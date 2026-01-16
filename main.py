@@ -3,48 +3,63 @@ import base64
 import socket
 import time
 import concurrent.futures
-import os
+import re
 from urllib.parse import unquote
 
-# --- НАСТРОЙКИ ---
+# --- ССЫЛКИ НА ИСТОЧНИКИ ---
+# Я добавил сюда прямые ссылки на Raw версии твоих файлов и запасные
 SOURCE_URLS = [
-    # Основной репозиторий (пробуем разные варианты ссылок)
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt", 
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/vless.txt",
-    # Резервные проверенные базы (чтобы точно работало)
-    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/vless.txt",
-    "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/vless.txt",
-    "https://raw.githubusercontent.com/tbbatbb/Proxy/master/dist/vless.txt"
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
 ]
-MAX_SERVERS = 15       # Оставим чуть больше, 15 штук
-MAX_PER_COUNTRY = 2    # Не больше 2 серверов от одной страны
-TIMEOUT = 1.5          # Тайм-аут (сек)
 
-def parse_vless(config_str):
+MAX_SERVERS = 15       # Количество серверов в итоге
+MAX_PER_COUNTRY = 2    # Максимум от одной страны
+TIMEOUT = 2.0          # Тайм-аут проверки (сек)
+
+def extract_vless_links(text):
+    """Ищет vless:// ссылки в любом тексте с помощью регулярных выражений"""
+    # Ищем всё, что начинается на vless:// и идет до конца строки или пробела
+    # Это позволяет игнорировать мусор вокруг
+    regex = r"(vless://[a-zA-Z0-9\-@:?=&%.#_]+)"
+    matches = re.findall(regex, text)
+    return matches
+
+def parse_config_info(config_str):
+    """Разбирает ссылку на IP и Порт для проверки"""
     try:
-        config_str = config_str.strip()
-        if not config_str.startswith("vless://"):
-            return None
-        
-        remark = "Unknown"
-        if "#" in config_str:
-            parts = config_str.split("#")
-            remark = unquote(parts[-1]).strip()
-        
+        # vless://uuid@ip:port?param...
         part = config_str.split("@")[1].split("?")[0]
-        host, port = part.split(":")
-        return {"ip": host, "port": int(port), "remark": remark, "original": config_str, "latency": 9999}
+        if ":" in part:
+            host, port = part.split(":")
+            # Пытаемся вытащить имя (remark) после #
+            remark = "Server"
+            if "#" in config_str:
+                remark = unquote(config_str.split("#")[-1]).strip()
+            
+            return {
+                "ip": host, 
+                "port": int(port), 
+                "remark": remark, 
+                "original": config_str, 
+                "latency": 9999
+            }
     except:
-        return None
+        pass
+    return None
 
 def check_server(server):
+    """Проверяет подключение"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TIMEOUT)
         start = time.time()
+        # Пробуем подключиться
         res = sock.connect_ex((server['ip'], server['port']))
         diff = (time.time() - start) * 1000
         sock.close()
+        
         if res == 0:
             server['latency'] = diff
             return server
@@ -53,77 +68,99 @@ def check_server(server):
     return None
 
 def main():
-    print("--- ЗАПУСК (ОБНОВЛЕННАЯ ВЕРСИЯ) ---")
-    all_configs = []
+    print("--- ЗАПУСК V3 (REGEX SEARCH) ---")
+    raw_links = []
 
-    # 1. Скачивание
+    # 1. Скачивание и поиск ссылок
     for url in SOURCE_URLS:
         try:
-            print(f"Пробую скачать: {url}")
-            resp = requests.get(url, timeout=5)
+            print(f"Скачиваю: {url}")
+            resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 content = resp.text
-                # Если base64
-                try:
-                    content = base64.b64decode(content).decode('utf-8', errors='ignore')
-                except:
-                    pass
                 
-                added = 0
-                for line in content.splitlines():
-                    p = parse_vless(line)
-                    if p:
-                        all_configs.append(p)
-                        added += 1
-                print(f"  -> Найдено: {added} ключей")
+                # Попытка 1: Ищем в обычном тексте
+                found = extract_vless_links(content)
+                
+                # Попытка 2: Если нашли мало, пробуем декодировать Base64
+                if len(found) == 0:
+                    try:
+                        decoded = base64.b64decode(content).decode('utf-8', errors='ignore')
+                        found = extract_vless_links(decoded)
+                    except:
+                        pass
+                
+                print(f"  -> Найдено ссылок: {len(found)}")
+                raw_links.extend(found)
             else:
-                print(f"  -> Ошибка: статус {resp.status_code}")
+                print(f"  -> Ошибка доступа: {resp.status_code}")
         except Exception as e:
-            print(f"  -> Ошибка соединения: {e}")
+            print(f"  -> Сбой сети: {e}")
 
-    unique_configs = {c['original']: c for c in all_configs}.values()
-    print(f"Всего уникальных ключей для проверки: {len(unique_configs)}")
+    # Удаляем дубликаты
+    raw_links = list(set(raw_links))
+    print(f"\nВсего уникальных ссылок для проверки: {len(raw_links)}")
 
-    if not unique_configs:
-        print("!!! НЕ НАЙДЕНО НИ ОДНОГО КЛЮЧА !!!")
-        # Создаем пустой файл, чтобы GitHub не ругался ошибкой
-        with open('sub.txt', 'w') as f:
-            f.write("")
-        return
+    if len(raw_links) == 0:
+        print("!!! ОШИБКА: Не найдено ни одной vless ссылки !!!")
+        print("Проверьте, доступны ли URL источников.")
+        exit(1) # Завершаем с ошибкой, чтобы в Actions был крестик
 
-    # 2. Проверка
-    print("Начинаю проверку скорости...")
-    working = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as ex:
-        futures = [ex.submit(check_server, c) for c in unique_configs]
-        for f in concurrent.futures.as_completed(futures):
-            res = f.result()
-            if res:
-                working.append(res)
+    # Подготовка к проверке
+    servers_to_check = []
+    for link in raw_links:
+        parsed = parse_config_info(link)
+        if parsed:
+            servers_to_check.append(parsed)
 
-    print(f"Рабочих серверов: {len(working)}")
-    working.sort(key=lambda x: x['latency'])
-
-    # 3. Фильтрация
-    final = []
-    countries = {}
-    for s in working:
-        if len(final) >= MAX_SERVERS: break
-        
-        # Пытаемся угадать страну по первым 5 символам ремарки (флаг)
-        tag = s['remark'][:5]
-        if countries.get(tag, 0) < MAX_PER_COUNTRY:
-            final.append(s)
-            countries[tag] = countries.get(tag, 0) + 1
-
-    # 4. Сохранение
-    res_str = "\n".join([x['original'] for x in final])
-    encoded = base64.b64encode(res_str.encode('utf-8')).decode('utf-8')
-
-    with open('sub.txt', 'w') as f:
-        f.write(encoded)
+    # 2. Массовая проверка скорости
+    print(f"Начинаю проверку пинга для {len(servers_to_check)} серверов...")
+    working_servers = []
     
-    print(f"Успешно сохранено {len(final)} серверов в sub.txt")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+        futures = [executor.submit(check_server, s) for s in servers_to_check]
+        for f in concurrent.futures.as_completed(futures):
+            result = f.result()
+            if result:
+                working_servers.append(result)
+
+    print(f"\nРабочих серверов: {len(working_servers)}")
+
+    if not working_servers:
+        print("Все серверы недоступны. Возможно, GitHub блокирует порты или список устарел.")
+        exit(1)
+
+    # 3. Сортировка и выборка
+    working_servers.sort(key=lambda x: x['latency'])
+    
+    final_list = []
+    countries = {}
+    
+    print("\n--- ТОП СЕРВЕРОВ ---")
+    for s in working_servers:
+        if len(final_list) >= MAX_SERVERS:
+            break
+            
+        # Определяем страну по эмодзи или первым буквам имени
+        tag = s['remark'][:5] 
+        
+        # Логика разнообразия
+        if countries.get(tag, 0) < MAX_PER_COUNTRY:
+            final_list.append(s)
+            countries[tag] = countries.get(tag, 0) + 1
+            print(f"[{int(s['latency'])}ms] {s['remark']}")
+
+    # 4. Сохранение результата
+    # Собираем ссылки в строку
+    result_text = "\n".join([s['original'] for s in final_list])
+    
+    # Кодируем в Base64 (обязательно для подписок)
+    final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
+    
+    with open('sub.txt', 'w') as f:
+        f.write(final_base64)
+
+    print(f"\nФайл sub.txt успешно записан ({len(final_list)} шт).")
 
 if __name__ == "__main__":
     main()
