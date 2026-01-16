@@ -34,12 +34,15 @@ def get_flag(country_code):
         return "🏳️"
 
 def get_real_geoip(ip):
+    """Определяет страну. Если сбой API - возвращает None"""
     try:
+        # Пауза, чтобы не словить бан API при многопоточности
+        time.sleep(0.1) 
         url = f"http://ip-api.com/json/{ip}?fields=country,countryCode"
-        resp = requests.get(url, timeout=2)
+        resp = requests.get(url, timeout=3)
         if resp.status_code == 200:
             data = resp.json()
-            return data.get('country', 'Unknown'), data.get('countryCode', 'XX')
+            return data.get('country', None), data.get('countryCode', None)
     except:
         pass
     return None, None
@@ -55,14 +58,21 @@ def parse_config_info(config_str):
         if ":" in part:
             host, port = part.split(":")
             
+            # Определяем Reality
             is_reality = False
             if "security=reality" in config_str or "pbk=" in config_str:
                 is_reality = True
             
+            # Достаем оригинальное имя на случай сбоя GeoIP
+            original_remark = "Unknown"
+            if "#" in config_str:
+                original_remark = unquote(config_str.split("#")[-1]).strip()
+
             return {
                 "ip": host, 
                 "port": int(port), 
-                "original": config_str, 
+                "original": config_str,
+                "original_remark": original_remark, 
                 "latency": 9999,
                 "score": 9999,
                 "real_country": None,
@@ -88,6 +98,7 @@ def tcp_ping(host, port):
     return None
 
 def check_server_smart(server):
+    """Замеры + GeoIP + Fallback"""
     pings = []
     for _ in range(3):
         p = tcp_ping(server['ip'], server['port'])
@@ -101,27 +112,51 @@ def check_server_smart(server):
     
     # --- SMART SCORE ---
     score = avg_ping
-    
-    # Бонус Reality (-50)
     if server['is_reality']:
-        score -= 50
+        score -= 50 # Бонус Reality
     
-    # Штраф CDN (+300)
+    # Если пинг подозрительно низкий для WS - это CDN
+    is_cdn_fake = False
     if avg_ping < 5 and not server['is_reality']:
         score += 300
-        server['real_country'] = "Cloudflare (CDN)"
-        server['country_code'] = "CDN"
-    else:
-        time.sleep(0.2)
+        is_cdn_fake = True
+    
+    # --- GEOIP LOGIC ---
+    country = None
+    code = None
+    
+    # Если это не явный CDN, пробуем узнать IP
+    if not is_cdn_fake:
         country, code = get_real_geoip(server['ip'])
-        server['real_country'] = country if country else "Unknown"
-        server['country_code'] = code if code else "XX"
+    
+    # ФОЛЛБЭК: Если API не ответил (или это CDN), пытаемся достать страну из названия
+    if not country:
+        # Ищем слова USA, Germany и т.д. в оригинальном названии
+        rem = server['original_remark'].lower()
+        if "united states" in rem or "usa" in rem or "🇺🇸" in rem:
+            country, code = "United States", "US"
+        elif "germany" in rem or "🇩🇪" in rem:
+            country, code = "Germany", "DE"
+        elif "netherlands" in rem or "🇳🇱" in rem:
+            country, code = "Netherlands", "NL"
+        elif "finland" in rem or "🇫🇮" in rem:
+            country, code = "Finland", "FI"
+        elif "russia" in rem or "🇷🇺" in rem:
+            country, code = "Russia", "RU"
+        elif "turkey" in rem or "🇹🇷" in rem:
+            country, code = "Turkey", "TR"
+        else:
+            # Если совсем ничего не нашли
+            country = "Unknown" if not is_cdn_fake else "Cloudflare"
+            code = "XX" if not is_cdn_fake else "CDN"
 
+    server['real_country'] = country
+    server['country_code'] = code
     server['score'] = score
     return server
 
 def main():
-    print("--- ЗАПУСК V6.1 (CLEAN FIX) ---")
+    print("--- ЗАПУСК V7 (VISUAL FIX) ---")
     raw_links = []
 
     for url in SOURCE_URLS:
@@ -150,7 +185,7 @@ def main():
     print(f"Checking {len(servers_to_check)} servers...")
     working_servers = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         futures = [executor.submit(check_server_smart, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
@@ -169,24 +204,37 @@ def main():
         country_name = s['real_country']
         country_code = s['country_code']
         
+        # Упрощаем имена
         short_name = country_name.replace("United States", "USA").replace("United Kingdom", "UK").replace("Russian Federation", "Russia").replace("Netherlands", "NL")
-        if short_name == "Unknown": short_name = "Relay"
-
+        
         limit = MAX_PER_COUNTRY
         if country_code == "CDN": limit = 1 
         
         if countries_count.get(country_name, 0) < limit:
             
+            # --- НОВЫЙ ВИЗУАЛ ---
+            # 1. Меняем Ракету на Молнию
             speed_icon = ""
-            if s['latency'] < 50: speed_icon = "🚀"
-            elif s['latency'] < 150: speed_icon = "⚡"
-            else: speed_icon = "🐢"
+            if s['latency'] < 100: speed_icon = "⚡" # Быстро
+            elif s['latency'] < 200: speed_icon = "✨" # Средне
+            else: speed_icon = "🐢" # Медленно
 
             flag = get_flag(country_code) if country_code != "CDN" else "🌐"
-            type_tag = "[REAL]" if s['is_reality'] else "[WS]"
             
+            # 2. Убираем [REAL], меняем [WS] на WARP
+            type_tag = "" 
+            if s['is_reality']:
+                type_tag = "" # Чистое имя для Reality
+            else:
+                type_tag = "WARP" # Метка для остальных
+
+            # Сборка имени
+            # Пример: ⚡ 🇺🇸 USA WARP | 50ms
+            # Пример: ⚡ 🇩🇪 Germany | 35ms
             new_remark = f"{speed_icon} {flag} {short_name} {type_tag} | {s['latency']}ms"
-            
+            # Убираем двойные пробелы если тег пустой
+            new_remark = " ".join(new_remark.split())
+
             base_link = s['original'].split('#')[0]
             s['original'] = f"{base_link}#{quote(new_remark)}"
             
@@ -196,7 +244,7 @@ def main():
             try:
                 print(f"Score: {s['score']} | {new_remark}")
             except:
-                print(f"Score: {s['score']} | [Emoji Error] {short_name}")
+                pass
 
     result_text = "\n".join([s['original'] for s in final_list])
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
