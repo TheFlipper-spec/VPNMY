@@ -4,36 +4,33 @@ import socket
 import time
 import concurrent.futures
 import re
-from urllib.parse import unquote
+from urllib.parse import unquote, quote
 
-# --- ССЫЛКИ НА ИСТОЧНИКИ ---
-# Я добавил сюда прямые ссылки на Raw версии твоих файлов и запасные
+# --- НАСТРОЙКИ ---
 SOURCE_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
 ]
 
-MAX_SERVERS = 15       # Количество серверов в итоге
-MAX_PER_COUNTRY = 2    # Максимум от одной страны
-TIMEOUT = 2.0          # Тайм-аут проверки (сек)
+MAX_SERVERS = 15       # Оставляем 15 лучших
+MAX_PER_COUNTRY = 2    # Разнообразие стран
+TIMEOUT = 2.0          # Тайм-аут проверки (быстрая проверка)
+OUTPUT_FILE = 'FL1PVPN' # Имя файла подписки
 
 def extract_vless_links(text):
-    """Ищет vless:// ссылки в любом тексте с помощью регулярных выражений"""
-    # Ищем всё, что начинается на vless:// и идет до конца строки или пробела
-    # Это позволяет игнорировать мусор вокруг
+    """Ищет vless:// ссылки через регулярные выражения"""
     regex = r"(vless://[a-zA-Z0-9\-@:?=&%.#_]+)"
     matches = re.findall(regex, text)
     return matches
 
 def parse_config_info(config_str):
-    """Разбирает ссылку на IP и Порт для проверки"""
+    """Разбирает ссылку для проверки"""
     try:
-        # vless://uuid@ip:port?param...
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
-            # Пытаемся вытащить имя (remark) после #
+            # Ищем имя (remark) после #
             remark = "Server"
             if "#" in config_str:
                 remark = unquote(config_str.split("#")[-1]).strip()
@@ -50,12 +47,11 @@ def parse_config_info(config_str):
     return None
 
 def check_server(server):
-    """Проверяет подключение"""
+    """Проверяет подключение (TCP Ping)"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TIMEOUT)
         start = time.time()
-        # Пробуем подключиться
         res = sock.connect_ex((server['ip'], server['port']))
         diff = (time.time() - start) * 1000
         sock.close()
@@ -68,21 +64,18 @@ def check_server(server):
     return None
 
 def main():
-    print("--- ЗАПУСК V3 (REGEX SEARCH) ---")
+    print("--- ЗАПУСК FL1PVPN AGGREGATOR ---")
     raw_links = []
 
-    # 1. Скачивание и поиск ссылок
+    # 1. Скачивание
     for url in SOURCE_URLS:
         try:
             print(f"Скачиваю: {url}")
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 content = resp.text
-                
-                # Попытка 1: Ищем в обычном тексте
                 found = extract_vless_links(content)
                 
-                # Попытка 2: Если нашли мало, пробуем декодировать Base64
                 if len(found) == 0:
                     try:
                         decoded = base64.b64decode(content).decode('utf-8', errors='ignore')
@@ -92,75 +85,69 @@ def main():
                 
                 print(f"  -> Найдено ссылок: {len(found)}")
                 raw_links.extend(found)
-            else:
-                print(f"  -> Ошибка доступа: {resp.status_code}")
         except Exception as e:
-            print(f"  -> Сбой сети: {e}")
+            print(f"  -> Ошибка: {e}")
 
-    # Удаляем дубликаты
-    raw_links = list(set(raw_links))
-    print(f"\nВсего уникальных ссылок для проверки: {len(raw_links)}")
-
-    if len(raw_links) == 0:
-        print("!!! ОШИБКА: Не найдено ни одной vless ссылки !!!")
-        print("Проверьте, доступны ли URL источников.")
-        exit(1) # Завершаем с ошибкой, чтобы в Actions был крестик
-
-    # Подготовка к проверке
+    raw_links = list(set(raw_links)) # Удаляем дубликаты
+    
     servers_to_check = []
     for link in raw_links:
         parsed = parse_config_info(link)
         if parsed:
             servers_to_check.append(parsed)
 
-    # 2. Массовая проверка скорости
-    print(f"Начинаю проверку пинга для {len(servers_to_check)} серверов...")
+    if not servers_to_check:
+        print("!!! Ключи не найдены !!!")
+        exit(1)
+
+    # 2. Проверка
+    print(f"\nНачинаю проверку {len(servers_to_check)} серверов...")
     working_servers = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
         futures = [executor.submit(check_server, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
-            result = f.result()
-            if result:
-                working_servers.append(result)
+            res = f.result()
+            if res:
+                working_servers.append(res)
 
-    print(f"\nРабочих серверов: {len(working_servers)}")
-
-    if not working_servers:
-        print("Все серверы недоступны. Возможно, GitHub блокирует порты или список устарел.")
-        exit(1)
-
-    # 3. Сортировка и выборка
+    print(f"Рабочих серверов: {len(working_servers)}")
     working_servers.sort(key=lambda x: x['latency'])
-    
+
+    # 3. Фильтрация и ДОБАВЛЕНИЕ ПИНГА В ИМЯ
     final_list = []
     countries = {}
     
-    print("\n--- ТОП СЕРВЕРОВ ---")
+    print("\n--- ТОП СЕРВЕРОВ (FL1PVPN) ---")
     for s in working_servers:
         if len(final_list) >= MAX_SERVERS:
             break
             
-        # Определяем страну по эмодзи или первым буквам имени
-        tag = s['remark'][:5] 
+        tag = s['remark'][:5] # Определяем страну
         
-        # Логика разнообразия
         if countries.get(tag, 0) < MAX_PER_COUNTRY:
+            # === МАГИЯ ТУТ ===
+            # Формируем новое имя: "🇩🇪 Germany | 45ms"
+            ping_val = int(s['latency'])
+            new_remark = f"{s['remark']} | {ping_val}ms"
+            
+            # Вставляем это имя обратно в ссылку (URL encoded)
+            base_link = s['original'].split('#')[0]
+            s['original'] = f"{base_link}#{quote(new_remark)}"
+            s['remark'] = new_remark
+            
             final_list.append(s)
             countries[tag] = countries.get(tag, 0) + 1
-            print(f"[{int(s['latency'])}ms] {s['remark']}")
+            print(f"[{ping_val}ms] {s['remark']}")
 
-    # 4. Сохранение результата
-    # Собираем ссылки в строку
+    # 4. Сохранение
     result_text = "\n".join([s['original'] for s in final_list])
-    
-    # Кодируем в Base64 (обязательно для подписок)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
     
-    with open('FL1PVPN', 'w') as f:
+    with open(OUTPUT_FILE, 'w') as f:
         f.write(final_base64)
 
-    print(f"\nФайл sub.txt успешно записан ({len(final_list)} шт).")
+    print(f"\nФайл {OUTPUT_FILE} успешно записан!")
 
 if __name__ == "__main__":
     main()
