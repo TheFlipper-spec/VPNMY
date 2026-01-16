@@ -3,10 +3,10 @@ name: Update VPN Subscription
 on:
   schedule:
     - cron: '0 */6 * * *'  # Запуск каждые 6 часов
-  workflow_dispatch:      # Кнопка для ручного запуска
+  workflow_dispatch:      # Кнопка ручного запуска
 
 permissions:
-  contents: write         # Разрешаем роботу обновлять файлы
+  contents: write
 
 jobs:
   build:
@@ -34,5 +34,5 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add FL1PVPN
-        git commit -m "Auto-update VPN list" || echo "No changes to commit"
+        git commit -m "Auto-update FL1PVPN list" || echo "No changes to commit"
         git push
