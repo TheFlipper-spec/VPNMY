@@ -157,7 +157,7 @@ def main():
     # Кодируем в Base64 (обязательно для подписок)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
     
-    with open('sub.txt', 'w') as f:
+    with open('FL1PVPN', 'w') as f:
         f.write(final_base64)
 
     print(f"\nФайл sub.txt успешно записан ({len(final_list)} шт).")
