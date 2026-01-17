@@ -43,6 +43,11 @@ RUS_NAMES = {
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур'
 }
 
+# СТРАНЫ, ПОДХОДЯЩИЕ ДЛЯ ИГР ИЗ РФ (Низкий пинг)
+GAMING_ALLOWED_COUNTRIES = [
+    'FI', 'SE', 'EE', 'LV', 'LT', 'DE', 'NL', 'PL', 'RU', 'KZ', 'BY', 'TR', 'UA'
+]
+
 # СПИСОК "ГРЯЗНЫХ" ПРОВАЙДЕРОВ (CDN)
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
@@ -137,11 +142,18 @@ def check_server_strict_v12(server):
     # 2. GEOIP
     ip_data = get_ip_info_retry(server['ip'])
     
+    # Если API не ответил, пытаемся спасти страну из названия (Fallback)
     if not ip_data:
+        # Для WS можно предположить CDN
         if server['transport'] in ['ws', 'grpc']:
              ip_data = {'countryCode': 'XX', 'org': 'Cloudflare', 'isp': 'CDN'}
         else:
-             return None
+             # Для TCP Reality пробуем угадать по имени, иначе удаляем
+             rem = server['original_remark'].lower()
+             if "germany" in rem: ip_data = {'countryCode': 'DE', 'org': 'Unknown', 'isp': 'Unknown'}
+             elif "finland" in rem: ip_data = {'countryCode': 'FI', 'org': 'Unknown', 'isp': 'Unknown'}
+             elif "netherlands" in rem: ip_data = {'countryCode': 'NL', 'org': 'Unknown', 'isp': 'Unknown'}
+             else: return None
     
     server['info'] = ip_data
     code = ip_data.get('countryCode', 'XX')
@@ -154,7 +166,9 @@ def check_server_strict_v12(server):
         is_warp_cdn = True
     if any(cdn in org_str for cdn in CDN_ISPS):
         is_warp_cdn = True
-    if avg_ping < 3:
+    # Убираем жесткий бан по пингу <3, так как мы теперь смотрим протокол
+    # Но если пинг 0-1ms - это все равно подозрительно для Reality
+    if avg_ping < 2:
         is_warp_cdn = True
     if server['security'] != 'reality':
         is_warp_cdn = True
@@ -189,7 +203,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V13 (GAMING EDITION) ---")
+    print("--- ЗАПУСК V14 (EURO-GAMING PRIORITY) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -200,7 +214,7 @@ def main():
     
     if not servers_to_check: exit(1)
 
-    print(f"Checking {len(servers_to_check)} servers (10 threads)...")
+    print(f"Checking {len(servers_to_check)} servers...")
     working_servers = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
@@ -215,36 +229,36 @@ def main():
     bucket_reality   = [s for s in working_servers if s['category'] == 'REALITY']
     bucket_warp      = [s for s in working_servers if s['category'] == 'WARP']
 
-    # СОРТИРОВКА
+    # СОРТИРОВКА (По пингу к GitHub, но мы будем учитывать страну ниже)
     bucket_whitelist.sort(key=lambda x: x['latency'])
     bucket_reality.sort(key=lambda x: x['latency'])
     bucket_warp.sort(key=lambda x: x['latency'])
 
     # --- ЛОГИКА ИГРОВОГО СЕРВЕРА ---
-    # Мы берем самый быстрый сервер из REALITY (так как он самый стабильный)
-    # и копируем его в отдельную категорию GAMING
+    # Мы ищем ПЕРВЫЙ Reality сервер, который находится в БЛИЖНЕМ ЗАРУБЕЖЬЕ
     gaming_server = None
-    if len(bucket_reality) > 0:
-        # Берем топ-1
-        best_real = bucket_reality[0]
-        # Делаем глубокую копию, чтобы не испортить оригинал в списке
-        gaming_server = copy.deepcopy(best_real)
-        gaming_server['category'] = 'GAMING'
+    
+    for s in bucket_reality:
+        code = s['info'].get('countryCode', 'XX')
+        # Если страна в списке "Игровых" (FI, SE, DE, NL...)
+        if code in GAMING_ALLOWED_COUNTRIES:
+            gaming_server = copy.deepcopy(s)
+            gaming_server['category'] = 'GAMING'
+            break
+            
+    # Если европейский сервер не найден, берем просто самый быстрый Reality
+    if not gaming_server and len(bucket_reality) > 0:
+         gaming_server = copy.deepcopy(bucket_reality[0])
+         gaming_server['category'] = 'GAMING'
 
     # ИТОГОВЫЙ СПИСОК
     final_list = []
     
-    # 1. ГЕЙМИНГ (Топ-1)
     if gaming_server:
         final_list.append(gaming_server)
 
-    # 2. Элита (Reality)
     final_list.extend(bucket_reality[:LIMIT_REALITY])
-    
-    # 3. WARP
     final_list.extend(bucket_warp[:LIMIT_WARP])
-    
-    # 4. WhiteList
     final_list.extend(bucket_whitelist[:LIMIT_WHITELIST])
 
     print("\n--- ИТОГОВЫЙ СПИСОК ---")
@@ -254,7 +268,6 @@ def main():
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         
-        # Спасение имени
         if code == 'XX' and s['category'] == 'WARP':
             rem = s['original_remark'].lower()
             if "united states" in rem or "usa" in rem: code = 'US'
@@ -271,7 +284,6 @@ def main():
         new_remark = ""
         
         if s['category'] == 'GAMING':
-            # Особое имя для игрового
             new_remark = f"🎮 GAME SERVER | {country_ru} | {ping}ms"
 
         elif s['category'] == 'WHITELIST':
@@ -284,7 +296,6 @@ def main():
                 new_remark = f"🌀 {flag} {country_ru} WARP | {ping}ms"
             
         else:
-            # REALITY
             isp_lower = (s['info'].get('isp', '')).lower()
             vps_tag = ""
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
