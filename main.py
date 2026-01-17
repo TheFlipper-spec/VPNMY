@@ -12,6 +12,7 @@ import time
 import concurrent.futures
 import re
 import statistics
+import copy
 from urllib.parse import unquote, quote, parse_qs
 
 # --- НАСТРОЙКИ ---
@@ -57,7 +58,6 @@ def get_flag(country_code):
         return "🏳️"
 
 def get_ip_info_retry(ip):
-    # 2 попытки запроса
     for attempt in range(2):
         try:
             time.sleep(0.2 + attempt * 0.2) 
@@ -79,20 +79,14 @@ def extract_vless_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # Парсинг основной части
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
             
-            # Парсинг параметров URL (?type=ws&security=reality...)
             query = config_str.split("?")[1].split("#")[0]
             params = parse_qs(query)
             
-            # --- ИЗВЛЕЧЕНИЕ ТЕХНИЧЕСКИХ ДАННЫХ ---
-            # type: tcp, ws, grpc (по умолчанию tcp)
             transport = params.get('type', ['tcp'])[0].lower()
-            
-            # security: reality, tls, none
             security = params.get('security', ['none'])[0].lower()
             
             original_remark = "Unknown"
@@ -106,7 +100,6 @@ def parse_config_info(config_str, source_type):
                 "original_remark": original_remark,
                 "latency": 9999,
                 "info": {},
-                # Технические поля
                 "transport": transport, 
                 "security": security,
                 "source_type": source_type
@@ -130,8 +123,6 @@ def tcp_ping(host, port):
     return None
 
 def check_server_strict_v12(server):
-    """СТРОГАЯ ПРОВЕРКА ПРОТОКОЛА"""
-    
     # 1. ПИНГ
     pings = []
     for _ in range(3):
@@ -143,54 +134,36 @@ def check_server_strict_v12(server):
     avg_ping = int(statistics.mean(pings))
     server['latency'] = avg_ping
     
-    # 2. GEOIP & ISP
+    # 2. GEOIP
     ip_data = get_ip_info_retry(server['ip'])
     
     if not ip_data:
-        # Если API не ответил, но мы уже видим, что это WS -> сразу WARP
         if server['transport'] in ['ws', 'grpc']:
              ip_data = {'countryCode': 'XX', 'org': 'Cloudflare', 'isp': 'CDN'}
         else:
-             return None # Выкидываем неизвестных TCP
+             return None
     
     server['info'] = ip_data
     code = ip_data.get('countryCode', 'XX')
     org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
-    # --- КЛАССИФИКАЦИЯ (PROTOCOL ENFORCER) ---
-    
+    # 3. КЛАССИФИКАЦИЯ
     is_warp_cdn = False
     
-    # А. ПРОВЕРКА ПРОТОКОЛА (Самое важное!)
-    # Если это WS или gRPC -> Это НЕ настоящий Reality VPN, это CDN обертка.
     if server['transport'] == 'ws' or server['transport'] == 'grpc':
         is_warp_cdn = True
-        
-    # Б. ПРОВЕРКА ПРОВАЙДЕРА
     if any(cdn in org_str for cdn in CDN_ISPS):
         is_warp_cdn = True
-        
-    # В. ПРОВЕРКА ПИНГА (Если < 2мс, это точно локальный CDN)
     if avg_ping < 3:
         is_warp_cdn = True
-
-    # Г. ПРОВЕРКА SECURITY
-    # Настоящий должен быть security=reality. Если нет - в мусор или варп.
     if server['security'] != 'reality':
         is_warp_cdn = True
 
-
-    # ПРИСВОЕНИЕ КАТЕГОРИИ
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
     elif is_warp_cdn:
         server['category'] = 'WARP'
     else:
-        # Сюда попадут только:
-        # 1. Type = TCP
-        # 2. Security = Reality
-        # 3. ISP != Cloudflare/Google
-        # 4. Ping > 3ms
         server['category'] = 'REALITY'
 
     return server
@@ -216,9 +189,8 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V12 (PROTOCOL ENFORCER) ---")
+    print("--- ЗАПУСК V13 (GAMING EDITION) ---")
     
-    # СБОР
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
     all_servers.extend(process_urls(WHITELIST_URLS, 'whitelist'))
@@ -248,16 +220,31 @@ def main():
     bucket_reality.sort(key=lambda x: x['latency'])
     bucket_warp.sort(key=lambda x: x['latency'])
 
+    # --- ЛОГИКА ИГРОВОГО СЕРВЕРА ---
+    # Мы берем самый быстрый сервер из REALITY (так как он самый стабильный)
+    # и копируем его в отдельную категорию GAMING
+    gaming_server = None
+    if len(bucket_reality) > 0:
+        # Берем топ-1
+        best_real = bucket_reality[0]
+        # Делаем глубокую копию, чтобы не испортить оригинал в списке
+        gaming_server = copy.deepcopy(best_real)
+        gaming_server['category'] = 'GAMING'
+
     # ИТОГОВЫЙ СПИСОК
     final_list = []
     
-    # 1. Элита (Только чистый TCP Reality)
+    # 1. ГЕЙМИНГ (Топ-1)
+    if gaming_server:
+        final_list.append(gaming_server)
+
+    # 2. Элита (Reality)
     final_list.extend(bucket_reality[:LIMIT_REALITY])
     
-    # 2. WARP (WS, gRPC, Cloudflare)
+    # 3. WARP
     final_list.extend(bucket_warp[:LIMIT_WARP])
     
-    # 3. WhiteList (Внизу)
+    # 4. WhiteList
     final_list.extend(bucket_whitelist[:LIMIT_WHITELIST])
 
     print("\n--- ИТОГОВЫЙ СПИСОК ---")
@@ -267,7 +254,7 @@ def main():
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         
-        # Спасение имени для WARP
+        # Спасение имени
         if code == 'XX' and s['category'] == 'WARP':
             rem = s['original_remark'].lower()
             if "united states" in rem or "usa" in rem: code = 'US'
@@ -283,7 +270,11 @@ def main():
         
         new_remark = ""
         
-        if s['category'] == 'WHITELIST':
+        if s['category'] == 'GAMING':
+            # Особое имя для игрового
+            new_remark = f"🎮 GAME SERVER | {country_ru} | {ping}ms"
+
+        elif s['category'] == 'WHITELIST':
             new_remark = f"⚪ 🇷🇺 Россия (WhiteList) | {ping}ms"
             
         elif s['category'] == 'WARP':
@@ -293,12 +284,9 @@ def main():
                 new_remark = f"🌀 {flag} {country_ru} WARP | {ping}ms"
             
         else:
-            # REALITY (Настоящий)
-            # Доп. проверка на хостинг
+            # REALITY
             isp_lower = (s['info'].get('isp', '')).lower()
             vps_tag = ""
-            # Если это VPS провайдер, добавим метку, но оставим в Reality, 
-            # так как это честный сервер, просто не домашний.
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
                 
@@ -308,9 +296,10 @@ def main():
         final_link = f"{base_link}#{quote(new_remark)}"
         result_configs.append(final_link)
         
-        # Лог для проверки
-        proto = s['transport'].upper()
-        print(f"[{s['category']}] [{proto}] {new_remark}")
+        try:
+            print(f"[{s['category']}] {new_remark}")
+        except:
+            pass
 
     result_text = "\n".join(result_configs)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
