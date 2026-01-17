@@ -13,6 +13,7 @@ import concurrent.futures
 import re
 import statistics
 import copy
+from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
 # --- НАСТРОЙКИ ---
@@ -34,6 +35,11 @@ LIMIT_REALITY = 10
 TIMEOUT = 1.5
 OUTPUT_FILE = 'FL1PVPN'
 
+# ЧАСОВОЙ ПОЯС (Для отображения времени)
+# 3 - это Москва (UTC+3)
+TIMEZONE_OFFSET = 3 
+UPDATE_INTERVAL_HOURS = 6 # Как часто запускается скрипт (для прогноза)
+
 # ПЕРЕВОДЧИК
 RUS_NAMES = {
     'US': 'США', 'DE': 'Германия', 'NL': 'Нидерланды', 'FI': 'Финляндия', 
@@ -43,12 +49,10 @@ RUS_NAMES = {
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур'
 }
 
-# СТРАНЫ, ПОДХОДЯЩИЕ ДЛЯ ИГР ИЗ РФ (Низкий пинг)
-GAMING_ALLOWED_COUNTRIES = [
-    'FI', 'SE', 'EE', 'LV', 'LT', 'DE', 'NL', 'PL', 'RU', 'KZ', 'BY', 'TR', 'UA'
+GAMING_whitelist_CODES = [
+    'FI', 'SE', 'EE', 'LV', 'LT', 'DE', 'NL', 'PL', 'RU', 'KZ', 'BY', 'UA', 'TR'
 ]
 
-# СПИСОК "ГРЯЗНЫХ" ПРОВАЙДЕРОВ (CDN)
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
     'fastly', 'akamai', 'cdn77', 'g-core', 'alibaba', 'tencent',
@@ -127,7 +131,7 @@ def tcp_ping(host, port):
         pass
     return None
 
-def check_server_strict_v12(server):
+def check_server_strict_v15(server):
     # 1. ПИНГ
     pings = []
     for _ in range(3):
@@ -142,18 +146,11 @@ def check_server_strict_v12(server):
     # 2. GEOIP
     ip_data = get_ip_info_retry(server['ip'])
     
-    # Если API не ответил, пытаемся спасти страну из названия (Fallback)
     if not ip_data:
-        # Для WS можно предположить CDN
-        if server['transport'] in ['ws', 'grpc']:
-             ip_data = {'countryCode': 'XX', 'org': 'Cloudflare', 'isp': 'CDN'}
+        if server['source_type'] == 'whitelist':
+             ip_data = {'countryCode': 'RU', 'org': 'Unknown', 'isp': 'Unknown'}
         else:
-             # Для TCP Reality пробуем угадать по имени, иначе удаляем
-             rem = server['original_remark'].lower()
-             if "germany" in rem: ip_data = {'countryCode': 'DE', 'org': 'Unknown', 'isp': 'Unknown'}
-             elif "finland" in rem: ip_data = {'countryCode': 'FI', 'org': 'Unknown', 'isp': 'Unknown'}
-             elif "netherlands" in rem: ip_data = {'countryCode': 'NL', 'org': 'Unknown', 'isp': 'Unknown'}
-             else: return None
+             return None 
     
     server['info'] = ip_data
     code = ip_data.get('countryCode', 'XX')
@@ -162,16 +159,10 @@ def check_server_strict_v12(server):
     # 3. КЛАССИФИКАЦИЯ
     is_warp_cdn = False
     
-    if server['transport'] == 'ws' or server['transport'] == 'grpc':
-        is_warp_cdn = True
-    if any(cdn in org_str for cdn in CDN_ISPS):
-        is_warp_cdn = True
-    # Убираем жесткий бан по пингу <3, так как мы теперь смотрим протокол
-    # Но если пинг 0-1ms - это все равно подозрительно для Reality
-    if avg_ping < 2:
-        is_warp_cdn = True
-    if server['security'] != 'reality':
-        is_warp_cdn = True
+    if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
+    if any(cdn in org_str for cdn in CDN_ISPS): is_warp_cdn = True
+    if avg_ping < 2: is_warp_cdn = True
+    if server['security'] != 'reality': is_warp_cdn = True
 
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
@@ -203,7 +194,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V14 (EURO-GAMING PRIORITY) ---")
+    print("--- ЗАПУСК V16 (INFO PANEL) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -214,58 +205,65 @@ def main():
     
     if not servers_to_check: exit(1)
 
-    print(f"Checking {len(servers_to_check)} servers...")
+    print(f"Checking {len(servers_to_check)} servers (10 threads)...")
     working_servers = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(check_server_strict_v12, s) for s in servers_to_check]
+        futures = [executor.submit(check_server_strict_v15, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
                 working_servers.append(res)
 
-    # РАСПРЕДЕЛЕНИЕ
     bucket_whitelist = [s for s in working_servers if s['category'] == 'WHITELIST']
     bucket_reality   = [s for s in working_servers if s['category'] == 'REALITY']
     bucket_warp      = [s for s in working_servers if s['category'] == 'WARP']
 
-    # СОРТИРОВКА (По пингу к GitHub, но мы будем учитывать страну ниже)
     bucket_whitelist.sort(key=lambda x: x['latency'])
     bucket_reality.sort(key=lambda x: x['latency'])
     bucket_warp.sort(key=lambda x: x['latency'])
 
-    # --- ЛОГИКА ИГРОВОГО СЕРВЕРА ---
-    # Мы ищем ПЕРВЫЙ Reality сервер, который находится в БЛИЖНЕМ ЗАРУБЕЖЬЕ
+    # GAMING Logic
     gaming_server = None
-    
     for s in bucket_reality:
         code = s['info'].get('countryCode', 'XX')
-        # Если страна в списке "Игровых" (FI, SE, DE, NL...)
-        if code in GAMING_ALLOWED_COUNTRIES:
-            gaming_server = copy.deepcopy(s)
-            gaming_server['category'] = 'GAMING'
-            break
-            
-    # Если европейский сервер не найден, берем просто самый быстрый Reality
-    if not gaming_server and len(bucket_reality) > 0:
-         gaming_server = copy.deepcopy(bucket_reality[0])
-         gaming_server['category'] = 'GAMING'
+        ping = s['latency']
+        if code not in GAMING_whitelist_CODES: continue
+        if ping < 20: continue
+        gaming_server = copy.deepcopy(s)
+        gaming_server['category'] = 'GAMING'
+        break
 
     # ИТОГОВЫЙ СПИСОК
-    final_list = []
-    
-    if gaming_server:
-        final_list.append(gaming_server)
+    final_objects = []
+    if gaming_server: final_objects.append(gaming_server)
+    final_objects.extend(bucket_reality[:LIMIT_REALITY])
+    final_objects.extend(bucket_warp[:LIMIT_WARP])
+    final_objects.extend(bucket_whitelist[:LIMIT_WHITELIST])
 
-    final_list.extend(bucket_reality[:LIMIT_REALITY])
-    final_list.extend(bucket_warp[:LIMIT_WARP])
-    final_list.extend(bucket_whitelist[:LIMIT_WHITELIST])
+    print("\n--- ГЕНЕРАЦИЯ СПИСКА ---")
+    result_links = []
+    
+    # 1. СОЗДАНИЕ ИНФО-СЕРВЕРА (ВРЕМЯ)
+    # Получаем текущее время UTC и добавляем смещение (Москва)
+    utc_now = datetime.now(timezone.utc)
+    msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
+    next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
+    
+    time_str = msk_now.strftime("%H:%M")
+    next_str = next_update.strftime("%H:%M")
+    
+    # Создаем фейковую ссылку для инфо-панели
+    info_remark = f"📅 Обновлено: {time_str} | След: {next_str}"
+    # Используем localhost, чтобы никуда не коннектилось
+    info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(info_remark)}"
+    
+    # Добавляем инфо-сервер самым первым
+    result_links.append(info_link)
+    print(f"[INFO] {info_remark}")
 
-    print("\n--- ИТОГОВЫЙ СПИСОК ---")
-    
-    result_configs = []
-    
-    for s in final_list:
+    # 2. ДОБАВЛЕНИЕ ОСТАЛЬНЫХ СЕРВЕРОВ
+    for s in final_objects:
         code = s['info'].get('countryCode', 'XX')
         
         if code == 'XX' and s['category'] == 'WARP':
@@ -284,7 +282,7 @@ def main():
         new_remark = ""
         
         if s['category'] == 'GAMING':
-            new_remark = f"🎮 GAME SERVER | {country_ru} | {ping}ms"
+            new_remark = f"🎮 GAME SERVER | {country_ru} (EU) | Ping: OK"
 
         elif s['category'] == 'WHITELIST':
             new_remark = f"⚪ 🇷🇺 Россия (WhiteList) | {ping}ms"
@@ -305,19 +303,19 @@ def main():
 
         base_link = s['original'].split('#')[0]
         final_link = f"{base_link}#{quote(new_remark)}"
-        result_configs.append(final_link)
+        result_links.append(final_link)
         
         try:
             print(f"[{s['category']}] {new_remark}")
         except:
             pass
 
-    result_text = "\n".join(result_configs)
+    result_text = "\n".join(result_links)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
     
     with open(OUTPUT_FILE, 'w') as f:
         f.write(final_base64)
-    print(f"\nSaved {len(final_list)} servers.")
+    print(f"\nSaved {len(result_links)} links (including Info).")
 
 if __name__ == "__main__":
     main()
