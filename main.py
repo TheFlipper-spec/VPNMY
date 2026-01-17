@@ -12,7 +12,7 @@ import time
 import concurrent.futures
 import re
 import statistics
-from urllib.parse import unquote, quote, urlparse, parse_qs
+from urllib.parse import unquote, quote, parse_qs
 
 # --- НАСТРОЙКИ ---
 GENERAL_URLS = [
@@ -42,18 +42,11 @@ RUS_NAMES = {
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур'
 }
 
-# 1. ЯВНЫЕ CDN ПРОВАЙДЕРЫ (Точно WARP)
-STRICT_CDN_ISPS = [
+# СПИСОК "ГРЯЗНЫХ" ПРОВАЙДЕРОВ (CDN)
+CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
     'fastly', 'akamai', 'cdn77', 'g-core', 'alibaba', 'tencent',
-    'edgecenter', 'servers.com', 'selectel'
-]
-
-# 2. ПОДОЗРИТЕЛЬНЫЕ ХОСТИНГИ (Часто используются как прокладка для WARP)
-# Если провайдер тут - мы проверим строже.
-VPS_HOSTING_ISPS = [
-    'digitalocean', 'hetzner', 'vultr', 'ovh', 'choopa', 
-    'hostinger', 'm247', 'datacamp', 'stark industries', 'aeza'
+    'edgecenter', 'servers.com', 'digitalocean', 'vultr'
 ]
 
 def get_flag(country_code):
@@ -64,7 +57,7 @@ def get_flag(country_code):
         return "🏳️"
 
 def get_ip_info_retry(ip):
-    # Уменьшили паузы, так как потоков больше
+    # 2 попытки запроса
     for attempt in range(2):
         try:
             time.sleep(0.2 + attempt * 0.2) 
@@ -84,40 +77,23 @@ def extract_vless_links(text):
     matches = re.findall(regex, text)
     return matches
 
-def check_link_internals(config_str):
-    """Ищет признаки CDN внутри самой ссылки (sni, host)"""
-    config_str_lower = config_str.lower()
-    
-    # Ключевые слова, указывающие на CDN
-    cdn_triggers = ['cloudflare', 'workers.dev', 'gcore', 'cloudfront', 'fastly', 'edge', 'cdn']
-    
-    # Парсим параметры
-    try:
-        if "?" in config_str:
-            query = config_str.split("?")[1].split("#")[0]
-            params = parse_qs(query)
-            
-            # Проверяем SNI и HOST
-            sni = params.get('sni', [''])[0].lower()
-            host = params.get('host', [''])[0].lower()
-            
-            for trigger in cdn_triggers:
-                if trigger in sni or trigger in host:
-                    return True # Это CDN/WARP
-    except:
-        pass
-        
-    return False
-
 def parse_config_info(config_str, source_type):
     try:
+        # Парсинг основной части
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
             
-            is_reality = False
-            if "security=reality" in config_str or "pbk=" in config_str:
-                is_reality = True
+            # Парсинг параметров URL (?type=ws&security=reality...)
+            query = config_str.split("?")[1].split("#")[0]
+            params = parse_qs(query)
+            
+            # --- ИЗВЛЕЧЕНИЕ ТЕХНИЧЕСКИХ ДАННЫХ ---
+            # type: tcp, ws, grpc (по умолчанию tcp)
+            transport = params.get('type', ['tcp'])[0].lower()
+            
+            # security: reality, tls, none
+            security = params.get('security', ['none'])[0].lower()
             
             original_remark = "Unknown"
             if "#" in config_str:
@@ -127,10 +103,12 @@ def parse_config_info(config_str, source_type):
                 "ip": host, 
                 "port": int(port), 
                 "original": config_str,
-                "original_remark": original_remark, 
+                "original_remark": original_remark,
                 "latency": 9999,
-                "info": {}, 
-                "is_reality": is_reality,
+                "info": {},
+                # Технические поля
+                "transport": transport, 
+                "security": security,
                 "source_type": source_type
             }
     except:
@@ -151,8 +129,8 @@ def tcp_ping(host, port):
         pass
     return None
 
-def check_server_deep(server):
-    """Глубокая проверка"""
+def check_server_strict_v12(server):
+    """СТРОГАЯ ПРОВЕРКА ПРОТОКОЛА"""
     
     # 1. ПИНГ
     pings = []
@@ -165,47 +143,54 @@ def check_server_deep(server):
     avg_ping = int(statistics.mean(pings))
     server['latency'] = avg_ping
     
-    # 2. АНАЛИЗ ССЫЛКИ (До запроса к API)
-    is_hidden_cdn = check_link_internals(server['original'])
-    
-    # 3. GEOIP
+    # 2. GEOIP & ISP
     ip_data = get_ip_info_retry(server['ip'])
     
     if not ip_data:
-        # Если API молчит, но мы нашли признаки CDN в ссылке - помечаем как WARP
-        if is_hidden_cdn:
-             ip_data = {'countryCode': 'XX', 'org': 'Cloudflare (Hidden)', 'isp': 'CDN'}
+        # Если API не ответил, но мы уже видим, что это WS -> сразу WARP
+        if server['transport'] in ['ws', 'grpc']:
+             ip_data = {'countryCode': 'XX', 'org': 'Cloudflare', 'isp': 'CDN'}
         else:
-             return None # Выкидываем неизвестных
+             return None # Выкидываем неизвестных TCP
     
     server['info'] = ip_data
     code = ip_data.get('countryCode', 'XX')
     org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
-    # 4. ВЕРДИКТ: REAL или WARP
+    # --- КЛАССИФИКАЦИЯ (PROTOCOL ENFORCER) ---
     
-    is_warp = False
+    is_warp_cdn = False
     
-    # A. Если нашли CDN в ссылке
-    if is_hidden_cdn: is_warp = True
-    
-    # B. Если провайдер в жестком списке CDN
-    if any(cdn in org_str for cdn in STRICT_CDN_ISPS): is_warp = True
-    
-    # C. Если провайдер - VPS хостинг, а пинг подозрительно низкий (<3ms)
-    # (Это значит сервер в том же датацентре, что и GitHub -> скорее всего просто прокси)
-    if avg_ping < 3 and any(vps in org_str for vps in VPS_HOSTING_ISPS):
-        is_warp = True
+    # А. ПРОВЕРКА ПРОТОКОЛА (Самое важное!)
+    # Если это WS или gRPC -> Это НЕ настоящий Reality VPN, это CDN обертка.
+    if server['transport'] == 'ws' or server['transport'] == 'grpc':
+        is_warp_cdn = True
+        
+    # Б. ПРОВЕРКА ПРОВАЙДЕРА
+    if any(cdn in org_str for cdn in CDN_ISPS):
+        is_warp_cdn = True
+        
+    # В. ПРОВЕРКА ПИНГА (Если < 2мс, это точно локальный CDN)
+    if avg_ping < 3:
+        is_warp_cdn = True
 
-    # D. Если пинг экстремально низкий (<2ms) для любого сервера
-    if avg_ping < 2: is_warp = True
+    # Г. ПРОВЕРКА SECURITY
+    # Настоящий должен быть security=reality. Если нет - в мусор или варп.
+    if server['security'] != 'reality':
+        is_warp_cdn = True
 
-    # КАТЕГОРИИ
+
+    # ПРИСВОЕНИЕ КАТЕГОРИИ
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
-    elif is_warp:
+    elif is_warp_cdn:
         server['category'] = 'WARP'
     else:
+        # Сюда попадут только:
+        # 1. Type = TCP
+        # 2. Security = Reality
+        # 3. ISP != Cloudflare/Google
+        # 4. Ping > 3ms
         server['category'] = 'REALITY'
 
     return server
@@ -218,7 +203,6 @@ def process_urls(urls, source_type):
             if resp.status_code == 200:
                 content = resp.text
                 found = extract_vless_links(content)
-                # Декодирование если base64
                 if not found:
                     try:
                         decoded = base64.b64decode(content).decode('utf-8', errors='ignore')
@@ -232,27 +216,23 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V11 (TRUTH SEEKER) ---")
+    print("--- ЗАПУСК V12 (PROTOCOL ENFORCER) ---")
     
-    # СБОР ДАННЫХ
+    # СБОР
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
     all_servers.extend(process_urls(WHITELIST_URLS, 'whitelist'))
     
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
-
-    # ОТВЕТ НА ВОПРОС ПОЛЬЗОВАТЕЛЯ
-    print(f"\n>>> В БАЗЕ НАЙДЕНО ССЫЛОК: {len(servers_to_check)} шт. <<<")
     
     if not servers_to_check: exit(1)
 
-    print(f"Начинаю проверку в 10 потоков...")
+    print(f"Checking {len(servers_to_check)} servers (10 threads)...")
     working_servers = []
     
-    # Вернули 10 потоков по просьбе
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(check_server_deep, s) for s in servers_to_check]
+        futures = [executor.submit(check_server_strict_v12, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
@@ -270,18 +250,24 @@ def main():
 
     # ИТОГОВЫЙ СПИСОК
     final_list = []
+    
+    # 1. Элита (Только чистый TCP Reality)
     final_list.extend(bucket_reality[:LIMIT_REALITY])
+    
+    # 2. WARP (WS, gRPC, Cloudflare)
     final_list.extend(bucket_warp[:LIMIT_WARP])
+    
+    # 3. WhiteList (Внизу)
     final_list.extend(bucket_whitelist[:LIMIT_WHITELIST])
 
-    print("\n--- ИТОГ ---")
+    print("\n--- ИТОГОВЫЙ СПИСОК ---")
     
     result_configs = []
     
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         
-        # Исправление имени, если API подвел, но мы знаем, что это WARP
+        # Спасение имени для WARP
         if code == 'XX' and s['category'] == 'WARP':
             rem = s['original_remark'].lower()
             if "united states" in rem or "usa" in rem: code = 'US'
@@ -301,18 +287,19 @@ def main():
             new_remark = f"⚪ 🇷🇺 Россия (WhiteList) | {ping}ms"
             
         elif s['category'] == 'WARP':
-            # Если код XX - пишем Глобал WARP
             if code == 'XX':
                 new_remark = f"🌀 🌐 Cloudflare WARP | {ping}ms"
             else:
                 new_remark = f"🌀 {flag} {country_ru} WARP | {ping}ms"
             
         else:
-            # REALITY (Если прошел все проверки)
-            # Для честности добавим метку VPS, если это хостинг
+            # REALITY (Настоящий)
+            # Доп. проверка на хостинг
             isp_lower = (s['info'].get('isp', '')).lower()
             vps_tag = ""
-            if any(v in isp_lower for v in VPS_HOSTING_ISPS):
+            # Если это VPS провайдер, добавим метку, но оставим в Reality, 
+            # так как это честный сервер, просто не домашний.
+            if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
                 
             new_remark = f"⚡ {flag} {country_ru}{vps_tag} | {ping}ms"
@@ -321,10 +308,9 @@ def main():
         final_link = f"{base_link}#{quote(new_remark)}"
         result_configs.append(final_link)
         
-        try:
-            print(f"[{s['category']}] {new_remark} [ISP: {s['info'].get('org', 'Unknown')}]")
-        except:
-            pass
+        # Лог для проверки
+        proto = s['transport'].upper()
+        print(f"[{s['category']}] [{proto}] {new_remark}")
 
     result_text = "\n".join(result_configs)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
