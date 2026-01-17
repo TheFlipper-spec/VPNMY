@@ -14,15 +14,25 @@ import re
 import statistics
 from urllib.parse import unquote, quote
 
-# --- НАСТРОЙКИ ---
-SOURCE_URLS = [
+# --- НАСТРОЙКИ ИСТОЧНИКОВ ---
+
+# 1. Ссылки на ОБЫЧНЫЕ базы (отсюда берем Reality и WARP)
+GENERAL_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
 ]
 
-MAX_SERVERS = 15       
-MAX_PER_COUNTRY = 3    
+# 2. Ссылки на БЕЛЫЕ СПИСКИ (специальные конфиги)
+WHITELIST_URLS = [
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
+]
+
+# --- НАСТРОЙКИ КВОТ (Сколько серверов каждого типа брать) ---
+LIMIT_WHITELIST = 3   # Сколько спец. серверов для обхода (⚪)
+LIMIT_WARP = 3        # Максимум WARP/CDN (не больше 3 штук!)
+LIMIT_REALITY = 10    # Остальное заполняем реальными серверами (⚡)
+
 TIMEOUT = 1.5          
 OUTPUT_FILE = 'FL1PVPN'
 
@@ -34,9 +44,7 @@ def get_flag(country_code):
         return "🏳️"
 
 def get_real_geoip(ip):
-    """Определяет страну. Если сбой API - возвращает None"""
     try:
-        # Пауза, чтобы не словить бан API при многопоточности
         time.sleep(0.1) 
         url = f"http://ip-api.com/json/{ip}?fields=country,countryCode"
         resp = requests.get(url, timeout=3)
@@ -52,18 +60,16 @@ def extract_vless_links(text):
     matches = re.findall(regex, text)
     return matches
 
-def parse_config_info(config_str):
+def parse_config_info(config_str, source_type):
     try:
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
             
-            # Определяем Reality
             is_reality = False
             if "security=reality" in config_str or "pbk=" in config_str:
                 is_reality = True
             
-            # Достаем оригинальное имя на случай сбоя GeoIP
             original_remark = "Unknown"
             if "#" in config_str:
                 original_remark = unquote(config_str.split("#")[-1]).strip()
@@ -74,10 +80,10 @@ def parse_config_info(config_str):
                 "original": config_str,
                 "original_remark": original_remark, 
                 "latency": 9999,
-                "score": 9999,
                 "real_country": None,
                 "country_code": None,
-                "is_reality": is_reality
+                "is_reality": is_reality,
+                "source_type": source_type # 'general' или 'whitelist'
             }
     except:
         pass
@@ -97,8 +103,8 @@ def tcp_ping(host, port):
         pass
     return None
 
-def check_server_smart(server):
-    """Замеры + GeoIP + Fallback"""
+def check_server_full(server):
+    """Полная проверка: пинг + GeoIP + определение типа"""
     pings = []
     for _ in range(3):
         p = tcp_ping(server['ip'], server['port'])
@@ -110,56 +116,49 @@ def check_server_smart(server):
     avg_ping = int(statistics.mean(pings))
     server['latency'] = avg_ping
     
-    # --- SMART SCORE ---
-    score = avg_ping
-    if server['is_reality']:
-        score -= 50 # Бонус Reality
+    # ОПРЕДЕЛЯЕМ КАТЕГОРИЮ (TAG)
+    # 1. Если из файла WhiteList -> WL
+    # 2. Если пинг < 5мс и не Reality -> WARP
+    # 3. Остальное -> REAL
     
-    # Если пинг подозрительно низкий для WS - это CDN
-    is_cdn_fake = False
-    if avg_ping < 5 and not server['is_reality']:
-        score += 300
-        is_cdn_fake = True
+    is_warp = False
     
-    # --- GEOIP LOGIC ---
+    if server['source_type'] == 'whitelist':
+        server['category'] = 'WHITELIST'
+    elif avg_ping < 5 and not server['is_reality']:
+        server['category'] = 'WARP'
+        is_warp = True
+    else:
+        server['category'] = 'REALITY'
+
+    # GEOIP ЛОГИКА
     country = None
     code = None
     
-    # Если это не явный CDN, пробуем узнать IP
-    if not is_cdn_fake:
+    # Для WhiteList и Reality пытаемся узнать страну
+    if not is_warp:
         country, code = get_real_geoip(server['ip'])
     
-    # ФОЛЛБЭК: Если API не ответил (или это CDN), пытаемся достать страну из названия
+    # Fallback (если API не ответил или это WARP)
     if not country:
-        # Ищем слова USA, Germany и т.д. в оригинальном названии
         rem = server['original_remark'].lower()
-        if "united states" in rem or "usa" in rem or "🇺🇸" in rem:
-            country, code = "United States", "US"
-        elif "germany" in rem or "🇩🇪" in rem:
-            country, code = "Germany", "DE"
-        elif "netherlands" in rem or "🇳🇱" in rem:
-            country, code = "Netherlands", "NL"
-        elif "finland" in rem or "🇫🇮" in rem:
-            country, code = "Finland", "FI"
-        elif "russia" in rem or "🇷🇺" in rem:
-            country, code = "Russia", "RU"
-        elif "turkey" in rem or "🇹🇷" in rem:
-            country, code = "Turkey", "TR"
+        if "united states" in rem or "usa" in rem or "🇺🇸" in rem: country, code = "United States", "US"
+        elif "germany" in rem or "🇩🇪" in rem: country, code = "Germany", "DE"
+        elif "netherlands" in rem or "🇳🇱" in rem: country, code = "Netherlands", "NL"
+        elif "finland" in rem or "🇫🇮" in rem: country, code = "Finland", "FI"
+        elif "russia" in rem or "🇷🇺" in rem: country, code = "Russia", "RU"
+        elif "turkey" in rem or "🇹🇷" in rem: country, code = "Turkey", "TR"
         else:
-            # Если совсем ничего не нашли
-            country = "Unknown" if not is_cdn_fake else "Cloudflare"
-            code = "XX" if not is_cdn_fake else "CDN"
+            country = "Relay" if not is_warp else "Cloudflare"
+            code = "XX" if not is_warp else "CDN"
 
     server['real_country'] = country
     server['country_code'] = code
-    server['score'] = score
     return server
 
-def main():
-    print("--- ЗАПУСК V7 (VISUAL FIX) ---")
-    raw_links = []
-
-    for url in SOURCE_URLS:
+def process_urls(urls, source_type):
+    links = []
+    for url in urls:
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
@@ -170,88 +169,109 @@ def main():
                         decoded = base64.b64decode(content).decode('utf-8', errors='ignore')
                         found = extract_vless_links(decoded)
                     except: pass
-                raw_links.extend(found)
+                
+                # Создаем объекты серверов
+                for link in found:
+                    p = parse_config_info(link, source_type)
+                    if p: links.append(p)
         except Exception as e:
-            print(f"Error {url}: {e}")
+            print(f"Error loading {url}: {e}")
+    return links
 
-    raw_links = list(set(raw_links))
-    servers_to_check = []
-    for link in raw_links:
-        p = parse_config_info(link)
-        if p: servers_to_check.append(p)
+def main():
+    print("--- ЗАПУСК V8 (BUCKETS SYSTEM) ---")
+    
+    # 1. Сбор всех ссылок
+    all_servers = []
+    all_servers.extend(process_urls(GENERAL_URLS, 'general'))
+    all_servers.extend(process_urls(WHITELIST_URLS, 'whitelist'))
+    
+    # Удаляем дубликаты по ссылке
+    unique_map = {s['original']: s for s in all_servers}
+    servers_to_check = list(unique_map.values())
 
     if not servers_to_check: exit(1)
 
     print(f"Checking {len(servers_to_check)} servers...")
     working_servers = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(check_server_smart, s) for s in servers_to_check]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        futures = [executor.submit(check_server_full, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
                 working_servers.append(res)
 
-    working_servers.sort(key=lambda x: x['score'])
+    # 2. РАСКЛАДЫВАЕМ ПО КОРЗИНАМ
+    bucket_whitelist = [s for s in working_servers if s['category'] == 'WHITELIST']
+    bucket_reality   = [s for s in working_servers if s['category'] == 'REALITY']
+    bucket_warp      = [s for s in working_servers if s['category'] == 'WARP']
 
+    # Сортируем каждую корзину по пингу (от быстрого к медленному)
+    bucket_whitelist.sort(key=lambda x: x['latency'])
+    bucket_reality.sort(key=lambda x: x['latency'])
+    bucket_warp.sort(key=lambda x: x['latency'])
+
+    # 3. НАБИРАЕМ ФИНАЛЬНЫЙ СПИСОК (КВОТЫ)
     final_list = []
-    countries_count = {}
     
-    print("\n--- ТОП СЕРВЕРОВ ---")
-    for s in working_servers:
-        if len(final_list) >= MAX_SERVERS: break
-            
+    # Сначала берем WhiteList (показываем первыми, так как они важны для РФ)
+    final_list.extend(bucket_whitelist[:LIMIT_WHITELIST])
+    
+    # Потом берем Reality (самые качественные)
+    final_list.extend(bucket_reality[:LIMIT_REALITY])
+    
+    # В конце добавляем немного WARP (для резерва)
+    final_list.extend(bucket_warp[:LIMIT_WARP])
+
+    print("\n--- ИТОГОВЫЙ СПИСОК ---")
+    
+    result_configs = []
+    
+    for s in final_list:
+        # ГЕНЕРАЦИЯ ИМЕНИ
+        
+        # Иконка типа
+        icon = ""
+        if s['category'] == 'WHITELIST': icon = "⚪"  # Белый круг
+        elif s['category'] == 'REALITY': icon = "⚡"  # Молния
+        elif s['category'] == 'WARP':    icon = "🌀"  # Спираль (Warp)
+
+        flag = get_flag(s['country_code']) if s['country_code'] != "CDN" else "🌐"
+        
+        # Упрощаем название страны
         country_name = s['real_country']
-        country_code = s['country_code']
+        country_name = country_name.replace("United States", "USA").replace("United Kingdom", "UK").replace("Russian Federation", "Russia")
+        if s['category'] == 'WHITELIST': country_name = "WhiteList" # Для WL пишем просто WhiteList или Russia
+
+        ping = s['latency']
         
-        # Упрощаем имена
-        short_name = country_name.replace("United States", "USA").replace("United Kingdom", "UK").replace("Russian Federation", "Russia").replace("Netherlands", "NL")
+        # Формат: ⚪ 🇷🇺 Russia | 45ms
+        # Формат: ⚡ 🇩🇪 Germany | 55ms
+        # Формат: 🌀 🌐 Cloudflare | 5ms
         
-        limit = MAX_PER_COUNTRY
-        if country_code == "CDN": limit = 1 
+        if s['category'] == 'WARP':
+            new_remark = f"{icon} WARP (CDN) | {ping}ms"
+        else:
+            new_remark = f"{icon} {flag} {country_name} | {ping}ms"
+
+        # Вставляем имя в ссылку
+        base_link = s['original'].split('#')[0]
+        final_link = f"{base_link}#{quote(new_remark)}"
+        result_configs.append(final_link)
         
-        if countries_count.get(country_name, 0) < limit:
-            
-            # --- НОВЫЙ ВИЗУАЛ ---
-            # 1. Меняем Ракету на Молнию
-            speed_icon = ""
-            if s['latency'] < 100: speed_icon = "⚡" # Быстро
-            elif s['latency'] < 200: speed_icon = "✨" # Средне
-            else: speed_icon = "🐢" # Медленно
+        try:
+            print(f"[{s['category']}] {new_remark}")
+        except:
+            pass
 
-            flag = get_flag(country_code) if country_code != "CDN" else "🌐"
-            
-            # 2. Убираем [REAL], меняем [WS] на WARP
-            type_tag = "" 
-            if s['is_reality']:
-                type_tag = "" # Чистое имя для Reality
-            else:
-                type_tag = "WARP" # Метка для остальных
-
-            # Сборка имени
-            # Пример: ⚡ 🇺🇸 USA WARP | 50ms
-            # Пример: ⚡ 🇩🇪 Germany | 35ms
-            new_remark = f"{speed_icon} {flag} {short_name} {type_tag} | {s['latency']}ms"
-            # Убираем двойные пробелы если тег пустой
-            new_remark = " ".join(new_remark.split())
-
-            base_link = s['original'].split('#')[0]
-            s['original'] = f"{base_link}#{quote(new_remark)}"
-            
-            final_list.append(s)
-            countries_count[country_name] = countries_count.get(country_name, 0) + 1
-            
-            try:
-                print(f"Score: {s['score']} | {new_remark}")
-            except:
-                pass
-
-    result_text = "\n".join([s['original'] for s in final_list])
+    # Сохранение
+    result_text = "\n".join(result_configs)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
     
     with open(OUTPUT_FILE, 'w') as f:
         f.write(final_base64)
-    print("Saved.")
+    print(f"\nSaved {len(final_list)} servers.")
 
 if __name__ == "__main__":
     main()
