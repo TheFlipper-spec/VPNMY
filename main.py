@@ -25,22 +25,35 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
 ]
 
-# Лимиты
-LIMIT_WHITELIST = 3   # Внизу списка
-LIMIT_WARP = 3        # Резерв
-LIMIT_REALITY = 12    # Основа
+# СТРОГИЕ ЛИМИТЫ
+LIMIT_WHITELIST = 3   # Внизу
+LIMIT_WARP = 5        # Максимум 5 WARP (если они качественные)
+LIMIT_REALITY = 10    # Максимум 10 Реальных
 
-TIMEOUT = 1.5          
+TIMEOUT = 2.0          
 OUTPUT_FILE = 'FL1PVPN'
 
-# Словарь для перевода стран
+# ПЕРЕВОДЧИК
 RUS_NAMES = {
     'US': 'США', 'DE': 'Германия', 'NL': 'Нидерланды', 
     'FI': 'Финляндия', 'RU': 'Россия', 'TR': 'Турция', 
     'GB': 'Великобритания', 'FR': 'Франция', 'SE': 'Швеция',
     'CA': 'Канада', 'PL': 'Польша', 'UA': 'Украина',
-    'KZ': 'Казахстан', 'BY': 'Беларусь'
+    'KZ': 'Казахстан', 'BY': 'Беларусь', 'EE': 'Эстония',
+    'LV': 'Латвия', 'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур'
 }
+
+# СПИСОК "ГРЯЗНЫХ" ПРОВАЙДЕРОВ (ЭТО ТОЧНО WARP/CDN)
+CDN_ISPS = [
+    'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
+    'digitalocean', 'fastly', 'akamai', 'cdn77', 'alibaba', 
+    'tencent', 'huawei', 'hostinger', 'hetzner online gmbh', # Hetzner 50/50, но часто там прокси
+    'ovh', 'choopa', 'vultr' 
+    # Vultr и DO часто используются для VPN, но мы будем строги:
+    # Если это хостинг - помечаем как WARP/VPS, а не "Домашний провайдер"
+]
+# Оставим Vultr и DigitalOcean как "Пограничные", но Cloudflare - точно бан.
+STRICT_CDN = ['cloudflare', 'google', 'akamai', 'fastly', 'cdn77', 'g-core']
 
 def get_flag(country_code):
     try:
@@ -49,17 +62,26 @@ def get_flag(country_code):
     except:
         return "🏳️"
 
-def get_ip_info(ip):
-    """Узнаем Страну и ПРОВАЙДЕРА (чтобы ловить Cloudflare)"""
-    try:
-        time.sleep(0.15) # Пауза для API
-        # Запрашиваем поле 'org' и 'isp'
-        url = f"http://ip-api.com/json/{ip}?fields=country,countryCode,org,isp"
-        resp = requests.get(url, timeout=3)
-        if resp.status_code == 200:
-            return resp.json()
-    except:
-        pass
+def get_ip_info_retry(ip):
+    """Пытается узнать инфо об IP с повторными попытками"""
+    for attempt in range(3):
+        try:
+            # Пауза зависит от попытки (чем больше неудач, тем дольше ждем)
+            time.sleep(0.5 + attempt * 0.5) 
+            url = f"http://ip-api.com/json/{ip}?fields=status,country,countryCode,org,isp"
+            resp = requests.get(url, timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get('status') == 'success':
+                    return data
+                else:
+                    # Если API вернул fail (приватный IP), это тоже инфо
+                    return {'status': 'fail', 'countryCode': 'XX', 'org': 'Private', 'isp': 'Private'}
+            elif resp.status_code == 429:
+                # Нас забанили по лимиту, ждем дольше
+                time.sleep(2)
+        except:
+            pass
     return None
 
 def extract_vless_links(text):
@@ -87,7 +109,7 @@ def parse_config_info(config_str, source_type):
                 "original": config_str,
                 "original_remark": original_remark, 
                 "latency": 9999,
-                "info": {}, # Сюда положим данные от API
+                "info": {}, 
                 "is_reality": is_reality,
                 "source_type": source_type
             }
@@ -109,8 +131,10 @@ def tcp_ping(host, port):
         pass
     return None
 
-def check_server_strict(server):
-    """Строгая проверка с детектором CDN"""
+def check_server_sherlock(server):
+    """Многоступенчатая проверка"""
+    
+    # 1. ПИНГ (3 раза)
     pings = []
     for _ in range(3):
         p = tcp_ping(server['ip'], server['port'])
@@ -118,38 +142,44 @@ def check_server_strict(server):
         time.sleep(0.05)
     
     if not pings: return None
-        
     avg_ping = int(statistics.mean(pings))
     server['latency'] = avg_ping
     
-    # 1. ЗАПРОС К API (ОБЯЗАТЕЛЬНО)
-    ip_data = get_ip_info(server['ip'])
+    # 2. GEOIP & ISP (Самое важное)
+    ip_data = get_ip_info_retry(server['ip'])
     
-    # Фолбэк, если API не ответил
     if not ip_data:
-        ip_data = {'countryCode': 'XX', 'org': 'Unknown', 'isp': 'Unknown'}
-
+        # Если API не ответил 3 раза - сервер мусор, выкидываем
+        return None 
+    
     server['info'] = ip_data
     code = ip_data.get('countryCode', 'XX')
-    org_name = (ip_data.get('org', '') + ip_data.get('isp', '')).lower()
-
-    # 2. ЖЕСТКАЯ ЛОГИКА ОПРЕДЕЛЕНИЯ WARP/CDN
-    # Список провайдеров, которые мы считаем "грязными" (CDN/Hosting)
-    cdn_keywords = ['cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 'digitalocean', 'fastly', 'akamai']
+    org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
-    is_cdn_detected = False
+    # 3. АНАЛИЗ (Real vs WARP)
     
-    # Если пинг подозрительно низкий (<5) ИЛИ имя провайдера содержит Cloudflare/Google...
-    if avg_ping < 5 or any(k in org_name for k in cdn_keywords):
-        is_cdn_detected = True
+    is_warp = False
+    
+    # Условие A: Пинг нереально низкий (<5)
+    if avg_ping < 5: 
+        is_warp = True
+    
+    # Условие B: Провайдер в списке CDN (Cloudflare и т.д.)
+    if any(cdn in org_str for cdn in STRICT_CDN):
+        is_warp = True
+        
+    # Условие C: Код страны XX (Private IP) - часто бывает у CDN
+    if code == 'XX':
+        is_warp = True
 
-    # 3. ПРИСВОЕНИЕ КАТЕГОРИИ
+    # КАТЕГОРИИ
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
-    elif is_cdn_detected:
+    elif is_warp:
         server['category'] = 'WARP'
     else:
-        server['category'] = 'REALITY' # Только если пинг > 5 и провайдер чистый
+        # Если это не WL и не WARP - значит это Честный VPN
+        server['category'] = 'REALITY'
 
     return server
 
@@ -174,7 +204,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V9 (STRICT ISP CHECK & RUS NAMES) ---")
+    print("--- ЗАПУСК V10 (SHERLOCK HOLMES) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -185,76 +215,79 @@ def main():
 
     if not servers_to_check: exit(1)
 
-    print(f"Checking {len(servers_to_check)} servers (with ISP check)...")
+    print(f"Checking {len(servers_to_check)} servers (SLOW & ACCURATE)...")
     working_servers = []
     
-    # Меньше потоков, чтобы API успевал отвечать
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        futures = [executor.submit(check_server_strict, s) for s in servers_to_check]
+    # !!! ВАЖНО: Ставим всего 4 потока, чтобы API точно ответил и не забанил !!!
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(check_server_sherlock, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
                 working_servers.append(res)
 
-    # Раскладываем по корзинам
+    # Корзины
     bucket_whitelist = [s for s in working_servers if s['category'] == 'WHITELIST']
     bucket_reality   = [s for s in working_servers if s['category'] == 'REALITY']
     bucket_warp      = [s for s in working_servers if s['category'] == 'WARP']
 
-    # Сортировка внутри корзин
+    # Сортировка
     bucket_whitelist.sort(key=lambda x: x['latency'])
     bucket_reality.sort(key=lambda x: x['latency'])
     bucket_warp.sort(key=lambda x: x['latency'])
 
-    # === СБОРКА ИТОГОВОГО СПИСКА ===
+    # СБОРКА
     final_list = []
-    
-    # 1. Сначала ЭЛИТА (Reality)
     final_list.extend(bucket_reality[:LIMIT_REALITY])
-    
-    # 2. Потом WARP (Резерв)
     final_list.extend(bucket_warp[:LIMIT_WARP])
-    
-    # 3. В самом низу - WHITELIST (Спецрезерв)
     final_list.extend(bucket_whitelist[:LIMIT_WHITELIST])
 
-    print("\n--- ИТОГ (РУССКИЕ НАЗВАНИЯ) ---")
+    print("\n--- ИТОГОВЫЙ ОТЧЕТ ---")
     
     result_configs = []
     
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
+        isp_name = s['info'].get('isp', 'Unknown')
         
-        # Перевод страны на Русский
-        country_ru = RUS_NAMES.get(code, code) # Если нет в словаре, берем код (US)
-        if code == 'XX': country_ru = "Европа"
+        # Попытка спасти имя, если API вернул XX, но мы знаем, что это WARP
+        if code == 'XX' and s['category'] == 'WARP':
+            # Пытаемся вытащить из оригинального имени
+            rem = s['original_remark'].lower()
+            if "united states" in rem or "usa" in rem: code = 'US'
+            elif "germany" in rem or "de" in rem: code = 'DE'
+            elif "finland" in rem: code = 'FI'
+            elif "netherlands" in rem: code = 'NL'
+            else: code = 'XX' # Если не удалось спасти
+
+        country_ru = RUS_NAMES.get(code, code)
+        if code == 'XX': country_ru = "Глобал"
 
         flag = get_flag(code)
         ping = s['latency']
         
-        # ФОРМИРОВАНИЕ ИМЕНИ
         new_remark = ""
         
         if s['category'] == 'WHITELIST':
-            # Для Вайтлистов обычно это РФ
             new_remark = f"⚪ 🇷🇺 Россия (WhiteList) | {ping}ms"
             
         elif s['category'] == 'WARP':
-            # WARP
-            flag = get_flag(code) if code != "XX" else "🌐"
-            new_remark = f"🌀 {flag} {country_ru} WARP | {ping}ms"
+            # Если WARP - пишем флаг, страну и WARP
+            if code == 'XX': 
+                new_remark = f"🌀 🌐 Cloudflare WARP | {ping}ms"
+            else:
+                new_remark = f"🌀 {flag} {country_ru} WARP | {ping}ms"
             
         else:
-            # REALITY (Чистый)
+            # REALITY
             new_remark = f"⚡ {flag} {country_ru} | {ping}ms"
 
-        # Вставляем в ссылку
         base_link = s['original'].split('#')[0]
         final_link = f"{base_link}#{quote(new_remark)}"
         result_configs.append(final_link)
         
         try:
-            print(f"[{s['category']}] {new_remark} (ISP: {s['info'].get('org', 'Unknown')})")
+            print(f"[{s['category']}] {country_ru} ({isp_name})")
         except:
             pass
 
