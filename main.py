@@ -29,8 +29,8 @@ WHITELIST_URLS = [
 
 # ЛИМИТЫ
 LIMIT_WHITELIST = 3
-LIMIT_WARP = 5
-LIMIT_REALITY = 12
+LIMIT_WARP = 3        # Снизил WARP, чтобы дать больше места соседям
+LIMIT_REALITY = 15    # Увеличил кол-во реальных серверов
 
 TIMEOUT = 1.5
 OUTPUT_FILE = 'FL1PVPN'
@@ -44,15 +44,23 @@ RUS_NAMES = {
     'SE': 'Швеция', 'CA': 'Канада', 'PL': 'Польша', 'UA': 'Украина',
     'KZ': 'Казахстан', 'BY': 'Беларусь', 'EE': 'Эстония', 'LV': 'Латвия', 
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур', 'BG': 'Болгария',
-    'CZ': 'Чехия', 'RO': 'Румыния', 'IT': 'Италия', 'ES': 'Испания'
+    'CZ': 'Чехия', 'RO': 'Румыния', 'IT': 'Италия', 'ES': 'Испания',
+    'AT': 'Австрия', 'NO': 'Норвегия'
 }
 
-# ТОЛЬКО ЭТИ СТРАНЫ МОГУТ БЫТЬ ИГРОВЫМИ (Ближняя Европа)
-EUROPE_GAMING_CODES = [
-    'FI', 'SE', 'EE', 'LV', 'LT', 'DE', 'NL', 'PL', 'RU', 'KZ', 'BY', 'UA', 'TR', 'CZ', 'BG', 'RO'
+# --- ГРУППЫ ПРИОРИТЕТА ---
+
+# 1. СОСЕДИ (Минимальный пинг до РФ) - Приоритет 1
+PRIORITY_1_NEIGHBORS = [
+    'FI', 'EE', 'LV', 'LT', 'SE', 'PL', 'RU', 'KZ', 'BY', 'UA'
 ]
 
-# "ГРЯЗНЫЕ" ПРОВАЙДЕРЫ
+# 2. БЛИЖНЯЯ ЕВРОПА (Хороший пинг) - Приоритет 2
+PRIORITY_2_EUROPE = [
+    'DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES'
+]
+
+# CDN ПРОВАЙДЕРЫ
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
     'fastly', 'akamai', 'cdn77', 'g-core', 'alibaba', 'tencent',
@@ -111,7 +119,8 @@ def parse_config_info(config_str, source_type):
                 "info": {},
                 "transport": transport, 
                 "security": security,
-                "source_type": source_type
+                "source_type": source_type,
+                "geo_rank": 99 # Ранг сортировки (чем меньше, тем лучше)
             }
     except:
         pass
@@ -131,7 +140,32 @@ def tcp_ping(host, port):
         pass
     return None
 
-def check_server_strict_v17(server):
+def calculate_geo_rank(server):
+    """Вычисляет ранг полезности сервера для пользователя из РФ"""
+    code = server['info'].get('countryCode', 'XX')
+    ping_from_us = server['latency']
+    
+    # ФИЛЬТР ФЕЙКОВ: Если пинг < 40мс (от бота в США), но страна заявлена как Европейская,
+    # значит это фейк (сервер физически в США). Сбрасываем ранг на низкий.
+    is_fake_europe = False
+    if ping_from_us < 40 and (code in PRIORITY_1_NEIGHBORS or code in PRIORITY_2_EUROPE):
+        is_fake_europe = True
+        
+    if is_fake_europe:
+        return 5 # Ранг "Мусор/Фейк"
+        
+    if code in PRIORITY_1_NEIGHBORS:
+        return 1 # Золото (Соседи)
+        
+    if code in PRIORITY_2_EUROPE:
+        return 2 # Серебро (Европа)
+        
+    if code == 'US' or code == 'CA':
+        return 4 # Америка (Далеко)
+        
+    return 3 # Остальной мир (Азия и т.д.)
+
+def check_server_v18(server):
     # 1. ПИНГ
     pings = []
     for _ in range(3):
@@ -158,10 +192,8 @@ def check_server_strict_v17(server):
     
     # 3. КЛАССИФИКАЦИЯ
     is_warp_cdn = False
-    
     if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
     if any(cdn in org_str for cdn in CDN_ISPS): is_warp_cdn = True
-    # ВАЖНО: Пинг < 2мс = локальный CDN (почти всегда)
     if avg_ping < 2: is_warp_cdn = True
     if server['security'] != 'reality': is_warp_cdn = True
 
@@ -171,6 +203,9 @@ def check_server_strict_v17(server):
         server['category'] = 'WARP'
     else:
         server['category'] = 'REALITY'
+
+    # 4. РАСЧЕТ РАНГА (GEOGRAPHIC PRIORITY)
+    server['geo_rank'] = calculate_geo_rank(server)
 
     return server
 
@@ -195,7 +230,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V17 (PHYSICS LAW FILTER) ---")
+    print("--- ЗАПУСК V18 (NEIGHBORS PRIORITY) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -210,7 +245,7 @@ def main():
     working_servers = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(check_server_strict_v17, s) for s in servers_to_check]
+        futures = [executor.submit(check_server_v18, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
@@ -220,44 +255,25 @@ def main():
     bucket_reality   = [s for s in working_servers if s['category'] == 'REALITY']
     bucket_warp      = [s for s in working_servers if s['category'] == 'WARP']
 
-    # Сортировка по пингу (от GitHub)
-    bucket_whitelist.sort(key=lambda x: x['latency'])
-    bucket_reality.sort(key=lambda x: x['latency'])
-    bucket_warp.sort(key=lambda x: x['latency'])
+    # --- СОРТИРОВКА (ГЛАВНОЕ ИЗМЕНЕНИЕ) ---
+    # Сортируем сначала по РАНГУ (1=Соседи, 2=Европа, 4=США), а внутри ранга - по пингу
+    def smart_sort_key(x):
+        return (x['geo_rank'], x['latency'])
 
-    # --- ЖЕСТКАЯ ЛОГИКА ИГРОВОГО СЕРВЕРА ---
+    bucket_whitelist.sort(key=smart_sort_key)
+    bucket_reality.sort(key=smart_sort_key) # Соседи будут первыми!
+    bucket_warp.sort(key=smart_sort_key)
+
+    # ИГРОВОЙ СЕРВЕР (Берем самый первый из отсортированного списка Reality,
+    # так как там теперь гарантированно лучший Сосед)
     gaming_server = None
     
-    print("\n--- ПОДБОР ИГРОВОГО СЕРВЕРА ---")
-    
-    # Проходим по всем REALITY серверам
+    # Но проверим еще раз "физику" (анти-фейк), чтобы наверняка
     for s in bucket_reality:
-        code = s['info'].get('countryCode', 'XX')
-        ping_from_github = s['latency']
-        
-        # 1. ПРОВЕРКА СТРАНЫ (Только Европа/РФ)
-        if code not in EUROPE_GAMING_CODES:
-            print(f"Skip {code} (Not Europe)")
+        # Пропускаем, если ранг плохой (значит это фейк или Америка)
+        if s['geo_rank'] > 2: 
             continue
             
-        # 2. ПРОВЕРКА ФИЗИКИ (Самое важное!)
-        # GitHub Actions обычно в США.
-        # Если пинг < 40мс -> Сервер слишком близко к США. Это ФЕЙКОВАЯ Европа.
-        # Если пинг > 40мс -> Сервер реально далеко (через океан). Это НАСТОЯЩАЯ Европа.
-        
-        MIN_LATENCY_FOR_EUROPE = 40 # Минимум 40мс через Атлантику
-        
-        if ping_from_github < MIN_LATENCY_FOR_EUROPE:
-            print(f"Skip {code} (Ping {ping_from_github}ms is suspicious/Fake Geo)")
-            continue
-            
-        # 3. ПРОВЕРКА НА БРЕД (Если пинг > 250, то это уже Азия/Австралия)
-        if ping_from_github > 250:
-            print(f"Skip {code} (Ping {ping_from_github}ms is too high)")
-            continue
-
-        # Если прошли все фильтры - это ИДЕАЛЬНЫЙ КАНДИДАТ
-        print(f">>> WINNER: {code} with ping {ping_from_github}ms (Verified Distance)")
         gaming_server = copy.deepcopy(s)
         gaming_server['category'] = 'GAMING'
         break
@@ -265,7 +281,7 @@ def main():
     # ИТОГОВЫЙ СПИСОК
     final_objects = []
     
-    # Инфо-панель
+    # 1. INFO
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -274,21 +290,25 @@ def main():
     info_remark = f"📅 Обновлено: {time_str} | След: {next_str}"
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(info_remark)}"
     
-    result_links = [info_link] # 1. Инфо
+    result_links = [info_link]
 
-    if gaming_server:          # 2. Игровой
-        final_objects.append(gaming_server)
-        
-    final_objects.extend(bucket_reality[:LIMIT_REALITY]) # 3. Элита
-    final_objects.extend(bucket_warp[:LIMIT_WARP])       # 4. Warp
-    final_objects.extend(bucket_whitelist[:LIMIT_WHITELIST]) # 5. WL
+    # 2. GAMING
+    if gaming_server: final_objects.append(gaming_server)
+    
+    # 3. REALITY (Теперь тут будут в основном Финляндия, Германия и т.д.)
+    final_objects.extend(bucket_reality[:LIMIT_REALITY])
+    
+    # 4. WARP
+    final_objects.extend(bucket_warp[:LIMIT_WARP])
+    
+    # 5. WHITELIST
+    final_objects.extend(bucket_whitelist[:LIMIT_WHITELIST])
 
     print("\n--- ГЕНЕРАЦИЯ ---")
     
     for s in final_objects:
         code = s['info'].get('countryCode', 'XX')
         
-        # Исправление имени для WARP
         if code == 'XX' and s['category'] == 'WARP':
             rem = s['original_remark'].lower()
             if "united states" in rem or "usa" in rem: code = 'US'
@@ -305,7 +325,6 @@ def main():
         new_remark = ""
         
         if s['category'] == 'GAMING':
-            # Особое имя
             new_remark = f"🎮 GAME SERVER | {country_ru} | Low Ping"
 
         elif s['category'] == 'WHITELIST':
@@ -330,7 +349,7 @@ def main():
         result_links.append(final_link)
         
         try:
-            print(f"[{s['category']}] {new_remark}")
+            print(f"[{s['category']}] {new_remark} (Rank: {s['geo_rank']})")
         except:
             pass
 
