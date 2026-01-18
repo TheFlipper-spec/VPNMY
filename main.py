@@ -29,9 +29,9 @@ WHITELIST_URLS = [
 
 # КОЛИЧЕСТВО ПОБЕДИТЕЛЕЙ (ЖЕСТКИЙ ЛИМИТ)
 TARGET_GAME = 1       # 1 Игровой (Лучший из лучших)
-TARGET_REALITY = 2    # 2 Обычных (Стабильные и быстрые)
-TARGET_WARP = 1       # 1 Лучший WARP
-TARGET_WHITELIST = 1  # 1 Лучший WhiteList
+TARGET_REALITY = 3    # 2 Обычных (Стабильные и быстрые)
+TARGET_WARP = 2       # 1 Лучший WARP
+TARGET_WHITELIST = 2  # 1 Лучший WhiteList
 
 TIMEOUT = 1.5
 OUTPUT_FILE = 'FL1PVPN'
