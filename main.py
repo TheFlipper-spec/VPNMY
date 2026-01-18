@@ -27,10 +27,11 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
 ]
 
-# ЛИМИТЫ
-LIMIT_WHITELIST = 3
-LIMIT_WARP = 3
-LIMIT_REALITY = 15
+# КОЛИЧЕСТВО ПОБЕДИТЕЛЕЙ (ЖЕСТКИЙ ЛИМИТ)
+TARGET_GAME = 1       # 1 Игровой (Лучший из лучших)
+TARGET_REALITY = 2    # 2 Обычных (Стабильные и быстрые)
+TARGET_WARP = 1       # 1 Лучший WARP
+TARGET_WHITELIST = 1  # 1 Лучший WhiteList
 
 TIMEOUT = 1.5
 OUTPUT_FILE = 'FL1PVPN'
@@ -48,7 +49,7 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия'
 }
 
-# --- ПРИОРИТЕТЫ ---
+# ПРИОРИТЕТЫ
 PRIORITY_1_NEIGHBORS = ['FI', 'EE', 'LV', 'LT', 'SE', 'PL', 'RU', 'KZ', 'BY', 'UA']
 PRIORITY_2_EUROPE = ['DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
@@ -90,13 +91,10 @@ def parse_config_info(config_str, source_type):
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
-            
             query = config_str.split("?")[1].split("#")[0]
             params = parse_qs(query)
-            
             transport = params.get('type', ['tcp'])[0].lower()
             security = params.get('security', ['none'])[0].lower()
-            
             original_remark = "Unknown"
             if "#" in config_str:
                 original_remark = unquote(config_str.split("#")[-1]).strip()
@@ -107,7 +105,8 @@ def parse_config_info(config_str, source_type):
                 "original": config_str,
                 "original_remark": original_remark,
                 "latency": 9999,
-                "jitter": 0, # Новое поле: стабильность
+                "jitter": 0,
+                "final_score": 9999,
                 "info": {},
                 "transport": transport, 
                 "security": security,
@@ -132,46 +131,20 @@ def tcp_ping(host, port):
         pass
     return None
 
-def stress_test_server(server):
-    """Делает 5 замеров для вычисления среднего пинга и Джиттера"""
-    pings = []
-    # 5 замеров с паузами
-    for _ in range(5):
-        p = tcp_ping(server['ip'], server['port'])
-        if p is not None:
-            pings.append(p)
-        time.sleep(0.1) # Пауза 100мс между пингами
-    
-    if len(pings) < 3: # Если слишком много потерь пакетов
-        return 9999, 9999 # Дисквалификация
-        
-    avg_ping = statistics.mean(pings)
-    
-    # Считаем Джиттер (Стандартное отклонение)
-    try:
-        jitter = statistics.stdev(pings)
-    except:
-        jitter = 0 # Если всего 1 замер (не должно быть)
-        
-    return avg_ping, jitter
-
 def calculate_geo_rank(server):
     code = server['info'].get('countryCode', 'XX')
     ping = server['latency']
-    
-    # ФИЛЬТР ФЕЙКОВ (Анти-США)
     is_fake = False
     if ping < 40 and (code in PRIORITY_1_NEIGHBORS or code in PRIORITY_2_EUROPE):
         is_fake = True
-        
     if is_fake: return 5 
     if code in PRIORITY_1_NEIGHBORS: return 1 
     if code in PRIORITY_2_EUROPE: return 2
     if code == 'US' or code == 'CA': return 4
     return 3
 
-def check_server_v19(server):
-    # Быстрая проверка (3 пинга) для общего списка
+def check_server_initial(server):
+    """Первичная быстрая проверка"""
     pings = []
     for _ in range(3):
         p = tcp_ping(server['ip'], server['port'])
@@ -209,6 +182,68 @@ def check_server_v19(server):
     server['geo_rank'] = calculate_geo_rank(server)
     return server
 
+def stress_test_server(server):
+    """СТРЕСС-ТЕСТ: 5 замеров для выявления лагов"""
+    pings = []
+    for _ in range(5):
+        p = tcp_ping(server['ip'], server['port'])
+        if p is not None: pings.append(p)
+        time.sleep(0.15) # Пауза побольше для точности
+    
+    # Если пакеты теряются (меньше 4 успешных из 5) - это мусор
+    if len(pings) < 4: 
+        return 9999, 9999
+        
+    avg_ping = statistics.mean(pings)
+    try:
+        jitter = statistics.stdev(pings)
+    except:
+        jitter = 0
+    
+    return avg_ping, jitter
+
+def run_tournament(candidates, winners_needed, strict_geo=False):
+    """Проводит турнир среди кандидатов"""
+    if not candidates: return []
+    
+    # Отбираем топ-8 претендентов по первичной сортировке (GeoRank + Ping)
+    # Если strict_geo=True, берем только ранги 1 и 2
+    if strict_geo:
+        preliminary = [c for c in candidates if c['geo_rank'] <= 2]
+    else:
+        preliminary = candidates
+        
+    if not preliminary: # Если строгий отбор не дал результатов, берем лучших из того что есть
+         preliminary = candidates
+         
+    # Берем топ-8 для стресс-теста (чтобы не ждать вечность)
+    finalists = sorted(preliminary, key=lambda x: (x['geo_rank'], x['latency']))[:8]
+    
+    scored_results = []
+    print(f"   >>> Турнир среди {len(finalists)} серверов...")
+    
+    for f in finalists:
+        avg, jitter = stress_test_server(f)
+        
+        # ФОРМУЛА СТАБИЛЬНОСТИ: Score = Ping + (Jitter * 3)
+        # Штраф за лаги очень высокий
+        score = avg + (jitter * 3)
+        
+        # Если это игровой турнир, штрафуем за плохой GeoRank
+        if strict_geo:
+             score += (f['geo_rank'] * 10) 
+             
+        f['latency'] = int(avg)
+        f['jitter'] = int(jitter)
+        f['final_score'] = score
+        scored_results.append(f)
+        
+    # Сортируем по финальному баллу (меньше = лучше)
+    scored_results.sort(key=lambda x: x['final_score'])
+    
+    # Возвращаем победителей
+    return scored_results[:winners_needed]
+
 def process_urls(urls, source_type):
     links = []
     for url in urls:
@@ -230,7 +265,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V19 (THE CHAMPIONSHIP) ---")
+    print("--- ЗАПУСК V20 (ELITE SQUAD) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -241,66 +276,55 @@ def main():
     
     if not servers_to_check: exit(1)
 
-    print(f"Checking {len(servers_to_check)} servers (10 threads)...")
+    print(f"Первичный отсев {len(servers_to_check)} серверов...")
     working_servers = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(check_server_v19, s) for s in servers_to_check]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
                 working_servers.append(res)
 
+    # Раскладываем по корзинам
     bucket_whitelist = [s for s in working_servers if s['category'] == 'WHITELIST']
     bucket_reality   = [s for s in working_servers if s['category'] == 'REALITY']
     bucket_warp      = [s for s in working_servers if s['category'] == 'WARP']
 
-    # Сортировка для обычного списка
-    def smart_sort_key(x): return (x['geo_rank'], x['latency'])
-    bucket_whitelist.sort(key=smart_sort_key)
-    bucket_reality.sort(key=smart_sort_key)
-    bucket_warp.sort(key=smart_sort_key)
+    final_list = []
 
-    # --- ТУРНИР ЗА ЗВАНИЕ ИГРОВОГО СЕРВЕРА ---
-    print("\n⚔️ НАЧИНАЕМ ТУРНИР ЗА ЗВАНИЕ GAME SERVER ⚔️")
+    # 1. ВЫБОР GAME SERVER (1 шт)
+    # Используем строгий гео-фильтр (только соседи/европа)
+    print("\n⚔️ Выбор GAME SERVER...")
+    game_winners = run_tournament(bucket_reality, TARGET_GAME, strict_geo=True)
     
-    # 1. Отбираем кандидатов (ТОЛЬКО Ранг 1 и 2 - Соседи и Европа)
-    candidates = [s for s in bucket_reality if s['geo_rank'] <= 2]
-    
-    # Если соседей нет, берем всех Reality
-    if not candidates:
-        candidates = bucket_reality
+    if game_winners:
+        champion = copy.deepcopy(game_winners[0])
+        champion['category'] = 'GAMING'
+        final_list.append(champion)
+        print(f"🏆 Победитель: {champion['info'].get('countryCode')} (Score: {champion['final_score']:.1f})")
         
-    # Берем топ-5 самых быстрых по первичной проверке
-    finalists = candidates[:5]
-    
-    winner = None
-    best_score = 9999
-    
-    if finalists:
-        print(f"Финалисты ({len(finalists)} шт): {[s['info'].get('countryCode') for s in finalists]}")
-        
-        for f in finalists:
-            # СТРЕСС-ТЕСТ: 5 замеров подряд
-            avg, jitter = stress_test_server(f)
-            
-            # ФОРМУЛА КАЧЕСТВА: Пинг + (Джиттер * 2)
-            # Мы наказываем за нестабильность в 2 раза сильнее
-            score = avg + (jitter * 2)
-            
-            print(f" -> {f['info'].get('countryCode')}: Avg={avg:.1f}ms, Jitter={jitter:.1f}ms, SCORE={score:.1f}")
-            
-            if score < best_score:
-                best_score = score
-                winner = copy.deepcopy(f)
-                winner['latency'] = int(avg) # Обновляем пинг на более точный
-                winner['category'] = 'GAMING'
-                
-        if winner:
-            print(f"🏆 ПОБЕДИТЕЛЬ: {winner['info'].get('countryCode')} (Score: {best_score:.1f})")
-    
-    # ИТОГОВЫЙ СПИСОК
-    final_objects = []
+        # Удаляем победителя из списка Reality, чтобы не дублировать
+        # (сравниваем по IP и порту)
+        bucket_reality = [s for s in bucket_reality if s['ip'] != champion['ip'] or s['port'] != champion['port']]
+
+    # 2. ВЫБОР ОБЫЧНЫХ REALITY (2 шт)
+    print("\n⚔️ Выбор TOP REALITY...")
+    reality_winners = run_tournament(bucket_reality, TARGET_REALITY, strict_geo=False)
+    final_list.extend(reality_winners)
+
+    # 3. ВЫБОР WARP (1 шт)
+    print("\n⚔️ Выбор TOP WARP...")
+    warp_winners = run_tournament(bucket_warp, TARGET_WARP, strict_geo=False)
+    final_list.extend(warp_winners)
+
+    # 4. ВЫБОР WHITELIST (1 шт)
+    print("\n⚔️ Выбор TOP WHITELIST...")
+    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, strict_geo=False)
+    final_list.extend(wl_winners)
+
+    # ГЕНЕРАЦИЯ
+    print("\n--- СБОРКА ПОДПИСКИ ---")
     
     # INFO
     utc_now = datetime.now(timezone.utc)
@@ -311,14 +335,7 @@ def main():
     
     result_links = [info_link]
 
-    if winner: final_objects.append(winner)
-    final_objects.extend(bucket_reality[:LIMIT_REALITY])
-    final_objects.extend(bucket_warp[:LIMIT_WARP])
-    final_objects.extend(bucket_whitelist[:LIMIT_WHITELIST])
-
-    print("\n--- ГЕНЕРАЦИЯ ---")
-    
-    for s in final_objects:
+    for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         
         if code == 'XX' and s['category'] == 'WARP':
@@ -337,34 +354,29 @@ def main():
         new_remark = ""
         
         if s['category'] == 'GAMING':
-            # Добавим значок стабильности, если джиттер был маленький
+            # Добавим значок стабильности
             new_remark = f"🎮 GAME SERVER | {country_ru} | Stable"
 
         elif s['category'] == 'WHITELIST':
             new_remark = f"⚪ 🇷🇺 Россия (WhiteList) | {ping}ms"
             
         elif s['category'] == 'WARP':
-            if code == 'XX':
-                new_remark = f"🌀 🌐 Cloudflare WARP | {ping}ms"
-            else:
-                new_remark = f"🌀 {flag} {country_ru} WARP | {ping}ms"
+            new_remark = f"🌀 {flag} {country_ru} WARP | {ping}ms"
             
         else:
             isp_lower = (s['info'].get('isp', '')).lower()
             vps_tag = ""
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
-                
+            
+            # Для элиты добавим значок "Звезда" или "Молния"
             new_remark = f"⚡ {flag} {country_ru}{vps_tag} | {ping}ms"
 
         base_link = s['original'].split('#')[0]
         final_link = f"{base_link}#{quote(new_remark)}"
         result_links.append(final_link)
         
-        try:
-            print(f"[{s['category']}] {new_remark}")
-        except:
-            pass
+        print(f"[{s['category']}] {new_remark} (Score: {s.get('final_score', 0):.1f})")
 
     result_text = "\n".join(result_links)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
