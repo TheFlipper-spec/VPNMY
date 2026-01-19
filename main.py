@@ -27,16 +27,16 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
 ]
 
-# КОЛИЧЕСТВО ПОБЕДИТЕЛЕЙ (ЖЕСТКИЙ ЛИМИТ)
-TARGET_GAME = 1       # 1 Игровой (Лучший из лучших)
-TARGET_REALITY = 3    # 2 Обычных (Стабильные и быстрые)
-TARGET_WARP = 2       # 1 Лучший WARP
-TARGET_WHITELIST = 2  # 1 Лучший WhiteList
+# ТВОИ НОВЫЕ ЛИМИТЫ
+TARGET_GAME = 1       # 1 Игровой
+TARGET_REALITY = 3    # 3 Обычных
+TARGET_WARP = 2       # 2 WARP
+TARGET_WHITELIST = 2  # 2 WhiteList
 
 TIMEOUT = 1.5
 OUTPUT_FILE = 'FL1PVPN'
 TIMEZONE_OFFSET = 3 
-UPDATE_INTERVAL_HOURS = 3
+UPDATE_INTERVAL_HOURS = 3 # Ты просил каждые 3 часа (для отображения в инфо)
 
 # ПЕРЕВОДЧИК
 RUS_NAMES = {
@@ -46,12 +46,16 @@ RUS_NAMES = {
     'KZ': 'Казахстан', 'BY': 'Беларусь', 'EE': 'Эстония', 'LV': 'Латвия', 
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур', 'BG': 'Болгария',
     'CZ': 'Чехия', 'RO': 'Румыния', 'IT': 'Италия', 'ES': 'Испания',
-    'AT': 'Австрия', 'NO': 'Норвегия'
+    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# ПРИОРИТЕТЫ
-PRIORITY_1_NEIGHBORS = ['FI', 'EE', 'LV', 'LT', 'SE', 'PL', 'RU', 'KZ', 'BY', 'UA']
-PRIORITY_2_EUROPE = ['DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
+# --- ГРУППЫ ПРИОРИТЕТА ---
+# Ранг 1: Соседи (Фора 0 мс)
+PRIORITY_1_NEIGHBORS = ['FI', 'EE', 'LV', 'LT', 'RU', 'KZ', 'BY', 'UA']
+
+# Ранг 2: Европа (Фора +15 мс)
+# Сюда добавил Швецию и Польшу, так как они быстрые, но чуть дальше Финляндии
+PRIORITY_2_EUROPE = ['DE', 'NL', 'SE', 'PL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
@@ -134,9 +138,12 @@ def tcp_ping(host, port):
 def calculate_geo_rank(server):
     code = server['info'].get('countryCode', 'XX')
     ping = server['latency']
+    
+    # ФИЛЬТР ФЕЙКОВ (Анти-США)
     is_fake = False
     if ping < 40 and (code in PRIORITY_1_NEIGHBORS or code in PRIORITY_2_EUROPE):
         is_fake = True
+        
     if is_fake: return 5 
     if code in PRIORITY_1_NEIGHBORS: return 1 
     if code in PRIORITY_2_EUROPE: return 2
@@ -144,7 +151,6 @@ def calculate_geo_rank(server):
     return 3
 
 def check_server_initial(server):
-    """Первичная быстрая проверка"""
     pings = []
     for _ in range(3):
         p = tcp_ping(server['ip'], server['port'])
@@ -183,14 +189,12 @@ def check_server_initial(server):
     return server
 
 def stress_test_server(server):
-    """СТРЕСС-ТЕСТ: 5 замеров для выявления лагов"""
     pings = []
     for _ in range(5):
         p = tcp_ping(server['ip'], server['port'])
         if p is not None: pings.append(p)
-        time.sleep(0.15) # Пауза побольше для точности
+        time.sleep(0.15)
     
-    # Если пакеты теряются (меньше 4 успешных из 5) - это мусор
     if len(pings) < 4: 
         return 9999, 9999
         
@@ -199,39 +203,51 @@ def stress_test_server(server):
         jitter = statistics.stdev(pings)
     except:
         jitter = 0
-    
     return avg_ping, jitter
 
-def run_tournament(candidates, winners_needed, strict_geo=False):
-    """Проводит турнир среди кандидатов"""
+def run_tournament(candidates, winners_needed, is_gaming_tournament=False):
+    """
+    Умный турнир с системой Гандикапа.
+    Позволяет Германии (Ранг 2) победить Латвию (Ранг 1), если Германия быстрее.
+    """
     if not candidates: return []
     
-    # Отбираем топ-8 претендентов по первичной сортировке (GeoRank + Ping)
-    # Если strict_geo=True, берем только ранги 1 и 2
-    if strict_geo:
+    # 1. Отбор участников
+    # Если это игровой турнир, допускаем ТОЛЬКО Ранги 1 и 2 (Соседи и Европа)
+    # Остальной мир (Азия, США) не участвует.
+    if is_gaming_tournament:
         preliminary = [c for c in candidates if c['geo_rank'] <= 2]
     else:
-        preliminary = candidates
+        preliminary = candidates # Для обычных VPN берем всех
         
-    if not preliminary: # Если строгий отбор не дал результатов, берем лучших из того что есть
-         preliminary = candidates
+    if not preliminary: return []
          
-    # Берем топ-8 для стресс-теста (чтобы не ждать вечность)
-    finalists = sorted(preliminary, key=lambda x: (x['geo_rank'], x['latency']))[:8]
+    # Берем топ-10 кандидатов для стресс-теста (чтобы не перегружать)
+    # Сортируем предварительно по рангу и пингу
+    finalists = sorted(preliminary, key=lambda x: (x['geo_rank'], x['latency']))[:10]
     
     scored_results = []
-    print(f"   >>> Турнир среди {len(finalists)} серверов...")
+    print(f"   >>> Турнир ({len(finalists)} уч.)...")
     
     for f in finalists:
         avg, jitter = stress_test_server(f)
         
-        # ФОРМУЛА СТАБИЛЬНОСТИ: Score = Ping + (Jitter * 3)
-        # Штраф за лаги очень высокий
-        score = avg + (jitter * 3)
+        # === ФОРМУЛА ПОБЕДЫ (HANDICAP) ===
+        # Score = Ping + (Jitter * 3) + GeoPenalty
         
-        # Если это игровой турнир, штрафуем за плохой GeoRank
-        if strict_geo:
-             score += (f['geo_rank'] * 10) 
+        geo_penalty = 0
+        
+        if is_gaming_tournament:
+            # Если сервер из Европы (Ранг 2), даем штраф +15мс
+            # Это значит, что Германия должна быть на 15мс быстрее Финляндии, чтобы победить.
+            if f['geo_rank'] == 2:
+                geo_penalty = 15
+                
+            # Если вдруг просочился Ранг 3 (маловероятно), даем огромный штраф
+            if f['geo_rank'] > 2:
+                geo_penalty = 500
+        
+        score = avg + (jitter * 3) + geo_penalty
              
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -241,7 +257,6 @@ def run_tournament(candidates, winners_needed, strict_geo=False):
     # Сортируем по финальному баллу (меньше = лучше)
     scored_results.sort(key=lambda x: x['final_score'])
     
-    # Возвращаем победителей
     return scored_results[:winners_needed]
 
 def process_urls(urls, source_type):
@@ -265,7 +280,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V20 (ELITE SQUAD) ---")
+    print("--- ЗАПУСК V21 (SMART HANDICAP) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -286,17 +301,15 @@ def main():
             if res:
                 working_servers.append(res)
 
-    # Раскладываем по корзинам
     bucket_whitelist = [s for s in working_servers if s['category'] == 'WHITELIST']
     bucket_reality   = [s for s in working_servers if s['category'] == 'REALITY']
     bucket_warp      = [s for s in working_servers if s['category'] == 'WARP']
 
     final_list = []
 
-    # 1. ВЫБОР GAME SERVER (1 шт)
-    # Используем строгий гео-фильтр (только соседи/европа)
+    # 1. GAME SERVER (Умный гандикап)
     print("\n⚔️ Выбор GAME SERVER...")
-    game_winners = run_tournament(bucket_reality, TARGET_GAME, strict_geo=True)
+    game_winners = run_tournament(bucket_reality, TARGET_GAME, is_gaming_tournament=True)
     
     if game_winners:
         champion = copy.deepcopy(game_winners[0])
@@ -304,29 +317,27 @@ def main():
         final_list.append(champion)
         print(f"🏆 Победитель: {champion['info'].get('countryCode')} (Score: {champion['final_score']:.1f})")
         
-        # Удаляем победителя из списка Reality, чтобы не дублировать
-        # (сравниваем по IP и порту)
+        # Удаляем победителя из списка Reality
         bucket_reality = [s for s in bucket_reality if s['ip'] != champion['ip'] or s['port'] != champion['port']]
 
-    # 2. ВЫБОР ОБЫЧНЫХ REALITY (2 шт)
+    # 2. ОБЫЧНЫЕ REALITY
     print("\n⚔️ Выбор TOP REALITY...")
-    reality_winners = run_tournament(bucket_reality, TARGET_REALITY, strict_geo=False)
+    reality_winners = run_tournament(bucket_reality, TARGET_REALITY, is_gaming_tournament=False)
     final_list.extend(reality_winners)
 
-    # 3. ВЫБОР WARP (1 шт)
+    # 3. WARP
     print("\n⚔️ Выбор TOP WARP...")
-    warp_winners = run_tournament(bucket_warp, TARGET_WARP, strict_geo=False)
+    warp_winners = run_tournament(bucket_warp, TARGET_WARP, is_gaming_tournament=False)
     final_list.extend(warp_winners)
 
-    # 4. ВЫБОР WHITELIST (1 шт)
+    # 4. WHITELIST
     print("\n⚔️ Выбор TOP WHITELIST...")
-    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, strict_geo=False)
+    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, is_gaming_tournament=False)
     final_list.extend(wl_winners)
 
     # ГЕНЕРАЦИЯ
     print("\n--- СБОРКА ПОДПИСКИ ---")
     
-    # INFO
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -354,7 +365,6 @@ def main():
         new_remark = ""
         
         if s['category'] == 'GAMING':
-            # Добавим значок стабильности
             new_remark = f"🎮 GAME SERVER | {country_ru} | Stable"
 
         elif s['category'] == 'WHITELIST':
@@ -369,7 +379,6 @@ def main():
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
             
-            # Для элиты добавим значок "Звезда" или "Молния"
             new_remark = f"⚡ {flag} {country_ru}{vps_tag} | {ping}ms"
 
         base_link = s['original'].split('#')[0]
