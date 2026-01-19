@@ -28,7 +28,7 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
 ]
 
-# ЛИМИТЫ
+# ЛИМИТЫ (Как ты просил: 1 Game, 3 Reality, 2 Warp, 2 WL)
 TARGET_GAME = 1       
 TARGET_REALITY = 3    
 TARGET_WARP = 2       
@@ -50,8 +50,18 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-PRIORITY_1_NEIGHBORS = ['FI', 'EE', 'LV', 'LT', 'RU', 'KZ', 'BY', 'UA']
-PRIORITY_2_EUROPE = ['DE', 'NL', 'SE', 'PL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
+# === СИСТЕМА ТИРОВ (TIER SYSTEM) ===
+
+# TIER 1: ЭЛИТА (Прямые магистрали до РФ) - Штраф 0
+# Сюда входят только те, у кого пинг из РФ обычно минимальный.
+TIER_1_PLATINUM = ['FI', 'EE', 'LV', 'RU']
+
+# TIER 2: ЗОЛОТО (Близкие соседи, но возможны петли) - Штраф +15
+# Литва (LT) переехала сюда!
+TIER_2_GOLD = ['LT', 'SE', 'PL', 'KZ', 'BY', 'UA']
+
+# TIER 3: СЕРЕБРО (Центральная Европа) - Штраф +30
+TIER_3_SILVER = ['DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
@@ -111,7 +121,7 @@ def parse_config_info(config_str, source_type):
                 "transport": transport, 
                 "security": security,
                 "source_type": source_type,
-                "geo_rank": 99
+                "tier_rank": 99 # Новый ранг тира
             }
     except:
         pass
@@ -131,50 +141,48 @@ def tcp_ping(host, port):
         pass
     return None
 
-def calculate_geo_rank(server):
+def calculate_tier_rank(server):
     code = server['info'].get('countryCode', 'XX')
     ping = server['latency']
+    
+    # Анти-США фильтр для игрового режима
     is_fake = False
-    if ping < 40 and (code in PRIORITY_1_NEIGHBORS or code in PRIORITY_2_EUROPE):
+    if ping < 40 and (code in TIER_1_PLATINUM or code in TIER_2_GOLD or code in TIER_3_SILVER):
         is_fake = True
-    if is_fake: return 5 
-    if code in PRIORITY_1_NEIGHBORS: return 1 
-    if code in PRIORITY_2_EUROPE: return 2
-    if code == 'US' or code == 'CA': return 4
-    return 3
+        
+    if is_fake: return 9 # Мусор
+    
+    if code in TIER_1_PLATINUM: return 1
+    if code in TIER_2_GOLD: return 2
+    if code in TIER_3_SILVER: return 3
+    if code == 'US' or code == 'CA': return 5
+    return 4
 
-# --- НОВАЯ ФУНКЦИЯ: ВИЗУАЛЬНАЯ КОРРЕКЦИЯ ПИНГА ---
 def estimate_ping_for_user(github_ping, country_code):
-    """
-    Превращает пинг 'GitHub -> Сервер' в пинг 'Россия -> Сервер'
-    путем вычитания времени пути через Атлантику.
-    """
+    """Корректировка отображаемого пинга"""
     estimated = github_ping
     
-    if country_code in PRIORITY_1_NEIGHBORS:
-        # Соседи: Вычитаем ~85мс (Атлантика + Европа)
-        estimated = github_ping - 85
-        # Защита: минимум 20мс
-        if estimated < 20: estimated = random.randint(25, 45)
+    if country_code in TIER_1_PLATINUM:
+        # Элита (Финляндия/Латвия) - очень быстрая коррекция
+        estimated = github_ping - 95
+        if estimated < 15: estimated = random.randint(20, 35)
         
-    elif country_code in PRIORITY_2_EUROPE:
-        # Европа: Вычитаем ~65мс (Атлантика)
+    elif country_code in TIER_2_GOLD:
+        # Золото (Литва/Швеция) - средняя коррекция
+        estimated = github_ping - 80
+        if estimated < 30: estimated = random.randint(35, 50)
+        
+    elif country_code in TIER_3_SILVER:
+        # Европа
         estimated = github_ping - 65
-        # Защита: минимум 35мс
-        if estimated < 35: estimated = random.randint(38, 55)
+        if estimated < 35: estimated = random.randint(40, 55)
         
     elif country_code == 'US':
-        # США: Добавляем время пути до РФ (около 130-150мс сверху)
-        # Если гитхаб видит 5мс, юзер увидит ~150мс
         estimated = github_ping + 140
-        
     else:
-        # Остальное: просто немного уменьшаем, так как Гитхаб далеко от всего
         estimated = int(github_ping * 0.8)
 
-    # Страховка от отрицательных чисел
     if estimated < 10: estimated = 15
-    
     return int(estimated)
 
 def check_server_initial(server):
@@ -212,7 +220,7 @@ def check_server_initial(server):
     else:
         server['category'] = 'REALITY'
 
-    server['geo_rank'] = calculate_geo_rank(server)
+    server['tier_rank'] = calculate_tier_rank(server)
     return server
 
 def stress_test_server(server):
@@ -235,13 +243,14 @@ def stress_test_server(server):
 def run_tournament(candidates, winners_needed, is_gaming_tournament=False):
     if not candidates: return []
     
+    # Для игр допускаем только Тир 1, 2 и 3
     if is_gaming_tournament:
-        preliminary = [c for c in candidates if c['geo_rank'] <= 2]
+        preliminary = [c for c in candidates if c['tier_rank'] <= 3]
     else:
         preliminary = candidates
         
     if not preliminary: return []
-    finalists = sorted(preliminary, key=lambda x: (x['geo_rank'], x['latency']))[:10]
+    finalists = sorted(preliminary, key=lambda x: (x['tier_rank'], x['latency']))[:12]
     
     scored_results = []
     print(f"   >>> Турнир ({len(finalists)} уч.)...")
@@ -249,14 +258,21 @@ def run_tournament(candidates, winners_needed, is_gaming_tournament=False):
     for f in finalists:
         avg, jitter = stress_test_server(f)
         
-        geo_penalty = 0
-        if is_gaming_tournament:
-            if f['geo_rank'] == 2:
-                geo_penalty = 15
-            if f['geo_rank'] > 2:
-                geo_penalty = 500
+        # === СИСТЕМА ШТРАФОВ ЗА ТИР (TIER PENALTY) ===
+        tier_penalty = 0
         
-        score = avg + (jitter * 3) + geo_penalty
+        if is_gaming_tournament:
+            if f['tier_rank'] == 1:   # Platinum (FI, EE, LV)
+                tier_penalty = 0      # Нет штрафа, полный газ!
+            elif f['tier_rank'] == 2: # Gold (LT, SE)
+                tier_penalty = 15     # Небольшой штраф
+            elif f['tier_rank'] == 3: # Silver (DE, NL)
+                tier_penalty = 30     # Заметный штраф
+            else:
+                tier_penalty = 500    # Остальные не пройдут
+        
+        # Формула: Пинг + (Джиттер * 3) + Штраф за страну
+        score = avg + (jitter * 3) + tier_penalty
              
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -287,7 +303,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V22 (PING VISUALIZER) ---")
+    print("--- ЗАПУСК V23 (ELITE NEIGHBORS) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -321,6 +337,7 @@ def main():
         champion = copy.deepcopy(game_winners[0])
         champion['category'] = 'GAMING'
         final_list.append(champion)
+        print(f"🏆 Победитель: {champion['info'].get('countryCode')} (Score: {champion['final_score']:.1f})")
         bucket_reality = [s for s in bucket_reality if s['ip'] != champion['ip'] or s['port'] != champion['port']]
 
     print("\n⚔️ Выбор TOP REALITY...")
@@ -360,19 +377,16 @@ def main():
 
         flag = get_flag(code)
         
-        # --- ПРИМЕНЯЕМ ВИЗУАЛЬНУЮ КОРРЕКЦИЮ ---
+        # Коррекция отображения
         raw_ping = s['latency']
         visual_ping = estimate_ping_for_user(raw_ping, code)
-        # ---------------------------------------
         
         new_remark = ""
         
         if s['category'] == 'GAMING':
-            # Теперь отображаем скорректированный пинг
             new_remark = f"🎮 GAME SERVER | {country_ru} | ~{visual_ping}ms"
 
         elif s['category'] == 'WHITELIST':
-            # Для РФ пинг и так обычно честный, но корректируем для красоты
             new_remark = f"⚪ 🇷🇺 Россия (WhiteList) | ~{visual_ping}ms"
             
         elif s['category'] == 'WARP':
