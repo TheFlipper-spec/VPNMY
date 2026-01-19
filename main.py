@@ -135,7 +135,6 @@ def tcp_ping(host, port):
 
 def calculate_tier_rank(server):
     code = server['info'].get('countryCode', 'XX')
-    
     if code in TIER_1_PLATINUM: return 1
     if code in TIER_2_GOLD: return 2
     if code in TIER_3_SILVER: return 3
@@ -144,29 +143,32 @@ def calculate_tier_rank(server):
 
 def estimate_ping_for_user(github_ping, country_code):
     estimated = github_ping
+    # Расчет для РФ (мы знаем что github_ping высокий для реальных серверов)
     
     if country_code in TIER_1_PLATINUM:
-        estimated = github_ping - 95
-        if estimated < 15: estimated = random.randint(20, 35)
+        # Для Элиты (Финка, Латвия) реальный пинг GitHub ~160-180мс
+        # Для юзера из РФ это ~30-50мс. Вычитаем много.
+        estimated = github_ping - 120
+        if estimated < 20: estimated = random.randint(25, 45)
         
     elif country_code in TIER_2_GOLD:
-        estimated = github_ping - 80
-        if estimated < 30: estimated = random.randint(35, 50)
+        estimated = github_ping - 90
+        if estimated < 30: estimated = random.randint(35, 55)
         
     elif country_code in TIER_3_SILVER:
         estimated = github_ping - 65
-        if estimated < 35: estimated = random.randint(40, 55)
+        if estimated < 40: estimated = random.randint(45, 60)
         
     elif country_code == 'US':
         estimated = github_ping + 140
     else:
         estimated = int(github_ping * 0.8)
 
-    if estimated < 10: estimated = 15
+    if estimated < 15: estimated = 20
     return int(estimated)
 
 def check_server_initial(server):
-    # 1. Быстрый пинг (3 раза)
+    # 1. Быстрый пинг
     pings = []
     for _ in range(3):
         p = tcp_ping(server['ip'], server['port'])
@@ -189,19 +191,39 @@ def check_server_initial(server):
     code = ip_data.get('countryCode', 'XX')
     org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
-    # === ДЕТЕКТОР ЛЖИ (ФИЗИКА) ===
-    # Если пинг < 35мс (очень быстро для США -> Европа/РФ), но страна НЕ США/Канада
-    # Значит сервер врет и находится в США.
-    if avg_ping < 35 and code not in ['US', 'CA', 'MX']:
-        # ПЕЧАТАЕМ В ЛОГ, ЧТОБЫ ТЫ ВИДЕЛ ЭТОГО ПРЕДАТЕЛЯ
-        print(f"🚫 FAKE DETECTED: {code} server ({server['ip']}) has {avg_ping}ms ping from GitHub. BANNED.")
-        return None
+    # === ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ (PHYSICS ENFORCER) ===
+    # Мы знаем, что бот в США.
+    
+    is_fake = False
+    
+    # Правило 1: "Дальний Восток/Север". 
+    # РФ, КЗ, Украина, Беларусь НЕ МОГУТ пинговаться быстрее 100мс из США.
+    if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90:
+        print(f"🚫 FAKE RU/East DETECTED: {code} server ({server['ip']}) has {avg_ping}ms ping. IMPOSSIBLE from US.")
+        is_fake = True
+
+    # Правило 2: "Балтия/Скандинавия".
+    # Финляндия, Эстония, Латвия НЕ МОГУТ пинговаться быстрее 80мс из США.
+    elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 75:
+        print(f"🚫 FAKE Baltic/Nordic DETECTED: {code} server ({server['ip']}) has {avg_ping}ms ping. Suspiciously fast.")
+        is_fake = True
+        
+    # Правило 3: "Европа".
+    # Германия/Нидерланды не могут быть быстрее 30мс (обычно 70-80).
+    elif code in TIER_3_SILVER and avg_ping < 25:
+        print(f"🚫 FAKE Europe DETECTED: {code} server ({server['ip']}) has {avg_ping}ms ping. Too fast.")
+        is_fake = True
+        
+    # Правило 4: Абсолютный фейк (локальный CDN).
+    elif avg_ping < 3 and code not in ['US', 'CA']:
+        print(f"🚫 LOCAL CDN DETECTED: {code} server ({server['ip']}) has {avg_ping}ms ping.")
+        is_fake = True
+
+    if is_fake: return None
 
     is_warp_cdn = False
     if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
     if any(cdn in org_str for cdn in CDN_ISPS): is_warp_cdn = True
-    # Если пинг экстремально низкий (1-2мс), то это локальный CDN даже в США
-    if avg_ping < 3: is_warp_cdn = True
     if server['security'] != 'reality': is_warp_cdn = True
 
     if server['source_type'] == 'whitelist':
@@ -233,25 +255,23 @@ def stress_test_server(server):
     return avg_ping, jitter, pings
 
 def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=False):
-    """
-    Турнир с подробными логами в консоль
-    """
     if not candidates: 
         print(f"   ⚠️ Нет кандидатов для {title}")
         return []
     
-    # Отбор участников
     if is_gaming:
-        # Для игр берем только Элиту, Золото и Серебро (Тир 1-3)
+        # Для игр допускаем только проверенную Элиту, Золото и Серебро
         preliminary = [c for c in candidates if c['tier_rank'] <= 3]
     else:
         preliminary = candidates
         
     if not preliminary: 
-        print(f"   ⚠️ Все кандидаты отсеяны по Гео-фильтру")
+        print(f"   ⚠️ Все кандидаты отсеяны")
         return []
     
-    # Берем топ-10 для финала
+    # Сортируем: сначала ЭЛИТА (Ранг 1), потом Золото, потом Серебро
+    # Внутри ранга - по пингу.
+    # Так как мы выкинули фейки, теперь высокий пинг (160мс) - это ХОРОШО (значит реально далеко от США)
     finalists = sorted(preliminary, key=lambda x: (x['tier_rank'], x['latency']))[:10]
     
     print(f"\n🏟️ {title} - НАЧАЛО ({len(finalists)} финалистов)")
@@ -263,7 +283,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
     for f in finalists:
         avg, jitter, raw_pings = stress_test_server(f)
         
-        # Штраф за тир (только для Игр)
         tier_penalty = 0
         if is_gaming:
             if f['tier_rank'] == 1: tier_penalty = 0
@@ -277,7 +296,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
         ip = f['ip']
         rank = f['tier_rank']
         
-        # Вывод лога
         ping_str = f"{int(avg)}"
         print(f"   {code:<10} | {ip:<15} | {rank:<4} | {ping_str:<10} | {int(jitter):<8} | {int(score):<6} -> Pings: {[int(p) for p in raw_pings]}")
              
@@ -288,7 +306,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
         
     scored_results.sort(key=lambda x: x['final_score'])
     
-    # Объявляем победителей
     winners = scored_results[:winners_needed]
     print(f"🏆 ПОБЕДИТЕЛИ {title}: {[w['info'].get('countryCode') for w in winners]}")
     
@@ -315,7 +332,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V24 (SHERLOCK LOGS & LIE DETECTOR) ---")
+    print("--- ЗАПУСК V25 (PHYSICS ENFORCER) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -348,7 +365,6 @@ def main():
         champion = copy.deepcopy(game_winners[0])
         champion['category'] = 'GAMING'
         final_list.append(champion)
-        # Удаляем победителя из списка
         bucket_reality = [s for s in bucket_reality if s['ip'] != champion['ip'] or s['port'] != champion['port']]
 
     # 2. TOP REALITY
