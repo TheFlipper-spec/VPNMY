@@ -28,7 +28,7 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
 ]
 
-# ЛИМИТЫ (Как ты просил: 1 Game, 3 Reality, 2 Warp, 2 WL)
+# ЛИМИТЫ
 TARGET_GAME = 1       
 TARGET_REALITY = 3    
 TARGET_WARP = 2       
@@ -50,17 +50,9 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# === СИСТЕМА ТИРОВ (TIER SYSTEM) ===
-
-# TIER 1: ЭЛИТА (Прямые магистрали до РФ) - Штраф 0
-# Сюда входят только те, у кого пинг из РФ обычно минимальный.
+# TIER SYSTEM
 TIER_1_PLATINUM = ['FI', 'EE', 'LV', 'RU']
-
-# TIER 2: ЗОЛОТО (Близкие соседи, но возможны петли) - Штраф +15
-# Литва (LT) переехала сюда!
 TIER_2_GOLD = ['LT', 'SE', 'PL', 'KZ', 'BY', 'UA']
-
-# TIER 3: СЕРЕБРО (Центральная Европа) - Штраф +30
 TIER_3_SILVER = ['DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
 CDN_ISPS = [
@@ -121,7 +113,7 @@ def parse_config_info(config_str, source_type):
                 "transport": transport, 
                 "security": security,
                 "source_type": source_type,
-                "tier_rank": 99 # Новый ранг тира
+                "tier_rank": 99
             }
     except:
         pass
@@ -143,14 +135,6 @@ def tcp_ping(host, port):
 
 def calculate_tier_rank(server):
     code = server['info'].get('countryCode', 'XX')
-    ping = server['latency']
-    
-    # Анти-США фильтр для игрового режима
-    is_fake = False
-    if ping < 40 and (code in TIER_1_PLATINUM or code in TIER_2_GOLD or code in TIER_3_SILVER):
-        is_fake = True
-        
-    if is_fake: return 9 # Мусор
     
     if code in TIER_1_PLATINUM: return 1
     if code in TIER_2_GOLD: return 2
@@ -159,21 +143,17 @@ def calculate_tier_rank(server):
     return 4
 
 def estimate_ping_for_user(github_ping, country_code):
-    """Корректировка отображаемого пинга"""
     estimated = github_ping
     
     if country_code in TIER_1_PLATINUM:
-        # Элита (Финляндия/Латвия) - очень быстрая коррекция
         estimated = github_ping - 95
         if estimated < 15: estimated = random.randint(20, 35)
         
     elif country_code in TIER_2_GOLD:
-        # Золото (Литва/Швеция) - средняя коррекция
         estimated = github_ping - 80
         if estimated < 30: estimated = random.randint(35, 50)
         
     elif country_code in TIER_3_SILVER:
-        # Европа
         estimated = github_ping - 65
         if estimated < 35: estimated = random.randint(40, 55)
         
@@ -186,6 +166,7 @@ def estimate_ping_for_user(github_ping, country_code):
     return int(estimated)
 
 def check_server_initial(server):
+    # 1. Быстрый пинг (3 раза)
     pings = []
     for _ in range(3):
         p = tcp_ping(server['ip'], server['port'])
@@ -196,6 +177,7 @@ def check_server_initial(server):
     avg_ping = int(statistics.mean(pings))
     server['latency'] = avg_ping
     
+    # 2. GeoIP
     ip_data = get_ip_info_retry(server['ip'])
     if not ip_data:
         if server['source_type'] == 'whitelist':
@@ -207,10 +189,19 @@ def check_server_initial(server):
     code = ip_data.get('countryCode', 'XX')
     org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
+    # === ДЕТЕКТОР ЛЖИ (ФИЗИКА) ===
+    # Если пинг < 35мс (очень быстро для США -> Европа/РФ), но страна НЕ США/Канада
+    # Значит сервер врет и находится в США.
+    if avg_ping < 35 and code not in ['US', 'CA', 'MX']:
+        # ПЕЧАТАЕМ В ЛОГ, ЧТОБЫ ТЫ ВИДЕЛ ЭТОГО ПРЕДАТЕЛЯ
+        print(f"🚫 FAKE DETECTED: {code} server ({server['ip']}) has {avg_ping}ms ping from GitHub. BANNED.")
+        return None
+
     is_warp_cdn = False
     if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
     if any(cdn in org_str for cdn in CDN_ISPS): is_warp_cdn = True
-    if avg_ping < 2: is_warp_cdn = True
+    # Если пинг экстремально низкий (1-2мс), то это локальный CDN даже в США
+    if avg_ping < 3: is_warp_cdn = True
     if server['security'] != 'reality': is_warp_cdn = True
 
     if server['source_type'] == 'whitelist':
@@ -225,10 +216,11 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
+    # 5 честных замеров
     for _ in range(5):
         p = tcp_ping(server['ip'], server['port'])
         if p is not None: pings.append(p)
-        time.sleep(0.15)
+        time.sleep(0.12)
     
     if len(pings) < 4: 
         return 9999, 9999
@@ -238,41 +230,56 @@ def stress_test_server(server):
         jitter = statistics.stdev(pings)
     except:
         jitter = 0
-    return avg_ping, jitter
+    return avg_ping, jitter, pings
 
-def run_tournament(candidates, winners_needed, is_gaming_tournament=False):
-    if not candidates: return []
+def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=False):
+    """
+    Турнир с подробными логами в консоль
+    """
+    if not candidates: 
+        print(f"   ⚠️ Нет кандидатов для {title}")
+        return []
     
-    # Для игр допускаем только Тир 1, 2 и 3
-    if is_gaming_tournament:
+    # Отбор участников
+    if is_gaming:
+        # Для игр берем только Элиту, Золото и Серебро (Тир 1-3)
         preliminary = [c for c in candidates if c['tier_rank'] <= 3]
     else:
         preliminary = candidates
         
-    if not preliminary: return []
-    finalists = sorted(preliminary, key=lambda x: (x['tier_rank'], x['latency']))[:12]
+    if not preliminary: 
+        print(f"   ⚠️ Все кандидаты отсеяны по Гео-фильтру")
+        return []
+    
+    # Берем топ-10 для финала
+    finalists = sorted(preliminary, key=lambda x: (x['tier_rank'], x['latency']))[:10]
+    
+    print(f"\n🏟️ {title} - НАЧАЛО ({len(finalists)} финалистов)")
+    print(f"   {'Страна':<10} | {'IP':<15} | {'Тир':<4} | {'Пинг (GH)':<10} | {'Джиттер':<8} | {'СЧЕТ':<6}")
+    print("-" * 75)
     
     scored_results = []
-    print(f"   >>> Турнир ({len(finalists)} уч.)...")
     
     for f in finalists:
-        avg, jitter = stress_test_server(f)
+        avg, jitter, raw_pings = stress_test_server(f)
         
-        # === СИСТЕМА ШТРАФОВ ЗА ТИР (TIER PENALTY) ===
+        # Штраф за тир (только для Игр)
         tier_penalty = 0
+        if is_gaming:
+            if f['tier_rank'] == 1: tier_penalty = 0
+            elif f['tier_rank'] == 2: tier_penalty = 15
+            elif f['tier_rank'] == 3: tier_penalty = 30
+            else: tier_penalty = 999
         
-        if is_gaming_tournament:
-            if f['tier_rank'] == 1:   # Platinum (FI, EE, LV)
-                tier_penalty = 0      # Нет штрафа, полный газ!
-            elif f['tier_rank'] == 2: # Gold (LT, SE)
-                tier_penalty = 15     # Небольшой штраф
-            elif f['tier_rank'] == 3: # Silver (DE, NL)
-                tier_penalty = 30     # Заметный штраф
-            else:
-                tier_penalty = 500    # Остальные не пройдут
-        
-        # Формула: Пинг + (Джиттер * 3) + Штраф за страну
         score = avg + (jitter * 3) + tier_penalty
+        
+        code = f['info'].get('countryCode')
+        ip = f['ip']
+        rank = f['tier_rank']
+        
+        # Вывод лога
+        ping_str = f"{int(avg)}"
+        print(f"   {code:<10} | {ip:<15} | {rank:<4} | {ping_str:<10} | {int(jitter):<8} | {int(score):<6} -> Pings: {[int(p) for p in raw_pings]}")
              
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -280,7 +287,12 @@ def run_tournament(candidates, winners_needed, is_gaming_tournament=False):
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
-    return scored_results[:winners_needed]
+    
+    # Объявляем победителей
+    winners = scored_results[:winners_needed]
+    print(f"🏆 ПОБЕДИТЕЛИ {title}: {[w['info'].get('countryCode') for w in winners]}")
+    
+    return winners
 
 def process_urls(urls, source_type):
     links = []
@@ -303,7 +315,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V23 (ELITE NEIGHBORS) ---")
+    print("--- ЗАПУСК V24 (SHERLOCK LOGS & LIE DETECTOR) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -314,7 +326,7 @@ def main():
     
     if not servers_to_check: exit(1)
 
-    print(f"Первичный отсев {len(servers_to_check)} серверов...")
+    print(f"\n🔍 Первичная проверка {len(servers_to_check)} серверов...")
     working_servers = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
@@ -330,26 +342,25 @@ def main():
 
     final_list = []
 
-    print("\n⚔️ Выбор GAME SERVER...")
-    game_winners = run_tournament(bucket_reality, TARGET_GAME, is_gaming_tournament=True)
-    
+    # 1. GAME SERVER
+    game_winners = run_tournament(bucket_reality, TARGET_GAME, title="GAME CUP", is_gaming=True)
     if game_winners:
         champion = copy.deepcopy(game_winners[0])
         champion['category'] = 'GAMING'
         final_list.append(champion)
-        print(f"🏆 Победитель: {champion['info'].get('countryCode')} (Score: {champion['final_score']:.1f})")
+        # Удаляем победителя из списка
         bucket_reality = [s for s in bucket_reality if s['ip'] != champion['ip'] or s['port'] != champion['port']]
 
-    print("\n⚔️ Выбор TOP REALITY...")
-    reality_winners = run_tournament(bucket_reality, TARGET_REALITY, is_gaming_tournament=False)
+    # 2. TOP REALITY
+    reality_winners = run_tournament(bucket_reality, TARGET_REALITY, title="REALITY CUP", is_gaming=False)
     final_list.extend(reality_winners)
 
-    print("\n⚔️ Выбор TOP WARP...")
-    warp_winners = run_tournament(bucket_warp, TARGET_WARP, is_gaming_tournament=False)
+    # 3. TOP WARP
+    warp_winners = run_tournament(bucket_warp, TARGET_WARP, title="WARP CUP", is_gaming=False)
     final_list.extend(warp_winners)
 
-    print("\n⚔️ Выбор TOP WHITELIST...")
-    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, is_gaming_tournament=False)
+    # 4. TOP WHITELIST
+    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, title="WHITELIST CUP", is_gaming=False)
     final_list.extend(wl_winners)
 
     print("\n--- СБОРКА ПОДПИСКИ ---")
@@ -377,7 +388,6 @@ def main():
 
         flag = get_flag(code)
         
-        # Коррекция отображения
         raw_ping = s['latency']
         visual_ping = estimate_ping_for_user(raw_ping, code)
         
@@ -404,7 +414,7 @@ def main():
         final_link = f"{base_link}#{quote(new_remark)}"
         result_links.append(final_link)
         
-        print(f"[{s['category']}] {new_remark} (Raw: {raw_ping}ms -> Vis: {visual_ping}ms)")
+        print(f"[{s['category']}] {new_remark}")
 
     result_text = "\n".join(result_links)
     final_base64 = base64.b64encode(result_text.encode('utf-8')).decode('utf-8')
