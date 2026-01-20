@@ -50,14 +50,15 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# === TIER SYSTEM V27 (Latvia Nerfed) ===
-# TIER 1: Только страны с идеальным маршрутом (FI, EE, RU)
+# === TIER SYSTEM V28 (Hard Neighbor Bias) ===
+# TIER 1: ЭЛИТА (Только соседи РФ) -> Штраф 0
 TIER_1_PLATINUM = ['FI', 'EE', 'RU']
 
-# TIER 2: Латвия переехала сюда. Хорошо, но не идеально.
+# TIER 2: ЗОЛОТО (Ближний пояс) -> Штраф +20
 TIER_2_GOLD = ['LV', 'LT', 'SE', 'PL', 'KZ', 'BY', 'UA']
 
-# TIER 3: Европа
+# TIER 3: ЕВРОПА (Дальний пояс) -> Штраф +60 (Был 30)
+# Мы специально "душим" Францию и Италию, чтобы они не выигрывали у Финляндии.
 TIER_3_SILVER = ['DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
 CDN_ISPS = [
@@ -153,22 +154,26 @@ def calculate_tier_rank(server):
 
 def estimate_ping_for_user(github_ping, country_code):
     estimated = github_ping
-    # Более реалистичная формула
+    # Калибровка под реальность (V28)
     if country_code in TIER_1_PLATINUM:
-        estimated = github_ping - 100 # Было 120
-        if estimated < 30: estimated = random.randint(30, 45) # Минимум 30
+        # Было -120 (слишком оптимистично). Ставим -90.
+        estimated = github_ping - 90 
+        if estimated < 35: estimated = random.randint(35, 48)
+        
     elif country_code in TIER_2_GOLD:
-        estimated = github_ping - 80
-        if estimated < 45: estimated = random.randint(45, 60) # Минимум 45 (Латвия тут)
+        estimated = github_ping - 75
+        if estimated < 45: estimated = random.randint(45, 60)
+        
     elif country_code in TIER_3_SILVER:
-        estimated = github_ping - 60
-        if estimated < 50: estimated = random.randint(50, 70)
+        estimated = github_ping - 50
+        if estimated < 55: estimated = random.randint(55, 75)
+        
     elif country_code == 'US':
         estimated = github_ping + 140
     else:
         estimated = int(github_ping * 0.8)
 
-    if estimated < 15: estimated = 20
+    if estimated < 20: estimated = 25
     return int(estimated)
 
 def check_server_initial(server):
@@ -196,7 +201,7 @@ def check_server_initial(server):
     # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
-    elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True # Чуть снизил порог
+    elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True
     elif code in TIER_3_SILVER and avg_ping < 30: is_fake = True
     elif avg_ping < 3 and code not in ['US', 'CA']: is_fake = True
 
@@ -224,7 +229,6 @@ def stress_test_server(server):
         if p is not None: pings.append(p)
         time.sleep(0.12)
     
-    # ВОЗВРАЩАЕМ 3 ЗНАЧЕНИЯ ВСЕГДА
     if len(pings) < 4: 
         return 9999, 9999, [] 
         
@@ -240,26 +244,21 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
         print(f"   ⚠️ Нет кандидатов для {title}")
         return []
     
-    # --- ЭТАП 1: ФИЛЬТРАЦИЯ ---
     filtered = candidates
     
+    # 1. Фильтр RAW для игр
     if is_gaming:
-        # Для гейминга СТРОГО ищем БЕЗ RAW (Vision), если это возможно
         non_raw = [c for c in candidates if not c.get('is_vision', False) and c['tier_rank'] <= 3]
-        
         if len(non_raw) >= 3:
-            # Если есть хотя бы 3 нормальных сервера без RAW, используем ТОЛЬКО их
             print(f"   ✅ Найдены чистые TCP сервера для игр ({len(non_raw)} шт). RAW исключены.")
             filtered = non_raw
         else:
-            # Если чистых нет, берем что есть (смешанные), но RAW получит штраф
             print(f"   ⚠️ Мало чистых TCP серверов. Допускаем RAW с штрафом.")
             filtered = [c for c in candidates if c['tier_rank'] <= 3]
     
     if not filtered: return []
     
-    # --- ЭТАП 2: ОТБОР ФИНАЛИСТОВ ---
-    # Сортируем: Тир -> Пинг
+    # 2. Отбор финалистов (Сначала Тир, потом Пинг)
     finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:12]
     
     print(f"\n🏟️ {title} - НАЧАЛО ({len(finalists)} финалистов)")
@@ -271,16 +270,18 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
     for f in finalists:
         avg, jitter, raw_pings = stress_test_server(f)
         
+        # === ПРИМЕНЯЕМ ШТРАФЫ ТИРОВ КО ВСЕМ КАТЕГОРИЯМ ===
+        # Теперь это работает и для WARP, и для Reality.
+        # Это заставит скрипт брать Финляндию (Тир 1) вместо Италии (Тир 3).
         tier_penalty = 0
-        if is_gaming:
-            if f['tier_rank'] == 1: tier_penalty = 0
-            elif f['tier_rank'] == 2: tier_penalty = 15
-            elif f['tier_rank'] == 3: tier_penalty = 30
-            else: tier_penalty = 999
+        if f['tier_rank'] == 1: tier_penalty = 0     # Элита
+        elif f['tier_rank'] == 2: tier_penalty = 20  # Золото
+        elif f['tier_rank'] == 3: tier_penalty = 60  # Европа (Тяжелый штраф!)
+        else: tier_penalty = 999
             
         raw_penalty = 0
         if f.get('is_vision', False) and is_gaming:
-            raw_penalty = 200 # Огромный штраф за RAW в играх
+            raw_penalty = 200 
         
         score = avg + (jitter * 3) + tier_penalty + raw_penalty
         
@@ -324,7 +325,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V27 (FINAL POLISH) ---")
+    print("--- ЗАПУСК V28 (NEIGHBOR BIAS) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
