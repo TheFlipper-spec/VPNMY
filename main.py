@@ -50,17 +50,9 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# === TIER SYSTEM V29 (Strategic Update) ===
-
-# TIER 1: ЭЛИТА (Идеальный пинг) -> Штраф 0
+# === TIER SYSTEM V30 (Strict Geo) ===
 TIER_1_PLATINUM = ['FI', 'EE', 'RU']
-
-# TIER 2: ЗОЛОТО (Хороший пинг) -> Штраф +20
-# Убрали Швецию. Оставили Польшу, Латвию, Литву.
 TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA']
-
-# TIER 3: ЕВРОПА (Средний пинг) -> Штраф +60
-# Швеция (SE) теперь здесь, вместе с Германией и Францией.
 TIER_3_SILVER = ['SE', 'DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
 CDN_ISPS = [
@@ -106,8 +98,12 @@ def parse_config_info(config_str, source_type):
             transport = params.get('type', ['tcp'])[0].lower()
             security = params.get('security', ['none'])[0].lower()
             
-            flow = params.get('flow', [''])[0].lower()
-            is_vision = 'vision' in flow
+            # --- DETECT ANY FLOW ---
+            flow_val = params.get('flow', [''])[0].lower()
+            # is_vision - это конкретно Vision
+            is_vision = 'vision' in flow_val
+            # has_flow - это вообще наличие flow (RAW)
+            has_flow = len(flow_val) > 0
             
             original_remark = "Unknown"
             if "#" in config_str:
@@ -125,6 +121,7 @@ def parse_config_info(config_str, source_type):
                 "transport": transport, 
                 "security": security,
                 "is_vision": is_vision, 
+                "has_flow": has_flow, # Новый флаг для полной чистоты
                 "source_type": source_type,
                 "tier_rank": 99
             }
@@ -195,7 +192,7 @@ def check_server_initial(server):
     code = ip_data.get('countryCode', 'XX')
     org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
-    # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ (Слегка ослаблен для SE/FI чтобы они попадали в список)
+    # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
     elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True 
@@ -243,19 +240,27 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
     
     filtered = candidates
     
-    # 1. Фильтр RAW для игр
+    # 1. СТРОГИЙ ФИЛЬТР: ТОЛЬКО PURE TCP ДЛЯ ИГР
     if is_gaming:
-        non_raw = [c for c in candidates if not c.get('is_vision', False) and c['tier_rank'] <= 3]
-        if len(non_raw) >= 3:
-            print(f"   ✅ Найдены чистые TCP сервера для игр ({len(non_raw)} шт).")
-            filtered = non_raw
+        # Ищем сервера, у которых flow вообще ПУСТОЙ (has_flow == False)
+        # И которые входят в Тир 1, 2 или 3
+        pure_tcp = [c for c in candidates if not c.get('has_flow', False) and c['tier_rank'] <= 3]
+        
+        if len(pure_tcp) >= 3:
+            print(f"   ✅ Найдены ИДЕАЛЬНЫЕ (PURE TCP) сервера ({len(pure_tcp)} шт).")
+            filtered = pure_tcp
         else:
-            print(f"   ⚠️ Мало чистых TCP серверов. Допускаем RAW.")
-            filtered = [c for c in candidates if c['tier_rank'] <= 3]
+            # Если идеальных нет, пробуем хотя бы без Vision
+            print(f"   ⚠️ Мало Pure TCP. Ищем без Vision...")
+            no_vision = [c for c in candidates if not c.get('is_vision', False) and c['tier_rank'] <= 3]
+            if no_vision:
+                 filtered = no_vision
+            else:
+                 print(f"   ⚠️ Придется брать RAW с огромным штрафом.")
+                 filtered = [c for c in candidates if c['tier_rank'] <= 3]
     
     if not filtered: return []
     
-    # 2. Отбор финалистов
     finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:12]
     
     print(f"\n🏟️ {title} - НАЧАЛО ({len(finalists)} финалистов)")
@@ -274,14 +279,16 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
         else: tier_penalty = 999
             
         raw_penalty = 0
-        if f.get('is_vision', False) and is_gaming:
-            raw_penalty = 200 
+        # Если все-таки пролез RAW сервер (has_flow=True), даем ему штраф
+        if f.get('has_flow', False) and is_gaming:
+            raw_penalty = 500 # Смертельный штраф
         
         score = avg + (jitter * 3) + tier_penalty + raw_penalty
         
         code = f['info'].get('countryCode')
         rank = f['tier_rank']
-        is_raw = "YES" if f.get('is_vision') else "NO"
+        # Логируем, есть ли flow
+        is_raw = "YES" if f.get('has_flow') else "NO"
         
         ping_str = f"{int(avg)}"
         print(f"   {code:<10} | {is_raw:<6} | {rank:<4} | {ping_str:<10} | {int(score):<6}")
@@ -319,7 +326,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V29 (THE SNIPER) ---")
+    print("--- ЗАПУСК V30 (PURE TCP ENFORCER) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
