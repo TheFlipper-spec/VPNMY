@@ -30,7 +30,7 @@ WHITELIST_URLS = [
 
 # ЛИМИТЫ
 TARGET_GAME = 1       
-TARGET_UNIVERSAL = 3  # Исправленная переменная
+TARGET_UNIVERSAL = 3  
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
@@ -50,7 +50,7 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# === TIER SYSTEM V32 ===
+# === TIER SYSTEM V33 ===
 TIER_1_PLATINUM = ['FI', 'EE', 'RU']
 TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA']
 TIER_3_SILVER = ['SE', 'DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
@@ -98,12 +98,10 @@ def parse_config_info(config_str, source_type):
             transport = params.get('type', ['tcp'])[0].lower()
             security = params.get('security', ['none'])[0].lower()
             
-            # --- DETECT PROTOCOL TYPE ---
             flow_val = params.get('flow', [''])[0].lower()
             
             is_reality = (security == 'reality')
             is_vision = ('vision' in flow_val)
-            # Pure TCP = Нет шифрования (none) или обычный TLS, но НЕ Reality
             is_pure = (security == 'none' or security == 'tls') and not is_reality
             
             original_remark = "Unknown"
@@ -194,12 +192,21 @@ def check_server_initial(server):
     code = ip_data.get('countryCode', 'XX')
     org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
-    # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
+    # === ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ (V33 STRICT) ===
     is_fake = False
+    
+    # 1. СНГ/Север
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
     elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True 
-    elif code in ['DE', 'NL', 'FR', 'IT'] and avg_ping < 30: is_fake = True
-    elif avg_ping < 3 and code not in ['US', 'CA']: is_fake = True
+    
+    # 2. Западная Европа (Если < 25мс - это США)
+    elif code in ['GB', 'FR', 'DE', 'NL', 'IT'] and avg_ping < 25: 
+        print(f"🚫 FAKE EU DETECTED: {code} server ({server['ip']}) has {avg_ping}ms. BANNED.")
+        is_fake = True
+        
+    # 3. Абсолютный фейк
+    elif avg_ping < 3 and code not in ['US', 'CA']: 
+        is_fake = True
 
     if is_fake: return None
 
@@ -219,10 +226,11 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
+    # Чуть увеличиваем интервал для отсева "захлебывающихся" серверов
     for _ in range(5):
         p = tcp_ping(server['ip'], server['port'])
         if p is not None: pings.append(p)
-        time.sleep(0.12)
+        time.sleep(0.2) 
     
     if len(pings) < 4: 
         return 9999, 9999, [] 
@@ -242,9 +250,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # ДЛЯ ИГР: СТРОГО PURE TCP (Без Reality)
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
-        
         if pure_strict:
             print(f"   ✅ Найдены PURE TCP сервера ({len(pure_strict)} шт).")
             filtered = pure_strict
@@ -280,10 +286,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         else: tier_penalty = 999
             
         type_penalty = 0
-        
         if mode == "gaming":
             if f['is_reality']: type_penalty = 2000 
-        
         elif mode == "universal":
             if f['is_pure']: type_penalty = 0        
             elif f['is_vision']: type_penalty = 150  
@@ -332,7 +336,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V32.1 (BUGFIX) ---")
+    print("--- ЗАПУСК V33 (CLEAN & STRICT) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -359,7 +363,7 @@ def main():
 
     final_list = []
 
-    # 1. GAME SERVER (STRICT PURE)
+    # 1. GAME SERVER
     game_winners = run_tournament(bucket_universal, TARGET_GAME, title="GAME CUP", mode="gaming")
     if game_winners:
         champion = copy.deepcopy(game_winners[0])
@@ -367,15 +371,15 @@ def main():
         final_list.append(champion)
         bucket_universal = [s for s in bucket_universal if s['ip'] != champion['ip'] or s['port'] != champion['port']]
 
-    # 2. UNIVERSAL (Используем исправленную переменную)
+    # 2. UNIVERSAL
     universal_winners = run_tournament(bucket_universal, TARGET_UNIVERSAL, title="UNIVERSAL CUP", mode="universal")
     final_list.extend(universal_winners)
 
-    # 3. TOP WARP
+    # 3. WARP
     warp_winners = run_tournament(bucket_warp, TARGET_WARP, title="WARP CUP", mode="mixed")
     final_list.extend(warp_winners)
 
-    # 4. TOP WHITELIST
+    # 4. WHITELIST
     wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, title="WHITELIST CUP", mode="mixed")
     final_list.extend(wl_winners)
 
@@ -424,8 +428,7 @@ def main():
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
             
-            if s.get('is_pure'):
-                vps_tag += " [TCP]"
+            # УБРАЛ ДОБАВЛЕНИЕ [TCP] ЗДЕСЬ
             
             new_remark = f"⚡ {flag} {country_ru}{vps_tag} | ~{visual_ping}ms"
 
