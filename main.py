@@ -21,24 +21,20 @@ from urllib.parse import unquote, quote, parse_qs
 
 # --- НАСТРОЙКИ ---
 GENERAL_URLS = [
-    # 1. ОСНОВА (Igareck)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
-    
-    # 2. НОВЫЕ ИСТОЧНИКИ (VLESS ONLY & TOP AGGREGATORS)
-    "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt", # Легендарный список
-    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt", # Чистый VLESS
-    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", # Чистый VLESS
-    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", # Огромная база
-    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", # Качественный микс
+    "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt", 
+    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt", 
+    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", 
+    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", 
+    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", 
 ]
 
 WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
 ]
 
-# ССЫЛКА НА БАЗУ GEOIP (MMDB)
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 
@@ -64,7 +60,6 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# TIER SYSTEM
 TIER_1_PLATINUM = ['FI', 'EE', 'RU']
 TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA']
 TIER_3_SILVER = ['SE', 'DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
@@ -75,7 +70,6 @@ CDN_ISPS = [
     'edgecenter', 'servers.com', 'digitalocean', 'vultr'
 ]
 
-# Глобальная переменная для ридера базы
 geo_reader = None
 
 def download_mmdb():
@@ -131,7 +125,6 @@ def parse_config_info(config_str, source_type):
             security = params.get('security', ['none'])[0].lower()
             
             flow_val = params.get('flow', [''])[0].lower()
-            
             is_reality = (security == 'reality')
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -212,15 +205,19 @@ def check_server_initial(server):
     # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
     avg_ping = server['latency']
-    
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
     elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True 
-    elif code in ['DE', 'NL', 'FR', 'IT', 'GB'] and avg_ping < 25: is_fake = True # Добавил GB
+    elif code in ['DE', 'NL', 'FR', 'IT', 'GB'] and avg_ping < 25: is_fake = True
     elif avg_ping < 3 and code not in ['US', 'CA']: is_fake = True
 
     if is_fake: return None
 
+    # --- СТРОГОЕ ОПРЕДЕЛЕНИЕ КАТЕГОРИИ (V36) ---
     is_warp_cdn = False
+    
+    # WARP определяем по ключевым словам или протоколам
+    rem = server['original_remark'].lower()
+    if 'warp' in rem or 'cloudflare' in rem: is_warp_cdn = True
     if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
     
     if server['source_type'] == 'whitelist':
@@ -257,19 +254,30 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     filtered = candidates
     
+    # --- РЕЖИМЫ ОТБОРА V36 ---
+    
     if mode == "gaming":
+        # 1. СТРОГО PURE TCP ДЛЯ ИГР
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
         if pure_strict:
             print(f"   ✅ Найдены PURE TCP сервера ({len(pure_strict)} шт).")
             filtered = pure_strict
         else:
-            pure_loose = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 3]
-            if pure_loose:
-                print(f"   ✅ Найдены PURE TCP (Тир 3) сервера ({len(pure_loose)} шт).")
-                filtered = pure_loose
-            else:
-                print(f"   ❌ Нет Pure TCP! Придется брать Reality.")
-                filtered = [c for c in candidates if c['tier_rank'] <= 3]
+            filtered = [c for c in candidates if c['tier_rank'] <= 3]
+
+    elif mode == "whitelist":
+        # 2. СТРОГО ТОЛЬКО РОССИЯ ДЛЯ WHITELIST
+        only_ru = [c for c in candidates if c['info'].get('countryCode') == 'RU']
+        if only_ru:
+            print(f"   ✅ Найдены RU сервера для Whitelist ({len(only_ru)} шт).")
+            filtered = only_ru
+        else:
+            print(f"   ❌ Нет RU серверов для Whitelist! Критическая ошибка.")
+            return []
+
+    elif mode == "warp":
+        # 3. ФИЛЬТР WARP (Уже сделан на этапе check_server_initial, но тут можно усилить)
+        filtered = candidates
 
     elif mode == "universal":
         filtered = candidates
@@ -344,7 +352,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V35 (EXPANSION & CLEANUP) ---")
+    print("--- ЗАПУСК V36 (SEGREGATION) ---")
     
     download_mmdb()
     init_geoip()
@@ -386,12 +394,12 @@ def main():
     universal_winners = run_tournament(bucket_universal, TARGET_UNIVERSAL, title="UNIVERSAL CUP", mode="universal")
     final_list.extend(universal_winners)
 
-    # 3. WARP
-    warp_winners = run_tournament(bucket_warp, TARGET_WARP, title="WARP CUP", mode="mixed")
+    # 3. WARP (Используем режим mixed, но бакет уже отфильтрован)
+    warp_winners = run_tournament(bucket_warp, TARGET_WARP, title="WARP CUP", mode="warp")
     final_list.extend(warp_winners)
 
-    # 4. WHITELIST
-    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, title="WHITELIST CUP", mode="mixed")
+    # 4. WHITELIST (СТРОГО RU)
+    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, title="WHITELIST CUP", mode="whitelist")
     final_list.extend(wl_winners)
 
     print("\n--- СБОРКА ПОДПИСКИ ---")
@@ -438,8 +446,6 @@ def main():
             vps_tag = ""
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
-            
-            # УБРАЛ ТЕГ [TCP] ЗДЕСЬ ПО ТВОЕЙ ПРОСЬБЕ
             
             new_remark = f"⚡ {flag} {country_ru}{vps_tag} | ~{visual_ping}ms"
 
