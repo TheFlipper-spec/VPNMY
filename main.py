@@ -14,6 +14,8 @@ import re
 import statistics
 import copy
 import random
+import os
+import geoip2.database # НОВАЯ БИБЛИОТЕКА
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
@@ -28,13 +30,17 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
 ]
 
+# ССЫЛКА НА БАЗУ GEOIP (MMDB)
+MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
+MMDB_FILE = "Country.mmdb"
+
 # ЛИМИТЫ
 TARGET_GAME = 1       
 TARGET_UNIVERSAL = 3  
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 1.5
+TIMEOUT = 1.0 # Уменьшил таймаут для скорости (1.5 -> 1.0)
 OUTPUT_FILE = 'FL1PVPN'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 3
@@ -50,7 +56,7 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# === TIER SYSTEM V33 ===
+# TIER SYSTEM
 TIER_1_PLATINUM = ['FI', 'EE', 'RU']
 TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA']
 TIER_3_SILVER = ['SE', 'DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
@@ -61,6 +67,32 @@ CDN_ISPS = [
     'edgecenter', 'servers.com', 'digitalocean', 'vultr'
 ]
 
+# Глобальная переменная для ридера базы
+geo_reader = None
+
+def download_mmdb():
+    """Скачивает базу GeoIP если её нет"""
+    if not os.path.exists(MMDB_FILE):
+        print("📥 Скачивание базы GeoIP (MMDB)...")
+        try:
+            r = requests.get(MMDB_URL, stream=True)
+            if r.status_code == 200:
+                with open(MMDB_FILE, 'wb') as f:
+                    for chunk in r.iter_content(1024):
+                        f.write(chunk)
+                print("✅ База успешно скачана.")
+            else:
+                print("❌ Ошибка скачивания базы.")
+        except Exception as e:
+            print(f"❌ Ошибка: {e}")
+
+def init_geoip():
+    global geo_reader
+    try:
+        geo_reader = geoip2.database.Reader(MMDB_FILE)
+    except:
+        pass
+
 def get_flag(country_code):
     try:
         if not country_code or len(country_code) != 2: return "🏳️"
@@ -68,20 +100,21 @@ def get_flag(country_code):
     except:
         return "🏳️"
 
-def get_ip_info_retry(ip):
-    for attempt in range(2):
-        try:
-            time.sleep(0.2 + attempt * 0.2) 
-            url = f"http://ip-api.com/json/{ip}?fields=status,country,countryCode,org,isp"
-            resp = requests.get(url, timeout=4)
-            if resp.status_code == 200:
-                data = resp.json()
-                if data.get('status') == 'success':
-                    return data
-                return {'status': 'fail', 'countryCode': 'XX', 'org': 'Private', 'isp': 'Private'}
-        except:
-            pass
-    return None
+def get_ip_country_local(ip):
+    """Мгновенное определение страны через локальную базу"""
+    if not geo_reader: return 'XX'
+    try:
+        response = geo_reader.country(ip)
+        return response.country.iso_code
+    except:
+        return 'XX'
+
+# ISP мы теперь не проверяем через API (это долго), 
+# определяем Cloudflare по косвенным признакам или оставляем Unknown
+# Это жертва ради скорости.
+def is_likely_cdn(transport, ip):
+    # Упрощенная проверка CDN без API
+    return False 
 
 def extract_vless_links(text):
     regex = r"(vless://[a-zA-Z0-9\-@:?=&%.#_]+)"
@@ -143,12 +176,11 @@ def tcp_ping(host, port):
         pass
     return None
 
-def calculate_tier_rank(server):
-    code = server['info'].get('countryCode', 'XX')
-    if code in TIER_1_PLATINUM: return 1
-    if code in TIER_2_GOLD: return 2
-    if code in TIER_3_SILVER: return 3
-    if code == 'US' or code == 'CA': return 5
+def calculate_tier_rank(country_code, ping):
+    if country_code in TIER_1_PLATINUM: return 1
+    if country_code in TIER_2_GOLD: return 2
+    if country_code in TIER_3_SILVER: return 3
+    if country_code == 'US' or country_code == 'CA': return 5
     return 4
 
 def estimate_ping_for_user(github_ping, country_code):
@@ -171,48 +203,30 @@ def estimate_ping_for_user(github_ping, country_code):
     return int(estimated)
 
 def check_server_initial(server):
-    pings = []
-    for _ in range(3):
-        p = tcp_ping(server['ip'], server['port'])
-        if p is not None: pings.append(p)
-        time.sleep(0.05)
+    # 1. Один быстрый пинг (Вместо 3). Если живой - идем дальше.
+    p = tcp_ping(server['ip'], server['port'])
+    if p is None: return None
     
-    if not pings: return None
-    avg_ping = int(statistics.mean(pings))
-    server['latency'] = avg_ping
+    server['latency'] = int(p)
     
-    ip_data = get_ip_info_retry(server['ip'])
-    if not ip_data:
-        if server['source_type'] == 'whitelist':
-             ip_data = {'countryCode': 'RU', 'org': 'Unknown', 'isp': 'Unknown'}
-        else:
-             return None 
+    # 2. Мгновенный GeoIP из локальной базы
+    code = get_ip_country_local(server['ip'])
+    server['info'] = {'countryCode': code, 'org': 'Unknown', 'isp': 'Unknown'} # ISP жертвуем ради скорости
     
-    server['info'] = ip_data
-    code = ip_data.get('countryCode', 'XX')
-    org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
-    
-    # === ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ (V33 STRICT) ===
+    # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
+    avg_ping = server['latency']
     
-    # 1. СНГ/Север
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
     elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True 
-    
-    # 2. Западная Европа (Если < 25мс - это США)
-    elif code in ['GB', 'FR', 'DE', 'NL', 'IT'] and avg_ping < 25: 
-        print(f"🚫 FAKE EU DETECTED: {code} server ({server['ip']}) has {avg_ping}ms. BANNED.")
-        is_fake = True
-        
-    # 3. Абсолютный фейк
-    elif avg_ping < 3 and code not in ['US', 'CA']: 
-        is_fake = True
+    elif code in ['DE', 'NL', 'FR', 'IT'] and avg_ping < 25: is_fake = True
+    elif avg_ping < 3 and code not in ['US', 'CA']: is_fake = True
 
     if is_fake: return None
 
     is_warp_cdn = False
     if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
-    if any(cdn in org_str for cdn in CDN_ISPS): is_warp_cdn = True
+    # Проверка ISP удалена ради скорости, полагаемся на транспорт
     
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
@@ -221,12 +235,12 @@ def check_server_initial(server):
     else:
         server['category'] = 'UNIVERSAL'
 
-    server['tier_rank'] = calculate_tier_rank(server)
+    server['tier_rank'] = calculate_tier_rank(code, avg_ping)
     return server
 
 def stress_test_server(server):
     pings = []
-    # Чуть увеличиваем интервал для отсева "захлебывающихся" серверов
+    # 5 честных замеров с паузой
     for _ in range(5):
         p = tcp_ping(server['ip'], server['port'])
         if p is not None: pings.append(p)
@@ -260,7 +274,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
                 print(f"   ✅ Найдены PURE TCP (Тир 3) сервера ({len(pure_loose)} шт).")
                 filtered = pure_loose
             else:
-                print(f"   ❌ Нет Pure TCP! Придется брать Reality.")
                 filtered = [c for c in candidates if c['tier_rank'] <= 3]
 
     elif mode == "universal":
@@ -336,7 +349,11 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V33 (CLEAN & STRICT) ---")
+    print("--- ЗАПУСК V34 (TURBO LOCAL GEOIP) ---")
+    
+    # 1. СКАЧИВАЕМ БАЗУ
+    download_mmdb()
+    init_geoip()
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -347,10 +364,11 @@ def main():
     
     if not servers_to_check: exit(1)
 
-    print(f"\n🔍 Первичная проверка {len(servers_to_check)} серверов...")
+    print(f"\n🔍 Первичная проверка {len(servers_to_check)} серверов (25 потоков)...")
     working_servers = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+    # Увеличили потоки, так как теперь нет лимита API
+    with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
@@ -428,7 +446,8 @@ def main():
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
             
-            # УБРАЛ ДОБАВЛЕНИЕ [TCP] ЗДЕСЬ
+            if s.get('is_pure'):
+                vps_tag += " [TCP]"
             
             new_remark = f"⚡ {flag} {country_ru}{vps_tag} | ~{visual_ping}ms"
 
@@ -447,3 +466,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+        
