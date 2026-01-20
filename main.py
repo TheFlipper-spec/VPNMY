@@ -29,6 +29,9 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", 
     "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", 
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", 
+    # ДОБАВИЛ ЕЩЕ ПАРУ ДЛЯ WARP:
+    "https://github.com/Kwinshadow/TelegramV2rayCollector/raw/refs/heads/main/sublinks/mix.txt",
+    "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt"
 ]
 
 WHITELIST_URLS = [
@@ -202,7 +205,6 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code, 'org': 'Unknown', 'isp': 'Unknown'}
     
-    # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
     avg_ping = server['latency']
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
@@ -212,19 +214,18 @@ def check_server_initial(server):
 
     if is_fake: return None
 
-    # --- СТРОГОЕ ОПРЕДЕЛЕНИЕ КАТЕГОРИИ (V36) ---
-    is_warp_cdn = False
-    
-    # WARP определяем по ключевым словам или протоколам
+    # --- СТРОГОЕ ОПРЕДЕЛЕНИЕ КАТЕГОРИИ (V37) ---
     rem = server['original_remark'].lower()
-    if 'warp' in rem or 'cloudflare' in rem: is_warp_cdn = True
-    if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
+    
+    # 1. WARP только если есть в названии
+    is_warp_real = ('warp' in rem or 'cloudflare' in rem or 'clash' in rem)
     
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
-    elif is_warp_cdn:
+    elif is_warp_real:
         server['category'] = 'WARP'
     else:
+        # Даже если транспорт WS, но нет слова WARP - это не WARP, а просто CDN
         server['category'] = 'UNIVERSAL'
 
     server['tier_rank'] = calculate_tier_rank(code, avg_ping)
@@ -254,10 +255,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     filtered = candidates
     
-    # --- РЕЖИМЫ ОТБОРА V36 ---
-    
     if mode == "gaming":
-        # 1. СТРОГО PURE TCP ДЛЯ ИГР
+        # PURE TCP + NO REALITY
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
         if pure_strict:
             print(f"   ✅ Найдены PURE TCP сервера ({len(pure_strict)} шт).")
@@ -266,17 +265,17 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             filtered = [c for c in candidates if c['tier_rank'] <= 3]
 
     elif mode == "whitelist":
-        # 2. СТРОГО ТОЛЬКО РОССИЯ ДЛЯ WHITELIST
+        # ТОЛЬКО RU
         only_ru = [c for c in candidates if c['info'].get('countryCode') == 'RU']
         if only_ru:
             print(f"   ✅ Найдены RU сервера для Whitelist ({len(only_ru)} шт).")
             filtered = only_ru
         else:
-            print(f"   ❌ Нет RU серверов для Whitelist! Критическая ошибка.")
             return []
 
     elif mode == "warp":
-        # 3. ФИЛЬТР WARP (Уже сделан на этапе check_server_initial, но тут можно усилить)
+        # В эту категорию попадают только те, у кого в check_server_initial встал флаг WARP
+        # Дополнительно можно проверить стабильность
         filtered = candidates
 
     elif mode == "universal":
@@ -352,7 +351,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V36 (SEGREGATION) ---")
+    print("--- ЗАПУСК V37 (WARP RESURRECTION) ---")
     
     download_mmdb()
     init_geoip()
@@ -394,11 +393,11 @@ def main():
     universal_winners = run_tournament(bucket_universal, TARGET_UNIVERSAL, title="UNIVERSAL CUP", mode="universal")
     final_list.extend(universal_winners)
 
-    # 3. WARP (Используем режим mixed, но бакет уже отфильтрован)
+    # 3. WARP
     warp_winners = run_tournament(bucket_warp, TARGET_WARP, title="WARP CUP", mode="warp")
     final_list.extend(warp_winners)
 
-    # 4. WHITELIST (СТРОГО RU)
+    # 4. WHITELIST
     wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, title="WHITELIST CUP", mode="whitelist")
     final_list.extend(wl_winners)
 
