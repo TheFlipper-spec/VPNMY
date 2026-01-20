@@ -30,7 +30,7 @@ WHITELIST_URLS = [
 
 # ЛИМИТЫ
 TARGET_GAME = 1       
-TARGET_UNIVERSAL = 3  # Бывший Reality, теперь ищем чистые
+TARGET_UNIVERSAL = 3  # Исправленная переменная
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
@@ -101,7 +101,6 @@ def parse_config_info(config_str, source_type):
             # --- DETECT PROTOCOL TYPE ---
             flow_val = params.get('flow', [''])[0].lower()
             
-            # Точная классификация
             is_reality = (security == 'reality')
             is_vision = ('vision' in flow_val)
             # Pure TCP = Нет шифрования (none) или обычный TLS, но НЕ Reality
@@ -124,7 +123,7 @@ def parse_config_info(config_str, source_type):
                 "security": security,
                 "is_reality": is_reality,
                 "is_vision": is_vision, 
-                "is_pure": is_pure, # Флаг "Чистоты"
+                "is_pure": is_pure, 
                 "source_type": source_type,
                 "tier_rank": 99
             }
@@ -208,13 +207,11 @@ def check_server_initial(server):
     if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
     if any(cdn in org_str for cdn in CDN_ISPS): is_warp_cdn = True
     
-    # КЛАССИФИКАЦИЯ
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
     elif is_warp_cdn:
         server['category'] = 'WARP'
     else:
-        # Все VLESS (TCP/Reality) кидаем в общую кучу, сортировать будем в турнире
         server['category'] = 'UNIVERSAL'
 
     server['tier_rank'] = calculate_tier_rank(server)
@@ -244,36 +241,23 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     filtered = candidates
     
-    # === РЕЖИМ ОТБОРА ===
-    
     if mode == "gaming":
         # ДЛЯ ИГР: СТРОГО PURE TCP (Без Reality)
-        # 1. Пытаемся найти Pure в Тир 1-2
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
         
         if pure_strict:
             print(f"   ✅ Найдены PURE TCP сервера ({len(pure_strict)} шт).")
             filtered = pure_strict
         else:
-            # Если нет, ищем Pure в Тир 3
             pure_loose = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 3]
             if pure_loose:
                 print(f"   ✅ Найдены PURE TCP (Тир 3) сервера ({len(pure_loose)} шт).")
                 filtered = pure_loose
             else:
-                print(f"   ❌ Нет Pure TCP! Придется брать Reality (но это плохо для Gemini).")
+                print(f"   ❌ Нет Pure TCP! Придется брать Reality.")
                 filtered = [c for c in candidates if c['tier_rank'] <= 3]
 
     elif mode == "universal":
-        # ДЛЯ ОБЫЧНЫХ: Стараемся избегать Vision, но берем Reality если надо
-        # Приоритет Pure TCP
-        
-        # Разделим на группы
-        pure_group = [c for c in candidates if c['is_pure']]
-        clean_reality = [c for c in candidates if c['is_reality'] and not c['is_vision']]
-        dirty_reality = [c for c in candidates if c['is_vision']]
-        
-        # Смешиваем, но приоритет будет в penalty
         filtered = candidates
 
     if not filtered: return []
@@ -298,12 +282,12 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         type_penalty = 0
         
         if mode == "gaming":
-            if f['is_reality']: type_penalty = 2000 # БАН REALITY ДЛЯ ИГР
+            if f['is_reality']: type_penalty = 2000 
         
         elif mode == "universal":
-            if f['is_pure']: type_penalty = 0        # Pure - лучше всего
-            elif f['is_vision']: type_penalty = 150  # Vision - плохо (блокировки)
-            else: type_penalty = 50                  # Обычный Reality - терпимо
+            if f['is_pure']: type_penalty = 0        
+            elif f['is_vision']: type_penalty = 150  
+            else: type_penalty = 50                  
         
         score = avg + (jitter * 3) + tier_penalty + type_penalty
         
@@ -348,7 +332,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V32 (THE PURGE) ---")
+    print("--- ЗАПУСК V32.1 (BUGFIX) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -381,11 +365,10 @@ def main():
         champion = copy.deepcopy(game_winners[0])
         champion['category'] = 'GAMING'
         final_list.append(champion)
-        # Удаляем чемпиона из списка, чтобы не дублировался
         bucket_universal = [s for s in bucket_universal if s['ip'] != champion['ip'] or s['port'] != champion['port']]
 
-    # 2. UNIVERSAL (FORMER REALITY) - Prefer Clean
-    universal_winners = run_tournament(bucket_universal, TARGET_REALITY, title="UNIVERSAL CUP", mode="universal")
+    # 2. UNIVERSAL (Используем исправленную переменную)
+    universal_winners = run_tournament(bucket_universal, TARGET_UNIVERSAL, title="UNIVERSAL CUP", mode="universal")
     final_list.extend(universal_winners)
 
     # 3. TOP WARP
@@ -441,7 +424,6 @@ def main():
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
             
-            # Если это PURE, добавим пометку, что он чистый
             if s.get('is_pure'):
                 vps_tag += " [TCP]"
             
