@@ -29,13 +29,14 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", 
     "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", 
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", 
-    # ДОБАВИЛ ЕЩЕ ПАРУ ДЛЯ WARP:
     "https://github.com/Kwinshadow/TelegramV2rayCollector/raw/refs/heads/main/sublinks/mix.txt",
     "https://github.com/MhdiTaheri/V2rayCollector_Py/raw/refs/heads/main/sub/Mix/mix.txt"
 ]
 
 WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
+    # НОВЫЙ ИСТОЧНИК ОТ AVENCORES
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
@@ -47,7 +48,7 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 1.0 
+TIMEOUT = 1.2 # Чуть увеличил таймаут для надежности
 OUTPUT_FILE = 'FL1PVPN'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 3
@@ -205,6 +206,7 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code, 'org': 'Unknown', 'isp': 'Unknown'}
     
+    # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
     avg_ping = server['latency']
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
@@ -214,18 +216,22 @@ def check_server_initial(server):
 
     if is_fake: return None
 
-    # --- СТРОГОЕ ОПРЕДЕЛЕНИЕ КАТЕГОРИИ (V37) ---
-    rem = server['original_remark'].lower()
+    # --- ОПРЕДЕЛЕНИЕ КАТЕГОРИИ V38 (SOFT WARP) ---
+    is_warp_candidate = False
     
-    # 1. WARP только если есть в названии
-    is_warp_real = ('warp' in rem or 'cloudflare' in rem or 'clash' in rem)
+    rem = server['original_remark'].lower()
+    # 1. По имени
+    if 'warp' in rem or 'cloudflare' in rem or 'clash' in rem: 
+        is_warp_candidate = True
+    # 2. По протоколу (WS/GRPC часто юзаются для CDN/WARP)
+    if server['transport'] in ['ws', 'grpc']: 
+        is_warp_candidate = True
     
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
-    elif is_warp_real:
-        server['category'] = 'WARP'
+    elif is_warp_candidate:
+        server['category'] = 'WARP' # Теперь сюда попадает больше серверов
     else:
-        # Даже если транспорт WS, но нет слова WARP - это не WARP, а просто CDN
         server['category'] = 'UNIVERSAL'
 
     server['tier_rank'] = calculate_tier_rank(code, avg_ping)
@@ -256,13 +262,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # PURE TCP + NO REALITY
+        # Игры: Пытаемся найти PURE TCP
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
         if pure_strict:
             print(f"   ✅ Найдены PURE TCP сервера ({len(pure_strict)} шт).")
             filtered = pure_strict
         else:
-            filtered = [c for c in candidates if c['tier_rank'] <= 3]
+            # Если нет, берем все кроме Reality (Vision тоже лучше избегать)
+            filtered = [c for c in candidates if not c['is_reality'] and c['tier_rank'] <= 3]
 
     elif mode == "whitelist":
         # ТОЛЬКО RU
@@ -274,11 +281,11 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             return []
 
     elif mode == "warp":
-        # В эту категорию попадают только те, у кого в check_server_initial встал флаг WARP
-        # Дополнительно можно проверить стабильность
+        # Фильтр уже пройден, берем всех кандидатов
         filtered = candidates
 
     elif mode == "universal":
+        # Тут мы хотим СТАБИЛЬНОСТИ. Reality - это стабильность.
         filtered = candidates
 
     if not filtered: return []
@@ -301,12 +308,19 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         else: tier_penalty = 999
             
         type_penalty = 0
+        
         if mode == "gaming":
             if f['is_reality']: type_penalty = 2000 
+        
         elif mode == "universal":
-            if f['is_pure']: type_penalty = 0        
-            elif f['is_vision']: type_penalty = 150  
-            else: type_penalty = 50                  
+            # Возвращаем приоритет REALITY для стабильности
+            if f['is_reality']: type_penalty = 0     # Reality - хорошо
+            elif f['is_pure']: type_penalty = 20     # Pure - норм, но может быть заблочен
+            elif f['is_vision']: type_penalty = 100  # Vision - так себе
+        
+        elif mode == "warp":
+            # Для WARP главное - не быть PURE (так как PURE не умеет быть CDN)
+            if f['is_pure']: type_penalty = 2000 # Убиваем PURE в категории WARP
         
         score = avg + (jitter * 3) + tier_penalty + type_penalty
         
@@ -351,7 +365,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V37 (WARP RESURRECTION) ---")
+    print("--- ЗАПУСК V38 (FINAL RESCUE) ---")
     
     download_mmdb()
     init_geoip()
