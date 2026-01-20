@@ -98,7 +98,6 @@ def parse_config_info(config_str, source_type):
             transport = params.get('type', ['tcp'])[0].lower()
             security = params.get('security', ['none'])[0].lower()
             
-            # Детектор RAW (Vision)
             flow = params.get('flow', [''])[0].lower()
             is_vision = 'vision' in flow
             
@@ -117,7 +116,7 @@ def parse_config_info(config_str, source_type):
                 "info": {},
                 "transport": transport, 
                 "security": security,
-                "is_vision": is_vision, # Метка RAW
+                "is_vision": is_vision, 
                 "source_type": source_type,
                 "tier_rank": 99
             }
@@ -188,20 +187,12 @@ def check_server_initial(server):
     code = ip_data.get('countryCode', 'XX')
     org_str = (ip_data.get('org', '') + " " + ip_data.get('isp', '')).lower()
     
-    # === НОВЫЙ ЖЕСТКИЙ ДЕТЕКТОР ЛЖИ ===
-    # Подняли порог. Настоящая Финляндия из США - это 110-120мс.
-    # Если видим 80мс - это скорее всего обман (Англия или Германия).
+    # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
-    
-    if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90:
-        is_fake = True
-    elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 100: # Поднял порог с 75 до 100!
-        print(f"🚫 FAKE Nordic DETECTED: {code} server ({server['ip']}) has {avg_ping}ms ping. Too fast from US.")
-        is_fake = True
-    elif code in TIER_3_SILVER and avg_ping < 30:
-        is_fake = True
-    elif avg_ping < 3 and code not in ['US', 'CA']:
-        is_fake = True
+    if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
+    elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 100: is_fake = True
+    elif code in TIER_3_SILVER and avg_ping < 30: is_fake = True
+    elif avg_ping < 3 and code not in ['US', 'CA']: is_fake = True
 
     if is_fake: return None
 
@@ -227,8 +218,10 @@ def stress_test_server(server):
         if p is not None: pings.append(p)
         time.sleep(0.12)
     
+    # ВОТ ЗДЕСЬ БЫЛА ОШИБКА. ИСПРАВЛЕНО.
+    # Теперь возвращаем 3 значения даже при ошибке.
     if len(pings) < 4: 
-        return 9999, 9999
+        return 9999, 9999, [] 
         
     avg_ping = statistics.mean(pings)
     try:
@@ -269,9 +262,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
             elif f['tier_rank'] == 3: tier_penalty = 30
             else: tier_penalty = 999
             
-        # === ШТРАФ ЗА RAW (VISION) ===
-        # Если сервер использует Vision (RAW), даем ему штраф +100 баллов.
-        # Это гарантирует, что он проиграет обычному TCP серверу.
         raw_penalty = 0
         if f.get('is_vision', False):
             raw_penalty = 100
@@ -318,7 +308,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V26 (COMPATIBILITY MODE) ---")
+    print("--- ЗАПУСК V26.1 (HOTFIX) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
@@ -345,7 +335,7 @@ def main():
 
     final_list = []
 
-    # 1. GAME SERVER (Теперь избегает RAW!)
+    # 1. GAME SERVER
     game_winners = run_tournament(bucket_reality, TARGET_GAME, title="GAME CUP", is_gaming=True)
     if game_winners:
         champion = copy.deepcopy(game_winners[0])
