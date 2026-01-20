@@ -15,15 +15,23 @@ import statistics
 import copy
 import random
 import os
-import geoip2.database # НОВАЯ БИБЛИОТЕКА
+import geoip2.database 
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
 # --- НАСТРОЙКИ ---
 GENERAL_URLS = [
+    # 1. ОСНОВА (Igareck)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
+    
+    # 2. НОВЫЕ ИСТОЧНИКИ (VLESS ONLY & TOP AGGREGATORS)
+    "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt", # Легендарный список
+    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt", # Чистый VLESS
+    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless", # Чистый VLESS
+    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes", # Огромная база
+    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt", # Качественный микс
 ]
 
 WHITELIST_URLS = [
@@ -40,7 +48,7 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 1.0 # Уменьшил таймаут для скорости (1.5 -> 1.0)
+TIMEOUT = 1.0 
 OUTPUT_FILE = 'FL1PVPN'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 3
@@ -71,7 +79,6 @@ CDN_ISPS = [
 geo_reader = None
 
 def download_mmdb():
-    """Скачивает базу GeoIP если её нет"""
     if not os.path.exists(MMDB_FILE):
         print("📥 Скачивание базы GeoIP (MMDB)...")
         try:
@@ -101,20 +108,12 @@ def get_flag(country_code):
         return "🏳️"
 
 def get_ip_country_local(ip):
-    """Мгновенное определение страны через локальную базу"""
     if not geo_reader: return 'XX'
     try:
         response = geo_reader.country(ip)
         return response.country.iso_code
     except:
         return 'XX'
-
-# ISP мы теперь не проверяем через API (это долго), 
-# определяем Cloudflare по косвенным признакам или оставляем Unknown
-# Это жертва ради скорости.
-def is_likely_cdn(transport, ip):
-    # Упрощенная проверка CDN без API
-    return False 
 
 def extract_vless_links(text):
     regex = r"(vless://[a-zA-Z0-9\-@:?=&%.#_]+)"
@@ -203,15 +202,12 @@ def estimate_ping_for_user(github_ping, country_code):
     return int(estimated)
 
 def check_server_initial(server):
-    # 1. Один быстрый пинг (Вместо 3). Если живой - идем дальше.
     p = tcp_ping(server['ip'], server['port'])
     if p is None: return None
     
     server['latency'] = int(p)
-    
-    # 2. Мгновенный GeoIP из локальной базы
     code = get_ip_country_local(server['ip'])
-    server['info'] = {'countryCode': code, 'org': 'Unknown', 'isp': 'Unknown'} # ISP жертвуем ради скорости
+    server['info'] = {'countryCode': code, 'org': 'Unknown', 'isp': 'Unknown'}
     
     # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
@@ -219,14 +215,13 @@ def check_server_initial(server):
     
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
     elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True 
-    elif code in ['DE', 'NL', 'FR', 'IT'] and avg_ping < 25: is_fake = True
+    elif code in ['DE', 'NL', 'FR', 'IT', 'GB'] and avg_ping < 25: is_fake = True # Добавил GB
     elif avg_ping < 3 and code not in ['US', 'CA']: is_fake = True
 
     if is_fake: return None
 
     is_warp_cdn = False
     if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
-    # Проверка ISP удалена ради скорости, полагаемся на транспорт
     
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
@@ -240,7 +235,6 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
-    # 5 честных замеров с паузой
     for _ in range(5):
         p = tcp_ping(server['ip'], server['port'])
         if p is not None: pings.append(p)
@@ -274,6 +268,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
                 print(f"   ✅ Найдены PURE TCP (Тир 3) сервера ({len(pure_loose)} шт).")
                 filtered = pure_loose
             else:
+                print(f"   ❌ Нет Pure TCP! Придется брать Reality.")
                 filtered = [c for c in candidates if c['tier_rank'] <= 3]
 
     elif mode == "universal":
@@ -349,9 +344,8 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V34 (TURBO LOCAL GEOIP) ---")
+    print("--- ЗАПУСК V35 (EXPANSION & CLEANUP) ---")
     
-    # 1. СКАЧИВАЕМ БАЗУ
     download_mmdb()
     init_geoip()
     
@@ -364,11 +358,10 @@ def main():
     
     if not servers_to_check: exit(1)
 
-    print(f"\n🔍 Первичная проверка {len(servers_to_check)} серверов (25 потоков)...")
+    print(f"\n🔍 Первичная проверка {len(servers_to_check)} серверов...")
     working_servers = []
     
-    # Увеличили потоки, так как теперь нет лимита API
-    with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
@@ -446,8 +439,7 @@ def main():
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
             
-            if s.get('is_pure'):
-                vps_tag += " [TCP]"
+            # УБРАЛ ТЕГ [TCP] ЗДЕСЬ ПО ТВОЕЙ ПРОСЬБЕ
             
             new_remark = f"⚡ {flag} {country_ru}{vps_tag} | ~{visual_ping}ms"
 
