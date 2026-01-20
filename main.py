@@ -50,9 +50,14 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-# TIER SYSTEM
-TIER_1_PLATINUM = ['FI', 'EE', 'LV', 'RU']
-TIER_2_GOLD = ['LT', 'SE', 'PL', 'KZ', 'BY', 'UA']
+# === TIER SYSTEM V27 (Latvia Nerfed) ===
+# TIER 1: Только страны с идеальным маршрутом (FI, EE, RU)
+TIER_1_PLATINUM = ['FI', 'EE', 'RU']
+
+# TIER 2: Латвия переехала сюда. Хорошо, но не идеально.
+TIER_2_GOLD = ['LV', 'LT', 'SE', 'PL', 'KZ', 'BY', 'UA']
+
+# TIER 3: Европа
 TIER_3_SILVER = ['DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
 CDN_ISPS = [
@@ -148,15 +153,16 @@ def calculate_tier_rank(server):
 
 def estimate_ping_for_user(github_ping, country_code):
     estimated = github_ping
+    # Более реалистичная формула
     if country_code in TIER_1_PLATINUM:
-        estimated = github_ping - 120
-        if estimated < 20: estimated = random.randint(25, 45)
+        estimated = github_ping - 100 # Было 120
+        if estimated < 30: estimated = random.randint(30, 45) # Минимум 30
     elif country_code in TIER_2_GOLD:
-        estimated = github_ping - 90
-        if estimated < 30: estimated = random.randint(35, 55)
+        estimated = github_ping - 80
+        if estimated < 45: estimated = random.randint(45, 60) # Минимум 45 (Латвия тут)
     elif country_code in TIER_3_SILVER:
-        estimated = github_ping - 65
-        if estimated < 40: estimated = random.randint(45, 60)
+        estimated = github_ping - 60
+        if estimated < 50: estimated = random.randint(50, 70)
     elif country_code == 'US':
         estimated = github_ping + 140
     else:
@@ -190,7 +196,7 @@ def check_server_initial(server):
     # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and avg_ping < 90: is_fake = True
-    elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 100: is_fake = True
+    elif code in ['FI', 'EE', 'LV', 'LT', 'SE'] and avg_ping < 90: is_fake = True # Чуть снизил порог
     elif code in TIER_3_SILVER and avg_ping < 30: is_fake = True
     elif avg_ping < 3 and code not in ['US', 'CA']: is_fake = True
 
@@ -218,8 +224,7 @@ def stress_test_server(server):
         if p is not None: pings.append(p)
         time.sleep(0.12)
     
-    # ВОТ ЗДЕСЬ БЫЛА ОШИБКА. ИСПРАВЛЕНО.
-    # Теперь возвращаем 3 значения даже при ошибке.
+    # ВОЗВРАЩАЕМ 3 ЗНАЧЕНИЯ ВСЕГДА
     if len(pings) < 4: 
         return 9999, 9999, [] 
         
@@ -235,16 +240,27 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
         print(f"   ⚠️ Нет кандидатов для {title}")
         return []
     
-    if is_gaming:
-        preliminary = [c for c in candidates if c['tier_rank'] <= 3]
-    else:
-        preliminary = candidates
-        
-    if not preliminary: 
-        print(f"   ⚠️ Все кандидаты отсеяны")
-        return []
+    # --- ЭТАП 1: ФИЛЬТРАЦИЯ ---
+    filtered = candidates
     
-    finalists = sorted(preliminary, key=lambda x: (x['tier_rank'], x['latency']))[:12]
+    if is_gaming:
+        # Для гейминга СТРОГО ищем БЕЗ RAW (Vision), если это возможно
+        non_raw = [c for c in candidates if not c.get('is_vision', False) and c['tier_rank'] <= 3]
+        
+        if len(non_raw) >= 3:
+            # Если есть хотя бы 3 нормальных сервера без RAW, используем ТОЛЬКО их
+            print(f"   ✅ Найдены чистые TCP сервера для игр ({len(non_raw)} шт). RAW исключены.")
+            filtered = non_raw
+        else:
+            # Если чистых нет, берем что есть (смешанные), но RAW получит штраф
+            print(f"   ⚠️ Мало чистых TCP серверов. Допускаем RAW с штрафом.")
+            filtered = [c for c in candidates if c['tier_rank'] <= 3]
+    
+    if not filtered: return []
+    
+    # --- ЭТАП 2: ОТБОР ФИНАЛИСТОВ ---
+    # Сортируем: Тир -> Пинг
+    finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:12]
     
     print(f"\n🏟️ {title} - НАЧАЛО ({len(finalists)} финалистов)")
     print(f"   {'Страна':<10} | {'RAW?':<6} | {'Тир':<4} | {'Пинг (GH)':<10} | {'СЧЕТ':<6}")
@@ -263,8 +279,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", is_gaming=Fal
             else: tier_penalty = 999
             
         raw_penalty = 0
-        if f.get('is_vision', False):
-            raw_penalty = 100
+        if f.get('is_vision', False) and is_gaming:
+            raw_penalty = 200 # Огромный штраф за RAW в играх
         
         score = avg + (jitter * 3) + tier_penalty + raw_penalty
         
@@ -308,7 +324,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V26.1 (HOTFIX) ---")
+    print("--- ЗАПУСК V27 (FINAL POLISH) ---")
     
     all_servers = []
     all_servers.extend(process_urls(GENERAL_URLS, 'general'))
