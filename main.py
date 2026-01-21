@@ -275,7 +275,10 @@ def main():
     msk_now = utc_now + timedelta(hours=3)
     
     json_data = {"updated_at": msk_now.strftime('%H:%M'), "servers": []}
-    result_links = [f"vless://fake@1.1.1.1:80?#{quote(f'Обновлено: {msk_now.strftime('%H:%M')}')}"]
+    
+    # ИСПРАВЛЕННАЯ СТРОКА С КАВЫЧКАМИ НИЖЕ
+    update_msg = f"Обновлено: {msk_now.strftime('%H:%M')}"
+    result_links = [f"vless://fake@1.1.1.1:80?#{quote(update_msg)}"]
     
     for s in final_list:
         flag = "".join([chr(127397 + ord(c)) for c in s['country'].upper()])
