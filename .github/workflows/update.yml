@@ -34,7 +34,15 @@ jobs:
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        # ИСПРАВЛЕНО: Добавляем все файлы (включая stats.json)
+        
+        # Добавляем ВСЕ файлы (включая stats.json)
         git add .
+        
+        # Фиксируем изменения
         git commit -m "Auto-update FL1PVPN and Stats" || echo "No changes to commit"
+        
+        # ВАЖНО: Сначала забираем свежие изменения с сервера, чтобы не было конфликта
+        git pull --rebase origin main
+        
+        # Теперь отправляем
         git push
