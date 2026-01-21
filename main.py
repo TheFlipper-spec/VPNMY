@@ -45,7 +45,7 @@ TARGET_WHITELIST = 2
 TIMEOUT = 1.0 # Уменьшил таймаут для скорости (1.5 -> 1.0)
 OUTPUT_FILE = 'FL1PVPN'
 TIMEZONE_OFFSET = 3 
-UPDATE_INTERVAL_HOURS = 3
+UPDATE_INTERVAL_HOURS = 1
 
 # ПЕРЕВОДЧИК
 RUS_NAMES = {
