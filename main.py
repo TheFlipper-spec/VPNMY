@@ -46,7 +46,7 @@ TARGET_WARP = 2
 TARGET_WHITELIST = 2  
 
 TIMEOUT = 0.8  # TCP Timeout
-REAL_TEST_TIMEOUT = 5.0 # Xray Timeout
+REAL_TEST_TIMEOUT = 10.0 # Xray Timeout (увеличил для надежности)
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
@@ -182,15 +182,21 @@ def generate_xray_config(server, local_port):
     try:
         params = server['parsed_params']
         
+        user_obj = {
+            "id": server['uuid'],
+            "encryption": "none"
+        }
+        
+        # Исправляем проблему с flow: если он пустой, не добавляем его
+        flow_val = params.get('flow', [''])[0]
+        if flow_val:
+            user_obj["flow"] = flow_val
+
         outbound_settings = {
             "vnext": [{
                 "address": server['ip'],
                 "port": int(server['port']),
-                "users": [{
-                    "id": server['uuid'],
-                    "encryption": "none",
-                    "flow": params.get('flow', [''])[0]
-                }]
+                "users": [user_obj]
             }]
         }
 
@@ -232,7 +238,7 @@ def generate_xray_config(server, local_port):
             stream_settings["realitySettings"] = reality_settings
 
         config = {
-            "log": {"loglevel": "none"},
+            "log": {"loglevel": "error"}, # Включаем лог ошибок
             "inbounds": [{
                 "port": local_port,
                 "listen": "127.0.0.1",
@@ -269,15 +275,19 @@ def check_real_connection(server):
     result_latency = None
 
     try:
+        # Запускаем Xray (ждем 2 сек для старта)
         xray_process = subprocess.Popen(
             [XRAY_BIN, "-config", config_path],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stdout=subprocess.DEVNULL, # Оставляем скрытым чтобы не спамить в лог
+            stderr=subprocess.PIPE     # Ловим ошибки если будут
         )
         
-        time.sleep(0.7)
+        time.sleep(1.5) # Даем больше времени на старт
         
         if xray_process.poll() is not None:
+            # Если процесс упал сразу - читаем ошибку
+            _, stderr = xray_process.communicate()
+            # print(f"DEBUG: Xray died for {server['ip']}: {stderr.decode()}")
             raise Exception("Xray process died")
 
         proxies = {
@@ -285,18 +295,22 @@ def check_real_connection(server):
             'https': f'socks5://127.0.0.1:{local_port}'
         }
         
-        target_url = "http://cp.cloudflare.com/" 
+        # Используем HTTPS Google для теста (Reality лучше работает с HTTPS)
+        target_url = "https://www.google.com/generate_204" 
         
         start_time = time.perf_counter()
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         end_time = time.perf_counter()
         
-        if 200 <= resp.status_code < 300:
+        # Google 204 возвращает No Content, это успех
+        if resp.status_code == 204 or (200 <= resp.status_code < 300):
             result_latency = (end_time - start_time) * 1000
         else:
             result_latency = None
 
-    except Exception:
+    except Exception as e:
+        # Раскомментируй строку ниже, если снова будет 100% DEAD, чтобы увидеть ошибку
+        # print(f"   ⚠️ ERROR {server['ip']}: {e}")
         result_latency = None
     finally:
         if xray_process:
@@ -319,7 +333,7 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    # --- ИСПРАВЛЕНИЕ: Сначала определяем категорию ---
+    # Определение категории СРАЗУ
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -328,7 +342,6 @@ def check_server_initial(server):
     if server['source_type'] == 'whitelist': server['category'] = 'WHITELIST'
     elif is_warp: server['category'] = 'WARP'
     else: server['category'] = 'UNIVERSAL'
-    # -------------------------------------------------
 
     p = tcp_ping(server['ip'], server['port'])
     if p is None: return None
@@ -343,7 +356,6 @@ def check_server_initial(server):
     elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
     elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
     
-    # Теперь category уже существует, ошибка KeyError исчезнет
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
     if is_fake and server['category'] != 'WHITELIST': return None
