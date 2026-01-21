@@ -24,8 +24,19 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests
-        pip install geoip2
+        # Используем requirements.txt, так правильнее
+        pip install -r requirements.txt
+
+    - name: Download Xray Core
+      run: |
+        # Скачиваем свежий Xray (ядро для проверки)
+        wget https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+        # Распаковываем
+        unzip -o Xray-linux-64.zip
+        # Даем права на запуск
+        chmod +x xray
+        # Удаляем архив, чтобы не мешался
+        rm Xray-linux-64.zip
 
     - name: Run script
       run: python main.py
@@ -35,14 +46,15 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-        # Добавляем ВСЕ файлы (включая stats.json)
-        git add .
+        # ВАЖНО: Добавляем ТОЛЬКО файлы результатов.
+        # Это предотвратит попадание бинарника xray и мусора в репозиторий.
+        git add FL1PVPN stats.json
         
         # Фиксируем изменения
         git commit -m "Auto-update FL1PVPN and Stats" || echo "No changes to commit"
         
-        # ВАЖНО: Сначала забираем свежие изменения с сервера, чтобы не было конфликта
+        # Забираем свежие изменения во избежание конфликтов
         git pull --rebase origin main
         
-        # Теперь отправляем
+        # Отправляем
         git push
