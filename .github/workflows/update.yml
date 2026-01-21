@@ -2,8 +2,8 @@ name: Update VPN Subscription
 
 on:
   schedule:
-    - cron: '0 */1 * * *'
-  workflow_dispatch:
+    - cron: '0 */1 * * *'  # Запуск каждый час
+  workflow_dispatch:      # Кнопка ручного запуска
 
 permissions:
   contents: write
@@ -26,14 +26,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests geoip2
 
-    # --- ДОБАВЛЕНО: СКАЧИВАЕМ XRAY ---
     - name: Download Xray Core
       run: |
         wget https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip
-        unzip Xray-linux-64.zip
+        # ФИКС: Распаковываем ТОЛЬКО файл xray, чтобы не было конфликта с README.md
+        unzip -o Xray-linux-64.zip xray
         chmod +x xray
-        # Удаляем лишнее, чтобы не мусорить
-        rm Xray-linux-64.zip geoip.dat geosite.dat
+        rm Xray-linux-64.zip
 
     - name: Run script
       run: python main.py
