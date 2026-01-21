@@ -24,6 +24,9 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/1.txt",
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/6.txt",
+    
 ]
 
 WHITELIST_URLS = [
@@ -449,7 +452,7 @@ def main():
             if s.get('is_pure'):
                 vps_tag += " [TCP]"
             
-            new_remark = f"⚡ {flag} {country_ru}{vps_tag} | ~{visual_ping}ms"
+            new_remark = f"⚡ {flag} {country_ru} | ~{visual_ping}ms"
 
         base_link = s['original'].split('#')[0]
         final_link = f"{base_link}#{quote(new_remark)}"
