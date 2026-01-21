@@ -3,229 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FL1P VPN Status</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>FL1P VPN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #09090b;
-            --surface: #18181b;
-            --surface-hover: #27272a;
-            --primary: #6366f1;
-            --accent: #10b981;
-            --text: #f4f4f5;
-            --text-dim: #a1a1aa;
+            --bg: #0b0c15;
+            --card-bg: #151621;
+            --card-hover: #1e1f2b;
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+            --text-main: #ffffff;
+            --text-sec: #9ca3af;
+            --accent-green: #10b981;
         }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Manrope', sans-serif;
             background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
+            color: var(--text-main);
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+        .container { width: 100%; max-width: 500px; }
+        
         /* HEADER */
-        .header-card {
-            background: linear-gradient(145deg, #1e1e24, #121215);
-            border-radius: 24px;
-            padding: 30px;
-            text-align: center;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.2);
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { margin: 0; font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status { 
+            display: inline-block; margin-top: 8px; padding: 6px 16px; 
+            border-radius: 20px; background: rgba(255,255,255,0.05); 
+            font-size: 0.85rem; color: var(--text-sec); border: 1px solid rgba(255,255,255,0.1);
         }
-        h1 { margin: 0; font-size: 2.2rem; letter-spacing: -1px; background: linear-gradient(to right, #fff, #a5a6f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            margin-top: 12px; padding: 6px 14px;
-            border-radius: 50px; background: rgba(16, 185, 129, 0.1);
-            color: var(--accent); font-size: 0.85rem; font-weight: 600;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        .copy-main-btn {
+
+        /* BUTTON */
+        .copy-btn {
             background: var(--primary); color: white;
-            border: none; width: 100%; padding: 16px;
-            border-radius: 16px; font-size: 1rem; font-weight: 700;
-            margin-top: 20px; cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            border: none; width: 100%; padding: 18px;
+            border-radius: 16px; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; margin-bottom: 30px;
+            box-shadow: 0 4px 20px var(--primary-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .copy-main-btn:active { transform: scale(0.98); }
+        .copy-btn:active { transform: scale(0.97); }
 
         /* LIST */
-        .grid { display: flex; flex-direction: column; gap: 12px; }
+        .list { display: flex; flex-direction: column; gap: 12px; }
         .card {
-            background: var(--surface);
-            padding: 16px; border-radius: 16px;
+            background: var(--card-bg);
+            border-radius: 16px; padding: 16px;
             display: flex; align-items: center; justify-content: space-between;
             border: 1px solid rgba(255,255,255,0.03);
             cursor: pointer; transition: all 0.2s;
         }
-        .card:hover { background: var(--surface-hover); transform: translateY(-2px); }
-        .card-content { display: flex; align-items: center; gap: 16px; }
-        .flag-icon { font-size: 2rem; line-height: 1; }
-        .info h3 { margin: 0; font-size: 1rem; font-weight: 600; }
-        .info p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-dim); }
-        .ping-badge {
-            background: #27272a; color: var(--accent);
-            padding: 6px 10px; border-radius: 8px;
-            font-size: 0.85rem; font-weight: 700; min-width: 50px; text-align: center;
-        }
+        .card:hover { background: var(--card-hover); transform: translateX(4px); }
         
-        /* TAGS */
-        .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 8px; font-weight: 700; }
-        .t-GAME { background: #ec4899; color: white; }
-        .t-WARP { background: #3b82f6; color: white; }
-        .t-WHITELIST { background: #fff; color: #000; }
-        .t-UNIVERSAL { background: #f59e0b; color: #000; }
+        .card-left { display: flex; align-items: center; gap: 15px; }
+        .flag { font-size: 2.2rem; line-height: 1; filter: drop-shadow(0 0 5px rgba(0,0,0,0.3)); }
+        .info h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+        .info p { margin: 3px 0 0; font-size: 0.8rem; color: var(--text-sec); display: flex; gap: 8px; }
+        
+        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .b-GAME { background: #db2777; color: #fff; }
+        .b-WARP { background: #2563eb; color: #fff; }
+        .b-WHITE { background: #fff; color: #000; }
+        .b-UNIV { background: #f59e0b; color: #000; }
+
+        .ping { 
+            font-weight: 800; font-size: 0.9rem; color: var(--accent-green); 
+            background: rgba(16, 185, 129, 0.1); padding: 6px 10px; border-radius: 8px; 
+        }
 
         /* MODAL */
-        .modal-overlay {
+        .modal-wrap {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: 0.3s; z-index: 100;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: 0.2s; z-index: 999;
         }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-wrap.open { opacity: 1; visibility: visible; }
         .modal {
-            background: #18181b; width: 90%; max-width: 400px;
-            border-radius: 24px; padding: 25px;
+            background: #18181b; width: 90%; max-width: 380px;
+            padding: 25px; border-radius: 24px;
             border: 1px solid rgba(255,255,255,0.1);
             transform: scale(0.9); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .modal-overlay.active .modal { transform: scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-title { font-size: 1.2rem; font-weight: 700; }
-        .close-btn { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
+        .modal-wrap.open .modal { transform: scale(1); }
         
-        .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .detail-label { color: var(--text-dim); font-size: 0.9rem; }
-        .detail-val { font-weight: 600; font-family: monospace; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .close-icon { font-size: 1.5rem; cursor: pointer; color: var(--text-sec); }
         
-        .modal-action { margin-top: 20px; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .label { color: var(--text-sec); font-size: 0.9rem; }
+        .val { font-weight: 600; font-family: monospace; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .modal-btn {
+            background: #27272a; color: white; width: 100%; border: none;
+            padding: 14px; border-radius: 12px; margin-top: 10px;
+            font-weight: 600; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-card">
+    <header>
         <h1>FL1P VPN</h1>
-        <div class="badge" id="status-badge">● Обновление...</div>
-        <button class="copy-main-btn" onclick="copyLink()">📋 Скопировать ссылку подписки</button>
-    </div>
+        <div class="status" id="time-badge">Загрузка...</div>
+    </header>
 
-    <div class="grid" id="server-list">
-        </div>
+    <button class="copy-btn" id="mainBtn" onclick="copyMain()">
+        СКОПИРОВАТЬ ПОДПИСКУ
+    </button>
+
+    <div class="list" id="serverList"></div>
 </div>
 
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+<div class="modal-wrap" id="modal" onclick="closeModal(event)">
     <div class="modal">
         <div class="modal-header">
-            <div class="modal-title">Детали сервера</div>
-            <button class="close-btn" onclick="closeModal(event, true)">×</button>
+            <h3>Детали сервера</h3>
+            <div class="close-icon" onclick="closeModal(event, true)">×</div>
         </div>
         <div id="modalContent"></div>
-        <div class="modal-action">
-            <button class="copy-main-btn" id="modalCopyBtn">Скопировать конфиг</button>
-        </div>
+        <button class="modal-btn" id="confBtn">Копировать конфиг</button>
     </div>
 </div>
 
 <script>
     const SUB_URL = 'https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/main/FL1PVPN';
     const JSON_URL = 'stats.json';
-    let currentConfig = '';
+    let currentLink = '';
 
-    async function init() {
+    async function load() {
         try {
-            const res = await fetch(JSON_URL);
-            const data = await res.json();
+            const r = await fetch(JSON_URL);
+            const d = await r.json();
+            document.getElementById('time-badge').innerText = `Обновлено: ${d.updated_at}`;
             
-            document.getElementById('status-badge').innerText = `● Обновлено: ${data.updated_at} | След: ${data.next_update}`;
-            renderList(data.servers);
-        } catch(e) {
-            document.getElementById('status-badge').innerText = "Ошибка данных";
-            document.getElementById('status-badge').style.color = "#ef4444";
+            const list = document.getElementById('serverList');
+            list.innerHTML = '';
+            
+            d.servers.forEach(s => {
+                let badgeClass = 'b-UNIV';
+                if(s.category.includes('GAME')) badgeClass = 'b-GAME';
+                if(s.category.includes('WARP')) badgeClass = 'b-WARP';
+                if(s.category.includes('WHITE')) badgeClass = 'b-WHITE';
+
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.innerHTML = `
+                    <div class="card-left">
+                        <div class="flag">${s.flag}</div>
+                        <div class="info">
+                            <h3>${s.country} <span class="badge ${badgeClass}">${s.category.split(' ')[0]}</span></h3>
+                            <p>${s.type} • ${s.protocol}</p>
+                        </div>
+                    </div>
+                    <div class="ping">${s.ping} ms</div>
+                `;
+                el.onclick = () => showModal(s);
+                list.appendChild(el);
+            });
+        } catch {
+            document.getElementById('time-badge').innerText = "Ошибка API";
+            document.getElementById('time-badge').style.color = "red";
         }
     }
 
-    function renderList(servers) {
-        const list = document.getElementById('server-list');
-        list.innerHTML = '';
-        
-        servers.forEach(s => {
-            const catClass = 't-' + s.category.split(' ')[0];
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div class="card-content">
-                    <div class="flag-icon">${s.flag}</div>
-                    <div class="info">
-                        <h3>${s.country} <span class="tag ${catClass}">${s.category}</span></h3>
-                        <p>${s.protocol} • ${s.type}</p>
-                    </div>
-                </div>
-                <div class="ping-badge">${s.ping} ms</div>
-            `;
-            div.onclick = () => openModal(s);
-            list.appendChild(div);
-        });
-    }
-
-    function openModal(s) {
-        currentConfig = s.link;
-        const content = document.getElementById('modalContent');
-        content.innerHTML = `
-            <div class="detail-row"><span class="detail-label">Страна</span><span class="detail-val">${s.flag} ${s.country}</span></div>
-            <div class="detail-row"><span class="detail-label">IP Адрес</span><span class="detail-val">${s.ip}</span></div>
-            <div class="detail-row"><span class="detail-label">Порт</span><span class="detail-val">${s.port}</span></div>
-            <div class="detail-row"><span class="detail-label">Протокол</span><span class="detail-val">${s.protocol}</span></div>
-            <div class="detail-row"><span class="detail-label">Тип</span><span class="detail-val">${s.type}</span></div>
-            <div class="detail-row" style="border:none"><span class="detail-label">Пинг</span><span class="detail-val" style="color:var(--accent)">${s.ping} ms</span></div>
+    function showModal(s) {
+        currentLink = s.link;
+        const c = document.getElementById('modalContent');
+        c.innerHTML = `
+            <div class="row"><span class="label">Страна</span><span class="val">${s.flag} ${s.country}</span></div>
+            <div class="row"><span class="label">IP</span><span class="val">${s.ip}</span></div>
+            <div class="row"><span class="label">Порт</span><span class="val">${s.port}</span></div>
+            <div class="row"><span class="label">Тип</span><span class="val" style="color:#a5b4fc">${s.type}</span></div>
+            <div class="row" style="border:none"><span class="label">UUID</span><span class="val">${s.uuid || 'N/A'}</span></div>
         `;
+        const btn = document.getElementById('confBtn');
+        btn.innerText = "Копировать конфиг";
+        btn.style.background = "#27272a";
+        btn.onclick = () => copyText(s.link, btn);
         
-        const btn = document.getElementById('modalCopyBtn');
-        btn.innerText = "Скопировать конфиг";
-        btn.onclick = () => copyConfig(s.link);
-        
-        document.getElementById('modalOverlay').classList.add('active');
+        document.getElementById('modal').classList.add('open');
     }
 
     function closeModal(e, force) {
-        if (e.target === document.getElementById('modalOverlay') || force) {
-            document.getElementById('modalOverlay').classList.remove('active');
+        if(force || e.target.id === 'modal') {
+            document.getElementById('modal').classList.remove('open');
         }
     }
 
-    function copyLink() {
-        navigator.clipboard.writeText(SUB_URL);
-        animateBtn(document.querySelector('.copy-main-btn'));
+    function copyMain() {
+        copyText(SUB_URL, document.getElementById('mainBtn'));
     }
 
-    function copyConfig(link) {
-        navigator.clipboard.writeText(link);
-        animateBtn(document.getElementById('modalCopyBtn'));
-    }
-
-    function animateBtn(btn) {
-        const oldText = btn.innerText;
-        btn.innerText = "✅ Готово!";
+    function copyText(txt, btn) {
+        navigator.clipboard.writeText(txt);
+        const old = btn.innerText;
+        btn.innerText = "УСПЕШНО!";
         btn.style.background = "#10b981";
         setTimeout(() => {
-            btn.innerText = oldText;
+            btn.innerText = old;
             btn.style.background = "";
         }, 1500);
     }
 
-    init();
+    load();
 </script>
 
 </body>
