@@ -21,12 +21,9 @@ from urllib.parse import unquote, quote, parse_qs
 
 # --- НАСТРОЙКИ ---
 GENERAL_URLS = [
-    # БАЗА (Igareck)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
-    
-    # ДОП. ИСТОЧНИКИ (Проверенные)
     "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt", 
     "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes",
     "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
@@ -35,14 +32,12 @@ GENERAL_URLS = [
 
 WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
-    # ТВОЙ НОВЫЙ ИСТОЧНИК
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 
-# ЛИМИТЫ
 TARGET_GAME = 1       
 TARGET_UNIVERSAL = 3  
 TARGET_WARP = 2       
@@ -53,7 +48,6 @@ OUTPUT_FILE = 'FL1PVPN'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 3
 
-# ПЕРЕВОДЧИК
 RUS_NAMES = {
     'US': 'США', 'DE': 'Германия', 'NL': 'Нидерланды', 'FI': 'Финляндия', 
     'RU': 'Россия', 'TR': 'Турция', 'GB': 'Великобритания', 'FR': 'Франция', 
@@ -215,13 +209,13 @@ def check_server_initial(server):
 
     if is_fake: return None
 
-    # --- КАТЕГОРИИ V40 ---
-    # WARP: Расширяем поиск. Если WS/GRPC - считаем кандидатом.
+    # --- КАТЕГОРИИ V41 ---
     is_warp_candidate = False
     rem = server['original_remark'].lower()
     
-    if 'warp' in rem or 'cloudflare' in rem: is_warp_candidate = True
-    if server['transport'] in ['ws', 'grpc']: is_warp_candidate = True # Вернули это условие!
+    if 'warp' in rem or 'cloudflare' in rem or 'clash' in rem: 
+        is_warp_candidate = True
+    if server['transport'] in ['ws', 'grpc']: is_warp_candidate = True
     
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
@@ -258,18 +252,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # ДЛЯ ИГР: ПРИОРИТЕТ PURE TCP (Как ты хотел)
+        # Игры: Приоритет PURE, но берем и аккуратный Reality
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
-        
         if pure_strict:
-            print(f"   ✅ Найдены PURE TCP сервера ({len(pure_strict)} шт).")
             filtered = pure_strict
         else:
-            # Если нет, тогда ищем без Vision
             filtered = [c for c in candidates if not c['is_vision'] and c['tier_rank'] <= 3]
 
     elif mode == "whitelist":
-        # ТОЛЬКО RU
         only_ru = [c for c in candidates if c['info'].get('countryCode') == 'RU']
         if only_ru:
             print(f"   ✅ Найдены RU сервера для Whitelist ({len(only_ru)} шт).")
@@ -278,7 +268,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             return []
 
     elif mode == "warp":
-        # Сюда уже попали все WS/GRPC. Фильтруем по качеству в турнире.
         filtered = candidates
 
     elif mode == "universal":
@@ -306,29 +295,36 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         type_penalty = 0
         
         if mode == "gaming":
-            # Тут мы любим Pure
             if f['is_pure']: type_penalty = 0
             elif f['is_reality']: type_penalty = 50 
             else: type_penalty = 200
             
         elif mode == "universal":
-            # Тут мы любим Reality (стабильность)
-            if f['is_reality']: type_penalty = 0
-            elif f['is_pure']: type_penalty = 20
-            
+            if f['is_reality']: type_penalty = 0     
+            elif f['is_pure']: type_penalty = 20     
+            elif f['is_vision']: type_penalty = 100  
+        
         elif mode == "warp":
-            # Тут мы НЕ любим Pure TCP (это не варп)
-            if f['is_pure']: type_penalty = 5000 
+            # --- НОВОЕ ПРАВИЛО WARP ---
+            # Приоритет WS/GRPC (это признаки CDN/Cloudflare)
+            # Штрафуем TCP/Reality, потому что они редко бывают WARP-ом
+            is_ws_grpc = f['transport'] in ['ws', 'grpc']
+            if is_ws_grpc:
+                type_penalty = 0  # Идеально для WARP
+            else:
+                type_penalty = 1000 # Почти бан для обычного TCP
         
         score = avg + (jitter * 3) + tier_penalty + type_penalty
         
         code = f['info'].get('countryCode')
         rank = f['tier_rank']
-        
         srv_type = "PURE" if f['is_pure'] else ("VIS" if f['is_vision'] else "REAL")
         
+        # Добавляем инфо о транспорте в лог
+        transp = f['transport'].upper()
+        
         ping_str = f"{int(avg)}"
-        print(f"   {code:<10} | {srv_type:<8} | {rank:<4} | {ping_str:<10} | {int(score):<6}")
+        print(f"   {code:<10} | {transp:<5} {srv_type:<4} | {rank:<4} | {ping_str:<10} | {int(score):<6}")
              
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -337,10 +333,34 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         
     scored_results.sort(key=lambda x: x['final_score'])
     
-    winners = scored_results[:winners_needed]
-    print(f"🏆 ПОБЕДИТЕЛИ {title}: {[w['info'].get('countryCode') for w in winners]}")
+    # --- ЛОГИКА РАЗНООБРАЗИЯ (DIVERSITY) ---
+    # Не даем одной стране занять все места (кроме Whitelist)
+    final_winners = []
+    used_countries = []
     
-    return winners
+    if mode == "whitelist":
+        final_winners = scored_results[:winners_needed]
+    else:
+        for s in scored_results:
+            code = s['info'].get('countryCode')
+            # Если страна уже есть в победителях - пропускаем (если есть другие варианты)
+            if code in used_countries and len(final_winners) < winners_needed:
+                # Но если вариантов мало, берем что есть
+                continue
+            
+            final_winners.append(s)
+            used_countries.append(code)
+            
+            if len(final_winners) >= winners_needed:
+                break
+        
+        # Если после фильтрации не набрали нужное кол-во, добиваем остатками
+        if len(final_winners) < winners_needed:
+            remaining = [s for s in scored_results if s not in final_winners]
+            final_winners.extend(remaining[:winners_needed - len(final_winners)])
+
+    print(f"🏆 ПОБЕДИТЕЛИ {title}: {[w['info'].get('countryCode') for w in final_winners]}")
+    return final_winners
 
 def process_urls(urls, source_type):
     links = []
@@ -363,7 +383,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V40 (THE ROLLBACK) ---")
+    print("--- ЗАПУСК V41 (DIVERSITY & WARP FIX) ---")
     
     download_mmdb()
     init_geoip()
