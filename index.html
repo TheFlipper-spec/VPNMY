@@ -14,10 +14,11 @@
             --text-main: #ffffff;
             --text-sec: #9ca3af;
             
-            --speed-green: #10b981;
-            --speed-yellow: #f59e0b;
-            --speed-orange: #f97316;
-            --speed-red: #ef4444;
+            /* ЦВЕТА СКОРОСТИ */
+            --s-green: #10b981;
+            --s-yellow: #facc15;
+            --s-orange: #fb923c;
+            --s-red: #ef4444;
         }
         body {
             font-family: 'Manrope', sans-serif;
@@ -29,7 +30,6 @@
         }
         .container { width: 100%; max-width: 500px; }
         
-        /* HEADER & TABS */
         header { text-align: center; margin-bottom: 20px; }
         h1 { margin: 0; font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .status { 
@@ -60,7 +60,6 @@
         }
         .copy-btn:active { transform: scale(0.98); }
 
-        /* LIST & CARDS */
         .list { display: flex; flex-direction: column; gap: 10px; }
         .card {
             background: var(--card-bg); border-radius: 16px; padding: 14px 16px;
@@ -85,19 +84,26 @@
         .b-UNIV { background: #f59e0b; color: #000; }
 
         /* SPEED INDICATOR */
-        .speed-box { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+        .speed-box { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .speed-row { display: flex; align-items: center; gap: 8px; }
         .bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; }
         .bar { width: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; }
-        .speed-text { font-size: 0.7rem; font-weight: 700; }
         
-        .s-green .bar.on { background: var(--speed-green); }
-        .s-green .speed-text { color: var(--speed-green); }
-        .s-yellow .bar.on { background: var(--speed-yellow); }
-        .s-yellow .speed-text { color: var(--speed-yellow); }
-        .s-orange .bar.on { background: var(--speed-orange); }
-        .s-orange .speed-text { color: var(--speed-orange); }
-        .s-red .bar.on { background: var(--speed-red); }
-        .s-red .speed-text { color: var(--speed-red); }
+        .ping-num { font-family: 'Manrope', monospace; font-weight: 800; font-size: 0.9rem; letter-spacing: -0.5px; }
+        .speed-text { font-size: 0.65rem; font-weight: 800; opacity: 0.9; margin-right: 2px; text-transform: uppercase; }
+        
+        /* COLORS */
+        .s-green .bar.on { background: var(--s-green); }
+        .s-green .speed-text, .s-green .ping-num { color: var(--s-green); }
+        
+        .s-yellow .bar.on { background: var(--s-yellow); }
+        .s-yellow .speed-text, .s-yellow .ping-num { color: var(--s-yellow); }
+        
+        .s-orange .bar.on { background: var(--s-orange); }
+        .s-orange .speed-text, .s-orange .ping-num { color: var(--s-orange); }
+        
+        .s-red .bar.on { background: var(--s-red); }
+        .s-red .speed-text, .s-red .ping-num { color: var(--s-red); }
 
         /* MODAL */
         .modal-wrap {
@@ -157,14 +163,16 @@
 
     async function load() {
         try {
-            const r = await fetch(JSON_URL);
+            const r = await fetch(JSON_URL + '?t=' + new Date().getTime());
+            if (!r.ok) throw new Error("File not found");
             const d = await r.json();
             allServers = d.servers;
             document.getElementById('updateInfo').innerText = `Обновлено: ${d.updated_at} (МСК)`;
             render('all');
         } catch {
-            document.getElementById('updateInfo').innerText = "Ошибка загрузки";
-            document.getElementById('updateInfo').style.color = "#ef4444";
+            document.getElementById('updateInfo').innerText = "Ожидание обновления...";
+            document.getElementById('updateInfo').style.color = "#f59e0b";
+            document.getElementById('list').innerHTML = `<div style="text-align:center;padding:20px;color:#555">Данные создаются...</div>`;
         }
     }
 
@@ -177,18 +185,33 @@
     function getSpeedVisual(ping) {
         let bars = 0, text = "", cls = "";
         
-        if (ping < 60) { bars = 5; text = "ЛЕТАЕТ"; cls = "s-green"; }
-        else if (ping < 120) { bars = 4; text = "ХОРОШО"; cls = "s-yellow"; }
-        else if (ping < 180) { bars = 3; text = "СРЕДНЕ"; cls = "s-orange"; }
-        else { bars = 2; text = "ПЛОХО"; cls = "s-red"; }
+        if (ping < 60) { 
+            bars = 5; text = "ЛЕТАЕТ"; cls = "s-green"; 
+        } else if (ping < 110) { 
+            bars = 4; text = "ХОРОШО"; cls = "s-yellow"; 
+        } else if (ping < 160) { 
+            bars = 3; text = "СРЕДНЕ"; cls = "s-orange"; 
+        } else { 
+            bars = 2; text = "УЖАСНО"; cls = "s-red"; 
+        }
 
         let barsHtml = "";
         for(let i=0; i<5; i++) {
-            let h = 4 + (i*2.5); // Ladder effect
+            let h = 4 + (i*2.5);
             let on = i < bars ? "on" : "";
             barsHtml += `<div class="bar ${on}" style="height:${h}px"></div>`;
         }
-        return { html: `<div class="bars">${barsHtml}</div><div class="speed-text">${text}</div>`, cls: cls };
+        
+        return { 
+            html: `
+            <div class="speed-row">
+                <div class="bars">${barsHtml}</div>
+                <div class="ping-num">${ping} ms</div>
+            </div>
+            <div class="speed-text">${text}</div>
+            `, 
+            cls: cls 
+        };
     }
 
     function render(type) {
@@ -235,7 +258,7 @@
             <div class="row"><span>Страна</span><span style="display:flex;align-items:center;gap:6px"><img src="${flagUrl}" style="width:20px;border-radius:2px"> ${s.country}</span></div>
             <div class="row"><span>IP</span><span>${s.ip}</span></div>
             <div class="row"><span>Порт</span><span>${s.port}</span></div>
-            <div class="row"><span>Пинг</span><span style="color:var(--accent-green)">${s.ping} ms</span></div>
+            <div class="row"><span>Пинг</span><span style="color:var(--s-green)">${s.ping} ms</span></div>
             <div class="row" style="border:none"><span>Протокол</span><span>${s.protocol} (${s.type})</span></div>
         `;
         const btn = document.getElementById('confBtn');
