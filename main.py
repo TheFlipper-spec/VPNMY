@@ -46,7 +46,7 @@ TARGET_WARP = 2
 TARGET_WHITELIST = 2  
 
 TIMEOUT = 0.8  # TCP Timeout
-REAL_TEST_TIMEOUT = 10.0 # Xray Timeout (увеличил для надежности)
+REAL_TEST_TIMEOUT = 10.0 # Xray Timeout
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
@@ -187,10 +187,8 @@ def generate_xray_config(server, local_port):
             "encryption": "none"
         }
         
-        # Исправляем проблему с flow: если он пустой, не добавляем его
-        flow_val = params.get('flow', [''])[0]
-        if flow_val:
-            user_obj["flow"] = flow_val
+        if params.get('flow', [''])[0]:
+            user_obj["flow"] = params.get('flow', [''])[0]
 
         outbound_settings = {
             "vnext": [{
@@ -238,7 +236,7 @@ def generate_xray_config(server, local_port):
             stream_settings["realitySettings"] = reality_settings
 
         config = {
-            "log": {"loglevel": "error"}, # Включаем лог ошибок
+            "log": {"loglevel": "error"},
             "inbounds": [{
                 "port": local_port,
                 "listen": "127.0.0.1",
@@ -254,10 +252,11 @@ def generate_xray_config(server, local_port):
         }
         return config
     except Exception as e:
-        print(f"ConfigGenError: {e}")
+        # print(f"ConfigGenError: {e}")
         return None
 
 def check_real_connection(server):
+    # Hy2 всегда пропускаем через этот тест (возвращаем OK), т.к. Xray тест только для TCP
     if server['is_hy2']:
         return server['latency']
 
@@ -275,19 +274,15 @@ def check_real_connection(server):
     result_latency = None
 
     try:
-        # Запускаем Xray (ждем 2 сек для старта)
         xray_process = subprocess.Popen(
             [XRAY_BIN, "-config", config_path],
-            stdout=subprocess.DEVNULL, # Оставляем скрытым чтобы не спамить в лог
-            stderr=subprocess.PIPE     # Ловим ошибки если будут
+            stdout=subprocess.DEVNULL, 
+            stderr=subprocess.PIPE     
         )
         
-        time.sleep(1.5) # Даем больше времени на старт
+        time.sleep(1.5) 
         
         if xray_process.poll() is not None:
-            # Если процесс упал сразу - читаем ошибку
-            _, stderr = xray_process.communicate()
-            # print(f"DEBUG: Xray died for {server['ip']}: {stderr.decode()}")
             raise Exception("Xray process died")
 
         proxies = {
@@ -295,22 +290,18 @@ def check_real_connection(server):
             'https': f'socks5://127.0.0.1:{local_port}'
         }
         
-        # Используем HTTPS Google для теста (Reality лучше работает с HTTPS)
         target_url = "https://www.google.com/generate_204" 
         
         start_time = time.perf_counter()
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         end_time = time.perf_counter()
         
-        # Google 204 возвращает No Content, это успех
         if resp.status_code == 204 or (200 <= resp.status_code < 300):
             result_latency = (end_time - start_time) * 1000
         else:
             result_latency = None
 
     except Exception as e:
-        # Раскомментируй строку ниже, если снова будет 100% DEAD, чтобы увидеть ошибку
-        # print(f"   ⚠️ ERROR {server['ip']}: {e}")
         result_latency = None
     finally:
         if xray_process:
@@ -333,7 +324,6 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    # Определение категории СРАЗУ
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -349,7 +339,6 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
-    # Fake Ping Detection
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
     elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
@@ -365,6 +354,7 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
+    # Делаем 3 быстрых пинга для точного TCP замера
     for i in range(3):
         p = tcp_ping(server['ip'], server['port'])
         if p is None and i == 0: return 9999, 9999
@@ -394,22 +384,27 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:20]
     
-    print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates via Real VLESS Test...)")
+    print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
     
     scored_results = []
     for f in semifinalists:
-        # --- ЭТАП 1: REAL VLESS TEST ---
-        real_lat = check_real_connection(f)
+        # --- Real VLESS Test только НЕ для гейминга ---
+        real_lat = None
+        is_alive = True
         
-        if real_lat is None:
-            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray (TCP was OK)")
-            continue 
-            
-        # --- ЭТАП 2: JITTER / STABILITY ---
+        if mode == "gaming":
+            # Для гейминга пропускаем Xray тест
+            is_alive = True
+        else:
+            # Для остальных - проверяем, жив ли прокси
+            real_lat = check_real_connection(f)
+            if real_lat is None:
+                is_alive = False
+                print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
+                continue
+
+        # --- JITTER / STABILITY ---
         avg, jitter = stress_test_server(f)
-        
-        if real_lat and not f['is_hy2']:
-            avg = (avg + real_lat) / 2 
         
         tier_penalty = 0
         if f['tier_rank'] == 1: tier_penalty = 0     
@@ -433,16 +428,18 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             
         score = avg + (jitter * 5) + tier_penalty + special_penalty
         
-        f['latency'] = int(avg)
+        f['latency'] = int(avg) # Сохраняем честный TCP пинг
         f['jitter'] = int(jitter)
         f['final_score'] = score
         
-        print(f"   ✅ {f['info']['countryCode']:<4} | RealLat: {int(real_lat if real_lat else avg)}ms | Score: {int(score)}")
+        print(f"   ✅ {f['info']['countryCode']:<4} | TCP Ping: {int(avg)}ms | Score: {int(score)}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
     
     if not scored_results and semifinalists:
+        if mode == "gaming":
+            return semifinalists[:winners_needed] 
         print("   ⚠️ WARNING: No servers passed Real Test. Returning TCP-only survivors.")
         return semifinalists[:winners_needed]
 
@@ -466,7 +463,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V54 (REAL VLESS XRAY CORE) ---")
+    print("--- ЗАПУСК V55 (FIXED PING & GAME LOGIC) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -501,7 +498,7 @@ def main():
     
     game = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     if game: 
-        game[0]['category'] = 'GAMING'
+        game[0]['category'] = 'Game Server' # <--- ТЕПЕРЬ ТАК
         final_list.extend(game)
     
     final_list.extend(run_tournament(b_univ, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
@@ -515,7 +512,7 @@ def main():
     time_str = msk_now.strftime('%H:%M')
     next_str = next_update.strftime('%H:%M')
     
-    update_msg = f"📅 Обновлено: {time_str} (МСК) | Check: Real VLESS"
+    update_msg = f"📅 Обновлено: {time_str} (МСК) | След. обновление: {next_str}"
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
     result_links = [info_link]
     
@@ -530,7 +527,6 @@ def main():
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
         country_full = RUS_NAMES.get(code, code)
         
-        base_ping = PING_BASE_MS.get(code, 120) 
         calc_ping = s['latency']
         
         if s['is_hy2']: calc_ping = int(calc_ping * 0.9)
@@ -541,8 +537,9 @@ def main():
         elif s['is_pure']: type_label = "TCP"
 
         name = ""
-        if s['category'] == 'GAMING': 
-            name = f"🎮 GAME | {flag} {country_full} | {calc_ping}ms"
+        # Проверка изменена на 'Game Server'
+        if s['category'] == 'Game Server': 
+            name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'WHITELIST': 
             name = f"⚪ {flag} RU (WhiteList) | {calc_ping}ms"
         elif s['category'] == 'WARP': 
