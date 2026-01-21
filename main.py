@@ -13,17 +13,26 @@ import re
 import statistics
 import os
 import json
-import uuid # Используем для генерации UUID если его нет
+import uuid 
 import geoip2.database 
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
+    # Источники igareck (Основа - стабильность)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
+    
+    # Источники goida (Массовка - много серверов)
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/1.txt",
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/6.txt",
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/22.txt",
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/23.txt",
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/24.txt",
+    "https://github.com/AvenCores/goida-vpn-configs/raw/refs/heads/main/githubmirror/25.txt"
 ]
 
 WHITELIST_URLS = [
@@ -34,33 +43,28 @@ WHITELIST_URLS = [
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 
+# --- НАСТРОЙКИ ОТБОРА ---
 TARGET_GAME = 1       
 TARGET_UNIVERSAL = 3  
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 0.8 
+TIMEOUT = 0.8  # Тайм-аут проверки порта
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
+# --- ЧЕРНЫЙ СПИСОК СТРАН ---
+# CN/IR часто выдают фейковый пинг из-за фаерволов
+BANNED_COUNTRIES = ['CN', 'IR', 'KP'] 
+
 # БАЗОВЫЙ ПИНГ ОТ МОСКВЫ/СПБ (ЭТАЛОН)
-# Это "идеальный" пинг до этих стран. К нему мы прибавим реальные лаги сервера.
 PING_BASE_MS = {
-    'RU': 25,  # Россия
-    'FI': 40,  # Финляндия
-    'EE': 45,  # Эстония
-    'SE': 55,  # Швеция
-    'DE': 65,  # Германия
-    'NL': 70,  # Нидерланды
-    'FR': 75,  # Франция
-    'GB': 80,  # Британия
-    'PL': 60,  # Польша
-    'TR': 90,  # Турция
-    'KZ': 60,  # Казахстан
-    'UA': 50,  # Украина
-    'US': 160  # США
+    'RU': 25,  'FI': 40,  'EE': 45,  'SE': 55,  'DE': 65,  
+    'NL': 70,  'FR': 75,  'GB': 80,  'PL': 60,  'TR': 90,  
+    'KZ': 60,  'UA': 50,  'US': 160, 'BG': 70,  'LV': 50,
+    'LT': 50,  'CZ': 65,  'AT': 65,  'CH': 70,  'IT': 75
 }
 
 RUS_NAMES = {
@@ -70,12 +74,13 @@ RUS_NAMES = {
     'KZ': 'Казахстан', 'BY': 'Беларусь', 'EE': 'Эстония', 'LV': 'Латвия', 
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур', 'BG': 'Болгария',
     'CZ': 'Чехия', 'RO': 'Румыния', 'IT': 'Италия', 'ES': 'Испания',
-    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
+    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'CH': 'Швейцария',
+    'AE': 'ОАЭ', 'IN': 'Индия', 'CN': 'Китай'
 }
 
-TIER_1_PLATINUM = ['FI', 'EE', 'SE']
-TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ']
-TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ']
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LV', 'LT'] # Добавил Прибалтику
+TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ', 'RU', 'BG', 'CZ', 'AT']
+TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'UA', 'CH', 'NO', 'DK']
 
 geo_reader = None
 
@@ -104,7 +109,7 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # Hy2
+        # Hy2 Parsing
         if config_str.startswith("hy2://"):
             try:
                 rest = config_str[6:]
@@ -122,7 +127,7 @@ def parse_config_info(config_str, source_type):
                 else: host_port = auth_host
 
                 if ":" in host_port:
-                    if "]" in host_port:
+                    if "]" in host_port: # IPv6
                         host = host_port.rsplit(":", 1)[0]
                         port = host_port.rsplit(":", 1)[1]
                     else:
@@ -139,7 +144,7 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # VLESS
+        # VLESS Parsing
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
@@ -188,19 +193,34 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
+    # 1. Пинг - проверка жизни
     p = tcp_ping(server['ip'], server['port'])
     if p is None: return None
+    
     server['latency'] = int(p)
+    
+    # 2. Проверка страны и БАН проблемных регионов
     code = get_ip_country_local(server['ip'])
+    
+    # --- ФИЛЬТР: БАН СТРАН ---
+    if code in BANNED_COUNTRIES:
+        return None  # Сразу выбрасываем Китай, Иран и т.д.
+        
     server['info'] = {'countryCode': code}
     
+    # 3. Детектор фейков (Гео-пинг несоответствие)
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
-    elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
+    elif code in ['FI', 'EE', 'SE', 'LV', 'LT'] and server['latency'] < 90: is_fake = True 
     elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
     elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
+    
+    # Разрешаем локальный пинг для тестов (если запускаешь не из РФ)
+    # Но для продакшена в GitHub Actions (Azure US/EU) логика выше может резать хорошие сервера.
+    # Оставим как есть, так как это защита от накрутки.
     if is_fake: return None
 
+    # 4. Категоризация
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -215,13 +235,13 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
-    # 4 Честных замера
+    # 4 Честных замера для расчета стабильности (Jitter)
     for i in range(4):
         p = tcp_ping(server['ip'], server['port'])
-        if p is None and i == 0: return 9999, 9999
+        if p is None and i == 0: return 9999, 9999 # Умер сразу
         if p is not None: pings.append(p)
         time.sleep(0.15) 
-    if len(pings) < 3: return 9999, 9999
+    if len(pings) < 3: return 9999, 9999 # Нестабилен
     return statistics.mean(pings), statistics.stdev(pings)
 
 def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed"):
@@ -232,6 +252,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         hy2_servers = [c for c in candidates if c['is_hy2']]
         if hy2_servers: filtered = hy2_servers
         else:
+            # Для игр берем только pure TCP и Vision в Tier 1-2
             pure = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
             if pure: filtered = pure
             else: filtered = [c for c in candidates if not c['is_vision'] and c['tier_rank'] <= 3]
@@ -243,21 +264,24 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:15]
+    # Берем топ-25 кандидатов по первичному пингу (было 15, увеличил т.к. базы goida большие)
+    finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:25]
     print(f"\n🏟️ {title} ({len(finalists)} candidates)")
     
     scored_results = []
     for f in finalists:
         avg, jitter = stress_test_server(f)
         
+        # Штраф за дальность страны (Tier)
         tier_penalty = 0
         if f['tier_rank'] == 1: tier_penalty = 0     
         elif f['tier_rank'] == 2: tier_penalty = 30  
         else: tier_penalty = 60
             
+        # Спец. штрафы
         special_penalty = 0
         if mode == "gaming":
-            if f['is_hy2']: special_penalty = -20
+            if f['is_hy2']: special_penalty = -20 # Hy2 топ для игр
             elif f['is_pure']: special_penalty = 0
             elif f['is_reality']: special_penalty = 40
             else: special_penalty = 200
@@ -272,13 +296,15 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             
         score = avg + (jitter * 5) + tier_penalty + special_penalty
         
-        # Сохраняем честные метрики
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
         f['final_score'] = score
         
         print(f"   {f['info']['countryCode']:<4} | {int(avg)}ms | Jitter: {int(jitter)} | Score: {int(score)}")
-        scored_results.append(f)
+        
+        # Отсекаем если пинг стал бесконечным (9999)
+        if avg < 1000:
+            scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
     return scored_results[:winners_needed]
@@ -287,7 +313,7 @@ def process_urls(urls, source_type):
     links = []
     for url in urls:
         try:
-            resp = requests.get(url, timeout=6)
+            resp = requests.get(url, timeout=10) # Чуть увеличил таймаут загрузки файла
             if resp.status_code == 200:
                 content = resp.text
                 found = extract_links(content)
@@ -301,7 +327,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V53 (TRUE MATH) ---")
+    print("--- ЗАПУСК V54 (ANTI-FAKE + GOIDA) ---")
     download_mmdb()
     init_geoip()
     
@@ -311,6 +337,7 @@ def main():
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         all_servers = f1.result() + f2.result()
     
+    # Удаляем дубликаты
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
     print(f"🔍 Checking {len(servers_to_check)} servers (60 threads)...")
@@ -322,11 +349,15 @@ def main():
             res = f.result()
             if res: working_servers.append(res)
 
+    print(f"✅ Active servers found: {len(working_servers)}")
+
     b_white = [s for s in working_servers if s['category'] == 'WHITELIST']
     b_univ = [s for s in working_servers if s['category'] == 'UNIVERSAL']
     b_warp = [s for s in working_servers if s['category'] == 'WARP']
 
     final_list = []
+    
+    # Турниры
     game = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     if game: 
         game[0]['category'] = 'GAMING'
@@ -336,7 +367,7 @@ def main():
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
-    # --- ГЕНЕРАЦИЯ ---
+    # --- ГЕНЕРАЦИЯ ВЫХОДА ---
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -359,16 +390,11 @@ def main():
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
         country_full = RUS_NAMES.get(code, code)
         
-        # --- ЧЕСТНЫЙ РАСЧЕТ ПИНГА ---
-        # Мы берем "Идеальный пинг" из таблицы PING_BASE_MS
-        # И прибавляем к нему реальный Jitter (нестабильность) сервера.
-        # Если сервер стабильный, Jitter ~1-2, и пинг будет идеальным.
-        # Если сервер плохой, Jitter ~50, и пинг вырастет.
-        
-        base_ping = PING_BASE_MS.get(code, 100) # По умолчанию 100
+        # Расчет "справедливого" пинга
+        # Если страны нет в списке, ставим 150 (штраф неизвестным)
+        base_ping = PING_BASE_MS.get(code, 150) 
         real_jitter = s.get('jitter', 0)
         
-        # Hy2 быстрее, даем бонус
         if s['is_hy2']: base_ping = int(base_ping * 0.9)
         
         calc_ping = base_ping + real_jitter
