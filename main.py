@@ -39,7 +39,7 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-# Таймауты стали жестче для скорости
+# Таймауты
 TCP_TIMEOUT = 0.5 
 REAL_TEST_TIMEOUT = 4.0
 
@@ -153,13 +153,12 @@ def generate_xray_config(server, local_port):
         s['grpcSettings'] = {"serviceName": server['path']}
 
     config = {
-        "log": {"loglevel": "none"}, # Отключаем логи для скорости
+        "log": {"loglevel": "none"}, 
         "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}],
         "outbounds": [outbound]
     }
     return config
 
-# Функция-обертка для параллельного запуска
 def check_real_server_wrapper(args):
     server, unique_id = args
     local_port = 10000 + unique_id
@@ -170,7 +169,7 @@ def check_real_server_wrapper(args):
     with open(conf_name, 'w') as f: json.dump(config, f)
     
     proc = subprocess.Popen([XRAY_BIN, "-c", conf_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(0.4) # Чуть уменьшили время на старт
+    time.sleep(0.4) 
     
     success = False
     delay = 9999
@@ -178,7 +177,6 @@ def check_real_server_wrapper(args):
     try:
         proxies = {'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}'}
         start = time.perf_counter()
-        # Используем таймаут 4 сек для реальной проверки
         r = requests.get('http://cp.cloudflare.com/', proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         if r.status_code == 204 or r.status_code == 200:
             delay = (time.perf_counter() - start) * 1000
@@ -208,7 +206,6 @@ def process_batch(servers):
 def run_tournament(candidates, needed, title):
     if not candidates: return []
     
-    # Берем ТОП-30 кандидатов по TCP (больше выборка для надежности)
     candidates.sort(key=lambda x: x['latency'])
     semi_finalists = candidates[:30]
     
@@ -216,17 +213,13 @@ def run_tournament(candidates, needed, title):
     
     real_winners = []
     
-    # ПАРАЛЛЕЛЬНЫЙ ЗАПУСК XRAY
-    # Используем 8 потоков для Xray (безопасно для 2-core CPU на GitHub)
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        # Передаем (сервер, уникальный_id) чтобы порты не пересекались
         tasks = [(s, i) for i, s in enumerate(semi_finalists)]
         results = list(executor.map(check_real_server_wrapper, tasks))
         
         for success, delay, s in results:
             if success:
                 s['real_delay'] = int(delay)
-                # Штраф Universal серверам из СНГ (чтобы не перебивали Европу пингом)
                 tier_penalty = 0
                 if title == "UNIVERSAL CUP" and s['country'] in ['RU', 'KZ', 'UA', 'BY']:
                     tier_penalty = 1000 
@@ -245,7 +238,6 @@ def main():
     download_mmdb()
     init_geoip()
     
-    # 1. СБОР ССЫЛОК (Параллельно)
     all_raw = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as ex:
         f1 = ex.submit(lambda: [parse_vless(l, 'gen') for u in GENERAL_URLS for l in extract_links(requests.get(u, timeout=5).text)])
@@ -259,7 +251,6 @@ def main():
     unique = list({s['original']: s for s in all_raw}.values())
     print(f"Total Unique Configs: {len(unique)}")
     
-    # 2. МАССОВЫЙ TCP ПИНГ (100 потоков - безопасно для IO операций)
     tcp_survivors = []
     print("🚀 Mass TCP Pinging...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=100) as ex:
@@ -276,12 +267,10 @@ def main():
     
     final_list = []
     
-    # 3. ФИНАЛЫ (Параллельный Xray)
     final_list.extend(run_tournament(gaming_pool, TARGET_GAME, "GAME CUP"))
     final_list.extend(run_tournament(universal_pool, TARGET_UNIVERSAL, "UNIVERSAL CUP"))
     final_list.extend(run_tournament(whitelist_pool, TARGET_WHITELIST, "WHITELIST CUP"))
     
-    # 4. СОХРАНЕНИЕ
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=3)
     
