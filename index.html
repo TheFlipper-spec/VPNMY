@@ -3,182 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FL1PVPN Status</title>
+    <title>FL1P VPN Status</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f0f13;
-            --card-bg: #1a1a20;
-            --primary: #5865F2; /* Discord Blurple style */
-            --accent: #00ff88;
-            --text: #ffffff;
-            --text-dim: #a0a0a0;
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface-hover: #27272a;
+            --primary: #6366f1;
+            --accent: #10b981;
+            --text: #f4f4f5;
+            --text-dim: #a1a1aa;
         }
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
         }
         .container {
+            width: 100%;
             max-width: 600px;
-            width: 100%;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
             padding: 20px;
-            background: linear-gradient(135deg, #1a1a20 0%, #25252b 100%);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
+            box-sizing: border-box;
         }
-        h1 { margin: 0; font-size: 2.5rem; background: linear-gradient(to right, #5865F2, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status-badge {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 5px 15px;
-            border-radius: 50px;
-            background: rgba(0, 255, 136, 0.1);
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 0.9rem;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-        }
-        .copy-btn-main {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .copy-btn-main:active { transform: scale(0.98); }
-        
-        .server-list { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
-        .card {
-            background: var(--card-bg);
-            padding: 15px 20px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: transform 0.2s;
-        }
-        .card:hover { transform: translateX(5px); border-color: rgba(255,255,255,0.1); }
-        .card-left { display: flex; align-items: center; gap: 15px; }
-        .flag { font-size: 1.8rem; }
-        .info h3 { margin: 0; font-size: 1.1rem; }
-        .info p { margin: 2px 0 0; font-size: 0.85rem; color: var(--text-dim); }
-        .ping {
-            font-weight: bold;
-            color: var(--accent);
-            background: rgba(0,0,0,0.3);
-            padding: 5px 10px;
-            border-radius: 8px;
-            min-width: 60px;
+        /* HEADER */
+        .header-card {
+            background: linear-gradient(145deg, #1e1e24, #121215);
+            border-radius: 24px;
+            padding: 30px;
             text-align: center;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.2);
         }
-        .category-tag {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 8px;
-            opacity: 0.8;
+        h1 { margin: 0; font-size: 2.2rem; letter-spacing: -1px; background: linear-gradient(to right, #fff, #a5a6f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 12px; padding: 6px 14px;
+            border-radius: 50px; background: rgba(16, 185, 129, 0.1);
+            color: var(--accent); font-size: 0.85rem; font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
-        .cat-GAME { background: #ff0055; color: white; }
-        .cat-WARP { background: #00aaff; color: white; }
-        .cat-WHITELIST { background: #ffffff; color: black; }
-        .cat-UNIVERSAL { background: #ffaa00; color: black; }
+        .copy-main-btn {
+            background: var(--primary); color: white;
+            border: none; width: 100%; padding: 16px;
+            border-radius: 16px; font-size: 1rem; font-weight: 700;
+            margin-top: 20px; cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        .copy-main-btn:active { transform: scale(0.98); }
 
-        @media (max-width: 480px) {
-            h1 { font-size: 2rem; }
+        /* LIST */
+        .grid { display: flex; flex-direction: column; gap: 12px; }
+        .card {
+            background: var(--surface);
+            padding: 16px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer; transition: all 0.2s;
         }
+        .card:hover { background: var(--surface-hover); transform: translateY(-2px); }
+        .card-content { display: flex; align-items: center; gap: 16px; }
+        .flag-icon { font-size: 2rem; line-height: 1; }
+        .info h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+        .info p { margin: 4px 0 0; font-size: 0.8rem; color: var(--text-dim); }
+        .ping-badge {
+            background: #27272a; color: var(--accent);
+            padding: 6px 10px; border-radius: 8px;
+            font-size: 0.85rem; font-weight: 700; min-width: 50px; text-align: center;
+        }
+        
+        /* TAGS */
+        .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 8px; font-weight: 700; }
+        .t-GAME { background: #ec4899; color: white; }
+        .t-WARP { background: #3b82f6; color: white; }
+        .t-WHITELIST { background: #fff; color: #000; }
+        .t-UNIVERSAL { background: #f59e0b; color: #000; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: 0.3s; z-index: 100;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal {
+            background: #18181b; width: 90%; max-width: 400px;
+            border-radius: 24px; padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transform: scale(0.9); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 1.2rem; font-weight: 700; }
+        .close-btn { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; }
+        
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .detail-label { color: var(--text-dim); font-size: 0.9rem; }
+        .detail-val { font-weight: 600; font-family: monospace; }
+        
+        .modal-action { margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
+    <div class="header-card">
         <h1>FL1P VPN</h1>
-        <div id="update-time" class="status-badge">Загрузка...</div>
-        <button class="copy-btn-main" onclick="copyMainLink()">
-            📋 Копировать ссылку подписки
-        </button>
-    </header>
+        <div class="badge" id="status-badge">● Обновление...</div>
+        <button class="copy-main-btn" onclick="copyLink()">📋 Скопировать ссылку подписки</button>
+    </div>
 
-    <div id="server-list" class="server-list">
+    <div class="grid" id="server-list">
         </div>
 </div>
 
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Детали сервера</div>
+            <button class="close-btn" onclick="closeModal(event, true)">×</button>
+        </div>
+        <div id="modalContent"></div>
+        <div class="modal-action">
+            <button class="copy-main-btn" id="modalCopyBtn">Скопировать конфиг</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // ЗАМЕНИ НА СВОЙ URL ПОДПИСКИ (RAW ССЫЛКА НА ФАЙЛ FL1PVPN)
-    const SUBSCRIPTION_URL = 'https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/FL1PVPN#FL1PVPN';
-    
-    // ССЫЛКА НА JSON (Создается новым скриптом)
+    const SUB_URL = 'https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/main/FL1PVPN';
     const JSON_URL = 'stats.json';
+    let currentConfig = '';
 
-    async function loadData() {
+    async function init() {
         try {
-            const response = await fetch(JSON_URL);
-            const data = await response.json();
+            const res = await fetch(JSON_URL);
+            const data = await res.json();
             
-            document.getElementById('update-time').innerText = 
-                `Обновлено: ${data.updated_at} (МСК) | След: ${data.next_update}`;
-
-            const list = document.getElementById('server-list');
-            list.innerHTML = '';
-
-            data.servers.forEach(s => {
-                let catClass = 'cat-' + s.category.split(' ')[0]; // Safe class name
-                
-                let html = `
-                <div class="card">
-                    <div class="card-left">
-                        <div class="flag">${s.flag}</div>
-                        <div class="info">
-                            <h3>${s.country} <span class="category-tag ${catClass}">${s.category}</span></h3>
-                            <p>${s.protocol} | ${s.type}</p>
-                        </div>
-                    </div>
-                    <div class="ping">${s.ping} ms</div>
-                </div>`;
-                list.innerHTML += html;
-            });
-
-        } catch (e) {
-            console.error(e);
-            document.getElementById('update-time').innerText = "Ошибка загрузки данных";
+            document.getElementById('status-badge').innerText = `● Обновлено: ${data.updated_at} | След: ${data.next_update}`;
+            renderList(data.servers);
+        } catch(e) {
+            document.getElementById('status-badge').innerText = "Ошибка данных";
+            document.getElementById('status-badge').style.color = "#ef4444";
         }
     }
 
-    function copyMainLink() {
-        navigator.clipboard.writeText(SUBSCRIPTION_URL).then(() => {
-            let btn = document.querySelector('.copy-btn-main');
-            let originalText = btn.innerText;
-            btn.innerText = "✅ Скопировано!";
-            btn.style.background = "#00ff88";
-            btn.style.color = "#000";
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.background = "#5865F2";
-                btn.style.color = "#fff";
-            }, 2000);
+    function renderList(servers) {
+        const list = document.getElementById('server-list');
+        list.innerHTML = '';
+        
+        servers.forEach(s => {
+            const catClass = 't-' + s.category.split(' ')[0];
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <div class="card-content">
+                    <div class="flag-icon">${s.flag}</div>
+                    <div class="info">
+                        <h3>${s.country} <span class="tag ${catClass}">${s.category}</span></h3>
+                        <p>${s.protocol} • ${s.type}</p>
+                    </div>
+                </div>
+                <div class="ping-badge">${s.ping} ms</div>
+            `;
+            div.onclick = () => openModal(s);
+            list.appendChild(div);
         });
     }
 
-    loadData();
+    function openModal(s) {
+        currentConfig = s.link;
+        const content = document.getElementById('modalContent');
+        content.innerHTML = `
+            <div class="detail-row"><span class="detail-label">Страна</span><span class="detail-val">${s.flag} ${s.country}</span></div>
+            <div class="detail-row"><span class="detail-label">IP Адрес</span><span class="detail-val">${s.ip}</span></div>
+            <div class="detail-row"><span class="detail-label">Порт</span><span class="detail-val">${s.port}</span></div>
+            <div class="detail-row"><span class="detail-label">Протокол</span><span class="detail-val">${s.protocol}</span></div>
+            <div class="detail-row"><span class="detail-label">Тип</span><span class="detail-val">${s.type}</span></div>
+            <div class="detail-row" style="border:none"><span class="detail-label">Пинг</span><span class="detail-val" style="color:var(--accent)">${s.ping} ms</span></div>
+        `;
+        
+        const btn = document.getElementById('modalCopyBtn');
+        btn.innerText = "Скопировать конфиг";
+        btn.onclick = () => copyConfig(s.link);
+        
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal(e, force) {
+        if (e.target === document.getElementById('modalOverlay') || force) {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+    }
+
+    function copyLink() {
+        navigator.clipboard.writeText(SUB_URL);
+        animateBtn(document.querySelector('.copy-main-btn'));
+    }
+
+    function copyConfig(link) {
+        navigator.clipboard.writeText(link);
+        animateBtn(document.getElementById('modalCopyBtn'));
+    }
+
+    function animateBtn(btn) {
+        const oldText = btn.innerText;
+        btn.innerText = "✅ Готово!";
+        btn.style.background = "#10b981";
+        setTimeout(() => {
+            btn.innerText = oldText;
+            btn.style.background = "";
+        }, 1500);
+    }
+
+    init();
 </script>
 
 </body>
