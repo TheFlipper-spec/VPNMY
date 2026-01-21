@@ -58,9 +58,10 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'DE', 'NL'] # Расширил Европу для Universal
-TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA', 'FR', 'IT', 'GB']
-TIER_3_SILVER = ['CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'ES']
+# --- НОВАЯ СИСТЕМА ТИРОВ (FINLAND FIRST) ---
+TIER_1_PLATINUM = ['FI', 'EE', 'SE'] # Только соседи
+TIER_2_GOLD = ['DE', 'NL', 'FR', 'GB', 'PL', 'LV', 'LT'] # Европа
+TIER_3_SILVER = ['KZ', 'BY', 'UA', 'TR', 'CZ', 'BG', 'RO'] # СНГ и Юг
 
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
@@ -209,7 +210,6 @@ def check_server_initial(server):
 
     if is_fake: return None
 
-    # --- КАТЕГОРИИ V43 ---
     is_warp_candidate = False
     rem = server['original_remark'].lower()
     
@@ -228,7 +228,6 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
-    # Увеличиваем паузу для Whitelist, чтобы поймать нестабильность
     pause = 0.2
     if server['category'] == 'WHITELIST': pause = 0.25
         
@@ -255,7 +254,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # Игры: PURE TCP > REALITY (без vision)
+        # Игры: PURE > REALITY (No Vision)
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
         if pure_strict:
             filtered = pure_strict
@@ -263,7 +262,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             filtered = [c for c in candidates if not c['is_vision'] and c['tier_rank'] <= 3]
 
     elif mode == "whitelist":
-        # ТОЛЬКО RU
+        # RU Only
         only_ru = [c for c in candidates if c['info'].get('countryCode') == 'RU']
         if only_ru:
             print(f"   ✅ Найдены RU сервера для Whitelist ({len(only_ru)} шт).")
@@ -272,7 +271,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             return []
 
     elif mode == "warp":
-        # БЕЗ РОССИИ
+        # NO RU
         filtered = [c for c in candidates if c['info'].get('countryCode') != 'RU']
 
     elif mode == "universal":
@@ -291,9 +290,12 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     for f in finalists:
         avg, jitter, raw_pings = stress_test_server(f)
         
+        # --- ТИРЫ (ГЛАВНЫЙ ФАКТОР) ---
+        # Tier 1 (FI, EE) = 0 штрафа
+        # Tier 2 (NL, DE) = +30 штрафа (чтобы FI выигрывала)
         tier_penalty = 0
         if f['tier_rank'] == 1: tier_penalty = 0     
-        elif f['tier_rank'] == 2: tier_penalty = 20  
+        elif f['tier_rank'] == 2: tier_penalty = 30  
         elif f['tier_rank'] == 3: tier_penalty = 60  
         else: tier_penalty = 999
             
@@ -305,12 +307,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             else: type_penalty = 200
             
         elif mode == "universal":
-            # --- ПРАВИЛО "RUSSIA LAST" ---
-            # Если страна RU - даем огромный штраф, чтобы она была в конце списка
-            if f['info'].get('countryCode') == 'RU':
-                type_penalty += 2000
+            if f['info'].get('countryCode') == 'RU': type_penalty += 2000
             
-            # Приоритет протоколов
             if f['is_reality']: type_penalty += 0     
             elif f['is_pure']: type_penalty += 20     
             elif f['is_vision']: type_penalty += 100  
@@ -321,19 +319,11 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             else: type_penalty = 1000 
             
         elif mode == "whitelist":
-            # --- ПРАВИЛО "STABLE WHITELIST" ---
-            # 1. Жестко караем за Jitter (нестабильность)
-            jitter_multiplier = 10 # Было 3, стало 10. Если лагает - до свидания.
-            
-            # 2. Приоритет протоколов для Whitelist
-            if f['is_reality']: type_penalty = 0      # Reality - самый надежный
-            elif f['is_pure']: type_penalty = 50      # Pure - может быть заблочен
-            elif f['is_vision']: type_penalty = 200   # Vision - часто ломается
-            
-            # Пересчитываем score с новым множителем джиттера
+            # Важнее стабильность (Jitter), а не тип
+            jitter_multiplier = 10 
+            if f['is_vision']: type_penalty = 100
             score = avg + (jitter * jitter_multiplier) + tier_penalty + type_penalty
         
-        # Для остальных режимов стандартный расчет
         if mode != "whitelist":
             score = avg + (jitter * 3) + tier_penalty + type_penalty
         
@@ -352,29 +342,37 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         
     scored_results.sort(key=lambda x: x['final_score'])
     
-    # --- DIVERSITY LOGIC (Разнообразие) ---
+    # --- DIVERSITY ---
     final_winners = []
-    used_ips = [] # Для Whitelist проверяем IP
+    used_items = [] 
     
     if mode == "whitelist":
+        # Проверка на IP (как просил)
         for s in scored_results:
-            # Проверка на дубликат IP (чтобы не брать два сервера с одного упавшего хостинга)
-            ip_prefix = ".".join(s['ip'].split('.')[:3]) # Берем подсеть (напр 95.123.45)
-            if ip_prefix in used_ips and len(final_winners) < winners_needed:
+            ip_prefix = ".".join(s['ip'].split('.')[:3]) 
+            if ip_prefix in used_items and len(final_winners) < winners_needed:
                 continue
-            
             final_winners.append(s)
-            used_ips.append(ip_prefix)
+            used_items.append(ip_prefix)
             if len(final_winners) >= winners_needed: break
             
-        # Добиваем если не хватило
         if len(final_winners) < winners_needed:
              remaining = [s for s in scored_results if s not in final_winners]
              final_winners.extend(remaining[:winners_needed - len(final_winners)])
 
     else:
-        # Для остальных режимов (Universal) просто берем лучших (там RU уже отшрафована)
-        final_winners = scored_results[:winners_needed]
+        # Проверка на Страну (для остальных)
+        for s in scored_results:
+            code = s['info'].get('countryCode')
+            if code in used_items and len(final_winners) < winners_needed:
+                continue
+            final_winners.append(s)
+            used_items.append(code)
+            if len(final_winners) >= winners_needed: break
+        
+        if len(final_winners) < winners_needed:
+            remaining = [s for s in scored_results if s not in final_winners]
+            final_winners.extend(remaining[:winners_needed - len(final_winners)])
 
     print(f"🏆 ПОБЕДИТЕЛИ {title}: {[w['info'].get('countryCode') for w in final_winners]}")
     return final_winners
@@ -400,7 +398,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V43 (RUSSIA LAST & STABLE WHITELIST) ---")
+    print("--- ЗАПУСК V44 (FINLAND SUPREMACY) ---")
     
     download_mmdb()
     init_geoip()
