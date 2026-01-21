@@ -24,6 +24,9 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
+    # --- AVEN_CORES ---
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/1.txt",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/25.txt"
 ]
 
 WHITELIST_URLS = [
