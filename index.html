@@ -11,10 +11,13 @@
             --card-bg: #151621;
             --card-hover: #1e1f2b;
             --primary: #4f46e5;
-            --primary-glow: rgba(79, 70, 229, 0.4);
             --text-main: #ffffff;
             --text-sec: #9ca3af;
-            --accent-green: #10b981;
+            
+            --speed-green: #10b981;
+            --speed-yellow: #f59e0b;
+            --speed-orange: #f97316;
+            --speed-red: #ef4444;
         }
         body {
             font-family: 'Manrope', sans-serif;
@@ -26,8 +29,8 @@
         }
         .container { width: 100%; max-width: 500px; }
         
-        /* HEADER */
-        header { text-align: center; margin-bottom: 30px; }
+        /* HEADER & TABS */
+        header { text-align: center; margin-bottom: 20px; }
         h1 { margin: 0; font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .status { 
             display: inline-block; margin-top: 8px; padding: 6px 16px; 
@@ -35,71 +38,89 @@
             font-size: 0.85rem; color: var(--text-sec); border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* BUTTON */
+        .tabs {
+            display: flex; background: #18181b; padding: 4px;
+            border-radius: 12px; margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .tab {
+            flex: 1; padding: 10px; text-align: center;
+            cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 0.9rem;
+            color: var(--text-sec); transition: 0.2s;
+        }
+        .tab.active { background: #27272a; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+
         .copy-btn {
             background: var(--primary); color: white;
-            border: none; width: 100%; padding: 18px;
-            border-radius: 16px; font-size: 1.1rem; font-weight: 700;
-            cursor: pointer; margin-bottom: 30px;
-            box-shadow: 0 4px 20px var(--primary-glow);
-            transition: transform 0.2s, box-shadow 0.2s;
+            border: none; width: 100%; padding: 16px;
+            border-radius: 16px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+            transition: 0.2s;
         }
-        .copy-btn:active { transform: scale(0.97); }
+        .copy-btn:active { transform: scale(0.98); }
 
-        /* LIST */
-        .list { display: flex; flex-direction: column; gap: 12px; }
+        /* LIST & CARDS */
+        .list { display: flex; flex-direction: column; gap: 10px; }
         .card {
-            background: var(--card-bg);
-            border-radius: 16px; padding: 16px;
+            background: var(--card-bg); border-radius: 16px; padding: 14px 16px;
             display: flex; align-items: center; justify-content: space-between;
             border: 1px solid rgba(255,255,255,0.03);
             cursor: pointer; transition: all 0.2s;
         }
-        .card:hover { background: var(--card-hover); transform: translateX(4px); }
+        .card:hover { background: var(--card-hover); transform: translateX(3px); }
         
-        .card-left { display: flex; align-items: center; gap: 15px; }
-        .flag { font-size: 2.2rem; line-height: 1; filter: drop-shadow(0 0 5px rgba(0,0,0,0.3)); }
-        .info h3 { margin: 0; font-size: 1rem; font-weight: 700; }
-        .info p { margin: 3px 0 0; font-size: 0.8rem; color: var(--text-sec); display: flex; gap: 8px; }
+        .card-left { display: flex; align-items: center; gap: 14px; }
+        .flag-img {
+            width: 34px; height: 26px; border-radius: 4px;
+            object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .info h3 { margin: 0; font-size: 0.95rem; font-weight: 700; }
+        .info p { margin: 3px 0 0; font-size: 0.75rem; color: var(--text-sec); display: flex; gap: 6px; }
         
-        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+        .badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .b-GAME { background: #db2777; color: #fff; }
         .b-WARP { background: #2563eb; color: #fff; }
         .b-WHITE { background: #fff; color: #000; }
         .b-UNIV { background: #f59e0b; color: #000; }
 
-        .ping { 
-            font-weight: 800; font-size: 0.9rem; color: var(--accent-green); 
-            background: rgba(16, 185, 129, 0.1); padding: 6px 10px; border-radius: 8px; 
-        }
+        /* SPEED INDICATOR */
+        .speed-box { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+        .bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; }
+        .bar { width: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .speed-text { font-size: 0.7rem; font-weight: 700; }
+        
+        .s-green .bar.on { background: var(--speed-green); }
+        .s-green .speed-text { color: var(--speed-green); }
+        .s-yellow .bar.on { background: var(--speed-yellow); }
+        .s-yellow .speed-text { color: var(--speed-yellow); }
+        .s-orange .bar.on { background: var(--speed-orange); }
+        .s-orange .speed-text { color: var(--speed-orange); }
+        .s-red .bar.on { background: var(--speed-red); }
+        .s-red .speed-text { color: var(--speed-red); }
 
         /* MODAL */
         .modal-wrap {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: 0.2s; z-index: 999;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: 0.2s; z-index: 100;
         }
         .modal-wrap.open { opacity: 1; visibility: visible; }
         .modal {
-            background: #18181b; width: 90%; max-width: 380px;
-            padding: 25px; border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transform: scale(0.9); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: #18181b; width: 90%; max-width: 380px; padding: 25px;
+            border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
+            transform: scale(0.9); transition: 0.2s;
         }
         .modal-wrap.open .modal { transform: scale(1); }
-        
         .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .close-icon { font-size: 1.5rem; cursor: pointer; color: var(--text-sec); }
-        
-        .row { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .label { color: var(--text-sec); font-size: 0.9rem; }
-        .val { font-weight: 600; font-family: monospace; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
+        .close { cursor: pointer; font-size: 1.5rem; color: var(--text-sec); }
+        .row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; }
+        .row span:first-child { color: var(--text-sec); font-size: 0.9rem; }
+        .row span:last-child { font-weight: 600; font-family: monospace; color: #fff; }
         .modal-btn {
-            background: #27272a; color: white; width: 100%; border: none;
-            padding: 14px; border-radius: 12px; margin-top: 10px;
-            font-weight: 600; cursor: pointer;
+            background: #27272a; color: white; width: 100%; padding: 14px;
+            border: none; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px;
         }
     </style>
 </head>
@@ -108,105 +129,134 @@
 <div class="container">
     <header>
         <h1>FL1P VPN</h1>
-        <div class="status" id="time-badge">Загрузка...</div>
+        <div class="status" id="updateInfo">Загрузка...</div>
     </header>
 
-    <button class="copy-btn" id="mainBtn" onclick="copyMain()">
-        СКОПИРОВАТЬ ПОДПИСКУ
-    </button>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('all')">ВСЕ СЕРВЕРА</div>
+        <div class="tab" onclick="switchTab('top')">🚀 ТОП-3 СКОРОСТНЫХ</div>
+    </div>
 
-    <div class="list" id="serverList"></div>
+    <button class="copy-btn" id="mainBtn" onclick="copyMain()">СКОПИРОВАТЬ ПОДПИСКУ</button>
+    
+    <div class="list" id="list"></div>
 </div>
 
 <div class="modal-wrap" id="modal" onclick="closeModal(event)">
     <div class="modal">
-        <div class="modal-header">
-            <h3>Детали сервера</h3>
-            <div class="close-icon" onclick="closeModal(event, true)">×</div>
-        </div>
-        <div id="modalContent"></div>
+        <div class="modal-header"><h3>Детали сервера</h3><div class="close" onclick="closeModal(event, true)">×</div></div>
+        <div id="modalBody"></div>
         <button class="modal-btn" id="confBtn">Копировать конфиг</button>
     </div>
 </div>
 
 <script>
-    const SUB_URL = 'https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/main/FL1PVPN';
+    const RAW_URL = 'https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/main/FL1PVPN';
     const JSON_URL = 'stats.json';
-    let currentLink = '';
+    let allServers = [];
 
     async function load() {
         try {
             const r = await fetch(JSON_URL);
             const d = await r.json();
-            document.getElementById('time-badge').innerText = `Обновлено: ${d.updated_at}`;
-            
-            const list = document.getElementById('serverList');
-            list.innerHTML = '';
-            
-            d.servers.forEach(s => {
-                let badgeClass = 'b-UNIV';
-                if(s.category.includes('GAME')) badgeClass = 'b-GAME';
-                if(s.category.includes('WARP')) badgeClass = 'b-WARP';
-                if(s.category.includes('WHITE')) badgeClass = 'b-WHITE';
-
-                const el = document.createElement('div');
-                el.className = 'card';
-                el.innerHTML = `
-                    <div class="card-left">
-                        <div class="flag">${s.flag}</div>
-                        <div class="info">
-                            <h3>${s.country} <span class="badge ${badgeClass}">${s.category.split(' ')[0]}</span></h3>
-                            <p>${s.type} • ${s.protocol}</p>
-                        </div>
-                    </div>
-                    <div class="ping">${s.ping} ms</div>
-                `;
-                el.onclick = () => showModal(s);
-                list.appendChild(el);
-            });
+            allServers = d.servers;
+            document.getElementById('updateInfo').innerText = `Обновлено: ${d.updated_at} (МСК)`;
+            render('all');
         } catch {
-            document.getElementById('time-badge').innerText = "Ошибка API";
-            document.getElementById('time-badge').style.color = "red";
+            document.getElementById('updateInfo').innerText = "Ошибка загрузки";
+            document.getElementById('updateInfo').style.color = "#ef4444";
         }
     }
 
-    function showModal(s) {
-        currentLink = s.link;
-        const c = document.getElementById('modalContent');
-        c.innerHTML = `
-            <div class="row"><span class="label">Страна</span><span class="val">${s.flag} ${s.country}</span></div>
-            <div class="row"><span class="label">IP</span><span class="val">${s.ip}</span></div>
-            <div class="row"><span class="label">Порт</span><span class="val">${s.port}</span></div>
-            <div class="row"><span class="label">Тип</span><span class="val" style="color:#a5b4fc">${s.type}</span></div>
-            <div class="row" style="border:none"><span class="label">UUID</span><span class="val">${s.uuid || 'N/A'}</span></div>
+    function switchTab(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        render(type);
+    }
+
+    function getSpeedVisual(ping) {
+        let bars = 0, text = "", cls = "";
+        
+        if (ping < 60) { bars = 5; text = "ЛЕТАЕТ"; cls = "s-green"; }
+        else if (ping < 120) { bars = 4; text = "ХОРОШО"; cls = "s-yellow"; }
+        else if (ping < 180) { bars = 3; text = "СРЕДНЕ"; cls = "s-orange"; }
+        else { bars = 2; text = "ПЛОХО"; cls = "s-red"; }
+
+        let barsHtml = "";
+        for(let i=0; i<5; i++) {
+            let h = 4 + (i*2.5); // Ladder effect
+            let on = i < bars ? "on" : "";
+            barsHtml += `<div class="bar ${on}" style="height:${h}px"></div>`;
+        }
+        return { html: `<div class="bars">${barsHtml}</div><div class="speed-text">${text}</div>`, cls: cls };
+    }
+
+    function render(type) {
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        
+        let data = [...allServers];
+        if (type === 'top') {
+            data.sort((a, b) => a.ping - b.ping);
+            data = data.slice(0, 3);
+        }
+
+        data.forEach(s => {
+            let badgeClass = 'b-UNIV';
+            if(s.category.includes('GAME')) badgeClass = 'b-GAME';
+            if(s.category.includes('WARP')) badgeClass = 'b-WARP';
+            if(s.category.includes('WHITE')) badgeClass = 'b-WHITE';
+
+            const flagUrl = `https://flagcdn.com/w80/${s.iso.toLowerCase()}.png`;
+            const speed = getSpeedVisual(s.ping);
+
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <div class="card-left">
+                    <img src="${flagUrl}" class="flag-img" alt="${s.iso}">
+                    <div class="info">
+                        <h3>${s.country} <span class="badge ${badgeClass}">${s.category.split(' ')[0]}</span></h3>
+                        <p>${s.type} • ${s.protocol}</p>
+                    </div>
+                </div>
+                <div class="speed-box ${speed.cls}">
+                    ${speed.html}
+                </div>
+            `;
+            div.onclick = () => showModal(s, flagUrl);
+            list.appendChild(div);
+        });
+    }
+
+    function showModal(s, flagUrl) {
+        const body = document.getElementById('modalBody');
+        body.innerHTML = `
+            <div class="row"><span>Страна</span><span style="display:flex;align-items:center;gap:6px"><img src="${flagUrl}" style="width:20px;border-radius:2px"> ${s.country}</span></div>
+            <div class="row"><span>IP</span><span>${s.ip}</span></div>
+            <div class="row"><span>Порт</span><span>${s.port}</span></div>
+            <div class="row"><span>Пинг</span><span style="color:var(--accent-green)">${s.ping} ms</span></div>
+            <div class="row" style="border:none"><span>Протокол</span><span>${s.protocol} (${s.type})</span></div>
         `;
         const btn = document.getElementById('confBtn');
         btn.innerText = "Копировать конфиг";
         btn.style.background = "#27272a";
         btn.onclick = () => copyText(s.link, btn);
-        
         document.getElementById('modal').classList.add('open');
     }
 
     function closeModal(e, force) {
-        if(force || e.target.id === 'modal') {
-            document.getElementById('modal').classList.remove('open');
-        }
+        if(force || e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
     }
 
-    function copyMain() {
-        copyText(SUB_URL, document.getElementById('mainBtn'));
-    }
+    function copyMain() { copyText(RAW_URL, document.getElementById('mainBtn')); }
 
     function copyText(txt, btn) {
         navigator.clipboard.writeText(txt);
         const old = btn.innerText;
-        btn.innerText = "УСПЕШНО!";
+        btn.innerText = "СКОПИРОВАНО!";
         btn.style.background = "#10b981";
-        setTimeout(() => {
-            btn.innerText = old;
-            btn.style.background = "";
-        }, 1500);
+        setTimeout(() => { btn.innerText = old; btn.style.background = ""; }, 1500);
     }
 
     load();
