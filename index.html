@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FL1PVPN Status</title>
+    <style>
+        :root {
+            --bg: #0f0f13;
+            --card-bg: #1a1a20;
+            --primary: #5865F2; /* Discord Blurple style */
+            --accent: #00ff88;
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a20 0%, #25252b 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        h1 { margin: 0; font-size: 2.5rem; background: linear-gradient(to right, #5865F2, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 15px;
+            border-radius: 50px;
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 0.9rem;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+        .copy-btn-main {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .copy-btn-main:active { transform: scale(0.98); }
+        
+        .server-list { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        .card {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateX(5px); border-color: rgba(255,255,255,0.1); }
+        .card-left { display: flex; align-items: center; gap: 15px; }
+        .flag { font-size: 1.8rem; }
+        .info h3 { margin: 0; font-size: 1.1rem; }
+        .info p { margin: 2px 0 0; font-size: 0.85rem; color: var(--text-dim); }
+        .ping {
+            font-weight: bold;
+            color: var(--accent);
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 8px;
+            min-width: 60px;
+            text-align: center;
+        }
+        .category-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            opacity: 0.8;
+        }
+        .cat-GAME { background: #ff0055; color: white; }
+        .cat-WARP { background: #00aaff; color: white; }
+        .cat-WHITELIST { background: #ffffff; color: black; }
+        .cat-UNIVERSAL { background: #ffaa00; color: black; }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>FL1P VPN</h1>
+        <div id="update-time" class="status-badge">Загрузка...</div>
+        <button class="copy-btn-main" onclick="copyMainLink()">
+            📋 Копировать ссылку подписки
+        </button>
+    </header>
+
+    <div id="server-list" class="server-list">
+        </div>
+</div>
+
+<script>
+    // ЗАМЕНИ НА СВОЙ URL ПОДПИСКИ (RAW ССЫЛКА НА ФАЙЛ FL1PVPN)
+    const SUBSCRIPTION_URL = 'https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/main/FL1PVPN';
+    
+    // ССЫЛКА НА JSON (Создается новым скриптом)
+    const JSON_URL = 'stats.json';
+
+    async function loadData() {
+        try {
+            const response = await fetch(JSON_URL);
+            const data = await response.json();
+            
+            document.getElementById('update-time').innerText = 
+                `Обновлено: ${data.updated_at} (МСК) | След: ${data.next_update}`;
+
+            const list = document.getElementById('server-list');
+            list.innerHTML = '';
+
+            data.servers.forEach(s => {
+                let catClass = 'cat-' + s.category.split(' ')[0]; // Safe class name
+                
+                let html = `
+                <div class="card">
+                    <div class="card-left">
+                        <div class="flag">${s.flag}</div>
+                        <div class="info">
+                            <h3>${s.country} <span class="category-tag ${catClass}">${s.category}</span></h3>
+                            <p>${s.protocol} | ${s.type}</p>
+                        </div>
+                    </div>
+                    <div class="ping">${s.ping} ms</div>
+                </div>`;
+                list.innerHTML += html;
+            });
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('update-time').innerText = "Ошибка загрузки данных";
+        }
+    }
+
+    function copyMainLink() {
+        navigator.clipboard.writeText(SUBSCRIPTION_URL).then(() => {
+            let btn = document.querySelector('.copy-btn-main');
+            let originalText = btn.innerText;
+            btn.innerText = "✅ Скопировано!";
+            btn.style.background = "#00ff88";
+            btn.style.color = "#000";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = "#5865F2";
+                btn.style.color = "#fff";
+            }, 2000);
+        });
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
