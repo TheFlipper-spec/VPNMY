@@ -15,7 +15,7 @@ import statistics
 import copy
 import random
 import os
-import geoip2.database # НОВАЯ БИБЛИОТЕКА
+import geoip2.database 
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
@@ -32,7 +32,6 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
 ]
 
-# ССЫЛКА НА БАЗУ GEOIP (MMDB)
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 
@@ -42,7 +41,7 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 1.0 # Уменьшил таймаут для скорости (1.5 -> 1.0)
+TIMEOUT = 0.8 # Уменьшили таймаут для первичной проверки (было 1.0)
 OUTPUT_FILE = 'FL1PVPN'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
@@ -59,9 +58,9 @@ RUS_NAMES = {
 }
 
 # TIER SYSTEM
-TIER_1_PLATINUM = ['FI', 'EE', 'RU']
-TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA']
-TIER_3_SILVER = ['SE', 'DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
+TIER_1_PLATINUM = ['FI', 'EE', 'RU', 'SE'] # Добавил Швецию в платину, она часто хороша
+TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA', 'DE', 'NL']
+TIER_3_SILVER = ['AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
 
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
@@ -69,11 +68,9 @@ CDN_ISPS = [
     'edgecenter', 'servers.com', 'digitalocean', 'vultr'
 ]
 
-# Глобальная переменная для ридера базы
 geo_reader = None
 
 def download_mmdb():
-    """Скачивает базу GeoIP если её нет"""
     if not os.path.exists(MMDB_FILE):
         print("📥 Скачивание базы GeoIP (MMDB)...")
         try:
@@ -103,20 +100,12 @@ def get_flag(country_code):
         return "🏳️"
 
 def get_ip_country_local(ip):
-    """Мгновенное определение страны через локальную базу"""
     if not geo_reader: return 'XX'
     try:
         response = geo_reader.country(ip)
         return response.country.iso_code
     except:
         return 'XX'
-
-# ISP мы теперь не проверяем через API (это долго), 
-# определяем Cloudflare по косвенным признакам или оставляем Unknown
-# Это жертва ради скорости.
-def is_likely_cdn(transport, ip):
-    # Упрощенная проверка CDN без API
-    return False 
 
 def extract_vless_links(text):
     regex = r"(vless://[a-zA-Z0-9\-@:?=&%.#_]+)"
@@ -205,15 +194,15 @@ def estimate_ping_for_user(github_ping, country_code):
     return int(estimated)
 
 def check_server_initial(server):
-    # 1. Один быстрый пинг (Вместо 3). Если живой - идем дальше.
+    # Первичный пинг
     p = tcp_ping(server['ip'], server['port'])
     if p is None: return None
     
     server['latency'] = int(p)
     
-    # 2. Мгновенный GeoIP из локальной базы
+    # GeoIP
     code = get_ip_country_local(server['ip'])
-    server['info'] = {'countryCode': code, 'org': 'Unknown', 'isp': 'Unknown'} # ISP жертвуем ради скорости
+    server['info'] = {'countryCode': code, 'org': 'Unknown', 'isp': 'Unknown'} 
     
     # ФИЗИЧЕСКИЙ ДЕТЕКТОР ЛЖИ
     is_fake = False
@@ -226,9 +215,11 @@ def check_server_initial(server):
 
     if is_fake: return None
 
+    # Определение категории (SOFT)
     is_warp_cdn = False
-    if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True
-    # Проверка ISP удалена ради скорости, полагаемся на транспорт
+    rem = server['original_remark'].lower()
+    if 'warp' in rem or 'cloudflare' in rem or 'clash' in rem: is_warp_cdn = True
+    if server['transport'] in ['ws', 'grpc']: is_warp_cdn = True 
     
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
@@ -242,11 +233,16 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
-    # 5 честных замеров с паузой
-    for _ in range(5):
+    # TURBO STRESS TEST
+    for i in range(5):
         p = tcp_ping(server['ip'], server['port'])
+        
+        # Если первый пинг не прошел - сразу выкидываем, не тратим время
+        if p is None and i == 0:
+            return 9999, 9999, []
+            
         if p is not None: pings.append(p)
-        time.sleep(0.2) 
+        time.sleep(0.1) # Уменьшили паузу с 0.2 до 0.1 для скорости
     
     if len(pings) < 4: 
         return 9999, 9999, [] 
@@ -265,28 +261,24 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     filtered = candidates
     
-    if mode == "gaming":
-        pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
-        if pure_strict:
-            print(f"   ✅ Найдены PURE TCP сервера ({len(pure_strict)} шт).")
-            filtered = pure_strict
-        else:
-            pure_loose = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 3]
-            if pure_loose:
-                print(f"   ✅ Найдены PURE TCP (Тир 3) сервера ({len(pure_loose)} шт).")
-                filtered = pure_loose
-            else:
-                filtered = [c for c in candidates if c['tier_rank'] <= 3]
+    # --- ЛОГИКА ФИЛЬТРАЦИИ ПО ЗАПРОСУ ---
+    
+    if mode == "whitelist":
+        # ТОЛЬКО VLESS + REALITY для Whitelist
+        filtered = [c for c in candidates if c['is_reality']]
+        if not filtered:
+            print("   ⚠️ Нет Reality для Whitelist, берем всё подряд...")
+            filtered = candidates
 
-    elif mode == "universal":
-        filtered = candidates
-
+    # Для остальных категорий берем всех, сортируем в финале
+    
     if not filtered: return []
     
-    finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:12]
+    # Берем топ-15 самых быстрых по первичному пингу на стресс-тест
+    finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:15]
     
     print(f"\n🏟️ {title} - НАЧАЛО ({len(finalists)} финалистов)")
-    print(f"   {'Страна':<10} | {'TYPE':<8} | {'Тир':<4} | {'Пинг (GH)':<10} | {'СЧЕТ':<6}")
+    print(f"   {'Страна':<10} | {'PROTO':<8} | {'Пинг (GH)':<10} | {'СЧЕТ':<6}")
     print("-" * 75)
     
     scored_results = []
@@ -294,29 +286,39 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     for f in finalists:
         avg, jitter, raw_pings = stress_test_server(f)
         
+        # Штрафы
         tier_penalty = 0
         if f['tier_rank'] == 1: tier_penalty = 0     
-        elif f['tier_rank'] == 2: tier_penalty = 20  
+        elif f['tier_rank'] == 2: tier_penalty = 30  
         elif f['tier_rank'] == 3: tier_penalty = 60  
         else: tier_penalty = 999
             
-        type_penalty = 0
-        if mode == "gaming":
-            if f['is_reality']: type_penalty = 2000 
-        elif mode == "universal":
-            if f['is_pure']: type_penalty = 0        
-            elif f['is_vision']: type_penalty = 150  
-            else: type_penalty = 50                  
+        # Доп. логика для категорий
+        special_penalty = 0
         
-        score = avg + (jitter * 3) + tier_penalty + type_penalty
+        if mode == "gaming":
+            # Игры любят стабильность (jitter) и чистый канал
+            if f['is_pure']: special_penalty = 0
+            elif f['is_reality']: special_penalty = 30
+            else: special_penalty = 100
+            
+        elif mode == "whitelist":
+            # Тут важно Reality
+            if f['is_reality']: special_penalty = 0
+            else: special_penalty = 500 # Убиваем не-Reality
+            
+        elif mode == "universal":
+            # Приоритет Reality
+            if f['is_reality']: special_penalty = 0
+            else: special_penalty = 20
+            
+        score = avg + (jitter * 3) + tier_penalty + special_penalty
         
         code = f['info'].get('countryCode')
-        rank = f['tier_rank']
-        
-        srv_type = "PURE" if f['is_pure'] else ("VIS" if f['is_vision'] else "REAL")
+        proto = "REAL" if f['is_reality'] else ("PURE" if f['is_pure'] else "VIS")
         
         ping_str = f"{int(avg)}"
-        print(f"   {code:<10} | {srv_type:<8} | {rank:<4} | {ping_str:<10} | {int(score):<6}")
+        print(f"   {code:<10} | {proto:<8} | {ping_str:<10} | {int(score):<6}")
              
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -324,7 +326,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
-    
     winners = scored_results[:winners_needed]
     print(f"🏆 ПОБЕДИТЕЛИ {title}: {[w['info'].get('countryCode') for w in winners]}")
     
@@ -351,9 +352,8 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V34 (TURBO LOCAL GEOIP) ---")
+    print("--- ЗАПУСК V45 (FINAL STABLE & FAST) ---")
     
-    # 1. СКАЧИВАЕМ БАЗУ
     download_mmdb()
     init_geoip()
     
@@ -366,11 +366,11 @@ def main():
     
     if not servers_to_check: exit(1)
 
-    print(f"\n🔍 Первичная проверка {len(servers_to_check)} серверов (25 потоков)...")
+    # Увеличил потоки до 50 для скорости
+    print(f"\n🔍 Первичная проверка {len(servers_to_check)} серверов (50 потоков)...")
     working_servers = []
     
-    # Увеличили потоки, так как теперь нет лимита API
-    with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
@@ -399,8 +399,8 @@ def main():
     warp_winners = run_tournament(bucket_warp, TARGET_WARP, title="WARP CUP", mode="mixed")
     final_list.extend(warp_winners)
 
-    # 4. WHITELIST
-    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, title="WHITELIST CUP", mode="mixed")
+    # 4. WHITELIST (Теперь строго Reality)
+    wl_winners = run_tournament(bucket_whitelist, TARGET_WHITELIST, title="WHITELIST CUP", mode="whitelist")
     final_list.extend(wl_winners)
 
     print("\n--- СБОРКА ПОДПИСКИ ---")
@@ -448,10 +448,7 @@ def main():
             if any(v in isp_lower for v in ['hetzner', 'aeza', 'm247', 'stark']):
                 vps_tag = " (VPS)"
             
-            if s.get('is_pure'):
-                vps_tag += " [TCP]"
-            
-            new_remark = f"⚡ {flag} {country_ru} | ~{visual_ping}ms"
+            new_remark = f"⚡ {flag} {country_ru}{vps_tag} | ~{visual_ping}ms"
 
         base_link = s['original'].split('#')[0]
         final_link = f"{base_link}#{quote(new_remark)}"
