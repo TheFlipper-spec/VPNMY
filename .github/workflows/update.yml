@@ -2,11 +2,11 @@ name: Update VPN Subscription
 
 on:
   schedule:
-    - cron: '0 */1 * * *'  # Запуск каждый 1 час
-  workflow_dispatch:      # Кнопка ручного запуска
+    - cron: '0 */1 * * *'  # Обновление каждый  час
+  workflow_dispatch:      # Ручной запуск
 
 permissions:
-  contents: write
+  contents: write # Разрешение на запись в репозиторий
 
 jobs:
   build:
@@ -19,30 +19,20 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.10' # Лучше использовать более новую версию Python
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests
-        pip install geoip2
+        pip install -r requirements.txt # Установка всех зависимостей из файла
 
     - name: Run script
-      run: python main.py
+      run: python main.py # Запуск основного скрипта
 
     - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        
-        # Добавляем ВСЕ файлы (включая stats.json)
-        git add .
-        
-        # Фиксируем изменения
-        git commit -m "Auto-update FL1PVPN and Stats" || echo "No changes to commit"
-        
-        # ВАЖНО: Сначала забираем свежие изменения с сервера, чтобы не было конфликта
-        git pull --rebase origin main
-        
-        # Теперь отправляем
-        git push
+        git add FL1PVPN stats.json # Добавляем оба файла
+        # Коммит только если есть изменения
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update VPN list [skip ci]" && git push)
