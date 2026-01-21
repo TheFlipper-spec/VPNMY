@@ -17,11 +17,10 @@ import geoip2.database
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
-# --- ИСТОЧНИКИ (База + Hy2) ---
+# --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
-    # Источник с Hysteria2 и др.
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
 ]
@@ -45,7 +44,6 @@ JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
-# ПЕРЕВОДЧИК (Полные названия)
 RUS_NAMES = {
     'US': 'США', 'DE': 'Германия', 'NL': 'Нидерланды', 'FI': 'Финляндия', 
     'RU': 'Россия', 'TR': 'Турция', 'GB': 'Великобритания', 'FR': 'Франция', 
@@ -198,13 +196,11 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
-    # 4 Замера
     for i in range(4):
         p = tcp_ping(server['ip'], server['port'])
         if p is None and i == 0: return 9999, 9999
         if p is not None: pings.append(p)
         time.sleep(0.15) 
-    
     if len(pings) < 3: return 9999, 9999
     return statistics.mean(pings), statistics.stdev(pings)
 
@@ -222,7 +218,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
-        
     elif mode == "warp":
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
 
@@ -282,7 +277,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V50 (FINAL POLISH) ---")
+    print("--- ЗАПУСК V52 (ISO + HY2) ---")
     download_mmdb()
     init_geoip()
     
@@ -308,7 +303,6 @@ def main():
     b_warp = [s for s in working_servers if s['category'] == 'WARP']
 
     final_list = []
-    
     game = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     if game: 
         game[0]['category'] = 'GAMING'
@@ -326,7 +320,6 @@ def main():
     time_str = msk_now.strftime('%H:%M')
     next_str = next_update.strftime('%H:%M')
     
-    # Полное сообщение об обновлении
     update_msg = f"📅 Обновлено: {time_str} (МСК) | След. обновление: {next_str}"
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
     result_links = [info_link]
@@ -340,8 +333,6 @@ def main():
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
-        
-        # Получаем полное русское название страны
         country_full = RUS_NAMES.get(code, code)
         
         raw_ping = s['latency']
@@ -349,13 +340,11 @@ def main():
         visual_ping = raw_ping - 50 if raw_ping > 60 else raw_ping
         if visual_ping < 20: visual_ping = random.randint(30, 50)
         
-        type_label = ""
+        type_label = "VLESS"
         if s['is_hy2']: type_label = "Hy2"
         elif s['is_reality']: type_label = "Reality"
         elif s['is_pure']: type_label = "TCP"
-        else: type_label = "VLESS"
 
-        # Форматирование имен БЕЗ "Universal" и с полными названиями
         name = ""
         if s['category'] == 'GAMING': 
             name = f"🎮 GAME SERVER | {flag} {country_full} | {visual_ping}ms"
@@ -364,7 +353,6 @@ def main():
         elif s['category'] == 'WARP': 
             name = f"🌀 {flag} {country_full} WARP | {visual_ping}ms"
         else: 
-            # Убрали слово "Universal"
             name = f"⚡ {flag} {country_full} | {visual_ping}ms"
 
         base = s['original'].split('#')[0]
@@ -374,7 +362,8 @@ def main():
         json_data["servers"].append({
             "name": name,
             "category": s['category'],
-            "country": country_full, # Отправляем полное имя для сайта
+            "country": country_full,
+            "iso": code, # ВАЖНО: ISO код для флагов в HTML
             "flag": flag,
             "ping": visual_ping,
             "ip": s['ip'],
