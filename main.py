@@ -58,9 +58,9 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания'
 }
 
-TIER_1_PLATINUM = ['FI', 'EE', 'RU']
-TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA']
-TIER_3_SILVER = ['SE', 'DE', 'NL', 'AT', 'CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'GB', 'FR', 'IT', 'ES']
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'DE', 'NL'] # Расширил Европу для Universal
+TIER_2_GOLD = ['LV', 'LT', 'PL', 'KZ', 'BY', 'UA', 'FR', 'IT', 'GB']
+TIER_3_SILVER = ['CZ', 'BG', 'RO', 'NO', 'TR', 'DK', 'ES']
 
 CDN_ISPS = [
     'cloudflare', 'google', 'amazon', 'microsoft', 'oracle', 
@@ -209,12 +209,11 @@ def check_server_initial(server):
 
     if is_fake: return None
 
-    # --- КАТЕГОРИИ V41 ---
+    # --- КАТЕГОРИИ V43 ---
     is_warp_candidate = False
     rem = server['original_remark'].lower()
     
-    if 'warp' in rem or 'cloudflare' in rem or 'clash' in rem: 
-        is_warp_candidate = True
+    if 'warp' in rem or 'cloudflare' in rem or 'clash' in rem: is_warp_candidate = True
     if server['transport'] in ['ws', 'grpc']: is_warp_candidate = True
     
     if server['source_type'] == 'whitelist':
@@ -229,10 +228,14 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
+    # Увеличиваем паузу для Whitelist, чтобы поймать нестабильность
+    pause = 0.2
+    if server['category'] == 'WHITELIST': pause = 0.25
+        
     for _ in range(5):
         p = tcp_ping(server['ip'], server['port'])
         if p is not None: pings.append(p)
-        time.sleep(0.2) 
+        time.sleep(pause) 
     
     if len(pings) < 4: 
         return 9999, 9999, [] 
@@ -252,7 +255,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # Игры: Приоритет PURE, но берем и аккуратный Reality
+        # Игры: PURE TCP > REALITY (без vision)
         pure_strict = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
         if pure_strict:
             filtered = pure_strict
@@ -260,6 +263,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             filtered = [c for c in candidates if not c['is_vision'] and c['tier_rank'] <= 3]
 
     elif mode == "whitelist":
+        # ТОЛЬКО RU
         only_ru = [c for c in candidates if c['info'].get('countryCode') == 'RU']
         if only_ru:
             print(f"   ✅ Найдены RU сервера для Whitelist ({len(only_ru)} шт).")
@@ -268,7 +272,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             return []
 
     elif mode == "warp":
-        filtered = candidates
+        # БЕЗ РОССИИ
+        filtered = [c for c in candidates if c['info'].get('countryCode') != 'RU']
 
     elif mode == "universal":
         filtered = candidates
@@ -300,27 +305,41 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             else: type_penalty = 200
             
         elif mode == "universal":
-            if f['is_reality']: type_penalty = 0     
-            elif f['is_pure']: type_penalty = 20     
-            elif f['is_vision']: type_penalty = 100  
+            # --- ПРАВИЛО "RUSSIA LAST" ---
+            # Если страна RU - даем огромный штраф, чтобы она была в конце списка
+            if f['info'].get('countryCode') == 'RU':
+                type_penalty += 2000
+            
+            # Приоритет протоколов
+            if f['is_reality']: type_penalty += 0     
+            elif f['is_pure']: type_penalty += 20     
+            elif f['is_vision']: type_penalty += 100  
         
         elif mode == "warp":
-            # --- НОВОЕ ПРАВИЛО WARP ---
-            # Приоритет WS/GRPC (это признаки CDN/Cloudflare)
-            # Штрафуем TCP/Reality, потому что они редко бывают WARP-ом
             is_ws_grpc = f['transport'] in ['ws', 'grpc']
-            if is_ws_grpc:
-                type_penalty = 0  # Идеально для WARP
-            else:
-                type_penalty = 1000 # Почти бан для обычного TCP
+            if is_ws_grpc: type_penalty = 0 
+            else: type_penalty = 1000 
+            
+        elif mode == "whitelist":
+            # --- ПРАВИЛО "STABLE WHITELIST" ---
+            # 1. Жестко караем за Jitter (нестабильность)
+            jitter_multiplier = 10 # Было 3, стало 10. Если лагает - до свидания.
+            
+            # 2. Приоритет протоколов для Whitelist
+            if f['is_reality']: type_penalty = 0      # Reality - самый надежный
+            elif f['is_pure']: type_penalty = 50      # Pure - может быть заблочен
+            elif f['is_vision']: type_penalty = 200   # Vision - часто ломается
+            
+            # Пересчитываем score с новым множителем джиттера
+            score = avg + (jitter * jitter_multiplier) + tier_penalty + type_penalty
         
-        score = avg + (jitter * 3) + tier_penalty + type_penalty
+        # Для остальных режимов стандартный расчет
+        if mode != "whitelist":
+            score = avg + (jitter * 3) + tier_penalty + type_penalty
         
         code = f['info'].get('countryCode')
         rank = f['tier_rank']
         srv_type = "PURE" if f['is_pure'] else ("VIS" if f['is_vision'] else "REAL")
-        
-        # Добавляем инфо о транспорте в лог
         transp = f['transport'].upper()
         
         ping_str = f"{int(avg)}"
@@ -333,31 +352,29 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         
     scored_results.sort(key=lambda x: x['final_score'])
     
-    # --- ЛОГИКА РАЗНООБРАЗИЯ (DIVERSITY) ---
-    # Не даем одной стране занять все места (кроме Whitelist)
+    # --- DIVERSITY LOGIC (Разнообразие) ---
     final_winners = []
-    used_countries = []
+    used_ips = [] # Для Whitelist проверяем IP
     
     if mode == "whitelist":
-        final_winners = scored_results[:winners_needed]
-    else:
         for s in scored_results:
-            code = s['info'].get('countryCode')
-            # Если страна уже есть в победителях - пропускаем (если есть другие варианты)
-            if code in used_countries and len(final_winners) < winners_needed:
-                # Но если вариантов мало, берем что есть
+            # Проверка на дубликат IP (чтобы не брать два сервера с одного упавшего хостинга)
+            ip_prefix = ".".join(s['ip'].split('.')[:3]) # Берем подсеть (напр 95.123.45)
+            if ip_prefix in used_ips and len(final_winners) < winners_needed:
                 continue
             
             final_winners.append(s)
-            used_countries.append(code)
+            used_ips.append(ip_prefix)
+            if len(final_winners) >= winners_needed: break
             
-            if len(final_winners) >= winners_needed:
-                break
-        
-        # Если после фильтрации не набрали нужное кол-во, добиваем остатками
+        # Добиваем если не хватило
         if len(final_winners) < winners_needed:
-            remaining = [s for s in scored_results if s not in final_winners]
-            final_winners.extend(remaining[:winners_needed - len(final_winners)])
+             remaining = [s for s in scored_results if s not in final_winners]
+             final_winners.extend(remaining[:winners_needed - len(final_winners)])
+
+    else:
+        # Для остальных режимов (Universal) просто берем лучших (там RU уже отшрафована)
+        final_winners = scored_results[:winners_needed]
 
     print(f"🏆 ПОБЕДИТЕЛИ {title}: {[w['info'].get('countryCode') for w in final_winners]}")
     return final_winners
@@ -383,7 +400,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V41 (DIVERSITY & WARP FIX) ---")
+    print("--- ЗАПУСК V43 (RUSSIA LAST & STABLE WHITELIST) ---")
     
     download_mmdb()
     init_geoip()
