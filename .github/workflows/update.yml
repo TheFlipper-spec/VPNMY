@@ -16,45 +16,61 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # ОПТИМИЗАЦИЯ 1: Кэшируем Python пакеты
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
+        cache: 'pip' # Авто-кэш для pip
+
+    # ОПТИМИЗАЦИЯ 2: Кэшируем Xray и MMDB, чтобы не качать их каждый раз
+    - name: Cache Xray and MMDB
+      id: cache-tools
+      uses: actions/cache@v3
+      with:
+        path: |
+          xray
+          Country.mmdb
+        key: vpn-tools-${{ runner.os }}-v2 # Меняй v2 на v3, если нужно сбросить кэш
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Используем requirements.txt, так правильнее
         pip install -r requirements.txt
 
+    # Скачиваем Xray только если его нет в кэше
     - name: Download Xray Core
+      if: steps.cache-tools.outputs.cache-hit != 'true'
       run: |
-        # Скачиваем свежий Xray (ядро для проверки)
-        wget https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        # Распаковываем
-        unzip -o Xray-linux-64.zip
-        # Даем права на запуск
+        echo "Cache miss - downloading Xray..."
+        wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+        unzip -o Xray-linux-64.zip xray
         chmod +x xray
-        # Удаляем архив, чтобы не мешался
         rm Xray-linux-64.zip
+
+    # Даем права на выполнение (даже если из кэша)
+    - name: Prepare Xray
+      run: chmod +x xray
 
     - name: Run script
       run: python main.py
 
+    # ФИКС ОШИБКИ GIT: Удаляем мусор перед Pull
     - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-        # ВАЖНО: Добавляем ТОЛЬКО файлы результатов.
-        # Это предотвратит попадание бинарника xray и мусора в репозиторий.
+        # 1. Добавляем только результаты
         git add FL1PVPN stats.json
         
-        # Фиксируем изменения
-        git commit -m "Auto-update FL1PVPN and Stats" || echo "No changes to commit"
+        # 2. Делаем коммит (если есть изменения)
+        git commit -m "Auto-update FL1PVPN and Stats" || exit 0
         
-        # Забираем свежие изменения во избежание конфликтов
+        # 3. ВАЖНО: Удаляем все "лишние" файлы (xray, логи), которые мешали pull
+        # Это не удалит твой коммит, но очистит рабочую папку
+        git reset --hard
+        
+        # 4. Теперь безопасно забираем обновления и отправляем
         git pull --rebase origin main
-        
-        # Отправляем
         git push
