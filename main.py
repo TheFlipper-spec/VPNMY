@@ -9,6 +9,7 @@ import os
 import json
 import subprocess
 import geoip2.database 
+import base64  # <--- ВЕРНУЛ НА МЕСТО
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
@@ -41,7 +42,7 @@ TARGET_WHITELIST = 2
 
 # Таймауты
 TCP_TIMEOUT = 0.5 
-REAL_TEST_TIMEOUT = 4.0
+REAL_TEST_TIMEOUT = 5.0 # Дадим чуть больше времени на реальный тест
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -168,8 +169,9 @@ def check_real_server_wrapper(args):
     
     with open(conf_name, 'w') as f: json.dump(config, f)
     
+    # Запускаем Xray (игнорируем вывод, чтобы не засорять логи)
     proc = subprocess.Popen([XRAY_BIN, "-c", conf_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(0.4) 
+    time.sleep(0.5) 
     
     success = False
     delay = 9999
@@ -177,6 +179,7 @@ def check_real_server_wrapper(args):
     try:
         proxies = {'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}'}
         start = time.perf_counter()
+        # Пробуем скачать заголовки с Cloudflare
         r = requests.get('http://cp.cloudflare.com/', proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         if r.status_code == 204 or r.status_code == 200:
             delay = (time.perf_counter() - start) * 1000
@@ -206,6 +209,7 @@ def process_batch(servers):
 def run_tournament(candidates, needed, title):
     if not candidates: return []
     
+    # Берем ТОП-30 кандидатов по TCP
     candidates.sort(key=lambda x: x['latency'])
     semi_finalists = candidates[:30]
     
@@ -276,7 +280,6 @@ def main():
     
     json_data = {"updated_at": msk_now.strftime('%H:%M'), "servers": []}
     
-    # ИСПРАВЛЕННАЯ СТРОКА С КАВЫЧКАМИ НИЖЕ
     update_msg = f"Обновлено: {msk_now.strftime('%H:%M')}"
     result_links = [f"vless://fake@1.1.1.1:80?#{quote(update_msg)}"]
     
