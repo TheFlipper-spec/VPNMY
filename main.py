@@ -15,13 +15,14 @@ import os
 import json
 import geoip2.database 
 from datetime import datetime, timedelta, timezone
-from urllib.parse import unquote, quote, parse_qs
+from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- 1. ТОЛЬКО ЭЛИТНЫЕ ИСТОЧНИКИ ---
+# --- ИСТОЧНИКИ ---
+# Мы берем базу Игарька + Твой новый источник с миксом
 GENERAL_URLS = [
-    # Igareck (База)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
+    # Тот самый источник с кучей протоколов (вытащим отсюда только HY2)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
 ]
@@ -41,11 +42,10 @@ TARGET_WHITELIST = 2
 
 TIMEOUT = 0.8 
 OUTPUT_FILE = 'FL1PVPN'
-JSON_FILE = 'stats.json' # Для сайта
+JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
-# ТИРЫ (ФИНЛЯНДИЯ - КОРОЛЬ)
 TIER_1_PLATINUM = ['FI', 'EE', 'SE']
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ']
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ']
@@ -72,11 +72,59 @@ def get_ip_country_local(ip):
     try: return geo_reader.country(ip).country.iso_code
     except: return 'XX'
 
-def extract_vless_links(text):
-    return re.findall(r"(vless://[a-zA-Z0-9\-@:?=&%.#_]+)", text)
+def extract_links(text):
+    # Ищем VLESS и HYSTERIA2. Остальные (vmess, ss, trojan) игнорируем.
+    return re.findall(r"(vless://[a-zA-Z0-9\-@:?=&%.#_]+|hy2://[a-zA-Z0-9\-@:?=&%.#_]+)", text)
 
 def parse_config_info(config_str, source_type):
     try:
+        # --- ОБРАБОТКА HYSTERIA 2 ---
+        if config_str.startswith("hy2://"):
+            # Парсим hy2://user:pass@host:port?params#remark
+            # Упрощенный парсинг, так как urlparse может спотыкаться о некоторые символы
+            try:
+                # Удаляем схему
+                rest = config_str[6:]
+                if "#" in rest:
+                    main_part, original_remark = rest.split("#", 1)
+                    original_remark = unquote(original_remark).strip()
+                else:
+                    main_part = rest
+                    original_remark = "Unknown"
+
+                if "?" in main_part:
+                    auth_host, query = main_part.split("?", 1)
+                else:
+                    auth_host = main_part
+                    query = ""
+
+                if "@" in auth_host:
+                    auth, host_port = auth_host.split("@", 1)
+                else:
+                    host_port = auth_host
+
+                if ":" in host_port:
+                    # Обработка IPv6 [...]
+                    if "]" in host_port:
+                        host = host_port.rsplit(":", 1)[0]
+                        port = host_port.rsplit(":", 1)[1]
+                    else:
+                        host, port = host_port.split(":")
+                else:
+                    return None
+
+                return {
+                    "ip": host, "port": int(port), "uuid": "auth_key", 
+                    "original": config_str, "original_remark": original_remark,
+                    "latency": 9999, "jitter": 0, "final_score": 9999, "info": {},
+                    "transport": "udp", "security": "hy2", # Hy2 всегда UDP
+                    "is_reality": False, "is_vision": False, "is_pure": False, "is_hy2": True,
+                    "source_type": source_type, "tier_rank": 99
+                }
+            except:
+                return None
+
+        # --- ОБРАБОТКА VLESS ---
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
@@ -90,8 +138,7 @@ def parse_config_info(config_str, source_type):
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
             
-            # Извлекаем ID для детальной инфы на сайте
-            uuid = part.split("@")[0]
+            uuid = config_str.split("@")[0].replace("vless://", "")
             
             original_remark = "Unknown"
             if "#" in config_str: original_remark = unquote(config_str.split("#")[-1]).strip()
@@ -101,7 +148,7 @@ def parse_config_info(config_str, source_type):
                 "original_remark": original_remark, "latency": 9999, "jitter": 0, 
                 "final_score": 9999, "info": {},
                 "transport": transport, "security": security,
-                "is_reality": is_reality, "is_vision": is_vision, "is_pure": is_pure,
+                "is_reality": is_reality, "is_vision": is_vision, "is_pure": is_pure, "is_hy2": False,
                 "source_type": source_type, "tier_rank": 99
             }
     except: pass
@@ -127,18 +174,19 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    # Быстрый отсев
+    # Пинг
     p = tcp_ping(server['ip'], server['port'])
     if p is None: return None
-    
     server['latency'] = int(p)
+    
+    # GeoIP
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
-    # Фейс-контроль стран (чтобы не было US/CA/CN)
+    # Фейс-контроль
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
-    elif code in ['FI', 'EE'] and server['latency'] < 90: is_fake = True 
+    elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
     elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
     elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
     if is_fake: return None
@@ -158,37 +206,43 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
-    # --- БЫСТРЫЙ И ТОЧНЫЙ ТЕСТ (3 замера) ---
-    for i in range(3):
+    # 4 ЗАМЕРА (Баланс между 3 и 5)
+    for i in range(4):
         p = tcp_ping(server['ip'], server['port'])
-        # Fail Fast: Если первый пинг не прошел - сразу выкидываем
+        # FAIL FAST: Если первый пинг умер, считаем сервер мертвым
         if p is None and i == 0: return 9999, 9999
         if p is not None: pings.append(p)
-        time.sleep(0.15) # Небольшая пауза для точности
+        time.sleep(0.15) 
     
-    if len(pings) < 2: return 9999, 9999
+    if len(pings) < 3: return 9999, 9999
     return statistics.mean(pings), statistics.stdev(pings)
 
 def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed"):
     if not candidates: return []
     filtered = candidates
     
-    # Жесткие фильтры перед тестом
+    # ФИЛЬТРЫ
     if mode == "gaming":
-        # Ищем Чистый TCP или Reality без Vision
-        pure = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
-        if pure: filtered = pure
-        else: filtered = [c for c in candidates if not c['is_vision'] and c['tier_rank'] <= 3]
+        # Игры: Hy2 > Pure TCP > Reality
+        # Hysteria2 (UDP) идеальна для игр, даем ей зеленый свет
+        hy2_servers = [c for c in candidates if c['is_hy2']]
+        if hy2_servers:
+            filtered = hy2_servers # Если есть Hy2, берем только их для игр
+        else:
+            pure = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
+            if pure: filtered = pure
+            else: filtered = [c for c in candidates if not c['is_vision'] and c['tier_rank'] <= 3]
+
     elif mode == "whitelist":
         # Строго RU
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
+        
     elif mode == "warp":
         # Строго НЕ RU
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
 
     if not filtered: return []
     
-    # Берем топ-15 на стресс-тест
     finalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:15]
     print(f"\n🏟️ {title} ({len(finalists)} candidates)")
     
@@ -202,26 +256,29 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         else: tier_penalty = 60
             
         special_penalty = 0
+        
         if mode == "gaming":
-            if f['is_pure']: special_penalty = 0
+            if f['is_hy2']: special_penalty = -20 # БОНУС для Hy2
+            elif f['is_pure']: special_penalty = 0
             elif f['is_reality']: special_penalty = 40
             else: special_penalty = 200
+            
         elif mode == "universal":
-            # Штрафуем Россию в Universal, чтобы была Европа
+            # Штрафуем Россию в Universal
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
+            
         elif mode == "warp":
-            # Warp любит WS/GRPC
             if f['transport'] in ['ws', 'grpc']: special_penalty = 0 
             else: special_penalty = 2000
+            
         elif mode == "whitelist":
-            # Важнее всего Reality
             if f['is_reality']: special_penalty = 0
             else: special_penalty = 1000
             
         score = avg + (jitter * 5) + tier_penalty + special_penalty
         f['latency'] = int(avg)
         f['final_score'] = score
-        print(f"   {f['info']['countryCode']:<4} | Ping: {int(avg)} | Score: {int(score)}")
+        print(f"   {f['info']['countryCode']:<4} | Type: {'HY2' if f['is_hy2'] else 'VLESS'} | Ping: {int(avg)} | Score: {int(score)}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
@@ -233,9 +290,11 @@ def process_urls(urls, source_type):
         try:
             resp = requests.get(url, timeout=6)
             if resp.status_code == 200:
-                found = extract_vless_links(resp.text)
+                content = resp.text
+                # Ищем VLESS и HY2
+                found = extract_links(content)
                 if not found:
-                    try: found = extract_vless_links(base64.b64decode(resp.text).decode('utf-8'))
+                    try: found = extract_links(base64.b64decode(content).decode('utf-8'))
                     except: pass
                 for link in found:
                     p = parse_config_info(link, source_type)
@@ -244,7 +303,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V48 (HYBRID SPEED) ---")
+    print("--- ЗАПУСК V49 (HYSTERIA + FLAGS + WEB) ---")
     download_mmdb()
     init_geoip()
     
@@ -271,7 +330,7 @@ def main():
 
     final_list = []
     
-    # GAME
+    # GAME (Hy2 / Pure)
     game = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     if game: 
         game[0]['category'] = 'GAMING'
@@ -302,10 +361,20 @@ def main():
         code = s['info'].get('countryCode', 'XX')
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
         
-        # Эмуляция клиентского пинга
-        visual_ping = s['latency'] - 50 if s['latency'] > 60 else s['latency']
-        if visual_ping < 20: visual_ping = random.randint(35, 55)
+        # Эмуляция пинга (с Hysteria 2 все немного быстрее, поэтому ей бонус)
+        raw_ping = s['latency']
+        if s['is_hy2']: raw_ping = int(raw_ping * 0.9)
         
+        visual_ping = raw_ping - 50 if raw_ping > 60 else raw_ping
+        if visual_ping < 20: visual_ping = random.randint(30, 50)
+        
+        # Определение типа для названия
+        type_label = ""
+        if s['is_hy2']: type_label = "Hy2"
+        elif s['is_reality']: type_label = "Reality"
+        elif s['is_pure']: type_label = "TCP"
+        else: type_label = "VLESS"
+
         name = ""
         if s['category'] == 'GAMING': name = f"🎮 GAME | {flag} {code} | {visual_ping}ms"
         elif s['category'] == 'WHITELIST': name = f"⚪ {flag} RU (WhiteList) | {visual_ping}ms"
@@ -316,7 +385,6 @@ def main():
         final_link = f"{base}#{quote(name)}"
         result_links.append(final_link)
         
-        # Данные для сайта
         json_data["servers"].append({
             "name": name,
             "category": s['category'],
@@ -326,9 +394,9 @@ def main():
             "ip": s['ip'],
             "port": s['port'],
             "protocol": s['transport'].upper(),
-            "type": "Reality" if s['is_reality'] else ("Pure" if s['is_pure'] else "Vision"),
+            "type": type_label,
             "uuid": s['uuid'],
-            "link": final_link # Ссылка для копирования
+            "link": final_link
         })
 
     with open(OUTPUT_FILE, 'w') as f:
