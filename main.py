@@ -9,7 +9,7 @@ import os
 import json
 import subprocess
 import geoip2.database 
-import base64  # <--- ВЕРНУЛ НА МЕСТО
+import base64
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
@@ -42,7 +42,7 @@ TARGET_WHITELIST = 2
 
 # Таймауты
 TCP_TIMEOUT = 0.5 
-REAL_TEST_TIMEOUT = 5.0 # Дадим чуть больше времени на реальный тест
+REAL_TEST_TIMEOUT = 5.0 
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -169,22 +169,34 @@ def check_real_server_wrapper(args):
     
     with open(conf_name, 'w') as f: json.dump(config, f)
     
-    # Запускаем Xray (игнорируем вывод, чтобы не засорять логи)
+    # Запускаем Xray
     proc = subprocess.Popen([XRAY_BIN, "-c", conf_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    time.sleep(0.5) 
+    time.sleep(0.7) # Чуть увеличил время на инициализацию Xray
     
     success = False
     delay = 9999
+    error_msg = "Unknown"
     
     try:
         proxies = {'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}'}
         start = time.perf_counter()
-        # Пробуем скачать заголовки с Cloudflare
-        r = requests.get('http://cp.cloudflare.com/', proxies=proxies, timeout=REAL_TEST_TIMEOUT)
-        if r.status_code == 204 or r.status_code == 200:
-            delay = (time.perf_counter() - start) * 1000
-            success = True
-    except: pass
+        
+        # Пробуем скачать Google (самый надежный тест)
+        # Если не работает Google, пробуем Cloudflare
+        try:
+            r = requests.get('http://www.google.com/generate_204', proxies=proxies, timeout=REAL_TEST_TIMEOUT)
+            if r.status_code == 204 or r.status_code == 200:
+                delay = (time.perf_counter() - start) * 1000
+                success = True
+        except:
+            # Fallback на Cloudflare
+            r = requests.get('http://cp.cloudflare.com/', proxies=proxies, timeout=REAL_TEST_TIMEOUT)
+            if r.status_code == 204 or r.status_code == 200:
+                delay = (time.perf_counter() - start) * 1000
+                success = True
+                
+    except Exception as e:
+        error_msg = str(e)
     finally:
         proc.terminate()
         try: os.remove(conf_name)
@@ -192,6 +204,12 @@ def check_real_server_wrapper(args):
         
     if success:
         return True, delay, server
+    
+    # Если тест провален, выведем ошибку в консоль для отладки (но не для всех, чтобы не спамить)
+    # Только если пинг был подозрительно хорошим
+    if server['latency'] < 10:
+        print(f"   [DEBUG] {server['country']} Failed: {error_msg}")
+        
     return False, 9999, server
 
 def process_batch(servers):
@@ -232,13 +250,14 @@ def run_tournament(candidates, needed, title):
                 print(f"   ✅ {s['country']} | TCP: {s['latency']}ms | REAL: {int(delay)}ms")
                 real_winners.append(s)
             else:
+                # В логах теперь будет видно, если была ошибка
                 print(f"   ❌ {s['country']} | TCP: {s['latency']}ms | REAL: FAIL")
 
     real_winners.sort(key=lambda x: x['score'])
     return real_winners[:needed]
 
 def main():
-    print("--- STARTING V70 (TURBO XRAY) ---")
+    print("--- STARTING V70 (TURBO XRAY + PYSOCKS FIX) ---")
     download_mmdb()
     init_geoip()
     
