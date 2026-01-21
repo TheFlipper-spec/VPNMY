@@ -2,8 +2,8 @@ name: Update VPN Subscription
 
 on:
   schedule:
-    - cron: '0 */1 * * *'  # Запуск каждый 1 час
-  workflow_dispatch:      # Кнопка ручного запуска
+    - cron: '0 */1 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,13 +19,21 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.10'
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests
-        pip install geoip2
+        pip install requests geoip2
+
+    # --- ДОБАВЛЕНО: СКАЧИВАЕМ XRAY ---
+    - name: Download Xray Core
+      run: |
+        wget https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip
+        unzip Xray-linux-64.zip
+        chmod +x xray
+        # Удаляем лишнее, чтобы не мусорить
+        rm Xray-linux-64.zip geoip.dat geosite.dat
 
     - name: Run script
       run: python main.py
@@ -34,15 +42,7 @@ jobs:
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        
-        # Добавляем ВСЕ файлы (включая stats.json)
         git add .
-        
-        # Фиксируем изменения
         git commit -m "Auto-update FL1PVPN and Stats" || echo "No changes to commit"
-        
-        # ВАЖНО: Сначала забираем свежие изменения с сервера, чтобы не было конфликта
         git pull --rebase origin main
-        
-        # Теперь отправляем
         git push
