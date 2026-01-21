@@ -19,17 +19,39 @@ import geoip2.database
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
+
 # --- НАСТРОЙКИ ---
 GENERAL_URLS = [
+    # 1. БАЗА (Igareck) - Самое надежное для РФ, база пробива
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",   
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
+    
+    # 2. МИРОВАЯ ЭЛИТА (Стабильные и быстрые)
+    # Roosterkid - легенда, обновляется часто, мало мусора
+    "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt",
+    
+    # 3. ЕВРОПЕЙСКИЙ ПОИСК (Для Финляндии/Германии/Нидерландов)
+    # LalatinaHub - огромная база, именно отсюда часто прилетают быстрые европейские IP
+    "https://github.com/LalatinaHub/Mineral/raw/refs/heads/master/result/nodes",
+    
+    # 4. VLESS СПЕЦИАЛИСТЫ (Чистые конфиги без лишних протоколов)
+    # Mheidari98 - специализируется на VLESS, хороший шанс найти WARP
+    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
+    # Yebekhe - очень известный коллектор, часто попадаются уникальные сервера
+    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/vless",
+    # MahdiTaheri - хороший микс, помогает найти резервные сервера
+    "https://github.com/MhdiTaheri/V2rayCollector/raw/refs/heads/main/sub/mix"
 ]
 
 WHITELIST_URLS = [
+    # База Игарька для белых списков (РФ)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-checked.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
+    
+    # Тот самый источник от AvenCores, который ты нашел (ОБЯЗАТЕЛЬНО ОСТАВЬ ЕГО)
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
