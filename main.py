@@ -14,7 +14,7 @@ import statistics
 import copy
 import random
 import os
-import json # ВАЖНО: Добавлен модуль для JSON
+import json 
 import geoip2.database 
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
@@ -43,9 +43,9 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 0.7 # Ускорил (было 1.0)
+TIMEOUT = 0.7 
 OUTPUT_FILE = 'FL1PVPN'
-JSON_FILE = 'stats.json' # Имя файла для сайта
+JSON_FILE = 'stats.json' 
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
@@ -264,7 +264,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V47 (WEB + SPEED) ---")
+    print("--- ЗАПУСК V47.1 (SYNTAX FIX) ---")
     download_mmdb()
     init_geoip()
     
@@ -280,7 +280,6 @@ def main():
     print(f"🔍 Checking {len(servers_to_check)} servers (60 threads)...")
     
     working_servers = []
-    # 60 потоков для скорости
     with concurrent.futures.ThreadPoolExecutor(max_workers=60) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
@@ -304,17 +303,21 @@ def main():
 
     print("\n--- GENERATING FILES ---")
     
+    # ИСПРАВЛЕНИЕ ОШИБКИ С КАВЫЧКАМИ
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
     
-    info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(f'📅 {msk_now.strftime('%H:%M')} | Next: {next_update.strftime('%H:%M')}')}"
+    str_now = msk_now.strftime('%H:%M')
+    str_next = next_update.strftime('%H:%M')
+    
+    info_remark = f"📅 {str_now} | Next: {str_next}"
+    info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(info_remark)}"
     result_links = [info_link]
     
-    # JSON структура для сайта
     json_data = {
-        "updated_at": msk_now.strftime('%H:%M'),
-        "next_update": next_update.strftime('%H:%M'),
+        "updated_at": str_now,
+        "next_update": str_next,
         "servers": []
     }
 
@@ -322,7 +325,6 @@ def main():
         code = s['info'].get('countryCode', 'XX')
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
         
-        # Эмуляция пинга для клиента (чтобы было красиво)
         visual_ping = s['latency'] - 50 if s['latency'] > 60 else s['latency']
         if visual_ping < 20: visual_ping = random.randint(30, 45)
         
