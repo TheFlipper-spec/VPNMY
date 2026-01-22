@@ -25,11 +25,15 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-    # Hy2 Источники
+    # Новые источники Goida (Hy2/Vless)
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/24.txt",
+    
+    # Специализированные Hy2
     "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/hysteria2/normal",
     "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/hysteria2.txt",
     
-    # Остальные
+    # Базовые
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
@@ -51,8 +55,8 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 0.8  # TCP Timeout
-REAL_TEST_TIMEOUT = 10.0 # Xray Timeout
+TIMEOUT = 0.7  # Уменьшил TCP Timeout для скорости
+REAL_TEST_TIMEOUT = 7.0 # Уменьшил Xray Timeout (быстрее отсеет мертвых)
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
@@ -117,7 +121,6 @@ def safe_base64_decode(s):
             return ""
 
 def extract_links(text):
-    # Regex ищет и hy2:// и hysteria2://
     regex = r"(vless://[^ \n]+|hy2://[^ \n]+|hysteria2://[^ \n]+|ss://[^ \n]+)"
     links = re.findall(regex, text)
     
@@ -127,7 +130,6 @@ def extract_links(text):
             links_decoded = re.findall(regex, decoded)
             links.extend(links_decoded)
     
-    # Нормализация: превращаем hysteria2:// в hy2://
     normalized_links = []
     for link in links:
         if link.startswith("hysteria2://"):
@@ -534,22 +536,65 @@ def stress_test_server(server):
     if len(pings) < 2: return 9999, 9999
     return statistics.mean(pings), statistics.stdev(pings)
 
+def check_candidates(candidates):
+    """Вспомогательная функция для проверки группы кандидатов"""
+    results = []
+    for f in candidates:
+        real_lat = check_real_connection(f)
+        if real_lat is None: continue
+        
+        avg, jitter = stress_test_server(f)
+        
+        tier_penalty = 0
+        if f['tier_rank'] == 1: tier_penalty = 0     
+        elif f['tier_rank'] == 2: tier_penalty = 30  
+        else: tier_penalty = 70                      
+            
+        special_penalty = 0
+        if f['is_hy2']: 
+            special_penalty = -200 
+            if f['info']['countryCode'] == 'FI': special_penalty -= 200 
+        elif f.get('is_ss', False):
+            special_penalty = -100 
+            if f['info']['countryCode'] == 'FI': special_penalty -= 300 # СУПЕР ПРИОРИТЕТ ФИНСКОГО SS
+            
+        score = avg + (jitter * 5) + tier_penalty + special_penalty
+        
+        f['latency'] = int(avg)
+        f['jitter'] = int(jitter)
+        f['final_score'] = score
+        results.append(f)
+        
+    return sorted(results, key=lambda x: x['final_score'])
+
 def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed"):
     if not candidates: return []
     filtered = candidates
     
     if mode == "gaming":
-        hy2_servers = [c for c in candidates if c['is_hy2']]
-        if hy2_servers:
-            filtered = hy2_servers
-        else:
-            print(f"   ℹ️ {title}: No Hy2 found. Fallback to Shadowsocks...")
-            ss_servers = [c for c in candidates if c.get('is_ss', False)]
-            if ss_servers:
-                filtered = ss_servers
-            else:
-                print(f"   ⚠️ {title}: No Hy2 OR Shadowsocks found. Skipping.")
-                return []
+        # ЭТАП 1: Только Hysteria 2
+        print(f"   ℹ️ {title}: Searching for Hy2...")
+        hy2_candidates = [c for c in candidates if c['is_hy2']]
+        # Берем Top-20 кандидатов на проверку
+        hy2_semifinals = sorted(hy2_candidates, key=lambda x: x['tier_rank'])[:20]
+        
+        winners = check_candidates(hy2_semifinals)
+        
+        if winners:
+            return winners[:winners_needed]
+            
+        # ЭТАП 2: Fallback на Shadowsocks
+        print(f"   ℹ️ {title}: No alive Hy2 found. Switching to Shadowsocks...")
+        ss_candidates = [c for c in candidates if c.get('is_ss', False)]
+        ss_semifinals = sorted(ss_candidates, key=lambda x: x['tier_rank'])[:20]
+        
+        winners = check_candidates(ss_semifinals)
+        
+        if winners:
+            return winners[:winners_needed]
+            
+        print(f"   ⚠️ {title}: No Game Servers found (Hy2/SS).")
+        return []
 
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
@@ -558,6 +603,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
+    # Стандартный турнир для остальных
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:20]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
@@ -578,15 +624,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         else: tier_penalty = 70                      
             
         special_penalty = 0
-        if mode == "gaming":
-            if f['is_hy2']: 
-                special_penalty = -200 
-                if f['info']['countryCode'] == 'FI': special_penalty -= 200 
-            elif f.get('is_ss', False):
-                special_penalty = -100 
-                if f['info']['countryCode'] == 'FI': special_penalty -= 200 
-            
-        elif mode == "universal":
+        if mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "warp":
             if f['transport'] in ['ws', 'grpc']: 
@@ -616,11 +654,9 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         
     scored_results.sort(key=lambda x: x['final_score'])
     
-    if not scored_results and semifinalists:
-        if mode == "gaming":
-             print("   ⚠️ WARNING: No Game Servers passed Real Test.")
-             return [] 
-        return semifinalists[:winners_needed]
+    if not scored_results:
+        print("   ⚠️ WARNING: No servers passed Real Test.")
+        return []
 
     return scored_results[:winners_needed]
 
@@ -647,7 +683,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V64 (HYSTERIA2 PROTOCOL FIX) ---")
+    print("--- ЗАПУСК V65 (SPEED UP + FALLBACK LOGIC) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -658,7 +694,8 @@ def main():
     init_geoip()
     
     all_servers = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    # УВЕЛИЧИВАЕМ КОЛИЧЕСТВО ПОТОКОВ ДЛЯ СКОРОСТИ
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         f1 = executor.submit(process_urls, GENERAL_URLS, 'general')
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         all_servers = f1.result() + f2.result()
@@ -668,7 +705,8 @@ def main():
     print(f"🔍 Checking {len(servers_to_check)} servers (TCP/ICMP scan)...")
     
     working_servers = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+    # УВЕЛИЧИВАЕМ КОЛИЧЕСТВО ПОТОКОВ ДЛЯ ПРОВЕРКИ (SPEED UP)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
