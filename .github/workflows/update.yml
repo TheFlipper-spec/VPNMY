@@ -31,11 +31,12 @@ jobs:
         path: |
           xray
           Country.mmdb
-        key: vpn-tools-${{ runner.os }}-v2 # Меняй v2 на v3, если нужно сбросить кэш
+        key: vpn-tools-${{ runner.os }}-v2 
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        # Обязательно используем requirements.txt (там должен быть PySocks)
         pip install -r requirements.txt
 
     # Скачиваем Xray только если его нет в кэше
@@ -68,7 +69,6 @@ jobs:
         git commit -m "Auto-update FL1PVPN and Stats" || exit 0
         
         # 3. ВАЖНО: Удаляем все "лишние" файлы (xray, логи), которые мешали pull
-        # Это не удалит твой коммит, но очистит рабочую папку
         git reset --hard
         
         # 4. Теперь безопасно забираем обновления и отправляем
