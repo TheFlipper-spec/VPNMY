@@ -2,7 +2,7 @@ name: Update VPN Subscription
 
 on:
   schedule:
-    - cron: '0 */1 * * *'  # Запуск каждый 1 час
+    - cron: '0 */1 * * *'  # Запуск каждый час
   workflow_dispatch:      # Кнопка ручного запуска
 
 permissions:
@@ -14,63 +14,65 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    # ОПТИМИЗАЦИЯ 1: Кэшируем Python пакеты
+    # 1. Кэшируем Python пакеты (ускорение)
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.9'
-        cache: 'pip' # Авто-кэш для pip
+        cache: 'pip'
 
-    # ОПТИМИЗАЦИЯ 2: Кэшируем Xray и MMDB, чтобы не качать их каждый раз
+    # 2. Кэшируем инструменты (Xray, MMDB), чтобы не качать их каждый раз
+    # Это защищает от бана за частые скачивания и ускоряет процесс
     - name: Cache Xray and MMDB
-      id: cache-tools
-      uses: actions/cache@v3
+      id: cache-files
+      uses: actions/cache@v4
       with:
         path: |
           xray
           Country.mmdb
-        key: vpn-tools-${{ runner.os }}-v2 
+        key: vpn-tools-v1
 
+    # 3. Ставим зависимости + PySocks (важно!)
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Обязательно используем requirements.txt (там должен быть PySocks)
-        pip install -r requirements.txt
+        pip install -r requirements.txt PySocks
 
-    # Скачиваем Xray только если его нет в кэше
-    - name: Download Xray Core
-      if: steps.cache-tools.outputs.cache-hit != 'true'
+    # 4. Скачиваем Xray только если его нет в кэше
+    - name: Setup Tools (Xray)
+      if: steps.cache-files.outputs.cache-hit != 'true'
       run: |
-        echo "Cache miss - downloading Xray..."
-        wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        unzip -o Xray-linux-64.zip xray
+        if [ ! -f xray ]; then
+          echo "Downloading Xray..."
+          wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+          unzip -o Xray-linux-64.zip xray
+          rm Xray-linux-64.zip
+        fi
         chmod +x xray
-        rm Xray-linux-64.zip
 
     # Даем права на выполнение (даже если из кэша)
-    - name: Prepare Xray
-      run: chmod +x xray
+    - name: Ensure Xray permissions
+      run: |
+        if [ -f xray ]; then chmod +x xray; fi
 
     - name: Run script
       run: python main.py
 
-    # ФИКС ОШИБКИ GIT: Удаляем мусор перед Pull
     - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
-        # 1. Добавляем только результаты
+        # Добавляем только результаты
         git add FL1PVPN stats.json
         
-        # 2. Делаем коммит (если есть изменения)
-        git commit -m "Auto-update FL1PVPN and Stats" || exit 0
-        
-        # 3. ВАЖНО: Удаляем все "лишние" файлы (xray, логи), которые мешали pull
-        git reset --hard
-        
-        # 4. Теперь безопасно забираем обновления и отправляем
-        git pull --rebase origin main
-        git push
+        # Если изменений нет — не спамим в историю
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Auto-update VPN configs [skip ci]"
+          git pull --rebase origin main
+          git push
+        fi
