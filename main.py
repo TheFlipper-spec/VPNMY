@@ -14,6 +14,7 @@ import statistics
 import os
 import json
 import uuid 
+import binascii # Нужен для SS
 import geoip2.database 
 import subprocess
 import tempfile
@@ -24,11 +25,11 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-    # Goida (тут много SS и Vless)
+    # Goida (Источник SS и Reality)
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/24.txt",
     
-    # Базовые
+    # Igareck (База)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
@@ -50,8 +51,9 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 0.8  # TCP Timeout
-REAL_TEST_TIMEOUT = 8.0 # Xray Timeout
+# БАЛАНС СКОРОСТИ И КАЧЕСТВА
+TIMEOUT = 0.8           # Быстрый TCP чек
+REAL_TEST_TIMEOUT = 8.0 # Надежный Xray чек
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
@@ -115,7 +117,7 @@ def safe_base64_decode(s):
             return ""
 
 def extract_links(text):
-    regex = r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)"
+    regex = r"(vless://[^ \n]+|ss://[^ \n]+)"
     links = re.findall(regex, text)
     if len(links) < 5:
         decoded = safe_base64_decode(text)
@@ -125,7 +127,7 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # SS
+        # --- SHADOWSOCKS ---
         if config_str.startswith("ss://"):
             try:
                 rest = config_str[5:]
@@ -180,51 +182,7 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # HY2
-        if config_str.startswith("hy2://"):
-            try:
-                rest = config_str[6:]
-                if "#" in rest:
-                    main_part, original_remark = rest.split("#", 1)
-                    original_remark = unquote(original_remark).strip()
-                else:
-                    main_part = rest
-                    original_remark = "Unknown"
-
-                if "?" in main_part: 
-                    auth_host, query = main_part.split("?", 1)
-                    params = parse_qs(query)
-                else: 
-                    auth_host = main_part
-                    params = {}
-
-                password = ""
-                if "@" in auth_host: 
-                    password, host_port = auth_host.split("@", 1)
-                else: 
-                    host_port = auth_host
-                    
-                if ":" in host_port:
-                    if "]" in host_port:
-                        host = host_port.rsplit(":", 1)[0]
-                        port = host_port.rsplit(":", 1)[1]
-                    else:
-                        host, port = host_port.split(":")
-                else: return None
-
-                return {
-                    "ip": host, "port": int(port), 
-                    "uuid": password,
-                    "original": config_str, "original_remark": original_remark,
-                    "latency": 9999, "jitter": 0, "final_score": 9999, "info": {},
-                    "transport": "udp", "security": "hy2",
-                    "is_reality": False, "is_vision": False, "is_pure": False, "is_hy2": True, "is_ss": False,
-                    "source_type": source_type, "tier_rank": 99,
-                    "parsed_params": params
-                }
-            except: return None
-
-        # VLESS
+        # --- VLESS ---
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
@@ -235,6 +193,7 @@ def parse_config_info(config_str, source_type):
             security = params.get('security', ['none'])[0].lower()
             flow_val = params.get('flow', [''])[0].lower()
             
+            # Строгая проверка на Reality
             is_reality = (security == 'reality')
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -271,7 +230,7 @@ def generate_xray_config(server, local_port):
     try:
         params = server['parsed_params']
         
-        # SS
+        # 1. SHADOWSOCKS
         if server.get('is_ss', False):
             outbound_config = {
                 "tag": "proxy",
@@ -282,7 +241,7 @@ def generate_xray_config(server, local_port):
                         "port": int(server['port']),
                         "method": params.get('method', ''),
                         "password": server['uuid'],
-                        "uot": True 
+                        "uot": True # UDP over TCP для игр
                     }]
                 }
             }
@@ -293,7 +252,7 @@ def generate_xray_config(server, local_port):
             }
             return config
 
-        # VLESS
+        # 2. VLESS
         user_obj = {
             "id": server['uuid'],
             "encryption": "none"
@@ -366,9 +325,6 @@ def generate_xray_config(server, local_port):
         return None
 
 def check_real_connection(server):
-    if server['is_hy2']:
-        return server['latency'] # Hy2 не проверяем через Xray в этой версии
-
     local_port = random.randint(10000, 60000)
     config_data = generate_xray_config(server, local_port)
     
@@ -399,7 +355,7 @@ def check_real_connection(server):
             'https': f'socks5://127.0.0.1:{local_port}'
         }
         
-        # Проверяем через Cloudflare, это быстро и надежно
+        # Надежная проверка через Cloudflare
         target_url = "http://cp.cloudflare.com/"
         
         start_time = time.perf_counter()
@@ -477,23 +433,24 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # СТРАТЕГИЯ: ФИНЛЯНДИЯ (SS или VLESS/REALITY)
+        # --- ЛОГИКА ГЕЙМ СЕРВЕРА ---
+        # 1. Только SS или Reality
+        filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
         
-        # 1. Отбираем только Финляндию (FI)
-        fi_candidates = [c for c in candidates if c['info']['countryCode'] == 'FI']
-        
-        if fi_candidates:
-            # 2. Если есть Финляндия, сортируем: SS выше, потом Reality, потом остальные
-            # Даем бонус SS (-200 очков) и Reality (-100)
-            print(f"   ℹ️ {title}: Found {len(fi_candidates)} candidates in Finland.")
-            filtered = fi_candidates
+        # 2. Только Tier 1 (FI, EE, SE)
+        # Если в Tier 1 пусто, берем Tier 2 (DE, NL)
+        tier1_candidates = [c for c in filtered if c['tier_rank'] == 1]
+        if tier1_candidates:
+            filtered = tier1_candidates
+            print(f"   ℹ️ {title}: Found {len(filtered)} Tier-1 candidates (FI/EE/SE).")
         else:
-            # 3. Если Финляндии нет, ищем Tier 1 (EE, SE)
-            print(f"   ℹ️ {title}: No Finland found. Looking for neighbors (EE, SE)...")
-            filtered = [c for c in candidates if c['tier_rank'] == 1]
+            print(f"   ℹ️ {title}: No Tier-1 found. Checking neighbors.")
             
-        if not filtered: return []
-
+    elif mode == "universal":
+        # --- ЛОГИКА UNIVERSAL ---
+        # СТРОГО: Только Reality
+        filtered = [c for c in candidates if c['is_reality']]
+        
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == "warp":
@@ -501,13 +458,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
+    # Берем ТОП-20 по пингу для проверки
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:20]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
     
     scored_results = []
     for f in semifinalists:
-        # Real VLESS Test (включая SS)
+        # Real Test через Xray (включая SS)
         real_lat = check_real_connection(f)
         
         if real_lat is None:
@@ -522,10 +480,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         else: tier_penalty = 70                      
             
         special_penalty = 0
+        
         if mode == "gaming":
-            # ПРИОРИТЕТЫ ДЛЯ ИГР (Финляндия уже отобрана, тут внутри страны)
-            if f.get('is_ss', False): special_penalty = -200 # SS топ
-            elif f['is_reality']: special_penalty = -100 # Reality тоже хорошо
+            # --- УМНАЯ ЛОГИКА ДЛЯ ИГР ---
+            # Даем бонус SS (-20 очков). 
+            # Это значит, если SS и Reality имеют одинаковый пинг -> выиграет SS.
+            # Но если Reality быстрее на 20мс+ -> выиграет Reality.
+            if f.get('is_ss', False): 
+                special_penalty = -20 
             
         elif mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
@@ -546,12 +508,12 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         f['jitter'] = int(jitter)
         f['final_score'] = score
         
-        # Красивый вывод
-        proto = "TCP"
-        if f.get('is_ss', False): proto = "SS"
-        elif f['is_reality']: proto = "Reality"
+        proto_info = "TCP"
+        if f.get('is_ss', False): proto_info = "SS"
+        elif f['is_reality']: proto_info = "Reality"
+        elif f['transport'] == 'ws': proto_info = "WS"
         
-        print(f"   ✅ {f['info']['countryCode']:<4} | {proto:<8} | Ping: {int(avg)}ms | Score: {int(score)}")
+        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<8} | Ping: {int(avg)}ms | Score: {int(score)}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
@@ -577,7 +539,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V58.2 (FI GAME PRIORITY + SS SUPPORT) ---")
+    print("--- ЗАПУСК V68 (REALITY ONLY + SMART GAMING SS) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -588,8 +550,8 @@ def main():
     init_geoip()
     
     all_servers = []
-    # 50 потоков - золотая середина (быстро и безопасно)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+    # 40 потоков для стабильности
+    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
         f1 = executor.submit(process_urls, GENERAL_URLS, 'general')
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         all_servers = f1.result() + f2.result()
@@ -599,7 +561,7 @@ def main():
     print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan)...")
     
     working_servers = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
@@ -611,7 +573,7 @@ def main():
 
     final_list = []
     
-    # 1. ГЕЙМ СЕРВЕР (Финляндия: SS или VLESS)
+    # 1. ГЕЙМ СЕРВЕР (SS приоритет, Reality если намного быстрее)
     game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     game_ips = []
     
@@ -624,7 +586,9 @@ def main():
     # 2. Фильтруем (чтобы гейм сервер не попал в обычные)
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     
+    # 3. UNIVERSAL (Только Reality)
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
+    
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
