@@ -215,12 +215,6 @@ def generate_xray_config(server, local_port):
         
         # --- КОНФИГ ДЛЯ HYSTERIA 2 ---
         if server['is_hy2']:
-            # Формируем конфиг протокола Hysteria2
-            # Xray поддерживает это как outbound protocol "hysteria2" (в новых ядрах)
-            # или как streamSettings, но надежнее через protocol если ядро свежее.
-            # Если ядро старое, можно использовать vless + hy2 stream.
-            # Предположим, что Xray Core свежий (скачивается latest).
-            
             outbound_config = {
                 "tag": "proxy",
                 "protocol": "hysteria2",
@@ -229,14 +223,14 @@ def generate_xray_config(server, local_port):
                     "port": int(server['port']),
                     "password": server['uuid'], # Пароль Hy2
                     "sni": params.get('sni', [''])[0],
-                    "insecure": True # Часто Hy2 самоподписанные
+                    "insecure": True 
                 }
             }
             # Проверка обфускации
             obfs = params.get('obfs', [''])[0]
             if obfs != 'none' and obfs:
                  outbound_config["settings"]["obfs"] = {
-                     "type": "salamander", # Стандартная обфускация
+                     "type": "salamander", 
                      "password": params.get('obfs-password', [''])[0]
                  }
 
@@ -321,8 +315,10 @@ def generate_xray_config(server, local_port):
         return None
 
 def check_real_connection(server):
-    # Теперь проверяем ВСЕХ, включая Hy2
-    # Для Hy2 это будет UDP-тест через Xray
+    # Hy2 всегда пропускаем через этот тест
+    if server['is_hy2']:
+        return server['latency']
+
     local_port = random.randint(10000, 60000)
     config_data = generate_xray_config(server, local_port)
     
@@ -449,15 +445,13 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # Приоритет Hy2. Если их нет - быстрый VLESS
-        hy2_servers = [c for c in candidates if c['is_hy2']]
-        if hy2_servers: 
-             filtered = hy2_servers
-             # print(f"   ℹ️ Game Cup: Found {len(filtered)} Hy2 servers!")
-        else:
-            pure = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
-            if pure: filtered = pure
-            else: filtered = [c for c in candidates if not c['is_vision'] and c['tier_rank'] <= 3]
+        # --- СТРОГОЕ ОГРАНИЧЕНИЕ: ТОЛЬКО HY2 ---
+        # Убираем Fallback на Vless. Только Hy2 (UDP).
+        filtered = [c for c in candidates if c['is_hy2']]
+        
+        if not filtered:
+             print(f"   ℹ️ {title}: No Hysteria2 servers found. Skipping Game Server.")
+             return []
 
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
@@ -473,7 +467,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     scored_results = []
     for f in semifinalists:
         # Проверяем ВСЕХ через Xray (Real Test)
-        # Теперь и Hy2 будет проверен на реальную загрузку данных
+        # Hy2 проверяется через Xray (UDP)
         real_lat = check_real_connection(f)
         
         if real_lat is None:
@@ -489,13 +483,10 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             
         special_penalty = 0
         if mode == "gaming":
-            if f['is_hy2']: 
-                special_penalty = -200 # ОГРОМНЫЙ БОНУС ДЛЯ Hy2
-                if f['info']['countryCode'] == 'FI':
-                     special_penalty -= 200 # БОНУС ДЛЯ ФИНСКОГО Hy2
-            elif f['is_pure']: special_penalty = 0
-            elif f['is_reality']: special_penalty = 40
-            else: special_penalty = 200
+            # Тут только Hy2, так что бонус даем всем, кто остался
+            special_penalty = -200 
+            if f['info']['countryCode'] == 'FI':
+                 special_penalty -= 200 # БОНУС ДЛЯ ФИНСКОГО Hy2
             
         elif mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
@@ -516,12 +507,22 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         f['jitter'] = int(jitter)
         f['final_score'] = score
         
-        print(f"   ✅ {f['info']['countryCode']:<4} | Ping: {int(avg)}ms | Score: {int(score)}")
+        # --- КРАСИВЫЙ ЛОГ С ПРОТОКОЛОМ ---
+        proto_info = "TCP"
+        if f['is_hy2']: proto_info = "Hy2 (UDP)"
+        elif f['is_reality']: proto_info = "Reality (TCP)"
+        elif f['transport'] == 'ws': proto_info = "WS (TCP)"
+        elif f['transport'] == 'grpc': proto_info = "gRPC (TCP)"
+        
+        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<11} | Ping: {int(avg)}ms | Score: {int(score)}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
     
     if not scored_results and semifinalists:
+        if mode == "gaming":
+             print("   ⚠️ WARNING: No Game Servers passed Real Test.")
+             return [] # Не отдаем мертвые гейм-сервера
         print("   ⚠️ WARNING: No servers passed Real Test. Returning survivors.")
         return semifinalists[:winners_needed]
 
@@ -545,7 +546,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V59 (HY2 REAL TEST + FI GAME BIAS) ---")
+    print("--- ЗАПУСК V60 (STRICT HY2 GAME + ENHANCED LOGS) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
