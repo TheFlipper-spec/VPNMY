@@ -25,15 +25,6 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-    # Hy2
-    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/hysteria2/normal",
-    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/hysteria2.txt",
-    
-    # Goida (Hy2/SS/Vless)
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/24.txt",
-    
-    # Igareck & Others
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
