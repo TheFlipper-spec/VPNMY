@@ -25,11 +25,15 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
+    # Базовые источники
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt", # Тут есть SS и Hy2
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt"
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
+    
+    # --- НОВЫЙ ИСТОЧНИК СПЕЦИАЛЬНО ДЛЯ HYSTERIA 2 ---
+    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/hysteria2/normal" 
 ]
 
 WHITELIST_URLS = [
@@ -68,7 +72,8 @@ RUS_NAMES = {
     'KZ': 'Казахстан', 'BY': 'Беларусь', 'EE': 'Эстония', 'LV': 'Латвия', 
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур', 'BG': 'Болгария',
     'CZ': 'Чехия', 'RO': 'Румыния', 'IT': 'Италия', 'ES': 'Испания',
-    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
+    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ',
+    'IR': 'Иран'
 }
 
 TIER_1_PLATINUM = ['FI', 'EE', 'SE']
@@ -98,11 +103,18 @@ def get_ip_country_local(ip):
     except: return 'XX'
 
 def extract_links(text):
-    # Улучшенный Regex, захватывающий и SS
-    return re.findall(r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)", text)
+    # Regex + Простая проверка строк, если regex не сработал
+    links = re.findall(r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)", text)
+    if not links:
+        # Пробуем построчно, если файл просто список ссылок
+        lines = text.splitlines()
+        for line in lines:
+            line = line.strip()
+            if line.startswith("hy2://") or line.startswith("vless://") or line.startswith("ss://"):
+                links.append(line)
+    return links
 
 def safe_base64_decode(s):
-    """Безопасное декодирование Base64 с исправлением паддинга"""
     s = s.strip()
     missing_padding = len(s) % 4
     if missing_padding:
@@ -114,11 +126,9 @@ def safe_base64_decode(s):
 
 def parse_config_info(config_str, source_type):
     try:
-        # --- ПАРСИНГ SHADOWSOCKS (SS) ---
+        # SS
         if config_str.startswith("ss://"):
             try:
-                # Формат 1: ss://BASE64#Name
-                # Формат 2: ss://method:pass@host:port#Name
                 rest = config_str[5:]
                 if "#" in rest:
                     main_part, original_remark = rest.split("#", 1)
@@ -133,20 +143,16 @@ def parse_config_info(config_str, source_type):
                 port = 0
 
                 if "@" in main_part:
-                    # Частично расшифрованный
                     user_info, host_port = main_part.split("@", 1)
-                    # user_info может быть base64
                     try:
                         decoded_user = safe_base64_decode(user_info)
                         if ":" in decoded_user:
                              method, password = decoded_user.split(":", 1)
                         else:
-                             # Если не декодируется, значит это plain text
                              if ":" in user_info:
                                  method, password = user_info.split(":", 1)
                     except: return None
                 else:
-                    # Полностью зашифрованный
                     decoded = safe_base64_decode(main_part)
                     if "@" in decoded:
                         auth, host_port = decoded.split("@", 1)
@@ -154,9 +160,8 @@ def parse_config_info(config_str, source_type):
                             method, password = auth.split(":", 1)
                     else: return None
 
-                # Парсим хост:порт
                 if ":" in host_port:
-                    if "]" in host_port: # IPv6
+                    if "]" in host_port: 
                         host = host_port.rsplit(":", 1)[0]
                         port = host_port.rsplit(":", 1)[1]
                     else:
@@ -165,18 +170,18 @@ def parse_config_info(config_str, source_type):
                 
                 return {
                     "ip": host, "port": int(port), 
-                    "uuid": password, # Пароль
+                    "uuid": password,
                     "original": config_str, "original_remark": original_remark,
                     "latency": 9999, "jitter": 0, "final_score": 9999, "info": {},
-                    "transport": "tcp", # SS обычно по TCP, но умеет UDP
-                    "security": "ss", # Маркер для генератора конфига
+                    "transport": "tcp",
+                    "security": "ss", 
                     "is_reality": False, "is_vision": False, "is_pure": False, "is_hy2": False, "is_ss": True,
                     "source_type": source_type, "tier_rank": 99,
                     "parsed_params": {"method": method}
                 }
             except: return None
 
-        # --- ПАРСИНГ HY2 ---
+        # HY2
         if config_str.startswith("hy2://"):
             try:
                 rest = config_str[6:]
@@ -220,7 +225,7 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # --- ПАРСИНГ VLESS ---
+        # VLESS
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
@@ -277,8 +282,6 @@ def icmp_ping(host):
     except: pass
     return None
 
-# --- REAL TEST LOGIC ---
-
 def generate_xray_config(server, local_port):
     try:
         params = server['parsed_params']
@@ -321,7 +324,7 @@ def generate_xray_config(server, local_port):
                         "port": int(server['port']),
                         "method": params.get('method', ''),
                         "password": server['uuid'],
-                        "uot": True # UDP over TCP для игр
+                        "uot": True # UDP over TCP
                     }]
                 }
             }
@@ -484,7 +487,10 @@ def check_server_initial(server):
     p = None
     if server['is_hy2']:
         p = icmp_ping(server['ip'])
-        if p is None: p = tcp_ping(server['ip'], server['port'])
+        # Если пинг не прошел, но это Hy2 - даем шанс (ставим фейк пинг 999),
+        # чтобы проверить его позже через Xray в турнире
+        if p is None: 
+            p = 999
     else:
         p = tcp_ping(server['ip'], server['port'])
 
@@ -495,10 +501,12 @@ def check_server_initial(server):
     server['info'] = {'countryCode': code}
     
     is_fake = False
-    if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
-    elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
-    elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
-    elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
+    # Ослабляем проверку для Hy2 (они часто показывают странный пинг)
+    if not server['is_hy2']: 
+        if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
+        elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
+        elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
+        elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
     
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
@@ -526,12 +534,10 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # 1. Сначала ищем HY2
         hy2_servers = [c for c in candidates if c['is_hy2']]
         if hy2_servers:
             filtered = hy2_servers
         else:
-            # 2. Если Hy2 нет - ищем SHADOWSOCKS (Fallback)
             print(f"   ℹ️ {title}: No Hy2 found. Fallback to Shadowsocks...")
             ss_servers = [c for c in candidates if c.get('is_ss', False)]
             if ss_servers:
@@ -553,7 +559,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     scored_results = []
     for f in semifinalists:
-        # Проверяем ВСЕХ через Xray (включая Hy2 и SS)
         real_lat = check_real_connection(f)
         
         if real_lat is None:
@@ -569,13 +574,12 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             
         special_penalty = 0
         if mode == "gaming":
-            # БОНУСЫ
             if f['is_hy2']: 
                 special_penalty = -200 
                 if f['info']['countryCode'] == 'FI': special_penalty -= 200 
             elif f.get('is_ss', False):
-                special_penalty = -100 # SS тоже хорош, но меньше очков
-                if f['info']['countryCode'] == 'FI': special_penalty -= 200 # SS из Финляндии = ТОП
+                special_penalty = -100 
+                if f['info']['countryCode'] == 'FI': special_penalty -= 200 
             
         elif mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
@@ -633,7 +637,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V61 (SS FALLBACK & ROBUST PARSER) ---")
+    print("--- ЗАПУСК V62 (HY2 BOOSTER & NEW SOURCE) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
