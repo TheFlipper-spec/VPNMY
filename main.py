@@ -40,7 +40,6 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- ЛИМИТЫ ВЫДАЧИ ---
 TARGET_GAME = 1       
 TARGET_UNIVERSAL = 3  
 TARGET_WARP = 2       
@@ -53,10 +52,11 @@ JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
-# БАЗОВЫЕ ПИНГИ ОТ МОСКВЫ (Для визуализации)
-# Это сделает цифры в приложении похожими на правду, а не "2 мс из облака"
+# БАЗОВЫЕ ПИНГИ (Визуальные, для приложения)
 PING_BASE_MS = {
-    'RU': 25, 'FI': 40, 'EE': 45, 'SE': 55, 'DE': 65, 'NL': 70, 
+    # RU поднял до 90, чтобы соответствовало 92мс в приложении
+    'RU': 90, 
+    'FI': 40, 'EE': 45, 'SE': 55, 'DE': 65, 'NL': 70, 
     'FR': 75, 'GB': 80, 'PL': 60, 'TR': 90, 'KZ': 60, 'UA': 50, 
     'US': 160, 'BG': 55, 'AT': 60, 'CZ': 60, 'LV': 45, 'LT': 45,
     'IT': 80, 'ES': 90, 'RO': 65, 'CH': 70, 'NO': 60
@@ -259,7 +259,7 @@ def generate_xray_config(server, local_port):
         return None
 
 def check_real_connection(server):
-    # Hy2 всегда пропускаем через этот тест (возвращаем OK)
+    # Hy2 всегда пропускаем через этот тест
     if server['is_hy2']:
         return server['latency']
 
@@ -370,7 +370,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # Приоритет Hy2, затем Pure TCP
         hy2_servers = [c for c in candidates if c['is_hy2']]
         if hy2_servers: filtered = hy2_servers
         else:
@@ -391,7 +390,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     scored_results = []
     for f in semifinalists:
-        # Gaming пропускает Xray test (только TCP/UDP ping)
         real_lat = None
         
         if mode == "gaming":
@@ -418,8 +416,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         elif mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "warp":
-            if f['transport'] in ['ws', 'grpc']: special_penalty = 0 
-            else: special_penalty = 2000
+            if f['transport'] in ['ws', 'grpc']: 
+                special_penalty = 0
+                # ДАЕМ ФОРУ ФИНЛЯНДИИ И ШВЕЦИИ (-150 очков)
+                # Чтобы они выигрывали у быстрой Франции, если они живы
+                if f['info']['countryCode'] == 'FI': special_penalty -= 150
+                elif f['info']['countryCode'] in ['EE', 'SE']: special_penalty -= 130
+            else: 
+                special_penalty = 2000
         elif mode == "whitelist":
             if f['is_reality']: special_penalty = 0
             else: special_penalty = 1000
@@ -461,7 +465,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V56 (FINAL DUPLICATE FIX & REAL PING) ---")
+    print("--- ЗАПУСК V58 (RU PING 90MS & WARP FI BONUS) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -494,24 +498,18 @@ def main():
 
     final_list = []
     
-    # 1. ТУРНИР ГЕЙМЕРОВ
     game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     game_ips = []
     
     if game_winners:
         for g in game_winners:
             g['category'] = 'Game Server'
-            game_ips.append(g['ip']) # Запоминаем IP победителя
+            game_ips.append(g['ip']) 
         final_list.extend(game_winners)
     
-    # 2. ФИЛЬТРАЦИЯ: Убираем победителей гейм-турнира из обычного списка
-    # Чтобы они не дублировались
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     
-    # 3. ТУРНИР ОБЫЧНЫЙ (уже без игрового сервера)
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
-    
-    # 4. Остальные
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
@@ -537,17 +535,13 @@ def main():
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
         country_full = RUS_NAMES.get(code, code)
         
-        # --- ФИКС ПИНГА: ИСПОЛЬЗУЕМ БАЗУ РФ ---
-        # Вместо того чтобы брать пинг от сервера GitHub (2мс), берем базу расстояния до Москвы
         base_ping = PING_BASE_MS.get(code, 120)
         
-        # Добавляем джиттер (реальную нестабильность сервера), чтобы цифры были живыми
+        # Визуальный пинг для конечного пользователя
+        # RU = 90 + джиттер (~92-100ms)
         calc_ping = base_ping + s['jitter']
         
-        # Чуть уменьшаем для Hy2 (визуально приятнее)
         if s['is_hy2']: calc_ping = int(calc_ping * 0.9)
-        
-        # Хард лимит, чтобы не было "0 мс"
         if calc_ping < 10: calc_ping = 15
 
         type_label = "VLESS"
@@ -575,7 +569,7 @@ def main():
             "country": country_full,
             "iso": code,
             "flag": flag,
-            "ping": calc_ping, # Теперь тут нормальная цифра для РФ
+            "ping": calc_ping,
             "ip": s['ip'],
             "port": s['port'],
             "protocol": s['transport'].upper(),
