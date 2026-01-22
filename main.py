@@ -25,10 +25,11 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-    # Источник специально для Hysteria 2 (обычно Base64)
+    # Hy2 Источники
     "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/hysteria2/normal",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/hysteria2.txt",
     
-    # Остальные источники
+    # Остальные
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
@@ -103,7 +104,6 @@ def get_ip_country_local(ip):
     except: return 'XX'
 
 def safe_base64_decode(s):
-    """Декодирует Base64, даже если кривой паддинг"""
     s = s.strip().replace('\n', '').replace('\r', '')
     missing_padding = len(s) % 4
     if missing_padding:
@@ -117,18 +117,24 @@ def safe_base64_decode(s):
             return ""
 
 def extract_links(text):
-    # 1. Сначала ищем в сыром тексте
-    links = re.findall(r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)", text)
+    # Regex ищет и hy2:// и hysteria2://
+    regex = r"(vless://[^ \n]+|hy2://[^ \n]+|hysteria2://[^ \n]+|ss://[^ \n]+)"
+    links = re.findall(regex, text)
     
-    # 2. Если мало нашли, пробуем декодировать ВЕСЬ текст как Base64
-    # (многие подписки - это просто Base64 blob)
     if len(links) < 5:
         decoded = safe_base64_decode(text)
         if decoded:
-            links_decoded = re.findall(r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)", decoded)
+            links_decoded = re.findall(regex, decoded)
             links.extend(links_decoded)
+    
+    # Нормализация: превращаем hysteria2:// в hy2://
+    normalized_links = []
+    for link in links:
+        if link.startswith("hysteria2://"):
+            link = link.replace("hysteria2://", "hy2://")
+        normalized_links.append(link)
             
-    return list(set(links)) # Убираем дубликаты
+    return list(set(normalized_links))
 
 def parse_config_info(config_str, source_type):
     try:
@@ -414,7 +420,6 @@ def generate_xray_config(server, local_port):
         return None
 
 def check_real_connection(server):
-    # Hy2 тест только через Xray
     if server['is_hy2']:
         return server['latency']
 
@@ -482,7 +487,6 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    # Категория
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -492,14 +496,9 @@ def check_server_initial(server):
     elif is_warp: server['category'] = 'WARP'
     else: server['category'] = 'UNIVERSAL'
 
-    # --- ЛОГИКА ПРОВЕРКИ ---
     if server['is_hy2']:
-        # ВАЖНО: ДЛЯ HY2 МЫ ПРОПУСКАЕМ СЕТЕВУЮ ПРОВЕРКУ ТУТ
-        # Мы верим ссылке на слово, чтобы не убить сервер пингом.
-        # Настоящая проверка будет в турнире через Xray.
-        server['latency'] = 100 # Фейковый пинг, чтобы пройти фильтр
+        server['latency'] = 100
     else:
-        # Для остальных делаем честный пинг
         p = tcp_ping(server['ip'], server['port'])
         if p is None: return None
         server['latency'] = int(p)
@@ -508,7 +507,7 @@ def check_server_initial(server):
     server['info'] = {'countryCode': code}
     
     is_fake = False
-    if not server['is_hy2']:
+    if not server['is_hy2']: 
         if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
         elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
         elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
@@ -648,7 +647,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V63 (AGGRESSIVE DECODER + HY2 SKIP CHECK) ---")
+    print("--- ЗАПУСК V64 (HYSTERIA2 PROTOCOL FIX) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
