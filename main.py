@@ -33,7 +33,7 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/24.txt",
     
-    # Igareck
+    # Igareck & Others
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
@@ -55,8 +55,9 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-TIMEOUT = 0.7  # Fast TCP check
-REAL_TEST_TIMEOUT = 7.0 # Fast Xray check
+# СНИЖАЕМ НАГРУЗКУ ДЛЯ ТОЧНОСТИ
+TIMEOUT = 0.8  
+REAL_TEST_TIMEOUT = 8.0 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
@@ -455,13 +456,14 @@ def check_real_connection(server):
             'https': f'socks5://127.0.0.1:{local_port}'
         }
         
-        target_url = "https://www.google.com/generate_204" 
+        # Более стабильный URL для проверки (Cloudflare CP)
+        target_url = "http://cp.cloudflare.com/"
         
         start_time = time.perf_counter()
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         end_time = time.perf_counter()
         
-        if resp.status_code == 204 or (200 <= resp.status_code < 300):
+        if 200 <= resp.status_code < 300:
             result_latency = (end_time - start_time) * 1000
         else:
             result_latency = None
@@ -541,15 +543,19 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # СБОРНАЯ СОЛЯНКА: HY2 и SS
         hy2_candidates = [c for c in candidates if c['is_hy2']]
         ss_candidates = [c for c in candidates if c.get('is_ss', False)]
         
-        # Берем Top-10 Hy2 и Top-10 SS для финала
-        semifinalists = sorted(hy2_candidates, key=lambda x: x['tier_rank'])[:10] + \
-                        sorted(ss_candidates, key=lambda x: x['tier_rank'])[:10]
+        # СТРАТЕГИЯ: Сначала пытаемся найти ТОПОВЫЕ SS (FI/SE/EE), чтобы они были в финале
+        ss_tier1 = [c for c in ss_candidates if c['tier_rank'] == 1]
+        ss_others = [c for c in ss_candidates if c['tier_rank'] != 1]
         
-        print(f"   ℹ️ {title}: Hy2 ({len(hy2_candidates)}) vs SS ({len(ss_candidates)}). Fight!")
+        # Топ-10 Hy2 + Топ-5 SS Tier1 + Топ-5 SS Others
+        semifinalists = sorted(hy2_candidates, key=lambda x: x['tier_rank'])[:10] + \
+                        sorted(ss_tier1, key=lambda x: x['latency'])[:5] + \
+                        sorted(ss_others, key=lambda x: x['latency'])[:5]
+        
+        print(f"   ℹ️ {title}: Hy2 ({len(hy2_candidates)}) vs SS (Tier1: {len(ss_tier1)}, Other: {len(ss_others)}).")
 
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
@@ -582,18 +588,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         special_penalty = 0
         
         if mode == "gaming":
-            # --- БИТВА HY2 vs SS ---
             if f['is_hy2']: 
-                special_penalty = -200 # Hy2 Priority
+                special_penalty = -200 
                 if f['info']['countryCode'] == 'FI': special_penalty -= 200
-                
-                # ШТРАФ ЗА ВЫСОКИЙ ПИНГ ДЛЯ HY2
-                if avg > 300: 
-                    special_penalty += 1000 # Если пинг конь, Hy2 проиграет хорошему SS
+                if avg > 300: special_penalty += 1000 
             
             elif f.get('is_ss', False):
-                special_penalty = -50  # SS Reserve
-                if f['info']['countryCode'] == 'FI': special_penalty -= 250 # SS Finland = Super Reserve
+                special_penalty = -50 
+                if f['info']['countryCode'] == 'FI': special_penalty -= 300 # ФИНЛЯНДИЯ ДОЛЖНА ПОБЕЖДАТЬ
             
         elif mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
@@ -654,7 +656,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V66 (HY2 vs SS BATTLE ROYALE) ---")
+    print("--- ЗАПУСК V67 (STABILITY FIX & FINLAND PRIORITY) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -665,7 +667,7 @@ def main():
     init_geoip()
     
     all_servers = []
-    # 100 Потоков для скачивания (быстрее)
+    # Снижаем нагрузку (20 потоков на скачивание)
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         f1 = executor.submit(process_urls, GENERAL_URLS, 'general')
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
@@ -676,8 +678,8 @@ def main():
     print(f"🔍 Checking {len(servers_to_check)} servers (TCP/ICMP scan)...")
     
     working_servers = []
-    # 100 Потоков для пинга (очень быстро)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    # Снижаем нагрузку (40 потоков на пинг вместо 100) -> МЕНЬШЕ ОШИБОК
+    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
