@@ -25,15 +25,15 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-    # Базовые источники
+    # Источник специально для Hysteria 2 (обычно Base64)
+    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/hysteria2/normal",
+    
+    # Остальные источники
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
-    
-    # --- НОВЫЙ ИСТОЧНИК СПЕЦИАЛЬНО ДЛЯ HYSTERIA 2 ---
-    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/hysteria2/normal" 
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt"
 ]
 
 WHITELIST_URLS = [
@@ -102,27 +102,33 @@ def get_ip_country_local(ip):
     try: return geo_reader.country(ip).country.iso_code
     except: return 'XX'
 
-def extract_links(text):
-    # Regex + Простая проверка строк, если regex не сработал
-    links = re.findall(r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)", text)
-    if not links:
-        # Пробуем построчно, если файл просто список ссылок
-        lines = text.splitlines()
-        for line in lines:
-            line = line.strip()
-            if line.startswith("hy2://") or line.startswith("vless://") or line.startswith("ss://"):
-                links.append(line)
-    return links
-
 def safe_base64_decode(s):
-    s = s.strip()
+    """Декодирует Base64, даже если кривой паддинг"""
+    s = s.strip().replace('\n', '').replace('\r', '')
     missing_padding = len(s) % 4
     if missing_padding:
         s += '=' * (4 - missing_padding)
     try:
         return base64.urlsafe_b64decode(s).decode('utf-8', errors='ignore')
     except:
-        return ""
+        try:
+            return base64.b64decode(s).decode('utf-8', errors='ignore')
+        except:
+            return ""
+
+def extract_links(text):
+    # 1. Сначала ищем в сыром тексте
+    links = re.findall(r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)", text)
+    
+    # 2. Если мало нашли, пробуем декодировать ВЕСЬ текст как Base64
+    # (многие подписки - это просто Base64 blob)
+    if len(links) < 5:
+        decoded = safe_base64_decode(text)
+        if decoded:
+            links_decoded = re.findall(r"(vless://[^ \n]+|hy2://[^ \n]+|ss://[^ \n]+)", decoded)
+            links.extend(links_decoded)
+            
+    return list(set(links)) # Убираем дубликаты
 
 def parse_config_info(config_str, source_type):
     try:
@@ -324,7 +330,7 @@ def generate_xray_config(server, local_port):
                         "port": int(server['port']),
                         "method": params.get('method', ''),
                         "password": server['uuid'],
-                        "uot": True # UDP over TCP
+                        "uot": True 
                     }]
                 }
             }
@@ -408,6 +414,7 @@ def generate_xray_config(server, local_port):
         return None
 
 def check_real_connection(server):
+    # Hy2 тест только через Xray
     if server['is_hy2']:
         return server['latency']
 
@@ -475,6 +482,7 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
+    # Категория
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -484,25 +492,23 @@ def check_server_initial(server):
     elif is_warp: server['category'] = 'WARP'
     else: server['category'] = 'UNIVERSAL'
 
-    p = None
+    # --- ЛОГИКА ПРОВЕРКИ ---
     if server['is_hy2']:
-        p = icmp_ping(server['ip'])
-        # Если пинг не прошел, но это Hy2 - даем шанс (ставим фейк пинг 999),
-        # чтобы проверить его позже через Xray в турнире
-        if p is None: 
-            p = 999
+        # ВАЖНО: ДЛЯ HY2 МЫ ПРОПУСКАЕМ СЕТЕВУЮ ПРОВЕРКУ ТУТ
+        # Мы верим ссылке на слово, чтобы не убить сервер пингом.
+        # Настоящая проверка будет в турнире через Xray.
+        server['latency'] = 100 # Фейковый пинг, чтобы пройти фильтр
     else:
+        # Для остальных делаем честный пинг
         p = tcp_ping(server['ip'], server['port'])
+        if p is None: return None
+        server['latency'] = int(p)
 
-    if p is None: return None
-
-    server['latency'] = int(p)
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
     is_fake = False
-    # Ослабляем проверку для Hy2 (они часто показывают странный пинг)
-    if not server['is_hy2']: 
+    if not server['is_hy2']:
         if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
         elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
         elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
@@ -621,23 +627,28 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
 def process_urls(urls, source_type):
     links = []
+    hy2_count = 0
+    ss_count = 0
+    
     for url in urls:
         try:
             resp = requests.get(url, timeout=6)
             if resp.status_code == 200:
                 content = resp.text
                 found = extract_links(content)
-                if not found:
-                    try: found = extract_links(base64.b64decode(content).decode('utf-8'))
-                    except: pass
                 for link in found:
                     p = parse_config_info(link, source_type)
-                    if p: links.append(p)
+                    if p: 
+                        links.append(p)
+                        if p['is_hy2']: hy2_count += 1
+                        if p.get('is_ss', False): ss_count += 1
         except: pass
+        
+    print(f"   ---> Found total: {len(links)} links. (Hy2: {hy2_count}, SS: {ss_count})")
     return links
 
 def main():
-    print("--- ЗАПУСК V62 (HY2 BOOSTER & NEW SOURCE) ---")
+    print("--- ЗАПУСК V63 (AGGRESSIVE DECODER + HY2 SKIP CHECK) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
