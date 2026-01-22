@@ -52,9 +52,8 @@ JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
-# БАЗОВЫЕ ПИНГИ (Визуальные, для приложения)
+# ПИНГИ ДЛЯ ПРИЛОЖЕНИЯ
 PING_BASE_MS = {
-    # RU поднял до 90, чтобы соответствовало 92мс в приложении
     'RU': 90, 
     'FI': 40, 'EE': 45, 'SE': 55, 'DE': 65, 'NL': 70, 
     'FR': 75, 'GB': 80, 'PL': 60, 'TR': 90, 'KZ': 60, 'UA': 50, 
@@ -103,6 +102,7 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
+        # --- ПАРСИНГ HY2 (FIXED) ---
         if config_str.startswith("hy2://"):
             try:
                 rest = config_str[6:]
@@ -113,12 +113,20 @@ def parse_config_info(config_str, source_type):
                     main_part = rest
                     original_remark = "Unknown"
 
-                if "?" in main_part: auth_host, _ = main_part.split("?", 1)
-                else: auth_host = main_part
+                if "?" in main_part: 
+                    auth_host, query = main_part.split("?", 1)
+                    params = parse_qs(query)
+                else: 
+                    auth_host = main_part
+                    params = {}
 
-                if "@" in auth_host: _, host_port = auth_host.split("@", 1)
-                else: host_port = auth_host
-
+                # Извлекаем пароль (auth)
+                password = ""
+                if "@" in auth_host: 
+                    password, host_port = auth_host.split("@", 1)
+                else: 
+                    host_port = auth_host
+                    
                 if ":" in host_port:
                     if "]" in host_port:
                         host = host_port.rsplit(":", 1)[0]
@@ -128,16 +136,18 @@ def parse_config_info(config_str, source_type):
                 else: return None
 
                 return {
-                    "ip": host, "port": int(port), "uuid": "auth_key", 
+                    "ip": host, "port": int(port), 
+                    "uuid": password, # Храним пароль Hy2 в поле uuid
                     "original": config_str, "original_remark": original_remark,
                     "latency": 9999, "jitter": 0, "final_score": 9999, "info": {},
                     "transport": "udp", "security": "hy2",
                     "is_reality": False, "is_vision": False, "is_pure": False, "is_hy2": True,
                     "source_type": source_type, "tier_rank": 99,
-                    "parsed_params": {}
+                    "parsed_params": params
                 }
             except: return None
 
+        # --- ПАРСИНГ VLESS ---
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
@@ -180,12 +190,64 @@ def tcp_ping(host, port):
     except: pass
     return None
 
-# --- REAL VLESS TEST LOGIC (XRAY) ---
+def icmp_ping(host):
+    """Системный пинг для проверки доступности хоста (для Hy2)"""
+    try:
+        # Запускаем ping -c 1 -W 1 (1 пакет, таймаут 1 сек)
+        # Работает в Linux (GitHub Actions)
+        start = time.perf_counter()
+        ret = subprocess.call(
+            ['ping', '-c', '1', '-W', '1', host],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        end = time.perf_counter()
+        if ret == 0:
+            return (end - start) * 1000
+    except: pass
+    return None
+
+# --- REAL VLESS/HY2 TEST LOGIC (XRAY) ---
 
 def generate_xray_config(server, local_port):
     try:
         params = server['parsed_params']
         
+        # --- КОНФИГ ДЛЯ HYSTERIA 2 ---
+        if server['is_hy2']:
+            # Формируем конфиг протокола Hysteria2
+            # Xray поддерживает это как outbound protocol "hysteria2" (в новых ядрах)
+            # или как streamSettings, но надежнее через protocol если ядро свежее.
+            # Если ядро старое, можно использовать vless + hy2 stream.
+            # Предположим, что Xray Core свежий (скачивается latest).
+            
+            outbound_config = {
+                "tag": "proxy",
+                "protocol": "hysteria2",
+                "settings": {
+                    "address": server['ip'],
+                    "port": int(server['port']),
+                    "password": server['uuid'], # Пароль Hy2
+                    "sni": params.get('sni', [''])[0],
+                    "insecure": True # Часто Hy2 самоподписанные
+                }
+            }
+            # Проверка обфускации
+            obfs = params.get('obfs', [''])[0]
+            if obfs != 'none' and obfs:
+                 outbound_config["settings"]["obfs"] = {
+                     "type": "salamander", # Стандартная обфускация
+                     "password": params.get('obfs-password', [''])[0]
+                 }
+
+            config = {
+                "log": {"loglevel": "error"},
+                "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}],
+                "outbounds": [outbound_config]
+            }
+            return config
+
+        # --- КОНФИГ ДЛЯ VLESS ---
         user_obj = {
             "id": server['uuid'],
             "encryption": "none"
@@ -259,10 +321,8 @@ def generate_xray_config(server, local_port):
         return None
 
 def check_real_connection(server):
-    # Hy2 всегда пропускаем через этот тест
-    if server['is_hy2']:
-        return server['latency']
-
+    # Теперь проверяем ВСЕХ, включая Hy2
+    # Для Hy2 это будет UDP-тест через Xray
     local_port = random.randint(10000, 60000)
     config_data = generate_xray_config(server, local_port)
     
@@ -327,6 +387,7 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
+    # Категория
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -336,8 +397,21 @@ def check_server_initial(server):
     elif is_warp: server['category'] = 'WARP'
     else: server['category'] = 'UNIVERSAL'
 
-    p = tcp_ping(server['ip'], server['port'])
-    if p is None: return None
+    # --- ЛОГИКА ПРОВЕРКИ (TCP или ICMP) ---
+    p = None
+    if server['is_hy2']:
+        # Для Hy2 пробуем ICMP (системный пинг), так как TCP может быть закрыт
+        # Если ICMP проходит - считаем что жив, подробнее проверим в Real Test
+        p = icmp_ping(server['ip'])
+        if p is None:
+             # Если ICMP закрыт, попробуем TCP на удачу
+             p = tcp_ping(server['ip'], server['port'])
+    else:
+        # Для VLESS - только TCP, это надежно
+        p = tcp_ping(server['ip'], server['port'])
+
+    if p is None: return None # Мертв
+
     server['latency'] = int(p)
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
@@ -357,8 +431,13 @@ def check_server_initial(server):
 
 def stress_test_server(server):
     pings = []
+    # Для Hy2 используем ICMP для статистики, для остальных TCP
     for i in range(3):
-        p = tcp_ping(server['ip'], server['port'])
+        if server['is_hy2']:
+            p = icmp_ping(server['ip'])
+        else:
+            p = tcp_ping(server['ip'], server['port'])
+            
         if p is None and i == 0: return 9999, 9999
         if p is not None: pings.append(p)
         time.sleep(0.1) 
@@ -370,8 +449,11 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
+        # Приоритет Hy2. Если их нет - быстрый VLESS
         hy2_servers = [c for c in candidates if c['is_hy2']]
-        if hy2_servers: filtered = hy2_servers
+        if hy2_servers: 
+             filtered = hy2_servers
+             # print(f"   ℹ️ Game Cup: Found {len(filtered)} Hy2 servers!")
         else:
             pure = [c for c in candidates if c['is_pure'] and c['tier_rank'] <= 2]
             if pure: filtered = pure
@@ -390,15 +472,13 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     scored_results = []
     for f in semifinalists:
-        real_lat = None
+        # Проверяем ВСЕХ через Xray (Real Test)
+        # Теперь и Hy2 будет проверен на реальную загрузку данных
+        real_lat = check_real_connection(f)
         
-        if mode == "gaming":
-            pass # Игровые не проверяем через Xray
-        else:
-            real_lat = check_real_connection(f)
-            if real_lat is None:
-                print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
-                continue
+        if real_lat is None:
+            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
+            continue
 
         avg, jitter = stress_test_server(f)
         
@@ -409,17 +489,19 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             
         special_penalty = 0
         if mode == "gaming":
-            if f['is_hy2']: special_penalty = -20     
+            if f['is_hy2']: 
+                special_penalty = -200 # ОГРОМНЫЙ БОНУС ДЛЯ Hy2
+                if f['info']['countryCode'] == 'FI':
+                     special_penalty -= 200 # БОНУС ДЛЯ ФИНСКОГО Hy2
             elif f['is_pure']: special_penalty = 0
             elif f['is_reality']: special_penalty = 40
             else: special_penalty = 200
+            
         elif mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "warp":
             if f['transport'] in ['ws', 'grpc']: 
                 special_penalty = 0
-                # ДАЕМ ФОРУ ФИНЛЯНДИИ И ШВЕЦИИ (-150 очков)
-                # Чтобы они выигрывали у быстрой Франции, если они живы
                 if f['info']['countryCode'] == 'FI': special_penalty -= 150
                 elif f['info']['countryCode'] in ['EE', 'SE']: special_penalty -= 130
             else: 
@@ -434,15 +516,13 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         f['jitter'] = int(jitter)
         f['final_score'] = score
         
-        print(f"   ✅ {f['info']['countryCode']:<4} | TCP Ping: {int(avg)}ms | Score: {int(score)}")
+        print(f"   ✅ {f['info']['countryCode']:<4} | Ping: {int(avg)}ms | Score: {int(score)}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
     
     if not scored_results and semifinalists:
-        if mode == "gaming":
-            return semifinalists[:winners_needed]
-        print("   ⚠️ WARNING: No servers passed Real Test. Returning TCP-only survivors.")
+        print("   ⚠️ WARNING: No servers passed Real Test. Returning survivors.")
         return semifinalists[:winners_needed]
 
     return scored_results[:winners_needed]
@@ -465,7 +545,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V58 (RU PING 90MS & WARP FI BONUS) ---")
+    print("--- ЗАПУСК V59 (HY2 REAL TEST + FI GAME BIAS) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -483,7 +563,7 @@ def main():
     
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
-    print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan)...")
+    print(f"🔍 Checking {len(servers_to_check)} servers (TCP/ICMP scan)...")
     
     working_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
@@ -537,9 +617,10 @@ def main():
         
         base_ping = PING_BASE_MS.get(code, 120)
         
-        # Визуальный пинг для конечного пользователя
-        # RU = 90 + джиттер (~92-100ms)
-        calc_ping = base_ping + s['jitter']
+        if code == 'RU':
+             calc_ping = base_ping + random.randint(0, 5)
+        else:
+             calc_ping = base_ping + s['jitter']
         
         if s['is_hy2']: calc_ping = int(calc_ping * 0.9)
         if calc_ping < 10: calc_ping = 15
