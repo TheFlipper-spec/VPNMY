@@ -37,7 +37,10 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
 
     # Типо одни из самых лучших
-    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt"
+    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
+
+    # FreeVPNKeys
+    "https://freevpnkeys.com/wp-content/uploads/vpn-subscriptions/raw.txt"
 ]
 
 
