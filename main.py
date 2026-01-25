@@ -23,7 +23,7 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- НАСТРОЙКИ ОТБОРА (V3.0 ULTIMATE) ---
+# --- НАСТРОЙКИ ОТБОРА (V3.1 ULTIMATE + NEW SOURCES) ---
 TARGET_GAME = 1       # Только 1 лучший для игр
 TARGET_UNIVERSAL = 3  # Только 3 лучших для всего остального
 TARGET_WARP = 2       
@@ -38,17 +38,28 @@ JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
-# ИСТОЧНИКИ
+# ИСТОЧНИКИ (ОБНОВЛЕННЫЙ СПИСОК)
 GENERAL_URLS = [
+    # Goida (Надежный источник)
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/24.txt",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
+
+    # Igareck (База для РФ)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
+
+    # MatinGhanbari (Один из лучших мировых агрегаторов)
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
-    "https://freevpnkeys.com/wp-content/uploads/vpn-subscriptions/raw.txt"
+    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/normal/mix.txt",
+
+    # Epodonios (Огромная база, обновляется каждые 10 мин)
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt",
+    
+    # Barry-Far (Тоже отличный запасной вариант)
+    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Splitted-By-Protocol/vless.txt"
 ]
 
 WHITELIST_URLS = [
@@ -71,11 +82,8 @@ RUS_NAMES = {
 }
 
 # ПРИОРИТЕТЫ (TIER)
-# Tier 1: Элита (Скандинавия - лучший пинг до РФ)
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] 
-# Tier 2: Топ (Центральная Европа)
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] # RU тут только для Whitelist
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ']
-# Tier 3: Норм
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
 
 geo_reader = None
@@ -259,13 +267,12 @@ def check_real_connection(server):
     try:
         with open(config_path, 'w') as f: json.dump(config_data, f)
         xray_process = subprocess.Popen([XRAY_BIN, "-config", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.0) # Даем Xray больше времени на старт
+        time.sleep(1.0) 
         if xray_process.poll() is not None: return None
 
         proxies = {'http': f'socks5h://127.0.0.1:{local_port}', 'https': f'socks5h://127.0.0.1:{local_port}'}
         
         # 1. СТАБИЛЬНОСТЬ (5 запросов к Google)
-        # Отсекаем серверы, которые теряют пакеты
         target_ping = "https://www.gstatic.com/generate_204"
         latencies = []
         for _ in range(5):
@@ -275,12 +282,11 @@ def check_real_connection(server):
                 if resp.status_code == 204:
                     latencies.append((time.perf_counter() - start) * 1000)
                 else:
-                    latencies.append(9999) # Ошибка сервера
+                    latencies.append(9999) 
             except:
-                latencies.append(9999) # Таймаут
+                latencies.append(9999) 
             time.sleep(0.05)
 
-        # Если 2 и более раз ошибка — сервер мусор
         failed_count = len([l for l in latencies if l > 5000])
         if failed_count > 1: return None 
         
@@ -291,23 +297,19 @@ def check_real_connection(server):
         jitter = statistics.stdev(valid_latencies) if len(valid_latencies) > 1 else 0
 
         # 2. ТЕСТ СКОРОСТИ (СКАЧИВАНИЕ)
-        # Качаем 100 КБ. Если сервер не тянет — он получит огромный штраф.
         speed_score = 0
         try:
-            # Маленький файл с быстрого CDN
             speed_target = "https://speed.cloudflare.com/__down?bytes=100000"
             start_dl = time.perf_counter()
             r_speed = requests.get(speed_target, proxies=proxies, timeout=5.0)
             duration = time.perf_counter() - start_dl
             
             if r_speed.status_code == 200:
-                # Чем быстрее скачал, тем меньше штраф.
-                # 0.1 сек = 100 очков, 1.0 сек = 1000 очков.
                 speed_score = duration * 1000 
             else:
-                speed_score = 5000 # Ошибка скачивания
+                speed_score = 5000 
         except:
-            speed_score = 5000 # Таймаут
+            speed_score = 5000 
 
         result = (avg_lat, jitter, speed_score)
 
@@ -327,7 +329,7 @@ def calculate_tier_rank(country_code):
     if country_code in TIER_1_PLATINUM: return 1
     if country_code in TIER_2_GOLD: return 2
     if country_code in TIER_3_SILVER: return 3
-    if country_code in ['US', 'CA']: return 5 # US всегда низкий приоритет
+    if country_code in ['US', 'CA']: return 5 
     return 4
 
 def check_server_initial(server):
@@ -351,12 +353,10 @@ def check_server_initial(server):
     server['info'] = {'countryCode': code}
     
     # --- [ЖЕСТКИЙ БАН РФ] ---
-    # Россия разрешена ТОЛЬКО в Whitelist.
     if code == 'RU' and server['category'] != 'WHITELIST':
         return None
 
     # --- ANTI-FAKE CHECK ---
-    # Фильтруем подозрительные пинги для других стран
     is_fake = False
     
     # Fake KZ/UA (физически в США)
@@ -378,7 +378,6 @@ def process_tournament_batch(candidates, mode):
     checked_servers = []
     print(f"   🚀 Running ULTIMATE test (Ping + Jitter + Speed) for {len(candidates)} configs...")
     
-    # Меньше потоков (8), чтобы не забивать канал при тесте скорости
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         future_to_server = {executor.submit(check_real_connection, s): s for s in candidates}
         
@@ -390,22 +389,20 @@ def process_tournament_batch(candidates, mode):
                 real_avg, real_jitter, speed_penalty = res
                 
                 # --- ФОРМУЛА КАЧЕСТВА ---
-                # Чем меньше Score, тем лучше
                 score = real_avg 
-                score += (real_jitter * 3)   # Стабильность важнее пинга
-                score += (speed_penalty * 0.5) # Скорость тоже важна
+                score += (real_jitter * 3)   
+                score += (speed_penalty * 0.5) 
                 
-                # Штраф за Страну
                 tier_penalty = 0
                 if srv['tier_rank'] == 1: tier_penalty = 0
                 elif srv['tier_rank'] == 2: tier_penalty = 10
                 elif srv['tier_rank'] == 3: tier_penalty = 40
-                else: tier_penalty = 600 # США в самом конце
+                else: tier_penalty = 600 
                 
                 score += tier_penalty
 
                 if mode == "gaming":
-                    if srv.get('is_ss', False): score -= 40 # Любим SS для игр
+                    if srv.get('is_ss', False): score -= 40 
                 
                 srv['latency'] = int(real_avg)
                 srv['jitter'] = int(real_jitter)
@@ -435,7 +432,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    # Берем ТОП-30 для глубокой проверки
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:30]
     
     print(f"\n🏟️ {title} (Testing top {len(semifinalists)} candidates)")
@@ -459,7 +455,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V3.0 ULTIMATE (SPEED TEST + RU BAN) ---")
+    print("--- ЗАПУСК V3.1 ULTIMATE (SPEED TEST + NEW SOURCES) ---")
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     else: print(f"❌ Error: Xray binary not found at {XRAY_BIN}")
