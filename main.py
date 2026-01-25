@@ -71,13 +71,9 @@ RUS_NAMES = {
 }
 
 # ПРИОРИТЕТЫ (TIER)
-# Tier 1: Лучшие (Скандинавия, Россия для своих)
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] 
-# Tier 2: Хорошие (Европа)
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] # RU тут только для Whitelist
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ']
-# Tier 3: Нормальные
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
-# Все остальные (включая US) будут Tier 4 или 5
 
 geo_reader = None
 
@@ -261,7 +257,7 @@ def check_real_connection(server):
         if xray_process.poll() is not None: return None
 
         proxies = {'http': f'socks5h://127.0.0.1:{local_port}', 'https': f'socks5h://127.0.0.1:{local_port}'}
-        target_url = "https://cp.cloudflare.com/" # Very fast for latency check
+        target_url = "https://cp.cloudflare.com/"
         
         latencies = []
         for _ in range(3):
@@ -288,7 +284,7 @@ def calculate_tier_rank(country_code):
     if country_code in TIER_1_PLATINUM: return 1
     if country_code in TIER_2_GOLD: return 2
     if country_code in TIER_3_SILVER: return 3
-    if country_code in ['US', 'CA']: return 5 # US is Tier 5
+    if country_code in ['US', 'CA']: return 5
     return 4
 
 def check_server_initial(server):
@@ -308,12 +304,15 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
-    # --- DETECTOR OF FAKES (Специально для GitHub Actions в США) ---
+    # --- [NEW] ЗАПРЕТ РОССИИ ВЕЗДЕ, КРОМЕ ВАЙТЛИСТА ---
+    if code == 'RU' and server['category'] != 'WHITELIST':
+        return None
+
+    # --- DETECTOR OF FAKES (Для остальных стран) ---
     is_fake = False
     
-    # 1. Fake RU/KZ (физически в США).
-    # Из США до РФ пинг не может быть < 80мс. Если меньше - это фейк/Cloudflare.
-    if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 80: 
+    # 1. Fake KZ/UA/BY (США под прикрытием)
+    if code in ['KZ', 'UA', 'BY'] and server['latency'] < 80: 
         is_fake = True
     
     # 2. Подозрительно быстрые для Европы (если мы в США)
@@ -324,9 +323,6 @@ def check_server_initial(server):
     elif server['latency'] < 1 and code not in ['US', 'CA']: 
         is_fake = True
     
-    # Whitelist не трогаем, там проверенные
-    if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
-
     if is_fake and server['category'] != 'WHITELIST': return None
 
     server['tier_rank'] = calculate_tier_rank(code)
@@ -346,31 +342,21 @@ def process_tournament_batch(candidates, mode):
             if res:
                 real_avg, real_jitter = res
                 
-                # --- ЛОГИКА ШТРАФОВ (ГЛАВНОЕ ИЗМЕНЕНИЕ) ---
+                # --- ЛОГИКА ШТРАФОВ ---
                 score = real_avg + (real_jitter * 2)
                 
                 # Штраф за Ранг Страны
-                # Tier 1 (FI/SE/RU): 0 штрафа
-                # Tier 2 (DE/NL): 15 штрафа
-                # Tier 5 (US/CA): 500 штрафа (!!!) -> Чтобы US никогда не побеждал DE
-                
                 tier_penalty = 0
                 if srv['tier_rank'] == 1: tier_penalty = 0
                 elif srv['tier_rank'] == 2: tier_penalty = 15
                 elif srv['tier_rank'] == 3: tier_penalty = 50
-                else: tier_penalty = 500 # Жестокий штраф для США и прочих
+                else: tier_penalty = 500 # Жестокий штраф для США
                 
                 score += tier_penalty
 
                 if mode == "gaming":
-                    # Бонус SS для игр
                     if srv.get('is_ss', False): score -= 30
                     score += (real_jitter * 10) 
-                
-                elif mode == "universal":
-                     # Доп защита от фейков
-                     if srv['info']['countryCode'] == 'RU' and real_avg < 80:
-                         score += 1000 # Если Xray показал низкий пинг до РФ (из США) - это фейк
                 
                 srv['latency'] = int(real_avg)
                 srv['jitter'] = int(real_jitter)
@@ -387,7 +373,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     if mode == "gaming":
         filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
-        tier1 = [c for c in filtered if c['tier_rank'] <= 2] # Tier 1 и 2
+        tier1 = [c for c in filtered if c['tier_rank'] <= 2] 
         if len(tier1) > 5: filtered = tier1
             
     elif mode == "universal":
@@ -399,7 +385,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    # Берем ТОП-30 для проверки
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:30]
     
     print(f"\n🏟️ {title} (Testing top {len(semifinalists)} candidates)")
@@ -423,7 +408,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V2.0 (ANTI-FAKE US + STRICT TIERS) ---")
+    print("--- ЗАПУСК V2.1 (STRICT BAN RU + ANTI-FAKE) ---")
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     else: print(f"❌ Error: Xray binary not found at {XRAY_BIN}")
