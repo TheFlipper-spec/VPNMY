@@ -23,15 +23,15 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- НАСТРОЙКИ ---
-TARGET_GAME = 1       # Только 1 гейм сервер
-TARGET_UNIVERSAL = 3  # Только 3 обычных
+# --- НАСТРОЙКИ ОТБОРА (V3.0 ULTIMATE) ---
+TARGET_GAME = 1       # Только 1 лучший для игр
+TARGET_UNIVERSAL = 3  # Только 3 лучших для всего остального
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
 # ТАЙМАУТЫ
-TIMEOUT = 0.8           
-REAL_TEST_TIMEOUT = 5.0 
+TIMEOUT = 0.8           # Быстрый TCP чек (отсев мертвых)
+REAL_TEST_TIMEOUT = 5.0 # Тайм-аут на каждое соединение в Xray
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -71,8 +71,11 @@ RUS_NAMES = {
 }
 
 # ПРИОРИТЕТЫ (TIER)
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] # RU тут только для Whitelist
+# Tier 1: Элита (Скандинавия - лучший пинг до РФ)
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] 
+# Tier 2: Топ (Центральная Европа)
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ']
+# Tier 3: Норм
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
 
 geo_reader = None
@@ -241,6 +244,9 @@ def generate_xray_config(server, local_port):
     except: return None
 
 def check_real_connection(server):
+    """
+    ULTIMATE TEST: Ping + Packet Loss + Speed (Download)
+    """
     local_port = get_free_port()
     config_data = generate_xray_config(server, local_port)
     if not config_data: return None
@@ -253,21 +259,58 @@ def check_real_connection(server):
     try:
         with open(config_path, 'w') as f: json.dump(config_data, f)
         xray_process = subprocess.Popen([XRAY_BIN, "-config", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(0.8)
+        time.sleep(1.0) # Даем Xray больше времени на старт
         if xray_process.poll() is not None: return None
 
         proxies = {'http': f'socks5h://127.0.0.1:{local_port}', 'https': f'socks5h://127.0.0.1:{local_port}'}
-        target_url = "https://cp.cloudflare.com/"
         
+        # 1. СТАБИЛЬНОСТЬ (5 запросов к Google)
+        # Отсекаем серверы, которые теряют пакеты
+        target_ping = "https://www.gstatic.com/generate_204"
         latencies = []
-        for _ in range(3):
-            start = time.perf_counter()
-            resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
-            if 200 <= resp.status_code < 300: latencies.append((time.perf_counter() - start) * 1000)
-            else: break
+        for _ in range(5):
+            try:
+                start = time.perf_counter()
+                resp = requests.get(target_ping, proxies=proxies, timeout=3.0)
+                if resp.status_code == 204:
+                    latencies.append((time.perf_counter() - start) * 1000)
+                else:
+                    latencies.append(9999) # Ошибка сервера
+            except:
+                latencies.append(9999) # Таймаут
+            time.sleep(0.05)
 
-        if len(latencies) >= 2:
-            result = (statistics.mean(latencies), statistics.stdev(latencies))
+        # Если 2 и более раз ошибка — сервер мусор
+        failed_count = len([l for l in latencies if l > 5000])
+        if failed_count > 1: return None 
+        
+        valid_latencies = [l for l in latencies if l < 5000]
+        if not valid_latencies: return None
+
+        avg_lat = statistics.mean(valid_latencies)
+        jitter = statistics.stdev(valid_latencies) if len(valid_latencies) > 1 else 0
+
+        # 2. ТЕСТ СКОРОСТИ (СКАЧИВАНИЕ)
+        # Качаем 100 КБ. Если сервер не тянет — он получит огромный штраф.
+        speed_score = 0
+        try:
+            # Маленький файл с быстрого CDN
+            speed_target = "https://speed.cloudflare.com/__down?bytes=100000"
+            start_dl = time.perf_counter()
+            r_speed = requests.get(speed_target, proxies=proxies, timeout=5.0)
+            duration = time.perf_counter() - start_dl
+            
+            if r_speed.status_code == 200:
+                # Чем быстрее скачал, тем меньше штраф.
+                # 0.1 сек = 100 очков, 1.0 сек = 1000 очков.
+                speed_score = duration * 1000 
+            else:
+                speed_score = 5000 # Ошибка скачивания
+        except:
+            speed_score = 5000 # Таймаут
+
+        result = (avg_lat, jitter, speed_score)
+
     except: pass
     finally:
         if xray_process:
@@ -284,10 +327,13 @@ def calculate_tier_rank(country_code):
     if country_code in TIER_1_PLATINUM: return 1
     if country_code in TIER_2_GOLD: return 2
     if country_code in TIER_3_SILVER: return 3
-    if country_code in ['US', 'CA']: return 5
+    if country_code in ['US', 'CA']: return 5 # US всегда низкий приоритет
     return 4
 
 def check_server_initial(server):
+    """
+    Быстрый фильтр + БАН РОССИИ
+    """
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -304,22 +350,22 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
-    # --- [NEW] ЗАПРЕТ РОССИИ ВЕЗДЕ, КРОМЕ ВАЙТЛИСТА ---
+    # --- [ЖЕСТКИЙ БАН РФ] ---
+    # Россия разрешена ТОЛЬКО в Whitelist.
     if code == 'RU' and server['category'] != 'WHITELIST':
         return None
 
-    # --- DETECTOR OF FAKES (Для остальных стран) ---
+    # --- ANTI-FAKE CHECK ---
+    # Фильтруем подозрительные пинги для других стран
     is_fake = False
     
-    # 1. Fake KZ/UA/BY (США под прикрытием)
+    # Fake KZ/UA (физически в США)
     if code in ['KZ', 'UA', 'BY'] and server['latency'] < 80: 
         is_fake = True
-    
-    # 2. Подозрительно быстрые для Европы (если мы в США)
+    # Fake Europe
     elif code in ['FI', 'EE', 'SE', 'DE', 'NL'] and server['latency'] < 10: 
         is_fake = True 
-        
-    # 3. Localhost
+    # Localhost
     elif server['latency'] < 1 and code not in ['US', 'CA']: 
         is_fake = True
     
@@ -330,9 +376,10 @@ def check_server_initial(server):
 
 def process_tournament_batch(candidates, mode):
     checked_servers = []
-    print(f"   🚀 Running parallel Xray test for {len(candidates)} configs...")
+    print(f"   🚀 Running ULTIMATE test (Ping + Jitter + Speed) for {len(candidates)} configs...")
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    # Меньше потоков (8), чтобы не забивать канал при тесте скорости
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         future_to_server = {executor.submit(check_real_connection, s): s for s in candidates}
         
         for future in concurrent.futures.as_completed(future_to_server):
@@ -340,30 +387,33 @@ def process_tournament_batch(candidates, mode):
             res = future.result()
             
             if res:
-                real_avg, real_jitter = res
+                real_avg, real_jitter, speed_penalty = res
                 
-                # --- ЛОГИКА ШТРАФОВ ---
-                score = real_avg + (real_jitter * 2)
+                # --- ФОРМУЛА КАЧЕСТВА ---
+                # Чем меньше Score, тем лучше
+                score = real_avg 
+                score += (real_jitter * 3)   # Стабильность важнее пинга
+                score += (speed_penalty * 0.5) # Скорость тоже важна
                 
-                # Штраф за Ранг Страны
+                # Штраф за Страну
                 tier_penalty = 0
                 if srv['tier_rank'] == 1: tier_penalty = 0
-                elif srv['tier_rank'] == 2: tier_penalty = 15
-                elif srv['tier_rank'] == 3: tier_penalty = 50
-                else: tier_penalty = 500 # Жестокий штраф для США
+                elif srv['tier_rank'] == 2: tier_penalty = 10
+                elif srv['tier_rank'] == 3: tier_penalty = 40
+                else: tier_penalty = 600 # США в самом конце
                 
                 score += tier_penalty
 
                 if mode == "gaming":
-                    if srv.get('is_ss', False): score -= 30
-                    score += (real_jitter * 10) 
+                    if srv.get('is_ss', False): score -= 40 # Любим SS для игр
                 
                 srv['latency'] = int(real_avg)
                 srv['jitter'] = int(real_jitter)
+                srv['speed_val'] = int(speed_penalty)
                 srv['final_score'] = score
                 
                 checked_servers.append(srv)
-                print(f"      ✅ {srv['info']['countryCode']} | {int(real_avg)}ms | Rank:{srv['tier_rank']} | Score:{int(score)}")
+                print(f"      ✅ {srv['info']['countryCode']} | Ping:{int(real_avg)} | Speed:{int(speed_penalty)} | Score:{int(score)}")
 
     return checked_servers
 
@@ -385,6 +435,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
+    # Берем ТОП-30 для глубокой проверки
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:30]
     
     print(f"\n🏟️ {title} (Testing top {len(semifinalists)} candidates)")
@@ -408,7 +459,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V2.1 (STRICT BAN RU + ANTI-FAKE) ---")
+    print("--- ЗАПУСК V3.0 ULTIMATE (SPEED TEST + RU BAN) ---")
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     else: print(f"❌ Error: Xray binary not found at {XRAY_BIN}")
@@ -472,6 +523,7 @@ def main():
         code = s['info'].get('countryCode', 'XX')
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
         country_full = RUS_NAMES.get(code, code)
+        
         real_ping = s.get('latency', 999)
         if real_ping < 10: real_ping = "<10"
         ping_str = f"{real_ping}ms"
