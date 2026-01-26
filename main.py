@@ -14,51 +14,42 @@ import statistics
 import os
 import json
 import uuid 
-import binascii 
 import geoip2.database 
 import subprocess
 import tempfile
 import random
 import shutil
 from datetime import datetime, timedelta, timezone
-from urllib.parse import unquote, quote, parse_qs, urlparse
+from urllib.parse import unquote, quote, parse_qs
 
-# --- НАСТРОЙКИ ОТБОРА (V3.1 ULTIMATE + NEW SOURCES) ---
-TARGET_GAME = 1       # Только 1 лучший для игр
-TARGET_UNIVERSAL = 3  # Только 3 лучших для всего остального
-TARGET_WARP = 2       
-TARGET_WHITELIST = 2  
+# --- НАСТРОЙКИ КОЛИЧЕСТВА (ТВОИ ЛИМИТЫ) ---
+TARGET_GAME = 1       # Ровно 1 лучший для игр
+TARGET_UNIVERSAL = 3  # Ровно 3 универсальных
+TARGET_WARP = 2       # Ровно 2 Warp
+TARGET_WHITELIST = 2  # Ровно 2 из Whitelist
 
 # ТАЙМАУТЫ
-TIMEOUT = 0.8           # Быстрый TCP чек (отсев мертвых)
-REAL_TEST_TIMEOUT = 5.0 # Тайм-аут на каждое соединение в Xray
+TIMEOUT = 0.7           # Быстрый скан
+REAL_TEST_TIMEOUT = 6.0 # Глубокий тест
+RETRIES_PORT = 5        # Попытки найти порт (Fix Bugs)
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
-# ИСТОЧНИКИ (ОБНОВЛЕННЫЙ СПИСОК)
+# ИСТОЧНИКИ
 GENERAL_URLS = [
-    # Goida (Надежный источник)
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/24.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
-
-    # Igareck (База для РФ)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-
-    # MatinGhanbari (Один из лучших мировых агрегаторов)
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/normal/mix.txt",
-
-    # Epodonios (Огромная база, обновляется каждые 10 мин)
     "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt",
-    
-    # Barry-Far (Тоже отличный запасной вариант)
     "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Splitted-By-Protocol/vless.txt"
 ]
 
@@ -81,17 +72,11 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
 }
 
-# ПРИОРИТЕТЫ (TIER)
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] # RU тут только для Whitelist
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'RU'] 
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ']
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
 
 geo_reader = None
-
-def get_free_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('', 0))
-        return s.getsockname()[1]
 
 def download_mmdb():
     if not os.path.exists(MMDB_FILE):
@@ -248,68 +233,72 @@ def generate_xray_config(server, local_port):
 
             outbound = {"tag": "proxy", "protocol": "vless", "settings": {"vnext": [{"address": server['ip'], "port": int(server['port']), "users": [user_obj]}]}, "streamSettings": stream_settings}
 
-        return {"log": {"loglevel": "error"}, "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}], "outbounds": [outbound]}
+        return {"log": {"loglevel": "none"}, "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}], "outbounds": [outbound]}
     except: return None
 
 def check_real_connection(server):
-    """
-    ULTIMATE TEST: Ping + Packet Loss + Speed (Download)
-    """
-    local_port = get_free_port()
-    config_data = generate_xray_config(server, local_port)
-    if not config_data: return None
-    
-    unique_name = f"config_{uuid.uuid4().hex}.json"
-    config_path = os.path.join(tempfile.gettempdir(), unique_name)
+    # Логика повторных попыток порта (FIX BUG)
+    local_port = 0
     xray_process = None
+    unique_name = f"conf_{uuid.uuid4().hex[:8]}.json"
+    config_path = os.path.join(tempfile.gettempdir(), unique_name)
+
+    for attempt in range(RETRIES_PORT):
+        try:
+            local_port = random.randint(15000, 45000)
+            config_data = generate_xray_config(server, local_port)
+            if not config_data: return None
+
+            with open(config_path, 'w') as f: json.dump(config_data, f)
+            
+            xray_process = subprocess.Popen([XRAY_BIN, "-config", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(0.5) 
+            
+            if xray_process.poll() is not None:
+                xray_process = None
+                continue
+            break
+        except:
+            if xray_process: xray_process.kill()
+            xray_process = None
+
+    if not xray_process: return None
+
     result = None
-
     try:
-        with open(config_path, 'w') as f: json.dump(config_data, f)
-        xray_process = subprocess.Popen([XRAY_BIN, "-config", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.0) 
-        if xray_process.poll() is not None: return None
-
         proxies = {'http': f'socks5h://127.0.0.1:{local_port}', 'https': f'socks5h://127.0.0.1:{local_port}'}
         
-        # 1. СТАБИЛЬНОСТЬ (5 запросов к Google)
-        target_ping = "https://www.gstatic.com/generate_204"
+        # 1. Пинг (Google)
         latencies = []
-        for _ in range(5):
+        for _ in range(4): 
             try:
                 start = time.perf_counter()
-                resp = requests.get(target_ping, proxies=proxies, timeout=3.0)
-                if resp.status_code == 204:
-                    latencies.append((time.perf_counter() - start) * 1000)
-                else:
-                    latencies.append(9999) 
+                requests.get("https://www.gstatic.com/generate_204", proxies=proxies, timeout=3.0)
+                latencies.append((time.perf_counter() - start) * 1000)
             except:
-                latencies.append(9999) 
+                latencies.append(9999)
             time.sleep(0.05)
 
-        failed_count = len([l for l in latencies if l > 5000])
-        if failed_count > 1: return None 
+        if len([l for l in latencies if l > 5000]) >= 2: raise Exception("Packet loss")
         
-        valid_latencies = [l for l in latencies if l < 5000]
-        if not valid_latencies: return None
+        valid = [l for l in latencies if l < 5000]
+        if not valid: raise Exception("All timed out")
+        
+        avg_lat = statistics.mean(valid)
+        jitter = statistics.stdev(valid) if len(valid) > 1 else 0
 
-        avg_lat = statistics.mean(valid_latencies)
-        jitter = statistics.stdev(valid_latencies) if len(valid_latencies) > 1 else 0
-
-        # 2. ТЕСТ СКОРОСТИ (СКАЧИВАНИЕ)
-        speed_score = 0
+        # 2. Скорость (Cloudflare)
+        speed_score = 5000
         try:
-            speed_target = "https://speed.cloudflare.com/__down?bytes=100000"
             start_dl = time.perf_counter()
-            r_speed = requests.get(speed_target, proxies=proxies, timeout=5.0)
-            duration = time.perf_counter() - start_dl
-            
-            if r_speed.status_code == 200:
+            r = requests.get("https://speed.cloudflare.com/__down?bytes=150000", proxies=proxies, timeout=5.0)
+            if r.status_code == 200:
+                duration = time.perf_counter() - start_dl
                 speed_score = duration * 1000 
             else:
-                speed_score = 5000 
+                speed_score = 6000
         except:
-            speed_score = 5000 
+            speed_score = 6000
 
         result = (avg_lat, jitter, speed_score)
 
@@ -333,9 +322,6 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    """
-    Быстрый фильтр + БАН РОССИИ
-    """
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -352,22 +338,14 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
-    # --- [ЖЕСТКИЙ БАН РФ] ---
-    if code == 'RU' and server['category'] != 'WHITELIST':
-        return None
+    # БАН РФ (Кроме Whitelist)
+    if code == 'RU' and server['category'] != 'WHITELIST': return None
 
-    # --- ANTI-FAKE CHECK ---
+    # ANTI-FAKE
     is_fake = False
-    
-    # Fake KZ/UA (физически в США)
-    if code in ['KZ', 'UA', 'BY'] and server['latency'] < 80: 
-        is_fake = True
-    # Fake Europe
-    elif code in ['FI', 'EE', 'SE', 'DE', 'NL'] and server['latency'] < 10: 
-        is_fake = True 
-    # Localhost
-    elif server['latency'] < 1 and code not in ['US', 'CA']: 
-        is_fake = True
+    if code in ['KZ', 'UA', 'BY'] and server['latency'] < 70: is_fake = True
+    elif code in ['FI', 'EE', 'SE', 'DE', 'NL'] and server['latency'] < 5: is_fake = True 
+    elif server['latency'] < 1 and code not in ['US', 'CA']: is_fake = True
     
     if is_fake and server['category'] != 'WHITELIST': return None
 
@@ -376,8 +354,6 @@ def check_server_initial(server):
 
 def process_tournament_batch(candidates, mode):
     checked_servers = []
-    print(f"   🚀 Running ULTIMATE test (Ping + Jitter + Speed) for {len(candidates)} configs...")
-    
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         future_to_server = {executor.submit(check_real_connection, s): s for s in candidates}
         
@@ -388,10 +364,7 @@ def process_tournament_batch(candidates, mode):
             if res:
                 real_avg, real_jitter, speed_penalty = res
                 
-                # --- ФОРМУЛА КАЧЕСТВА ---
-                score = real_avg 
-                score += (real_jitter * 3)   
-                score += (speed_penalty * 0.5) 
+                score = real_avg + (real_jitter * 2) + (speed_penalty * 0.5)
                 
                 tier_penalty = 0
                 if srv['tier_rank'] == 1: tier_penalty = 0
@@ -402,7 +375,7 @@ def process_tournament_batch(candidates, mode):
                 score += tier_penalty
 
                 if mode == "gaming":
-                    if srv.get('is_ss', False): score -= 40 
+                    if srv.get('is_ss', False): score -= 50 
                 
                 srv['latency'] = int(real_avg)
                 srv['jitter'] = int(real_jitter)
@@ -410,35 +383,47 @@ def process_tournament_batch(candidates, mode):
                 srv['final_score'] = score
                 
                 checked_servers.append(srv)
-                print(f"      ✅ {srv['info']['countryCode']} | Ping:{int(real_avg)} | Speed:{int(speed_penalty)} | Score:{int(score)}")
+                print(f"   [OK] {srv['info']['countryCode']} | Ping:{int(real_avg)} | Speed:{int(speed_penalty)} | Score:{int(score)}")
 
     return checked_servers
 
-def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed"):
+def run_tournament_with_rescue(candidates, winners_needed, title, mode):
     if not candidates: return []
-    filtered = candidates
     
+    # 1. Фильтр Элиты
+    filtered_elite = candidates
     if mode == "gaming":
-        filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
-        tier1 = [c for c in filtered if c['tier_rank'] <= 2] 
-        if len(tier1) > 5: filtered = tier1
-            
+        filtered_elite = [c for c in candidates if (c.get('is_ss', False) or c['is_reality']) and c['tier_rank'] <= 2]
     elif mode == "universal":
-        filtered = [c for c in candidates if c['is_reality']]
+        filtered_elite = [c for c in candidates if c['is_reality'] and c['tier_rank'] <= 3]
     elif mode == "whitelist":
-        filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
+        filtered_elite = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == "warp":
-        filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
+        filtered_elite = [c for c in candidates if c['info']['countryCode'] != 'RU']
 
-    if not filtered: return []
+    print(f"\n🏟️ {title} (Elite Candidates: {len(filtered_elite)})")
     
-    semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:30]
+    top_picks = sorted(filtered_elite, key=lambda x: x['latency'])[:20]
+    results = process_tournament_batch(top_picks, mode)
+    results.sort(key=lambda x: x['final_score'])
     
-    print(f"\n🏟️ {title} (Testing top {len(semifinalists)} candidates)")
-    scored_results = process_tournament_batch(semifinalists, mode)
-    scored_results.sort(key=lambda x: x['final_score'])
+    final_winners = results[:winners_needed]
     
-    return scored_results[:winners_needed]
+    # 2. СПАСАТЕЛЬНЫЙ РЕЖИМ (RESCUE MODE)
+    # Гарантирует, что наберется ровно winners_needed
+    if len(final_winners) < winners_needed:
+        deficit = winners_needed - len(final_winners)
+        print(f"⚠️ Warning: Found only {len(final_winners)}/{winners_needed}. Activating Rescue Mode...")
+        
+        rescue_pool = [c for c in candidates if c not in filtered_elite]
+        rescue_picks = sorted(rescue_pool, key=lambda x: x['latency'])[:15]
+        
+        rescue_results = process_tournament_batch(rescue_picks, mode)
+        rescue_results.sort(key=lambda x: x['final_score'])
+        
+        final_winners.extend(rescue_results[:deficit])
+        
+    return final_winners
 
 def process_urls(urls, source_type):
     links = []
@@ -455,7 +440,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V3.1 ULTIMATE (SPEED TEST + NEW SOURCES) ---")
+    print("--- ЗАПУСК V4.1 (STABILITY + EXACT LIMITS 1/3/2/2) ---")
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     else: print(f"❌ Error: Xray binary not found at {XRAY_BIN}")
@@ -463,7 +448,6 @@ def main():
     download_mmdb()
     init_geoip()
     
-    all_servers = []
     print("🔍 Fetching URLs...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         f1 = executor.submit(process_urls, GENERAL_URLS, 'general')
@@ -489,18 +473,22 @@ def main():
 
     final_list = []
     
-    # Турниры
-    game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
+    # 1 GAME
+    game_winners = run_tournament_with_rescue(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     game_ips = [g['ip'] for g in game_winners]
-    
     if game_winners:
         for g in game_winners: g['category'] = 'Game Server'
         final_list.extend(game_winners)
     
+    # 3 UNIVERSAL
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
-    final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
-    final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
-    final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
+    final_list.extend(run_tournament_with_rescue(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
+    
+    # 2 WARP
+    final_list.extend(run_tournament_with_rescue(b_warp, TARGET_WARP, "WARP CUP", "warp"))
+    
+    # 2 WHITELIST
+    final_list.extend(run_tournament_with_rescue(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
