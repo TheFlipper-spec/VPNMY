@@ -20,7 +20,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.12'
         cache: 'pip'
 
     # 2. Кэшируем инструменты (Xray, MMDB), чтобы не качать их каждый раз
