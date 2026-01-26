@@ -25,22 +25,13 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-    # Goida (Источник SS и Reality)
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/6.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/24.txt",
-    
-    # Igareck (База)
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
-
-    # Типо одни из самых лучших
-    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
-
-    # FreeVPNKeys
-    "https://freevpnkeys.com/wp-content/uploads/vpn-subscriptions/raw.txt"
+    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt"
 ]
 
 
