@@ -22,16 +22,16 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
-# --- НАСТРОЙКИ КОЛИЧЕСТВА (ТВОИ ЛИМИТЫ) ---
-TARGET_GAME = 1       # Ровно 1 лучший для игр
-TARGET_UNIVERSAL = 3  # Ровно 3 универсальных
-TARGET_WARP = 2       # Ровно 2 Warp
-TARGET_WHITELIST = 2  # Ровно 2 из Whitelist
+# --- НАСТРОЙКИ ---
+TARGET_GAME = 1       
+TARGET_UNIVERSAL = 3  
+TARGET_WARP = 2       
+TARGET_WHITELIST = 2  
 
 # ТАЙМАУТЫ
-TIMEOUT = 0.7           # Быстрый скан
-REAL_TEST_TIMEOUT = 6.0 # Глубокий тест
-RETRIES_PORT = 5        # Попытки найти порт (Fix Bugs)
+TIMEOUT = 0.8           
+REAL_TEST_TIMEOUT = 5.0 # Если сервер хороший, он ответит быстро
+RETRIES_PORT = 5        
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -237,12 +237,12 @@ def generate_xray_config(server, local_port):
     except: return None
 
 def check_real_connection(server):
-    # Логика повторных попыток порта (FIX BUG)
     local_port = 0
     xray_process = None
     unique_name = f"conf_{uuid.uuid4().hex[:8]}.json"
     config_path = os.path.join(tempfile.gettempdir(), unique_name)
 
+    # Retry logic for ports
     for attempt in range(RETRIES_PORT):
         try:
             local_port = random.randint(15000, 45000)
@@ -268,7 +268,7 @@ def check_real_connection(server):
     try:
         proxies = {'http': f'socks5h://127.0.0.1:{local_port}', 'https': f'socks5h://127.0.0.1:{local_port}'}
         
-        # 1. Пинг (Google)
+        # 1. PING (Google)
         latencies = []
         for _ in range(4): 
             try:
@@ -287,7 +287,7 @@ def check_real_connection(server):
         avg_lat = statistics.mean(valid)
         jitter = statistics.stdev(valid) if len(valid) > 1 else 0
 
-        # 2. Скорость (Cloudflare)
+        # 2. SPEED (Cloudflare)
         speed_score = 5000
         try:
             start_dl = time.perf_counter()
@@ -338,16 +338,13 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
-    # БАН РФ (Кроме Whitelist)
+    # БАН РФ (только если не whitelist)
     if code == 'RU' and server['category'] != 'WHITELIST': return None
 
-    # ANTI-FAKE
-    is_fake = False
-    if code in ['KZ', 'UA', 'BY'] and server['latency'] < 70: is_fake = True
-    elif code in ['FI', 'EE', 'SE', 'DE', 'NL'] and server['latency'] < 5: is_fake = True 
-    elif server['latency'] < 1 and code not in ['US', 'CA']: is_fake = True
-    
-    if is_fake and server['category'] != 'WHITELIST': return None
+    # --- ИСПРАВЛЕННЫЙ ANTI-FAKE ДЛЯ ЕВРОПЫ ---
+    # Мы УБРАЛИ проверку (latency < 5), которая убивала серверы Германии/Нидерландов
+    # Теперь блокируем только очевидный локалхост (< 0.5 мс)
+    if server['latency'] < 0.5 and code not in ['US', 'CA']: return None
 
     server['tier_rank'] = calculate_tier_rank(code)
     return server
@@ -403,14 +400,19 @@ def run_tournament_with_rescue(candidates, winners_needed, title, mode):
 
     print(f"\n🏟️ {title} (Elite Candidates: {len(filtered_elite)})")
     
-    top_picks = sorted(filtered_elite, key=lambda x: x['latency'])[:20]
+    # --- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ---
+    # Сортируем сначала по РАНГУ (Tier), а потом по пингу.
+    # Это заставит скрипт проверять Финляндию/Швецию ПЕРВЫМИ,
+    # даже если у них TCP пинг чуть хуже, чем у какой-нибудь Франции.
+    # Берем топ-50, чтобы охватить всех лучших.
+    top_picks = sorted(filtered_elite, key=lambda x: (x['tier_rank'], x['latency']))[:50]
+    
     results = process_tournament_batch(top_picks, mode)
     results.sort(key=lambda x: x['final_score'])
     
     final_winners = results[:winners_needed]
     
     # 2. СПАСАТЕЛЬНЫЙ РЕЖИМ (RESCUE MODE)
-    # Гарантирует, что наберется ровно winners_needed
     if len(final_winners) < winners_needed:
         deficit = winners_needed - len(final_winners)
         print(f"⚠️ Warning: Found only {len(final_winners)}/{winners_needed}. Activating Rescue Mode...")
@@ -440,7 +442,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V4.1 (STABILITY + EXACT LIMITS 1/3/2/2) ---")
+    print("--- ЗАПУСК V5.0 (VPS EDITION + BEST TIERS) ---")
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     else: print(f"❌ Error: Xray binary not found at {XRAY_BIN}")
