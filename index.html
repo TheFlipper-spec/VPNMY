@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FL1PVPN</title>
+    <title>FL1PVPN - Статус серверов</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -30,225 +30,159 @@
         }
         .container { width: 100%; max-width: 500px; }
         
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status { 
-            display: inline-block; margin-top: 8px; padding: 6px 16px; 
-            border-radius: 20px; background: rgba(255,255,255,0.05); 
-            font-size: 0.85rem; color: var(--text-sec); border: 1px solid rgba(255,255,255,0.1);
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 30px; 
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
+        .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+        
+        .status-badge {
+            font-size: 12px; font-weight: 600; 
+            background: rgba(16, 185, 129, 0.1); color: var(--s-green);
+            padding: 6px 12px; border-radius: 20px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
 
-        .tabs {
-            display: flex; background: #18181b; padding: 4px;
-            border-radius: 12px; margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .tab {
-            flex: 1; padding: 10px; text-align: center;
-            cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 0.9rem;
-            color: var(--text-sec); transition: 0.2s;
-        }
-        .tab.active { background: #27272a; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-
-        .copy-btn {
-            background: var(--primary); color: white;
-            border: none; width: 100%; padding: 16px;
-            border-radius: 16px; font-size: 1rem; font-weight: 700;
-            cursor: pointer; margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
-            transition: 0.2s;
-        }
-        .copy-btn:active { transform: scale(0.98); }
-
-        .list { display: flex; flex-direction: column; gap: 10px; }
+        /* СПИСОК СЕРВЕРОВ */
+        .server-list { display: flex; flex-direction: column; gap: 12px; }
+        
         .card {
-            background: var(--card-bg); border-radius: 16px; padding: 14px 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            border: 1px solid rgba(255,255,255,0.03);
-            cursor: pointer; transition: all 0.2s;
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
         }
-        .card:hover { background: var(--card-hover); transform: translateX(3px); }
+        .card:hover { transform: translateY(-2px); background: var(--card-hover); border-color: rgba(255,255,255,0.05); }
         
-        .card-left { display: flex; align-items: center; gap: 14px; }
-        .flag-img {
-            width: 34px; height: 26px; border-radius: 4px;
-            object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        }
-        .info h3 { margin: 0; font-size: 0.95rem; font-weight: 700; }
-        .info p { margin: 3px 0 0; font-size: 0.75rem; color: var(--text-sec); display: flex; gap: 6px; }
-        
-        .badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
-        .b-GAME { background: #db2777; color: #fff; }
-        .b-WARP { background: #2563eb; color: #fff; }
-        .b-WHITE { background: #fff; color: #000; }
-        .b-UNIV { background: #f59e0b; color: #000; }
+        .card-left { display: flex; align-items: center; gap: 12px; }
+        .flag { width: 28px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .info { display: flex; flex-direction: column; gap: 2px; }
+        .country { font-weight: 700; font-size: 15px; }
+        .protocol { font-size: 11px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; width: fit-content;}
 
-        /* SPEED INDICATOR */
-        .speed-box { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-        .speed-row { display: flex; align-items: center; gap: 8px; }
-        .bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; }
-        .bar { width: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .ping { font-weight: 700; font-size: 14px; text-align: right; }
         
-        .ping-num { font-family: 'Manrope', monospace; font-weight: 800; font-size: 0.9rem; letter-spacing: -0.5px; }
-        .speed-text { font-size: 0.65rem; font-weight: 800; opacity: 0.9; margin-right: 2px; text-transform: uppercase; }
-        
-        /* COLORS */
-        .s-green .bar.on { background: var(--s-green); }
-        .s-green .speed-text, .s-green .ping-num { color: var(--s-green); }
-        
-        .s-yellow .bar.on { background: var(--s-yellow); }
-        .s-yellow .speed-text, .s-yellow .ping-num { color: var(--s-yellow); }
-        
-        .s-orange .bar.on { background: var(--s-orange); }
-        .s-orange .speed-text, .s-orange .ping-num { color: var(--s-orange); }
-        
-        .s-red .bar.on { background: var(--s-red); }
-        .s-red .speed-text, .s-red .ping-num { color: var(--s-red); }
-
-        /* MODAL */
-        .modal-wrap {
+        /* МОДАЛЬНОЕ ОКНО */
+        .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: 0.2s; z-index: 100;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: flex-end;
+            opacity: 0; pointer-events: none; transition: all 0.3s;
+            z-index: 1000;
         }
-        .modal-wrap.open { opacity: 1; visibility: visible; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        
         .modal {
-            background: #18181b; width: 90%; max-width: 380px; padding: 25px;
-            border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
-            transform: scale(0.9); transition: 0.2s;
+            background: #1a1b26; width: 100%; max-width: 500px;
+            border-radius: 24px 24px 0 0; padding: 25px;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
-        .modal-wrap.open .modal { transform: scale(1); }
-        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .close { cursor: pointer; font-size: 1.5rem; color: var(--text-sec); }
-        .row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; }
-        .row span:first-child { color: var(--text-sec); font-size: 0.9rem; }
-        .row span:last-child { font-weight: 600; font-family: monospace; color: #fff; }
+        .modal-overlay.open .modal { transform: translateY(0); }
+        
+        .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+        .row span:last-child { color: var(--text-main); font-weight: 600; }
+        .row span:first-child { color: var(--text-sec); }
+
         .modal-btn {
-            background: #27272a; color: white; width: 100%; padding: 14px;
-            border: none; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 10px;
+            width: 100%; margin-top: 20px; padding: 16px;
+            border-radius: 12px; border: none; font-weight: 700; font-size: 16px;
+            background: var(--primary); color: white; cursor: pointer;
         }
+
+        /* АНИМАЦИЯ ЗАГРУЗКИ */
+        .loader { text-align: center; color: var(--text-sec); margin-top: 50px; font-size: 14px; }
+
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>FL1PVPN</h1>
-        <div class="status" id="updateInfo">Загрузка...</div>
-    </header>
+        <div class="logo">FL1PVPN</div>
+        <div class="status-badge" id="statusBadge">
+            <span class="dot"></span> <span id="statusText">Обновление...</span>
+        </div>
+        </header>
 
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('all')">ВСЕ СЕРВЕРА</div>
-        <div class="tab" onclick="switchTab('top')">🚀 ТОП-3 СКОРОСТНЫХ</div>
+    <div id="serverList" class="server-list">
+        <div class="loader">Загрузка серверов...</div>
     </div>
-
-    <button class="copy-btn" id="mainBtn" onclick="copyMain()">СКОПИРОВАТЬ ПОДПИСКУ</button>
-    
-    <div class="list" id="list"></div>
 </div>
 
-<div class="modal-wrap" id="modal" onclick="closeModal(event)">
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
     <div class="modal">
-        <div class="modal-header"><h3>Детали сервера</h3><div class="close" onclick="closeModal(event, true)">×</div></div>
+        <h2 style="margin: 0 0 20px 0; font-size: 20px;">Информация</h2>
         <div id="modalBody"></div>
-        <button class="modal-btn" id="confBtn">Копировать конфиг</button>
+        <button class="modal-btn" id="confBtn">🔒 Доступ через Бота</button>
     </div>
 </div>
 
 <script>
-    const RAW_URL = 'https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/main/FL1PVPN#FL1PVPN';
-    const JSON_URL = 'stats.json';
-    let allServers = [];
+    // Ссылка на JSON со статистикой (оставляем, чтобы работала карта)
+    const JSON_URL = "stats.json"; 
+    // Ссылка на бота (или твой профиль)
+    const BOT_LINK = "https://t.me/FlYpper1707";
 
-    async function load() {
+    async function fetchData() {
         try {
-            const r = await fetch(JSON_URL + '?t=' + new Date().getTime());
-            if (!r.ok) throw new Error("File not found");
-            const d = await r.json();
-            allServers = d.servers;
-            document.getElementById('updateInfo').innerText = `Обновлено: ${d.updated_at} (МСК)`;
-            render('all');
-        } catch {
-            document.getElementById('updateInfo').innerText = "Ожидание обновления...";
-            document.getElementById('updateInfo').style.color = "#f59e0b";
-            document.getElementById('list').innerHTML = `<div style="text-align:center;padding:20px;color:#555">Данные создаются...</div>`;
+            const r = await fetch(JSON_URL + "?t=" + Date.now());
+            if(!r.ok) throw new Error("Err");
+            const data = await r.json();
+            renderCards(data.servers || []);
+            document.getElementById('statusText').innerText = "Все системы в норме";
+        } catch (e) {
+            document.getElementById('serverList').innerHTML = `<div style="text-align:center;color:var(--s-red)">Ошибка загрузки данных</div>`;
+            document.getElementById('statusBadge').style.color = "var(--s-red)";
+            document.getElementById('statusBadge').style.background = "rgba(239,68,68,0.1)";
+            document.getElementById('statusText').innerText = "Offline";
         }
     }
 
-    function switchTab(type) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
-        render(type);
-    }
+    function renderCards(servers) {
+        const list = document.getElementById('serverList');
+        list.innerHTML = "";
 
-    function getSpeedVisual(ping) {
-        let bars = 0, text = "", cls = "";
-        
-        if (ping < 60) { 
-            bars = 5; text = "ЛЕТАЕТ"; cls = "s-green"; 
-        } else if (ping < 110) { 
-            bars = 4; text = "ХОРОШО"; cls = "s-yellow"; 
-        } else if (ping < 160) { 
-            bars = 3; text = "СРЕДНЕ"; cls = "s-orange"; 
-        } else { 
-            bars = 2; text = "УЖАСНО"; cls = "s-red"; 
-        }
+        // Сортировка: сначала быстрые (зеленые), потом остальные
+        servers.sort((a, b) => {
+            const pa = parseInt(a.ping) || 999;
+            const pb = parseInt(b.ping) || 999;
+            return pa - pb;
+        });
 
-        let barsHtml = "";
-        for(let i=0; i<5; i++) {
-            let h = 4 + (i*2.5);
-            let on = i < bars ? "on" : "";
-            barsHtml += `<div class="bar ${on}" style="height:${h}px"></div>`;
-        }
-        
-        return { 
-            html: `
-            <div class="speed-row">
-                <div class="bars">${barsHtml}</div>
-                <div class="ping-num">${ping} ms</div>
-            </div>
-            <div class="speed-text">${text}</div>
-            `, 
-            cls: cls 
-        };
-    }
+        servers.forEach(s => {
+            const p = parseInt(s.ping);
+            let color = "var(--s-green)";
+            if(p > 100) color = "var(--s-yellow)";
+            if(p > 200) color = "var(--s-orange)";
+            if(!s.online) color = "var(--s-red)";
 
-    function render(type) {
-        const list = document.getElementById('list');
-        list.innerHTML = '';
-        
-        let data = [...allServers];
-        if (type === 'top') {
-            data.sort((a, b) => a.ping - b.ping);
-            data = data.slice(0, 3);
-        }
+            const flagUrl = `https://flagcdn.com/w40/${s.countryCode.toLowerCase()}.png`;
 
-        data.forEach(s => {
-            let badgeClass = 'b-UNIV';
-            if(s.category.includes('GAME')) badgeClass = 'b-GAME';
-            if(s.category.includes('WARP')) badgeClass = 'b-WARP';
-            if(s.category.includes('WHITE')) badgeClass = 'b-WHITE';
-
-            const flagUrl = `https://flagcdn.com/w80/${s.iso.toLowerCase()}.png`;
-            const speed = getSpeedVisual(s.ping);
-
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
+            const card = document.createElement('div');
+            card.className = "card";
+            card.innerHTML = `
                 <div class="card-left">
-                    <img src="${flagUrl}" class="flag-img" alt="${s.iso}">
+                    <img src="${flagUrl}" class="flag" onerror="this.style.display='none'">
                     <div class="info">
-                        <h3>${s.country} <span class="badge ${badgeClass}">${s.category.split(' ')[0]}</span></h3>
-                        <p>${s.type} • ${s.protocol}</p>
+                        <div class="country">${s.country}</div>
+                        <div class="protocol">${s.protocol} · ${s.ip}</div>
                     </div>
                 </div>
-                <div class="speed-box ${speed.cls}">
-                    ${speed.html}
-                </div>
+                <div class="ping" style="color:${color}">${s.online ? s.ping + " ms" : "OFF"}</div>
             `;
-            div.onclick = () => showModal(s, flagUrl);
-            list.appendChild(div);
+            
+            // При клике открываем модалку
+            card.onclick = () => showModal(s, flagUrl);
+            list.appendChild(card);
         });
     }
 
@@ -256,15 +190,18 @@
         const body = document.getElementById('modalBody');
         body.innerHTML = `
             <div class="row"><span>Страна</span><span style="display:flex;align-items:center;gap:6px"><img src="${flagUrl}" style="width:20px;border-radius:2px"> ${s.country}</span></div>
-            <div class="row"><span>IP</span><span>${s.ip}</span></div>
+            <div class="row"><span>IP Адрес</span><span>${s.ip}</span></div>
             <div class="row"><span>Порт</span><span>${s.port}</span></div>
             <div class="row"><span>Пинг</span><span style="color:var(--s-green)">${s.ping} ms</span></div>
             <div class="row" style="border:none"><span>Протокол</span><span>${s.protocol} (${s.type})</span></div>
         `;
+        
         const btn = document.getElementById('confBtn');
-        btn.innerText = "Копировать конфиг";
-        btn.style.background = "#27272a";
-        btn.onclick = () => copyText(s.link, btn);
+        // Изменяем логику кнопки: не копировать, а вести в бота
+        btn.innerText = "👉 Купить доступ (Telegram)";
+        btn.style.background = "var(--primary)";
+        btn.onclick = () => window.location.href = BOT_LINK;
+
         document.getElementById('modal').classList.add('open');
     }
 
@@ -272,17 +209,8 @@
         if(force || e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
     }
 
-    function copyMain() { copyText(RAW_URL, document.getElementById('mainBtn')); }
-
-    function copyText(txt, btn) {
-        navigator.clipboard.writeText(txt);
-        const old = btn.innerText;
-        btn.innerText = "СКОПИРОВАНО!";
-        btn.style.background = "#10b981";
-        setTimeout(() => { btn.innerText = old; btn.style.background = ""; }, 1500);
-    }
-
-    load();
+    // Запуск
+    fetchData();
 </script>
 
 </body>
