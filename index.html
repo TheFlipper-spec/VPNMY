@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FL1PVPN - Статус</title>
+    <title>FL1PVPN - Status</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,17 +13,11 @@
             --primary: #4f46e5;
             --text-main: #ffffff;
             --text-sec: #9ca3af;
-            
-            /* ЦВЕТА СТАТУСА */
-            --s-green: #10b981;
-            --s-yellow: #facc15;
-            --s-orange: #fb923c;
-            --s-red: #ef4444;
+            --s-green: #10b981; --s-yellow: #facc15; --s-orange: #fb923c; --s-red: #ef4444;
         }
         body {
             font-family: 'Manrope', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
+            background-color: var(--bg); color: var(--text-main);
             margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
@@ -32,10 +26,8 @@
         
         header { 
             display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 30px; 
-            background: var(--card-bg);
-            padding: 15px 20px;
-            border-radius: 16px;
+            margin-bottom: 30px; background: var(--card-bg);
+            padding: 15px 20px; border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
         .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
@@ -46,71 +38,53 @@
             padding: 6px 12px; border-radius: 20px;
             display: flex; align-items: center; gap: 6px;
         }
-        .dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+        .dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
 
-        /* СПИСОК */
         .server-list { display: flex; flex-direction: column; gap: 12px; }
         
         .card {
-            background: var(--card-bg);
-            border-radius: 14px;
-            padding: 16px;
+            background: var(--card-bg); border-radius: 14px; padding: 16px;
             display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            cursor: pointer; transition: all 0.2s ease;
             border: 1px solid transparent;
         }
         .card:hover { transform: translateY(-2px); background: var(--card-hover); border-color: rgba(255,255,255,0.05); }
         
         .card-left { display: flex; align-items: center; gap: 12px; }
-        .flag { width: 28px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .flag { width: 28px; border-radius: 4px; }
         .info { display: flex; flex-direction: column; gap: 2px; }
         .country { font-weight: 700; font-size: 15px; }
         .protocol { font-size: 11px; color: var(--text-sec); text-transform: uppercase; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; width: fit-content;}
-
-        /* СТАТУС БЕЗ ЦИФР */
-        .ping-status { 
-            font-weight: 700; font-size: 13px; 
-            display: flex; align-items: center; gap: 6px;
-        }
+        .ping-status { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px; }
         
-        /* МОДАЛКА */
+        /* Modal */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
             display: flex; justify-content: center; align-items: flex-end;
-            opacity: 0; pointer-events: none; transition: all 0.3s;
-            z-index: 1000;
+            opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 1000;
         }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
-        
         .modal {
             background: #1a1b26; width: 100%; max-width: 500px;
             border-radius: 24px 24px 0 0; padding: 25px;
-            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(100%); transition: transform 0.3s;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         .modal-overlay.open .modal { transform: translateY(0); }
-        
         .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
-        .row span:last-child { color: var(--text-main); font-weight: 600; }
-        .row span:first-child { color: var(--text-sec); }
-
+        
         .modal-btn {
             width: 100%; margin-top: 20px; padding: 16px;
             border-radius: 12px; border: none; font-weight: 700; font-size: 16px;
             background: var(--primary); color: white; cursor: pointer;
         }
-
-        .loader { text-align: center; color: var(--text-sec); margin-top: 50px; font-size: 14px; }
         
-        /* СТИЛЬ ДЛЯ ТЕХНИЧЕСКОГО ПЕРЕРЫВА */
+        .loader { text-align: center; color: var(--text-sec); margin-top: 50px; font-size: 14px; }
         .maintenance-msg { 
             text-align: center; color: var(--text-sec); 
-            margin-top: 40px; 
-            background: rgba(255,255,255,0.03);
-            padding: 20px;
-            border-radius: 12px;
+            margin-top: 40px; background: rgba(255,255,255,0.03);
+            padding: 20px; border-radius: 12px;
             border: 1px dashed rgba(255,255,255,0.1);
         }
     </style>
@@ -132,15 +106,14 @@
 
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
     <div class="modal">
-        <h2 style="margin: 0 0 20px 0; font-size: 20px;">Информация о сервере</h2>
+        <h2 style="margin: 0 0 20px 0; font-size: 20px;">Информация</h2>
         <div id="modalBody"></div>
-        <button class="modal-btn" id="confBtn">🔒 Купить доступ в Боте</button>
+        <button class="modal-btn" id="confBtn">🔒 Купить в Боте</button>
     </div>
 </div>
 
 <script>
     const JSON_URL = "stats.json"; 
-    // ЗАМЕНИ НА СВОЕГО БОТА:
     const BOT_LINK = "https://t.me/FL1PVPN_bot"; 
 
     async function fetchData() {
@@ -152,15 +125,18 @@
             if (!data.servers || data.servers.length === 0) throw new Error("Empty list");
 
             renderCards(data.servers);
-            document.getElementById('statusText').innerText = "System Online";
             
+            document.getElementById('statusText').innerText = "System Online";
+            document.getElementById('statusBadge').style.color = "var(--s-green)";
+            document.getElementById('statusBadge').style.background = "rgba(16, 185, 129, 0.1)";
+
         } catch (e) {
-            // КРАСИВОЕ СООБЩЕНИЕ О ТЕХНИЧЕСКОМ ПЕРЕРЫВЕ
+            console.error(e);
             document.getElementById('serverList').innerHTML = `
                 <div class="maintenance-msg">
                     <div style="font-size: 24px; margin-bottom: 10px;">🛠</div>
                     <div style="font-weight: 700; color: #fff; margin-bottom: 5px;">Технический перерыв</div>
-                    <div style="font-size: 13px;">Проводим плановое обновление.<br>Сервис скоро вернется.</div>
+                    <div style="font-size: 13px;">Обновляем базу серверов.<br>Сервис скоро вернется.</div>
                 </div>
             `;
             const badge = document.getElementById('statusBadge');
@@ -174,18 +150,25 @@
         const list = document.getElementById('serverList');
         list.innerHTML = "";
         
-        servers.sort((a, b) => (b.online === true) - (a.online === true));
+        // Сортируем: сначала быстрые
+        servers.sort((a, b) => parseInt(a.ping) - parseInt(b.ping));
 
         servers.forEach(s => {
-            const p = parseInt(s.ping);
+            const p = parseInt(s.ping) || 999;
+            
+            // В твоем JSON нет поля online, поэтому считаем, что если есть пинг - сервер жив
+            const isOnline = p > 0 && p < 999;
+            
             let color = "var(--s-green)";
             let statusText = "Отлично";
 
             if(p > 150) { color = "var(--s-yellow)"; statusText = "Хорошо"; }
             if(p > 300) { color = "var(--s-orange)"; statusText = "Средне"; }
-            if(!s.online) { color = "var(--s-red)"; statusText = "Недоступен"; }
+            if(!isOnline) { color = "var(--s-red)"; statusText = "Недоступен"; }
 
-            const flagUrl = `https://flagcdn.com/w40/${s.countryCode.toLowerCase()}.png`;
+            // Исправление: используем ISO вместо countryCode (как в твоем main.py)
+            const code = s.iso || s.countryCode || 'un';
+            const flagUrl = `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
 
             const card = document.createElement('div');
             card.className = "card";
@@ -193,8 +176,8 @@
                 <div class="card-left">
                     <img src="${flagUrl}" class="flag" onerror="this.style.display='none'">
                     <div class="info">
-                        <div class="country">${s.country}</div>
-                        <div class="protocol">${s.protocol}</div>
+                        <div class="country">${s.country || 'Unknown'}</div>
+                        <div class="protocol">${s.type || s.protocol}</div>
                     </div>
                 </div>
                 <div class="ping-status" style="color:${color}">
@@ -202,7 +185,6 @@
                 </div>
             `;
             
-            // При клике открываем модалку
             card.onclick = () => showModal(s, flagUrl, statusText, color);
             list.appendChild(card);
         });
@@ -210,8 +192,25 @@
 
     function showModal(s, flagUrl, statusText, color) {
         const body = document.getElementById('modalBody');
-        // ВАЖНО: Мы НЕ вставляем сюда s.link (ссылку на конфиг), поэтому скопировать её невозможно
         body.innerHTML = `
             <div class="row"><span>Страна</span><span style="display:flex;align-items:center;gap:6px"><img src="${flagUrl}" style="width:20px;border-radius:2px"> ${s.country}</span></div>
             <div class="row"><span>IP Адрес</span><span>${s.ip}</span></div>
-            <div class="row"><span>Состояние</span>
+            <div class="row"><span>Состояние</span><span style="color:${color}">${statusText}</span></div>
+            <div class="row" style="border:none"><span>Тип</span><span>${s.type || s.protocol}</span></div>
+        `;
+        
+        const btn = document.getElementById('confBtn');
+        btn.onclick = () => window.location.href = BOT_LINK;
+
+        document.getElementById('modal').classList.add('open');
+    }
+
+    function closeModal(e, force) {
+        if(force || e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
+    }
+
+    fetchData();
+</script>
+
+</body>
+</html>
