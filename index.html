@@ -87,6 +87,8 @@
             padding: 20px; border-radius: 12px;
             border: 1px dashed rgba(255,255,255,0.1);
         }
+        .error-title { font-weight: 700; color: #fff; margin-bottom: 5px; }
+        .error-icon { font-size: 24px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -116,10 +118,43 @@
     const JSON_URL = "stats.json"; 
     const BOT_LINK = "https://t.me/FL1PVPN_bot"; 
 
+    // Функция для отображения ошибки
+    function showError(title, message) {
+        document.getElementById('serverList').innerHTML = `
+            <div class="maintenance-msg">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title">${title}</div>
+                <div style="font-size: 13px;">${message}</div>
+            </div>
+        `;
+        const badge = document.getElementById('statusBadge');
+        badge.style.color = "var(--s-red)";
+        badge.style.background = "rgba(239, 68, 68, 0.1)";
+        document.getElementById('statusText').innerText = "Ошибка";
+    }
+
     async function fetchData() {
+        // Проверка запуска через файл
+        if (window.location.protocol === 'file:') {
+            showError(
+                "Запуск через файл", 
+                "Браузеры блокируют загрузку данных при открытии файла напрямую.<br>Запустите локальный сервер или загрузите файлы на хостинг."
+            );
+            return;
+        }
+
         try {
-            const r = await fetch(JSON_URL + "?t=" + Date.now());
-            if(!r.ok) throw new Error("File not found");
+            // Fetch с таймаутом и защитой от кэша
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд таймаут
+
+            const r = await fetch(JSON_URL + "?t=" + Date.now(), { 
+                signal: controller.signal 
+            });
+            clearTimeout(timeoutId);
+
+            if(!r.ok) throw new Error("File not found or Server Error");
+            
             const data = await r.json();
             
             if (!data.servers || data.servers.length === 0) throw new Error("Empty list");
@@ -132,11 +167,14 @@
 
         } catch (e) {
             console.error(e);
+            let msg = "Обновляем базу серверов.<br>Сервис скоро вернется.";
+            if (e.name === 'AbortError') msg = "Превышено время ожидания сервера.";
+            
             document.getElementById('serverList').innerHTML = `
                 <div class="maintenance-msg">
-                    <div style="font-size: 24px; margin-bottom: 10px;">🛠</div>
-                    <div style="font-weight: 700; color: #fff; margin-bottom: 5px;">Технический перерыв</div>
-                    <div style="font-size: 13px;">Обновляем базу серверов.<br>Сервис скоро вернется.</div>
+                    <div class="error-icon">🛠</div>
+                    <div class="error-title">Технический перерыв</div>
+                    <div style="font-size: 13px;">${msg}</div>
                 </div>
             `;
             const badge = document.getElementById('statusBadge');
@@ -150,13 +188,15 @@
         const list = document.getElementById('serverList');
         list.innerHTML = "";
         
-        // Сортируем: сначала быстрые
-        servers.sort((a, b) => parseInt(a.ping) - parseInt(b.ping));
+        // Сортируем: сначала быстрые. Проверка на NaN.
+        servers.sort((a, b) => {
+            const pa = parseInt(a.ping) || 999;
+            const pb = parseInt(b.ping) || 999;
+            return pa - pb;
+        });
 
         servers.forEach(s => {
             const p = parseInt(s.ping) || 999;
-            
-            // В твоем JSON нет поля online, поэтому считаем, что если есть пинг - сервер жив
             const isOnline = p > 0 && p < 999;
             
             let color = "var(--s-green)";
@@ -166,7 +206,6 @@
             if(p > 300) { color = "var(--s-orange)"; statusText = "Средне"; }
             if(!isOnline) { color = "var(--s-red)"; statusText = "Недоступен"; }
 
-            // Исправление: используем ISO вместо countryCode (как в твоем main.py)
             const code = s.iso || s.countryCode || 'un';
             const flagUrl = `https://flagcdn.com/w40/${code.toLowerCase()}.png`;
 
@@ -192,6 +231,7 @@
 
     function showModal(s, flagUrl, statusText, color) {
         const body = document.getElementById('modalBody');
+        // Показываем только безопасные данные. IP можно скрыть при желании.
         body.innerHTML = `
             <div class="row"><span>Страна</span><span style="display:flex;align-items:center;gap:6px"><img src="${flagUrl}" style="width:20px;border-radius:2px"> ${s.country}</span></div>
             <div class="row"><span>IP Адрес</span><span>${s.ip}</span></div>
