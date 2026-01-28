@@ -14,7 +14,7 @@ import statistics
 import os
 import json
 import uuid 
-import binascii # Нужен для SS
+import binascii 
 import geoip2.database 
 import subprocess
 import tempfile
@@ -34,7 +34,6 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt"
 ]
 
-
 WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
@@ -50,10 +49,10 @@ TARGET_WARP = 2
 TARGET_WHITELIST = 2  
 
 # БАЛАНС СКОРОСТИ И КАЧЕСТВА
-TIMEOUT = 0.8           # Быстрый TCP чек
-REAL_TEST_TIMEOUT = 8.0 # Надежный Xray чек
-OUTPUT_FILE = 'FL1PVPN'
-JSON_FILE = 'stats.json'
+TIMEOUT = 0.8           
+REAL_TEST_TIMEOUT = 8.0 
+OUTPUT_FILE = 'FL1PVPN' # Файл с конфигами (СЕКРЕТНЫЙ, для бота)
+JSON_FILE = 'stats.json' # Файл для сайта (ПУБЛИЧНЫЙ, без ключей)
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
@@ -191,7 +190,6 @@ def parse_config_info(config_str, source_type):
             security = params.get('security', ['none'])[0].lower()
             flow_val = params.get('flow', [''])[0].lower()
             
-            # Строгая проверка на Reality
             is_reality = (security == 'reality')
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -228,7 +226,6 @@ def generate_xray_config(server, local_port):
     try:
         params = server['parsed_params']
         
-        # 1. SHADOWSOCKS
         if server.get('is_ss', False):
             outbound_config = {
                 "tag": "proxy",
@@ -239,7 +236,7 @@ def generate_xray_config(server, local_port):
                         "port": int(server['port']),
                         "method": params.get('method', ''),
                         "password": server['uuid'],
-                        "uot": True # UDP over TCP для игр
+                        "uot": True 
                     }]
                 }
             }
@@ -250,7 +247,6 @@ def generate_xray_config(server, local_port):
             }
             return config
 
-        # 2. VLESS
         user_obj = {
             "id": server['uuid'],
             "encryption": "none"
@@ -342,7 +338,6 @@ def check_real_connection(server):
             stdout=subprocess.DEVNULL, 
             stderr=subprocess.PIPE     
         )
-        
         time.sleep(1.5) 
         
         if xray_process.poll() is not None:
@@ -352,8 +347,6 @@ def check_real_connection(server):
             'http': f'socks5://127.0.0.1:{local_port}',
             'https': f'socks5://127.0.0.1:{local_port}'
         }
-        
-        # Надежная проверка через Cloudflare
         target_url = "http://cp.cloudflare.com/"
         
         start_time = time.perf_counter()
@@ -431,12 +424,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     filtered = candidates
     
     if mode == "gaming":
-        # --- ЛОГИКА ГЕЙМ СЕРВЕРА ---
-        # 1. Только SS или Reality
         filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
-        
-        # 2. Только Tier 1 (FI, EE, SE)
-        # Если в Tier 1 пусто, берем Tier 2 (DE, NL)
         tier1_candidates = [c for c in filtered if c['tier_rank'] == 1]
         if tier1_candidates:
             filtered = tier1_candidates
@@ -445,8 +433,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             print(f"   ℹ️ {title}: No Tier-1 found. Checking neighbors.")
             
     elif mode == "universal":
-        # --- ЛОГИКА UNIVERSAL ---
-        # СТРОГО: Только Reality
         filtered = [c for c in candidates if c['is_reality']]
         
     elif mode == "whitelist":
@@ -456,14 +442,12 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    # Берем ТОП-20 по пингу для проверки
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:20]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
     
     scored_results = []
     for f in semifinalists:
-        # Real Test через Xray (включая SS)
         real_lat = check_real_connection(f)
         
         if real_lat is None:
@@ -480,10 +464,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         special_penalty = 0
         
         if mode == "gaming":
-            # --- УМНАЯ ЛОГИКА ДЛЯ ИГР ---
-            # Даем бонус SS (-20 очков). 
-            # Это значит, если SS и Reality имеют одинаковый пинг -> выиграет SS.
-            # Но если Reality быстрее на 20мс+ -> выиграет Reality.
             if f.get('is_ss', False): 
                 special_penalty = -20 
             
@@ -548,7 +528,6 @@ def main():
     init_geoip()
     
     all_servers = []
-    # 40 потоков для стабильности
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
         f1 = executor.submit(process_urls, GENERAL_URLS, 'general')
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
@@ -571,7 +550,6 @@ def main():
 
     final_list = []
     
-    # 1. ГЕЙМ СЕРВЕР (SS приоритет, Reality если намного быстрее)
     game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     game_ips = []
     
@@ -581,12 +559,9 @@ def main():
             game_ips.append(g['ip']) 
         final_list.extend(game_winners)
     
-    # 2. Фильтруем (чтобы гейм сервер не попал в обычные)
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     
-    # 3. UNIVERSAL (Только Reality)
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
-    
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
@@ -599,8 +574,11 @@ def main():
     
     update_msg = f"📅 Обновлено: {time_str} (МСК) | След. обновление: {next_str}"
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
+    
+    # 1. Список для файла подписки (ПОЛНЫЙ ДОСТУП)
     result_links = [info_link]
     
+    # 2. Список для сайта (БЕЗОПАСНЫЙ, БЕЗ КОНФИГОВ)
     json_data = {
         "updated_at": time_str,
         "next_update": next_str,
@@ -642,6 +620,7 @@ def main():
         final_link = f"{base}#{quote(name)}"
         result_links.append(final_link)
         
+        # --- БЕЗОПАСНОСТЬ: В JSON не пишем ссылку и UUID ---
         json_data["servers"].append({
             "name": name,
             "category": s['category'],
@@ -649,21 +628,24 @@ def main():
             "iso": code,
             "flag": flag,
             "ping": calc_ping,
-            "ip": s['ip'],
+            "ip": s['ip'],       # IP оставляем для информации в карточке
             "port": s['port'],
             "protocol": s['transport'].upper(),
-            "type": type_label,
-            "uuid": s['uuid'],
-            "link": final_link
+            "type": type_label
+            # "link": final_link,  <-- УДАЛЕНО
+            # "uuid": s['uuid']    <-- УДАЛЕНО
         })
 
+    # Сохраняем полный файл подписки
     with open(OUTPUT_FILE, 'w') as f:
         f.write(base64.b64encode("\n".join(result_links).encode('utf-8')).decode('utf-8'))
         
+    # Сохраняем безопасный JSON для сайта
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-    print(f"DONE. {len(result_links)} links saved.")
+    print(f"DONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
+    print(f"SECURE stats saved to {JSON_FILE} (No configs inside).")
 
 if __name__ == "__main__":
     main()
