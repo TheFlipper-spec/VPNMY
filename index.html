@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FL1PVPN - Статус серверов</title>
+    <title>FL1PVPN - Статус</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,7 +14,7 @@
             --text-main: #ffffff;
             --text-sec: #9ca3af;
             
-            /* ЦВЕТА СКОРОСТИ */
+            /* ЦВЕТА СТАТУСА */
             --s-green: #10b981;
             --s-yellow: #facc15;
             --s-orange: #fb923c;
@@ -48,7 +48,7 @@
         }
         .dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
 
-        /* СПИСОК СЕРВЕРОВ */
+        /* СПИСОК */
         .server-list { display: flex; flex-direction: column; gap: 12px; }
         
         .card {
@@ -66,11 +66,15 @@
         .flag { width: 28px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .info { display: flex; flex-direction: column; gap: 2px; }
         .country { font-weight: 700; font-size: 15px; }
-        .protocol { font-size: 11px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; width: fit-content;}
+        .protocol { font-size: 11px; color: var(--text-sec); text-transform: uppercase; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; width: fit-content;}
 
-        .ping { font-weight: 700; font-size: 14px; text-align: right; }
+        /* СТАТУС БЕЗ ЦИФР */
+        .ping-status { 
+            font-weight: 700; font-size: 13px; 
+            display: flex; align-items: center; gap: 6px;
+        }
         
-        /* МОДАЛЬНОЕ ОКНО */
+        /* МОДАЛКА */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
@@ -98,9 +102,17 @@
             background: var(--primary); color: white; cursor: pointer;
         }
 
-        /* АНИМАЦИЯ ЗАГРУЗКИ */
         .loader { text-align: center; color: var(--text-sec); margin-top: 50px; font-size: 14px; }
-
+        
+        /* СТИЛЬ ДЛЯ ТЕХНИЧЕСКОГО ПЕРЕРЫВА */
+        .maintenance-msg { 
+            text-align: center; color: var(--text-sec); 
+            margin-top: 40px; 
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px dashed rgba(255,255,255,0.1);
+        }
     </style>
 </head>
 <body>
@@ -109,61 +121,69 @@
     <header>
         <div class="logo">FL1PVPN</div>
         <div class="status-badge" id="statusBadge">
-            <span class="dot"></span> <span id="statusText">Обновление...</span>
+            <span class="dot"></span> <span id="statusText">Загрузка...</span>
         </div>
-        </header>
+    </header>
 
     <div id="serverList" class="server-list">
-        <div class="loader">Загрузка серверов...</div>
+        <div class="loader">Получение данных...</div>
     </div>
 </div>
 
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
     <div class="modal">
-        <h2 style="margin: 0 0 20px 0; font-size: 20px;">Информация</h2>
+        <h2 style="margin: 0 0 20px 0; font-size: 20px;">Информация о сервере</h2>
         <div id="modalBody"></div>
-        <button class="modal-btn" id="confBtn">🔒 Доступ через Бота</button>
+        <button class="modal-btn" id="confBtn">🔒 Купить доступ в Боте</button>
     </div>
 </div>
 
 <script>
-    // Ссылка на JSON со статистикой (оставляем, чтобы работала карта)
     const JSON_URL = "stats.json"; 
-    // Ссылка на бота (или твой профиль)
-    const BOT_LINK = "https://t.me/FlYpper1707";
+    // ЗАМЕНИ НА СВОЕГО БОТА:
+    const BOT_LINK = "https://t.me/FL1PVPN_bot"; 
 
     async function fetchData() {
         try {
             const r = await fetch(JSON_URL + "?t=" + Date.now());
-            if(!r.ok) throw new Error("Err");
+            if(!r.ok) throw new Error("File not found");
             const data = await r.json();
-            renderCards(data.servers || []);
-            document.getElementById('statusText').innerText = "Все системы в норме";
+            
+            if (!data.servers || data.servers.length === 0) throw new Error("Empty list");
+
+            renderCards(data.servers);
+            document.getElementById('statusText').innerText = "System Online";
+            
         } catch (e) {
-            document.getElementById('serverList').innerHTML = `<div style="text-align:center;color:var(--s-red)">Ошибка загрузки данных</div>`;
-            document.getElementById('statusBadge').style.color = "var(--s-red)";
-            document.getElementById('statusBadge').style.background = "rgba(239,68,68,0.1)";
-            document.getElementById('statusText').innerText = "Offline";
+            // КРАСИВОЕ СООБЩЕНИЕ О ТЕХНИЧЕСКОМ ПЕРЕРЫВЕ
+            document.getElementById('serverList').innerHTML = `
+                <div class="maintenance-msg">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🛠</div>
+                    <div style="font-weight: 700; color: #fff; margin-bottom: 5px;">Технический перерыв</div>
+                    <div style="font-size: 13px;">Проводим плановое обновление.<br>Сервис скоро вернется.</div>
+                </div>
+            `;
+            const badge = document.getElementById('statusBadge');
+            badge.style.color = "var(--s-yellow)";
+            badge.style.background = "rgba(250, 204, 21, 0.1)";
+            document.getElementById('statusText').innerText = "Техработы";
         }
     }
 
     function renderCards(servers) {
         const list = document.getElementById('serverList');
         list.innerHTML = "";
-
-        // Сортировка: сначала быстрые (зеленые), потом остальные
-        servers.sort((a, b) => {
-            const pa = parseInt(a.ping) || 999;
-            const pb = parseInt(b.ping) || 999;
-            return pa - pb;
-        });
+        
+        servers.sort((a, b) => (b.online === true) - (a.online === true));
 
         servers.forEach(s => {
             const p = parseInt(s.ping);
             let color = "var(--s-green)";
-            if(p > 100) color = "var(--s-yellow)";
-            if(p > 200) color = "var(--s-orange)";
-            if(!s.online) color = "var(--s-red)";
+            let statusText = "Отлично";
+
+            if(p > 150) { color = "var(--s-yellow)"; statusText = "Хорошо"; }
+            if(p > 300) { color = "var(--s-orange)"; statusText = "Средне"; }
+            if(!s.online) { color = "var(--s-red)"; statusText = "Недоступен"; }
 
             const flagUrl = `https://flagcdn.com/w40/${s.countryCode.toLowerCase()}.png`;
 
@@ -174,44 +194,24 @@
                     <img src="${flagUrl}" class="flag" onerror="this.style.display='none'">
                     <div class="info">
                         <div class="country">${s.country}</div>
-                        <div class="protocol">${s.protocol} · ${s.ip}</div>
+                        <div class="protocol">${s.protocol}</div>
                     </div>
                 </div>
-                <div class="ping" style="color:${color}">${s.online ? s.ping + " ms" : "OFF"}</div>
+                <div class="ping-status" style="color:${color}">
+                    <span class="dot" style="box-shadow:none"></span> ${statusText}
+                </div>
             `;
             
             // При клике открываем модалку
-            card.onclick = () => showModal(s, flagUrl);
+            card.onclick = () => showModal(s, flagUrl, statusText, color);
             list.appendChild(card);
         });
     }
 
-    function showModal(s, flagUrl) {
+    function showModal(s, flagUrl, statusText, color) {
         const body = document.getElementById('modalBody');
+        // ВАЖНО: Мы НЕ вставляем сюда s.link (ссылку на конфиг), поэтому скопировать её невозможно
         body.innerHTML = `
             <div class="row"><span>Страна</span><span style="display:flex;align-items:center;gap:6px"><img src="${flagUrl}" style="width:20px;border-radius:2px"> ${s.country}</span></div>
             <div class="row"><span>IP Адрес</span><span>${s.ip}</span></div>
-            <div class="row"><span>Порт</span><span>${s.port}</span></div>
-            <div class="row"><span>Пинг</span><span style="color:var(--s-green)">${s.ping} ms</span></div>
-            <div class="row" style="border:none"><span>Протокол</span><span>${s.protocol} (${s.type})</span></div>
-        `;
-        
-        const btn = document.getElementById('confBtn');
-        // Изменяем логику кнопки: не копировать, а вести в бота
-        btn.innerText = "👉 Купить доступ (Telegram)";
-        btn.style.background = "var(--primary)";
-        btn.onclick = () => window.location.href = BOT_LINK;
-
-        document.getElementById('modal').classList.add('open');
-    }
-
-    function closeModal(e, force) {
-        if(force || e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
-    }
-
-    // Запуск
-    fetchData();
-</script>
-
-</body>
-</html>
+            <div class="row"><span>Состояние</span>
