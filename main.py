@@ -192,15 +192,15 @@ def parse_config_info(config_str, source_type):
             
             is_reality = (security == 'reality')
             
-            # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY ---
+            # --- ФИЛЬТР REALITY ---
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 30: # Проверка длины ключа
+                if len(pbk) < 30: 
                     return None
                 sni = params.get('sni', [''])[0]
-                if sni == host: # SNI не должен совпадать с IP
+                if sni == host: 
                     return None
-            # ---------------------------------------------
+            # ----------------------
             
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -529,58 +529,83 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-# --- ПОИСК НА GITHUB (БЕЗОПАСНЫЙ) ---
-def fetch_github_raw_links(query, max_files=10):
+# --- УМНЫЙ ПОИСК (REPO FIRST STRATEGY) ---
+def fetch_fresh_github_links(max_repos=8):
     """
-    Ищет файлы на GitHub по запросу.
-    Использует токен из ENV для безопасности.
+    Стратегия "Variant 2": 
+    1. Ищем РЕПОЗИТОРИИ, которые обновились за последние 24 часа.
+    2. Ищем файлы внутри этих свежих репозиториев.
+    Это гарантирует, что мы находим живые конфиги, а не старый мусор.
     """
-    print(f"🔎 GitHub Search: ищем '{query}'...")
-    
-    # БЕРЕМ ТОКЕН ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ (БЕЗОПАСНО)
     token = os.environ.get("GITHUB_TOKEN")
-    
+    if not token:
+        print("   ⚠️ Warning: GITHUB_TOKEN не найден. Поиск будет ограничен.")
+        return []
+
     headers = {
-        "Accept": "application/vnd.github.v3+json"
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {token}"
     }
-    if token:
-        headers["Authorization"] = f"token {token}"
-    else:
-        print("   ⚠️ Warning: GITHUB_TOKEN не найден. Возможны лимиты API.")
 
-    api_url = "https://api.github.com/search/code"
-    params = {
-        "q": query,
-        "sort": "indexed",
+    # 1. Вычисляем дату "вчера" для фильтра pushed:>
+    date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
+    print(f"🔎 Smart Repo Search: ищем активные репозитории (pushed > {date_filter})...")
+
+    # Ищем репозитории по теме vless, обновленные недавно
+    repo_api_url = "https://api.github.com/search/repositories"
+    repo_params = {
+        "q": f"vless pushed:>{date_filter}",
+        "sort": "updated",
         "order": "desc",
-        "per_page": max_files
+        "per_page": max_repos
     }
 
-    raw_links = []
+    found_files = []
+    
     try:
-        response = requests.get(api_url, headers=headers, params=params, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            items = data.get("items", [])
-            print(f"   ✅ Найдено файлов через GitHub API: {len(items)}")
+        repo_resp = requests.get(repo_api_url, headers=headers, params=repo_params, timeout=10)
+        if repo_resp.status_code == 200:
+            repos = repo_resp.json().get("items", [])
+            print(f"   ✅ Найдено свежих репозиториев: {len(repos)}")
             
-            for item in items:
-                raw_url = item.get("html_url", "") \
-                    .replace("github.com", "raw.githubusercontent.com") \
-                    .replace("/blob/", "/")
+            # 2. Проходимся по каждому репозиторию и ищем внутри файлы
+            code_api_url = "https://api.github.com/search/code"
+            
+            for repo in repos:
+                full_name = repo.get("full_name")
+                print(f"      -> Сканируем репо: {full_name}")
                 
-                if raw_url:
-                    raw_links.append(raw_url)
+                # Ищем файлы .txt или без расширения с содержанием vless://
+                # Ограничиваем поиск конкретным репозиторием (repo:...)
+                code_params = {
+                    "q": f'"vless://" repo:{full_name} size:1000..50000',
+                    "per_page": 3 # Берем топ-3 файла из каждого репо
+                }
+                
+                try:
+                    code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
+                    if code_resp.status_code == 200:
+                        files = code_resp.json().get("items", [])
+                        for f in files:
+                            raw_url = f.get("html_url", "") \
+                                .replace("github.com", "raw.githubusercontent.com") \
+                                .replace("/blob/", "/")
+                            if raw_url:
+                                found_files.append(raw_url)
+                    time.sleep(1) # Небольшая пауза, чтобы API не ругался
+                except: pass
+                
         else:
-            print(f"   ❌ Ошибка API GitHub: {response.status_code} - {response.text}")
-    except Exception as e:
-        print(f"   ❌ Ошибка при поиске на GitHub: {e}")
+            print(f"   ❌ Ошибка поиска репозиториев: {repo_resp.status_code}")
 
-    return list(set(raw_links))
+    except Exception as e:
+        print(f"   ❌ Ошибка Smart Search: {e}")
+
+    return list(set(found_files))
 # ------------------------------------------------
 
 def main():
-    print("--- ЗАПУСК V69 (REALITY + GITHUB SEARCH + SOURCE LOG) ---")
+    print("--- ЗАПУСК V70 (SMART REPO SEARCH + STATIC) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -592,21 +617,28 @@ def main():
     
     # --- ЭТАП 1: СБОР ССЫЛОК ---
     
-    # Ищем динамические ссылки через GitHub
-    github_query = '"vless://" extension:txt size:1000..50000'
-    dynamic_urls = fetch_github_raw_links(github_query, max_files=15)
+    # 1. Запускаем УМНЫЙ поиск по свежим репозиториям
+    smart_urls = fetch_fresh_github_links(max_repos=10)
     
     all_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
-        print(f"🌐 Скачивание источников: {len(GENERAL_URLS)} static + {len(dynamic_urls)} github + {len(WHITELIST_URLS)} whitelist...")
+        print(f"🌐 Скачивание источников: {len(GENERAL_URLS)} static + {len(smart_urls)} smart_github + {len(WHITELIST_URLS)} whitelist...")
         
-        # Запускаем скачивание раздельно, чтобы присвоить разные source_type
-        f1 = executor.submit(process_urls, GENERAL_URLS, 'static')      # Старые списки
-        f2 = executor.submit(process_urls, dynamic_urls, 'github')      # Новые с GitHub
-        f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist') # Белый список
+        # Загружаем списки.
+        # ВАЖНО: GitHub загружаем ПОСЛЕ Static, чтобы в случае дубликатов
+        # в финальном списке побеждала версия с меткой 'GITHUB' (для статистики).
+        f1 = executor.submit(process_urls, GENERAL_URLS, 'static')
+        f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         
-        all_servers = f1.result() + f2.result() + f3.result()
+        static_results = f1.result() + f3.result()
+        
+        # Запускаем обработку smart ссылок
+        f2 = executor.submit(process_urls, smart_urls, 'github')
+        github_results = f2.result()
+        
+        all_servers = static_results + github_results
     
+    # Дедупликация: если конфиг одинаковый, останется последний добавленный (Github)
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
     print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan)...")
