@@ -195,7 +195,7 @@ def parse_config_info(config_str, source_type):
             # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY ---
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 30: # Проверка длины ключа Reality (обычно 43)
+                if len(pbk) < 30: # Проверка длины ключа
                     return None
                 sni = params.get('sni', [''])[0]
                 if sni == host: # SNI не должен совпадать с IP
@@ -502,7 +502,9 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         elif f['is_reality']: proto_info = "Reality"
         elif f['transport'] == 'ws': proto_info = "WS"
         
-        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<8} | Ping: {int(avg)}ms | Score: {int(score)}")
+        # --- ЛОГИРОВАНИЕ ИСТОЧНИКА ---
+        source_label = f.get('source_type', 'UNK').upper()
+        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<8} | Ping: {int(avg)}ms | Score: {int(score)} | Src: {source_label}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
@@ -527,23 +529,25 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-# --- ПОИСК НА GITHUB С ТОКЕНОМ ---
+# --- ПОИСК НА GITHUB (БЕЗОПАСНЫЙ) ---
 def fetch_github_raw_links(query, max_files=10):
     """
-    Ищет файлы на GitHub по запросу и возвращает прямые (raw) ссылки на них.
-    Использует хардкод-токен для обхода лимитов API.
+    Ищет файлы на GitHub по запросу.
+    Использует токен из ENV для безопасности.
     """
     print(f"🔎 GitHub Search: ищем '{query}'...")
     
-    # ТВОЙ ТОКЕН
+    # БЕРЕМ ТОКЕН ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ (БЕЗОПАСНО)
     token = os.environ.get("GITHUB_TOKEN")
     
     headers = {
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"token {token}"
+        "Accept": "application/vnd.github.v3+json"
     }
+    if token:
+        headers["Authorization"] = f"token {token}"
+    else:
+        print("   ⚠️ Warning: GITHUB_TOKEN не найден. Возможны лимиты API.")
 
-    # Сортируем по индексации, чтобы получать свежее
     api_url = "https://api.github.com/search/code"
     params = {
         "q": query,
@@ -561,7 +565,6 @@ def fetch_github_raw_links(query, max_files=10):
             print(f"   ✅ Найдено файлов через GitHub API: {len(items)}")
             
             for item in items:
-                # Превращаем ссылку на просмотр (blob) в сырую (raw)
                 raw_url = item.get("html_url", "") \
                     .replace("github.com", "raw.githubusercontent.com") \
                     .replace("/blob/", "/")
@@ -577,7 +580,7 @@ def fetch_github_raw_links(query, max_files=10):
 # ------------------------------------------------
 
 def main():
-    print("--- ЗАПУСК V69 (REALITY + GITHUB SEARCH) ---")
+    print("--- ЗАПУСК V69 (REALITY + GITHUB SEARCH + SOURCE LOG) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -589,20 +592,20 @@ def main():
     
     # --- ЭТАП 1: СБОР ССЫЛОК ---
     
-    # Ищем динамические ссылки через GitHub API
-    # Ищем свежие файлы .txt, содержащие "vless://", размером от 1кб до 50кб
+    # Ищем динамические ссылки через GitHub
     github_query = '"vless://" extension:txt size:1000..50000'
     dynamic_urls = fetch_github_raw_links(github_query, max_files=15)
     
-    # Объединяем статические и найденные ссылки
-    combined_general_urls = GENERAL_URLS + dynamic_urls
-
     all_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
-        print(f"🌐 Скачивание источников ({len(combined_general_urls)} combined + {len(WHITELIST_URLS)} whitelist)...")
-        f1 = executor.submit(process_urls, combined_general_urls, 'general')
-        f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
-        all_servers = f1.result() + f2.result()
+        print(f"🌐 Скачивание источников: {len(GENERAL_URLS)} static + {len(dynamic_urls)} github + {len(WHITELIST_URLS)} whitelist...")
+        
+        # Запускаем скачивание раздельно, чтобы присвоить разные source_type
+        f1 = executor.submit(process_urls, GENERAL_URLS, 'static')      # Старые списки
+        f2 = executor.submit(process_urls, dynamic_urls, 'github')      # Новые с GitHub
+        f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist') # Белый список
+        
+        all_servers = f1.result() + f2.result() + f3.result()
     
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
@@ -703,8 +706,6 @@ def main():
             "port": s['port'],
             "protocol": s['transport'].upper(),
             "type": type_label
-            # "link": final_link,  <-- УДАЛЕНО
-            # "uuid": s['uuid']    <-- УДАЛЕНО
         })
 
     # Сохраняем полный файл подписки
