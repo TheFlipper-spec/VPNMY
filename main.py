@@ -192,10 +192,10 @@ def parse_config_info(config_str, source_type):
             
             is_reality = (security == 'reality')
             
-            # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY (ИДЕЯ №3) ---
+            # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY ---
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 30: # Базовая проверка длины ключа Reality (обычно 43)
+                if len(pbk) < 30: # Проверка длины ключа Reality (обычно 43)
                     return None
                 sni = params.get('sni', [''])[0]
                 if sni == host: # SNI не должен совпадать с IP
@@ -527,21 +527,21 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-# --- НОВАЯ ФУНКЦИЯ ПОИСКА НА GITHUB (ИДЕЯ №1) ---
+# --- ПОИСК НА GITHUB С ТОКЕНОМ ---
 def fetch_github_raw_links(query, max_files=10):
     """
     Ищет файлы на GitHub по запросу и возвращает прямые (raw) ссылки на них.
-    Требует GITHUB_TOKEN в переменных окружения для снятия лимитов.
+    Использует хардкод-токен для обхода лимитов API.
     """
     print(f"🔎 GitHub Search: ищем '{query}'...")
-    token = os.environ.get("GITHUB_TOKEN") 
+    
+    # ТВОЙ ТОКЕН
+    token = os.environ.get("GITHUB_TOKEN")
+    
     headers = {
-        "Accept": "application/vnd.github.v3+json"
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {token}"
     }
-    if token:
-        headers["Authorization"] = f"token {token}"
-    else:
-        print("   ⚠️ Warning: GITHUB_TOKEN не найден. Возможны лимиты API.")
 
     # Сортируем по индексации, чтобы получать свежее
     api_url = "https://api.github.com/search/code"
@@ -589,7 +589,7 @@ def main():
     
     # --- ЭТАП 1: СБОР ССЫЛОК ---
     
-    # Ищем динамические ссылки через GitHub API (Идея №1)
+    # Ищем динамические ссылки через GitHub API
     # Ищем свежие файлы .txt, содержащие "vless://", размером от 1кб до 50кб
     github_query = '"vless://" extension:txt size:1000..50000'
     dynamic_urls = fetch_github_raw_links(github_query, max_files=15)
