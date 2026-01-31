@@ -1,78 +1,54 @@
-name: Update VPN Subscription
+name: Update VPN Configs
 
 on:
   schedule:
-    - cron: '0 */1 * * *'  # Запуск каждый час
-  workflow_dispatch:      # Кнопка ручного запуска
-
-permissions:
-  contents: write
+    - cron: '0 * * * *' # Запуск каждый час (в 00 минут)
+  workflow_dispatch: # Возможность запустить кнопку вручную
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # Права нужны для коммита файлов обратно в репо
+    permissions:
+      contents: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1 # Скачиваем только последний коммит для скорости
 
-    # 1. Кэшируем Python пакеты (ускорение)
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        cache: 'pip'
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip' # Кэшируем пакеты для ускорения
 
-    # 2. Кэшируем инструменты (Xray, MMDB), чтобы не качать их каждый раз
-    # Это защищает от бана за частые скачивания и ускоряет процесс
-    - name: Cache Xray and MMDB
-      id: cache-files
-      uses: actions/cache@v4
-      with:
-        path: |
-          xray
-          Country.mmdb
-        key: vpn-tools-v1
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests geoip2 PySocks
 
-    # 3. Ставим зависимости + PySocks (важно!)
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt PySocks
+      - name: Run VPN Parser Script
+        env:
+          # ВАЖНО: Мы берем твой секрет "TOKEN" и кладем его в переменную "GITHUB_TOKEN",
+          # которую ищет скрипт main.py (os.environ.get("GITHUB_TOKEN"))
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        run: python main.py
 
-    # 4. Скачиваем Xray только если его нет в кэше
-    - name: Setup Tools (Xray)
-      if: steps.cache-files.outputs.cache-hit != 'true'
-      run: |
-        if [ ! -f xray ]; then
-          echo "Downloading Xray..."
-          wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-          unzip -o Xray-linux-64.zip xray
-          rm Xray-linux-64.zip
-        fi
-        chmod +x xray
-
-    # Даем права на выполнение (даже если из кэша)
-    - name: Ensure Xray permissions
-      run: |
-        if [ -f xray ]; then chmod +x xray; fi
-
-    - name: Run script
-      run: python main.py
-
-    - name: Commit and push changes
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        
-        # Добавляем только результаты
-        git add FL1PVPN stats.json
-        
-        # Если изменений нет — не спамим в историю
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Auto-update VPN configs [skip ci]"
-          git pull --rebase origin main
-          git push
-        fi
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Добавляем только нужные файлы
+          git add FL1PVPN stats.json
+          
+          # Проверяем, есть ли изменения перед коммитом
+          if git diff --staged --quiet; then
+            echo "Changes not detected. Skipping commit."
+          else
+            git commit -m "🚀 Auto-update: $(date -u)"
+            git push
+          fi
