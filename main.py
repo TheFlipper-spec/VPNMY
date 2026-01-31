@@ -191,6 +191,17 @@ def parse_config_info(config_str, source_type):
             flow_val = params.get('flow', [''])[0].lower()
             
             is_reality = (security == 'reality')
+            
+            # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY (ИДЕЯ №3) ---
+            if is_reality:
+                pbk = params.get('pbk', [''])[0]
+                if len(pbk) < 30: # Базовая проверка длины ключа Reality (обычно 43)
+                    return None
+                sni = params.get('sni', [''])[0]
+                if sni == host: # SNI не должен совпадать с IP
+                    return None
+            # ---------------------------------------------
+            
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
             
@@ -516,8 +527,57 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
+# --- НОВАЯ ФУНКЦИЯ ПОИСКА НА GITHUB (ИДЕЯ №1) ---
+def fetch_github_raw_links(query, max_files=10):
+    """
+    Ищет файлы на GitHub по запросу и возвращает прямые (raw) ссылки на них.
+    Требует GITHUB_TOKEN в переменных окружения для снятия лимитов.
+    """
+    print(f"🔎 GitHub Search: ищем '{query}'...")
+    token = os.environ.get("GITHUB_TOKEN") 
+    headers = {
+        "Accept": "application/vnd.github.v3+json"
+    }
+    if token:
+        headers["Authorization"] = f"token {token}"
+    else:
+        print("   ⚠️ Warning: GITHUB_TOKEN не найден. Возможны лимиты API.")
+
+    # Сортируем по индексации, чтобы получать свежее
+    api_url = "https://api.github.com/search/code"
+    params = {
+        "q": query,
+        "sort": "indexed",
+        "order": "desc",
+        "per_page": max_files
+    }
+
+    raw_links = []
+    try:
+        response = requests.get(api_url, headers=headers, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            items = data.get("items", [])
+            print(f"   ✅ Найдено файлов через GitHub API: {len(items)}")
+            
+            for item in items:
+                # Превращаем ссылку на просмотр (blob) в сырую (raw)
+                raw_url = item.get("html_url", "") \
+                    .replace("github.com", "raw.githubusercontent.com") \
+                    .replace("/blob/", "/")
+                
+                if raw_url:
+                    raw_links.append(raw_url)
+        else:
+            print(f"   ❌ Ошибка API GitHub: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"   ❌ Ошибка при поиске на GitHub: {e}")
+
+    return list(set(raw_links))
+# ------------------------------------------------
+
 def main():
-    print("--- ЗАПУСК V68 (REALITY ONLY + SMART GAMING SS) ---")
+    print("--- ЗАПУСК V69 (REALITY + GITHUB SEARCH) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -527,9 +587,20 @@ def main():
     download_mmdb()
     init_geoip()
     
+    # --- ЭТАП 1: СБОР ССЫЛОК ---
+    
+    # Ищем динамические ссылки через GitHub API (Идея №1)
+    # Ищем свежие файлы .txt, содержащие "vless://", размером от 1кб до 50кб
+    github_query = '"vless://" extension:txt size:1000..50000'
+    dynamic_urls = fetch_github_raw_links(github_query, max_files=15)
+    
+    # Объединяем статические и найденные ссылки
+    combined_general_urls = GENERAL_URLS + dynamic_urls
+
     all_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
-        f1 = executor.submit(process_urls, GENERAL_URLS, 'general')
+        print(f"🌐 Скачивание источников ({len(combined_general_urls)} combined + {len(WHITELIST_URLS)} whitelist)...")
+        f1 = executor.submit(process_urls, combined_general_urls, 'general')
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         all_servers = f1.result() + f2.result()
     
