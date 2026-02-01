@@ -24,7 +24,7 @@ import urllib3
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V87: WINNERS LIST + NO SS + FIX FRESH SEARCH ---
+# --- V88: WIDER SEARCH + PL/DE TIER 1 + BAN US/CA ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ----------------------------------------------------
 
@@ -75,7 +75,7 @@ MAX_FAILURES = 2
 PING_BASE_MS = {
     'RU': 90, 
     'FI': 40, 'EE': 45, 'SE': 55, 'DE': 65, 'NL': 70, 
-    'FR': 75, 'GB': 80, 'PL': 60, 'TR': 90, 'KZ': 60, 'UA': 50, 
+    'FR': 75, 'GB': 80, 'PL': 50, 'TR': 90, 'KZ': 60, 'UA': 50, 
     'US': 160, 'BG': 55, 'AT': 60, 'CZ': 60, 'LV': 45, 'LT': 45,
     'IT': 80, 'ES': 90, 'RO': 65, 'CH': 70, 'NO': 60
 }
@@ -90,9 +90,13 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
 }
 
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO']
-TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ', 'RU']
-TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
+# --- V88: Добавили PL и DE в элиту ---
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO', 'PL', 'DE']
+TIER_2_GOLD = ['NL', 'FR', 'KZ', 'RU'] # NL теперь здесь (резерв)
+TIER_3_SILVER = ['IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
+
+# ЧЕРНЫЙ СПИСОК (Не брать никогда)
+BLACKLIST_COUNTRIES = ['US', 'CA', 'GB'] 
 
 geo_reader = None
 server_history = {} 
@@ -192,7 +196,7 @@ def extract_links(text):
 def parse_config_info(config_str, source_type):
     try:
         if config_str.startswith("ss://"):
-            return None # ОТКЛЮЧАЕМ SHADOWSOCKS ПОЛНОСТЬЮ
+            return None 
 
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
@@ -399,7 +403,6 @@ def calculate_tier_rank(country_code):
     if country_code in TIER_1_PLATINUM: return 1
     if country_code in TIER_2_GOLD: return 2
     if country_code in TIER_3_SILVER: return 3
-    if country_code == 'US' or country_code == 'CA': return 5
     return 4
 
 def check_server_initial(server):
@@ -422,13 +425,20 @@ def check_server_initial(server):
         
     server['latency'] = int(p)
     code = get_ip_country_local(server['ip'])
+    
+    # --- V88: HARD BLACKLIST CHECK ---
+    if code in BLACKLIST_COUNTRIES:
+        update_history(server['ip'], server['port'], False)
+        return None
+    # ---------------------------------
+
     server['info'] = {'countryCode': code}
     
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
     elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
     elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
-    elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
+    elif server['latency'] < 3: is_fake = True # Removed US/CA exception
     
     if server['source_type'] == 'github': 
         is_fake = False
@@ -454,9 +464,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
-    # --- NO SHADOWSOCKS IN GAME CUP ---
     if mode == "gaming":
-        filtered = [c for c in candidates if c['is_reality']] # Только Reality
+        filtered = [c for c in candidates if c['is_reality']] # NO SS
     elif mode == "universal":
         filtered = [c for c in candidates if c['is_reality']]
     elif mode == "whitelist":
@@ -551,8 +560,9 @@ def fetch_fresh_github_links(max_repos=150):
 
     headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    # --- ИЩЕМ ИМЕННО REALITY VLESS ---
-    query = f'"vless://" "reality" pushed:>{date_filter}'
+    
+    # --- WIDER SEARCH QUERY (Repo Level) ---
+    query = f'vless pushed:>{date_filter} stars:<=50'
     
     print(f"🔎 Smart Repo Search: '{query}' (Scan Limit: {max_repos})...")
     repo_api_url = "https://api.github.com/search/repositories"
@@ -568,8 +578,8 @@ def fetch_fresh_github_links(max_repos=150):
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
                 full_name = repo.get("full_name")
-                # Убрали ограничение на размер файла
-                code_params = {"q": f'"vless://" repo:{full_name}', "per_page": 5}
+                # --- STRICT CODE SEARCH ---
+                code_params = {"q": f'"vless://" "reality" repo:{full_name}', "per_page": 5}
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
                     if code_resp.status_code == 200:
@@ -583,7 +593,7 @@ def fetch_fresh_github_links(max_repos=150):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V87 (WINNERS LIST + NO SS + FIX FRESH SEARCH) ---")
+    print("--- ЗАПУСК V88 (WIDER SEARCH + PL/DE TIER 1 + BAN US/CA) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
