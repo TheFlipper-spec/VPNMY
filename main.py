@@ -44,7 +44,7 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
-MAX_WORKERS = 25        # Подняли потоки, так как объем работы вырос
+MAX_WORKERS = 25        
 TIMEOUT = 0.8           
 REAL_TEST_TIMEOUT = 5.0 
 SPEED_TEST_TIMEOUT = 4.0 
@@ -533,7 +533,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     elif mode == "warp":
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
     elif mode == "github_only": 
-        filtered = candidates
+        # Фильтруем дубликаты по IP, чтобы не проверять одно и то же
+        seen_ips = set()
+        unique_candidates = []
+        for c in candidates:
+            if c['ip'] not in seen_ips:
+                unique_candidates.append(c)
+                seen_ips.add(c['ip'])
+        filtered = unique_candidates
 
     if not filtered: return []
     
@@ -638,14 +645,13 @@ def fetch_fresh_github_links(max_repos=80):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V78 (MASSIVE GITHUB SEARCH + NO FAKE CHECK) ---")
+    print("--- ЗАПУСК V79 (UNIQUE IP SEARCH + FALLBACK) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
     init_geoip()
     
-    # Сканируем 80 репозиториев вместо 26
     smart_urls = fetch_fresh_github_links(max_repos=80) 
     
     all_servers = []
@@ -685,15 +691,26 @@ def main():
     final_list = []
     used_ips = []
     
+    # 🏆 1. GITHUB FRESH CUP (TARGET_GITHUB = 1)
+    github_winners = []
     if b_github_fresh:
         github_winners = run_tournament(b_github_fresh, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
+        
+    if github_winners:
         for g in github_winners:
             g['category'] = 'Fresh GitHub' 
             used_ips.append(g['ip'])
         final_list.extend(github_winners)
     else:
-        print("   ⚠️ GitHub Cup Skipped: No alive candidates.")
+        print("   ⚠️ GitHub Cup Failed: Filling quota with best UNIVERSAL.")
+        # FALLBACK: Если Гитхаб подвел, берем +1 сервер из обычных, чтобы заполнить место
+        extra_univ = run_tournament(b_univ, 1, "BACKUP CUP", "universal")
+        if extra_univ:
+            extra_univ[0]['category'] = 'Fresh GitHub (Backup)' # Честно пишем, что это замена
+            final_list.extend(extra_univ)
+            used_ips.append(extra_univ[0]['ip'])
     
+    # 🏆 2. Остальные кубки
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
     game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP", "gaming")
     
@@ -733,7 +750,7 @@ def main():
         if calc_ping < 10: calc_ping = 15
 
         name = ""
-        if s['category'] == 'Fresh GitHub':
+        if 'GitHub' in s['category']:
              name = f"🔥 Fresh GitHub | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'Game Server': 
             name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
