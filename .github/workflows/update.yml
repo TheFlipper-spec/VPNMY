@@ -38,12 +38,15 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # ТЕПЕРЬ СОХРАНЯЕМ И history.json
           git add FL1PVPN stats.json history.json
           
           if git diff --staged --quiet; then
             echo "Changes not detected. Skipping commit."
           else
             git commit -m "🚀 Auto-update: $(date -u)"
+            
+            # --- FIX: Забираем изменения с удаленного сервера перед отправкой ---
+            git pull --rebase origin main
+            
             git push
           fi
