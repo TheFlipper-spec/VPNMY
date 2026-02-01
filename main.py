@@ -533,7 +533,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     elif mode == "warp":
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
     elif mode == "github_only": 
-        # Фильтруем дубликаты по IP, чтобы не проверять одно и то же
+        # Фильтруем дубликаты по IP
         seen_ips = set()
         unique_candidates = []
         for c in candidates:
@@ -569,8 +569,19 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         elif mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "whitelist" and not f['is_reality']: special_penalty = 1000
         
-        speed_bonus = min(real_speed * 2, 100) 
+        # --- НОВЫЙ СКОРИНГ (ЖЕСТКОЕ НАКАЗАНИЕ ЗА СКОРОСТЬ) ---
+        speed_bonus = 0
+        if real_speed < 1.0:
+            speed_bonus = -500 # Штраф за мусорную скорость (< 1 Mbps)
+        elif real_speed < 3.0:
+            speed_bonus = -100 # Штраф за низкую скорость (< 3 Mbps)
+        elif real_speed > 10.0:
+            speed_bonus = 150  # Супер бонус за > 10 Mbps
+        else:
+            speed_bonus = real_speed * 10 # Обычный бонус
+            
         score = avg + (jitter * 5) + tier_penalty + special_penalty - speed_bonus
+        # -----------------------------------------------------
         
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -612,7 +623,6 @@ def fetch_fresh_github_links(max_repos=80):
 
     headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    # Увеличили лимит звезд и объем поиска
     query = f"vless pushed:>{date_filter} stars:<=100"
     
     print(f"🔎 Smart Repo Search: '{query}'...")
@@ -630,7 +640,6 @@ def fetch_fresh_github_links(max_repos=80):
             for repo in repos:
                 full_name = repo.get("full_name")
                 print(f"      -> Сканируем репо: {full_name}")
-                # Увеличили per_page до 5
                 code_params = {"q": f'"vless://" repo:{full_name} size:1000..50000', "per_page": 5}
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
@@ -645,7 +654,7 @@ def fetch_fresh_github_links(max_repos=80):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V80 (UNIQUE IP SEARCH + FALLBACK) ---")
+    print("--- ЗАПУСК V81 (STRICT SPEED PENALTY + FIXED NAMES) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
@@ -691,26 +700,29 @@ def main():
     final_list = []
     used_ips = []
     
-    # 🏆 1. GITHUB FRESH CUP (TARGET_GITHUB = 1)
-    github_winners = []
     if b_github_fresh:
         github_winners = run_tournament(b_github_fresh, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
         
-    if github_winners:
+    github_added = False
+    if 'github_winners' in locals() and github_winners:
         for g in github_winners:
-            g['category'] = 'Fresh GitHub' 
-            used_ips.append(g['ip'])
-        final_list.extend(github_winners)
-    else:
-        print("   ⚠️ GitHub Cup Failed: Filling quota with best UNIVERSAL.")
-        # FALLBACK: Если Гитхаб подвел, берем +1 сервер из обычных, чтобы заполнить место
+            # Берем только если скорость адекватная (> 1 Mbps), иначе лучше взять резерв
+            if g['speed_mbps'] > 1.0:
+                g['category'] = 'Fresh GitHub' 
+                used_ips.append(g['ip'])
+                final_list.extend([g])
+                github_added = True
+            else:
+                print(f"   ⚠️ GitHub winner dropped due to low speed: {g['speed_mbps']} Mbps")
+
+    if not github_added:
+        print("   ⚠️ GitHub Cup Failed (or too slow): Filling quota with best UNIVERSAL.")
         extra_univ = run_tournament(b_univ, 1, "BACKUP CUP", "universal")
         if extra_univ:
-            extra_univ[0]['category'] = 'Fresh GitHub (Backup)' # Честно пишем, что это замена
+            extra_univ[0]['category'] = 'Fresh GitHub (Backup)'
             final_list.extend(extra_univ)
             used_ips.append(extra_univ[0]['ip'])
     
-    # 🏆 2. Остальные кубки
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
     game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP", "gaming")
     
@@ -750,9 +762,9 @@ def main():
         if calc_ping < 10: calc_ping = 15
 
         name = ""
-        # --- ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ ИМЕНИ ---
+        # --- FIX: Убрали 'GitHub' из названия ---
         if 'GitHub' in s['category']:
-             name = f"🔥 Fresh | {flag} {country_full} | {calc_ping}ms" # Было "Fresh GitHub"
+             name = f"🔥 Fresh | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'Game Server': 
             name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'WHITELIST': 
