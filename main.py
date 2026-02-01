@@ -50,9 +50,10 @@ TARGET_WHITELIST = 2
 
 # БАЛАНС СКОРОСТИ И КАЧЕСТВА
 TIMEOUT = 0.8           
-REAL_TEST_TIMEOUT = 8.0 
-OUTPUT_FILE = 'FL1PVPN' # Файл с конфигами (СЕКРЕТНЫЙ, для бота)
-JSON_FILE = 'stats.json' # Файл для сайта (ПУБЛИЧНЫЙ, без ключей)
+REAL_TEST_TIMEOUT = 5.0 # Чуть уменьшили таймаут для ускорения
+SPEED_TEST_TIMEOUT = 4.0 # Таймаут на скачивание файла скорости
+OUTPUT_FILE = 'FL1PVPN' 
+JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
@@ -171,6 +172,7 @@ def parse_config_info(config_str, source_type):
                     "uuid": password,
                     "original": config_str, "original_remark": original_remark,
                     "latency": 9999, "jitter": 0, "final_score": 9999, "info": {},
+                    "speed_mbps": 0.0, # Новое поле скорости
                     "transport": "tcp",
                     "security": "ss", 
                     "is_reality": False, "is_vision": False, "is_pure": False, "is_hy2": False, "is_ss": True,
@@ -192,15 +194,16 @@ def parse_config_info(config_str, source_type):
             
             is_reality = (security == 'reality')
             
-            # --- ФИЛЬТР REALITY ---
+            # --- СТРОГИЙ ФИЛЬТР REALITY (LEVEL 2) ---
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 30: 
+                # Ключ Reality ВСЕГДА 43 символа. Если не 43 - это мусор.
+                if len(pbk) != 43: 
                     return None
                 sni = params.get('sni', [''])[0]
                 if sni == host: 
                     return None
-            # ----------------------
+            # ----------------------------------------
             
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -213,6 +216,7 @@ def parse_config_info(config_str, source_type):
                 "ip": host, "port": int(port), "uuid": _uuid, "original": config_str, 
                 "original_remark": original_remark, "latency": 9999, "jitter": 0, 
                 "final_score": 9999, "info": {},
+                "speed_mbps": 0.0, # Новое поле скорости
                 "transport": transport, "security": security,
                 "is_reality": is_reality, "is_vision": is_vision, "is_pure": is_pure, "is_hy2": False, "is_ss": False,
                 "source_type": source_type, "tier_rank": 99,
@@ -329,12 +333,45 @@ def generate_xray_config(server, local_port):
     except Exception as e:
         return None
 
+# --- НОВАЯ ФУНКЦИЯ ЗАМЕРА СКОРОСТИ (LEVEL 3) ---
+def measure_speed(local_port):
+    """
+    Качает 1.5 МБ с CDN Cloudflare через локальный SOCKS-порт.
+    Возвращает скорость в Mbps.
+    """
+    url = "https://speed.cloudflare.com/__down?bytes=1500000" # ~1.5 MB
+    proxies = {
+        "http": f"socks5h://127.0.0.1:{local_port}",
+        "https": f"socks5h://127.0.0.1:{local_port}"
+    }
+    
+    start_time = time.time()
+    try:
+        # stream=True чтобы не грузить память
+        with requests.get(url, proxies=proxies, timeout=SPEED_TEST_TIMEOUT, stream=True) as r:
+            r.raise_for_status()
+            total_bytes = 0
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    total_bytes += len(chunk)
+                    # Если скачали достаточно, можно прерывать, но тут файл и так маленький
+            
+            duration = time.time() - start_time
+            if duration <= 0: duration = 0.1
+            
+            # (Bytes * 8) / (Seconds * 1_000_000) = Mbps
+            speed_mbps = (total_bytes * 8) / (duration * 1_000_000)
+            return round(speed_mbps, 2)
+    except:
+        return 0.0
+# -----------------------------------------------
+
 def check_real_connection(server):
     local_port = random.randint(10000, 60000)
     config_data = generate_xray_config(server, local_port)
     
     if not config_data:
-        return None
+        return None, 0.0
 
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp_conf:
         json.dump(config_data, tmp_conf)
@@ -342,6 +379,7 @@ def check_real_connection(server):
 
     xray_process = None
     result_latency = None
+    result_speed = 0.0
 
     try:
         xray_process = subprocess.Popen(
@@ -360,12 +398,18 @@ def check_real_connection(server):
         }
         target_url = "http://cp.cloudflare.com/"
         
+        # 1. Замер задержки (TTFB / Ping)
         start_time = time.perf_counter()
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         end_time = time.perf_counter()
         
         if 200 <= resp.status_code < 300:
             result_latency = (end_time - start_time) * 1000
+            
+            # 2. Если сервер жив, запускаем SPEED TEST
+            # Только для серверов с нормальным откликом (< 800ms)
+            if result_latency < 800:
+                 result_speed = measure_speed(local_port)
         else:
             result_latency = None
 
@@ -382,7 +426,7 @@ def check_real_connection(server):
         if os.path.exists(config_path):
             os.remove(config_path)
 
-    return result_latency
+    return result_latency, result_speed
 
 def calculate_tier_rank(country_code):
     if country_code in TIER_1_PLATINUM: return 1
@@ -459,7 +503,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     scored_results = []
     for f in semifinalists:
-        real_lat = check_real_connection(f)
+        # Возвращает теперь и скорость!
+        real_lat, real_speed = check_real_connection(f)
         
         if real_lat is None:
             print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
@@ -475,9 +520,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         special_penalty = 0
         
         if mode == "gaming":
-            if f.get('is_ss', False): 
-                special_penalty = -20 
-            
+            if f.get('is_ss', False): special_penalty = -20 
         elif mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "warp":
@@ -491,10 +534,15 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             if f['is_reality']: special_penalty = 0
             else: special_penalty = 1000
             
-        score = avg + (jitter * 5) + tier_penalty + special_penalty
+        # --- НОВАЯ ФОРМУЛА СКОРИНГА С УЧЕТОМ СКОРОСТИ ---
+        # 1 Mbps снимает 2 балла штрафа (до макс -100 баллов)
+        speed_bonus = min(real_speed * 2, 100) 
+        
+        score = avg + (jitter * 5) + tier_penalty + special_penalty - speed_bonus
         
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
+        f['speed_mbps'] = real_speed
         f['final_score'] = score
         
         proto_info = "TCP"
@@ -502,9 +550,12 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         elif f['is_reality']: proto_info = "Reality"
         elif f['transport'] == 'ws': proto_info = "WS"
         
-        # --- ЛОГИРОВАНИЕ ИСТОЧНИКА ---
         source_label = f.get('source_type', 'UNK').upper()
-        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<8} | Ping: {int(avg)}ms | Score: {int(score)} | Src: {source_label}")
+        
+        # Вывод скорости в лог
+        speed_str = f"{real_speed:.1f} Mbps" if real_speed > 0 else "---"
+        
+        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | Ping: {int(avg)}ms | Speed: {speed_str:<9} | Score: {int(score)} | Src: {source_label}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
@@ -531,12 +582,6 @@ def process_urls(urls, source_type):
 
 # --- УМНЫЙ ПОИСК (REPO FIRST STRATEGY) ---
 def fetch_fresh_github_links(max_repos=8):
-    """
-    Стратегия "Variant 2": 
-    1. Ищем РЕПОЗИТОРИИ, которые обновились за последние 24 часа.
-    2. Ищем файлы внутри этих свежих репозиториев.
-    Это гарантирует, что мы находим живые конфиги, а не старый мусор.
-    """
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         print("   ⚠️ Warning: GITHUB_TOKEN не найден. Поиск будет ограничен.")
@@ -547,11 +592,9 @@ def fetch_fresh_github_links(max_repos=8):
         "Authorization": f"token {token}"
     }
 
-    # 1. Вычисляем дату "вчера" для фильтра pushed:>
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
     print(f"🔎 Smart Repo Search: ищем активные репозитории (pushed > {date_filter})...")
 
-    # Ищем репозитории по теме vless, обновленные недавно
     repo_api_url = "https://api.github.com/search/repositories"
     repo_params = {
         "q": f"vless pushed:>{date_filter}",
@@ -561,27 +604,21 @@ def fetch_fresh_github_links(max_repos=8):
     }
 
     found_files = []
-    
     try:
         repo_resp = requests.get(repo_api_url, headers=headers, params=repo_params, timeout=10)
         if repo_resp.status_code == 200:
             repos = repo_resp.json().get("items", [])
             print(f"   ✅ Найдено свежих репозиториев: {len(repos)}")
             
-            # 2. Проходимся по каждому репозиторию и ищем внутри файлы
             code_api_url = "https://api.github.com/search/code"
-            
             for repo in repos:
                 full_name = repo.get("full_name")
                 print(f"      -> Сканируем репо: {full_name}")
                 
-                # Ищем файлы .txt или без расширения с содержанием vless://
-                # Ограничиваем поиск конкретным репозиторием (repo:...)
                 code_params = {
                     "q": f'"vless://" repo:{full_name} size:1000..50000',
-                    "per_page": 3 # Берем топ-3 файла из каждого репо
+                    "per_page": 3 
                 }
-                
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
                     if code_resp.status_code == 200:
@@ -592,12 +629,10 @@ def fetch_fresh_github_links(max_repos=8):
                                 .replace("/blob/", "/")
                             if raw_url:
                                 found_files.append(raw_url)
-                    time.sleep(1) # Небольшая пауза, чтобы API не ругался
+                    time.sleep(1) 
                 except: pass
-                
         else:
             print(f"   ❌ Ошибка поиска репозиториев: {repo_resp.status_code}")
-
     except Exception as e:
         print(f"   ❌ Ошибка Smart Search: {e}")
 
@@ -605,7 +640,7 @@ def fetch_fresh_github_links(max_repos=8):
 # ------------------------------------------------
 
 def main():
-    print("--- ЗАПУСК V70 (SMART REPO SEARCH + STATIC) ---")
+    print("--- ЗАПУСК V71 (SMART REPO + SPEED TEST + STRICT FILTER) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -615,30 +650,21 @@ def main():
     download_mmdb()
     init_geoip()
     
-    # --- ЭТАП 1: СБОР ССЫЛОК ---
-    
-    # 1. Запускаем УМНЫЙ поиск по свежим репозиториям
     smart_urls = fetch_fresh_github_links(max_repos=10)
     
     all_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
         print(f"🌐 Скачивание источников: {len(GENERAL_URLS)} static + {len(smart_urls)} smart_github + {len(WHITELIST_URLS)} whitelist...")
         
-        # Загружаем списки.
-        # ВАЖНО: GitHub загружаем ПОСЛЕ Static, чтобы в случае дубликатов
-        # в финальном списке побеждала версия с меткой 'GITHUB' (для статистики).
         f1 = executor.submit(process_urls, GENERAL_URLS, 'static')
         f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
-        
         static_results = f1.result() + f3.result()
         
-        # Запускаем обработку smart ссылок
         f2 = executor.submit(process_urls, smart_urls, 'github')
         github_results = f2.result()
         
         all_servers = static_results + github_results
     
-    # Дедупликация: если конфиг одинаковый, останется последний добавленный (Github)
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
     print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan)...")
@@ -681,10 +707,8 @@ def main():
     update_msg = f"📅 Обновлено: {time_str} (МСК) | След. обновление: {next_str}"
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
     
-    # 1. Список для файла подписки (ПОЛНЫЙ ДОСТУП)
     result_links = [info_link]
     
-    # 2. Список для сайта (БЕЗОПАСНЫЙ, БЕЗ КОНФИГОВ)
     json_data = {
         "updated_at": time_str,
         "next_update": next_str,
@@ -712,21 +736,25 @@ def main():
         elif s['is_reality']: type_label = "Reality"
         elif s['is_pure']: type_label = "TCP"
 
+        # Формируем имя с отображением скорости, если она есть
+        speed_tag = ""
+        if s['speed_mbps'] > 0:
+            speed_tag = f" | 🚀 {s['speed_mbps']} Mbps"
+
         name = ""
         if s['category'] == 'Game Server': 
-            name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
+            name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms{speed_tag}"
         elif s['category'] == 'WHITELIST': 
-            name = f"⚪ {flag} RU (WhiteList) | {calc_ping}ms"
+            name = f"⚪ {flag} RU (WhiteList) | {calc_ping}ms{speed_tag}"
         elif s['category'] == 'WARP': 
-            name = f"🌀 {flag} {country_full} WARP | {calc_ping}ms"
+            name = f"🌀 {flag} {country_full} WARP | {calc_ping}ms{speed_tag}"
         else: 
-            name = f"⚡ {flag} {country_full} | {calc_ping}ms"
+            name = f"⚡ {flag} {country_full} | {calc_ping}ms{speed_tag}"
 
         base = s['original'].split('#')[0]
         final_link = f"{base}#{quote(name)}"
         result_links.append(final_link)
         
-        # --- БЕЗОПАСНОСТЬ: В JSON не пишем ссылку и UUID ---
         json_data["servers"].append({
             "name": name,
             "category": s['category'],
@@ -734,17 +762,16 @@ def main():
             "iso": code,
             "flag": flag,
             "ping": calc_ping,
-            "ip": s['ip'],       # IP оставляем для информации в карточке
+            "speed": s['speed_mbps'], # Добавили скорость в JSON
+            "ip": s['ip'],
             "port": s['port'],
             "protocol": s['transport'].upper(),
             "type": type_label
         })
 
-    # Сохраняем полный файл подписки
     with open(OUTPUT_FILE, 'w') as f:
         f.write(base64.b64encode("\n".join(result_links).encode('utf-8')).decode('utf-8'))
         
-    # Сохраняем безопасный JSON для сайта
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
