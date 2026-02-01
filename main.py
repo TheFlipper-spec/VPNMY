@@ -539,7 +539,8 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         seen_ips = set()
         unique_candidates = []
         for c in candidates:
-            if c['ip'] not in seen_ips:
+            # --- FIX: Теперь берем ТОЛЬКО REALITY и без дублей ---
+            if c['is_reality'] and c['ip'] not in seen_ips:
                 unique_candidates.append(c)
                 seen_ips.add(c['ip'])
         filtered = unique_candidates
@@ -658,7 +659,7 @@ def fetch_fresh_github_links(max_repos=80):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V83 (STRICT GEO-PRIORITY + GOOGLE HTTPS) ---")
+    print("--- ЗАПУСК V84 (REALITY ONLY FOR GITHUB + STRICT GEO) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
