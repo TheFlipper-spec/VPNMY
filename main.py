@@ -44,18 +44,18 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
-MAX_WORKERS = 20        
+MAX_WORKERS = 25        # Подняли потоки, так как объем работы вырос
 TIMEOUT = 0.8           
 REAL_TEST_TIMEOUT = 5.0 
 SPEED_TEST_TIMEOUT = 4.0 
 
-# --- ТВОИ НОВЫЕ КВОТЫ ---
-TARGET_GITHUB = 1     # 1 Фреш сервер
-TARGET_GAME = 1       # 1 Гейм
-TARGET_UNIVERSAL = 3  # 3 Универсал
-TARGET_WARP = 2       # 2 WARP
-TARGET_WHITELIST = 2  # 2 Whitelist
-# ------------------------
+# --- КВОТЫ ---
+TARGET_GITHUB = 1     
+TARGET_GAME = 1       
+TARGET_UNIVERSAL = 3  
+TARGET_WARP = 2       
+TARGET_WHITELIST = 2  
+# -------------
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -496,6 +496,11 @@ def check_server_initial(server):
     elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
     elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
     
+    # --- FIX: Не считаем GitHub сервера фейками из-за пинга ---
+    if server['source_type'] == 'github': 
+        is_fake = False
+    # ----------------------------------------------------------
+
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
     if is_fake and server['category'] != 'WHITELIST': return None
@@ -592,7 +597,7 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-def fetch_fresh_github_links(max_repos=50): 
+def fetch_fresh_github_links(max_repos=80): 
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         print("   ⚠️ Warning: GITHUB_TOKEN не найден.")
@@ -600,7 +605,8 @@ def fetch_fresh_github_links(max_repos=50):
 
     headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    query = f"vless pushed:>{date_filter} stars:<=50"
+    # Увеличили лимит звезд и объем поиска
+    query = f"vless pushed:>{date_filter} stars:<=100"
     
     print(f"🔎 Smart Repo Search: '{query}'...")
     repo_api_url = "https://api.github.com/search/repositories"
@@ -617,7 +623,8 @@ def fetch_fresh_github_links(max_repos=50):
             for repo in repos:
                 full_name = repo.get("full_name")
                 print(f"      -> Сканируем репо: {full_name}")
-                code_params = {"q": f'"vless://" repo:{full_name} size:1000..50000', "per_page": 3}
+                # Увеличили per_page до 5
+                code_params = {"q": f'"vless://" repo:{full_name} size:1000..50000', "per_page": 5}
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
                     if code_resp.status_code == 200:
@@ -631,14 +638,15 @@ def fetch_fresh_github_links(max_repos=50):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V77 (QUOTAS + EXPANDED GITHUB) ---")
+    print("--- ЗАПУСК V78 (MASSIVE GITHUB SEARCH + NO FAKE CHECK) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
     init_geoip()
     
-    smart_urls = fetch_fresh_github_links(max_repos=50) 
+    # Сканируем 80 репозиториев вместо 26
+    smart_urls = fetch_fresh_github_links(max_repos=80) 
     
     all_servers = []
     github_candidates_raw = [] 
@@ -677,7 +685,6 @@ def main():
     final_list = []
     used_ips = []
     
-    # 🏆 1. GITHUB FRESH CUP (TARGET_GITHUB = 1)
     if b_github_fresh:
         github_winners = run_tournament(b_github_fresh, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
         for g in github_winners:
@@ -687,7 +694,6 @@ def main():
     else:
         print("   ⚠️ GitHub Cup Skipped: No alive candidates.")
     
-    # 🏆 2. Остальные кубки
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
     game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP", "gaming")
     
