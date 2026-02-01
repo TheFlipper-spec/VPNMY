@@ -44,21 +44,28 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
-MAX_WORKERS = 20        # Чуть подняли, так как кэш ускорит процесс
+MAX_WORKERS = 20        
 TIMEOUT = 0.8           
 REAL_TEST_TIMEOUT = 5.0 
 SPEED_TEST_TIMEOUT = 4.0 
 
+# --- КОЛИЧЕСТВО ПОБЕДИТЕЛЕЙ (ВЕРНУЛ ЭТОТ БЛОК) ---
+TARGET_GAME = 1       
+TARGET_UNIVERSAL = 3  
+TARGET_WARP = 2       
+TARGET_WHITELIST = 2  
+# -------------------------------------------------
+
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
-HISTORY_FILE = 'history.json' # Файл кэша
+HISTORY_FILE = 'history.json' 
 
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
 # Настройки кэширования
-CACHE_TTL_HOURS = 4      # Сколько помнить, что сервер мертв
-MAX_FAILURES = 2         # Сколько раз сервер должен упасть, чтобы попасть в игнор
+CACHE_TTL_HOURS = 4      
+MAX_FAILURES = 2         
 
 PING_BASE_MS = {
     'RU': 90, 
@@ -83,7 +90,7 @@ TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ', 'RU']
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
 
 geo_reader = None
-server_history = {} # Глобальный словарь для истории
+server_history = {} 
 
 def load_history():
     global server_history
@@ -96,11 +103,10 @@ def load_history():
             server_history = {}
 
 def save_history():
-    # Чистим старые записи (старше 24 часов), чтобы файл не распух
     current_ts = time.time()
     clean_history = {}
     for key, val in server_history.items():
-        if current_ts - val['ts'] < (24 * 3600): # Храним сутки
+        if current_ts - val['ts'] < (24 * 3600): 
             clean_history[key] = val
             
     try:
@@ -114,7 +120,6 @@ def update_history(ip, port, is_alive):
     current = server_history.get(key, {'fails': 0, 'ts': 0})
     
     if is_alive:
-        # Если жив - сбрасываем счетчик ошибок
         current['fails'] = 0
     else:
         current['fails'] += 1
@@ -123,17 +128,15 @@ def update_history(ip, port, is_alive):
     server_history[key] = current
 
 def should_check_server(ip, port):
-    """Возвращает False, если сервер в бане (кэш)."""
     key = f"{ip}:{port}"
     if key not in server_history:
         return True
     
     rec = server_history[key]
-    # Если сервер падал много раз и прошло мало времени -> пропускаем
     if rec['fails'] >= MAX_FAILURES:
         age_hours = (time.time() - rec['ts']) / 3600
         if age_hours < CACHE_TTL_HOURS:
-            return False # В БАНЕ
+            return False 
     
     return True
 
@@ -183,7 +186,6 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # --- SHADOWSOCKS ---
         if config_str.startswith("ss://"):
             try:
                 rest = config_str[5:]
@@ -239,7 +241,6 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # --- VLESS ---
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
             host, port = part.split(":")
@@ -442,7 +443,6 @@ def check_real_connection(server):
             result_latency = (end_time - start_time) * 1000
             if result_latency < 800:
                  result_speed = measure_speed(local_port)
-            # Обновляем историю: УСПЕХ
             update_history(server['ip'], server['port'], True)
         else:
             result_latency = None
@@ -450,7 +450,6 @@ def check_real_connection(server):
 
     except Exception as e:
         result_latency = None
-        # Обновляем историю: ПРОВАЛ
         update_history(server['ip'], server['port'], False)
     finally:
         if xray_process:
@@ -469,10 +468,8 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    # --- CHECK HISTORY FIRST (CLAUDE FEATURE) ---
     if not should_check_server(server['ip'], server['port']):
-        return None # Skip cached dead server
-    # --------------------------------------------
+        return None 
 
     is_warp = False
     rem = server['original_remark'].lower()
@@ -519,7 +516,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
-    # Режимы турниров
     if mode == "gaming":
         filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
         tier1_candidates = [c for c in filtered if c['tier_rank'] == 1]
@@ -530,12 +526,11 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == "warp":
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
-    elif mode == "github_only": # Новый режим для GitHub Fresh Cup
-        filtered = candidates # Входной список уже состоит только из github
+    elif mode == "github_only": 
+        filtered = candidates
 
     if not filtered: return []
     
-    # Берем топ-25 (или топ-10 для github cup, чтобы не затягивать)
     limit = 10 if mode == "github_only" else 20
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:limit]
     
@@ -635,7 +630,7 @@ def fetch_fresh_github_links(max_repos=12):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V74 (CACHE/HISTORY + GITHUB CUP) ---")
+    print("--- ЗАПУСК V75 (FIXED NAMES + CACHE + GITHUB CUP) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
@@ -645,7 +640,7 @@ def main():
     smart_urls = fetch_fresh_github_links(max_repos=12)
     
     all_servers = []
-    github_candidates_raw = [] # Собираем отдельно для GitHub Cup
+    github_candidates_raw = [] 
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         print(f"🌐 Скачивание источников...")
@@ -655,7 +650,7 @@ def main():
         
         f2 = executor.submit(process_urls, smart_urls, 'github')
         github_results = f2.result()
-        github_candidates_raw = github_results # Запоминаем чисто гитхабовские
+        github_candidates_raw = github_results 
         
         all_servers = static_results + github_results
     
@@ -671,29 +666,23 @@ def main():
             res = f.result()
             if res: working_servers.append(res)
 
-    # Разделяем на группы
     b_white = [s for s in working_servers if s['category'] == 'WHITELIST']
     b_univ = [s for s in working_servers if s['category'] == 'UNIVERSAL']
     b_warp = [s for s in working_servers if s['category'] == 'WARP']
     
-    # Выделяем работающие GitHub сервера для отдельного кубка
-    # Мы ищем пересечение working_servers и github_candidates_raw по original конфигу
     github_originals = set(g['original'] for g in github_candidates_raw)
     b_github_fresh = [s for s in working_servers if s['original'] in github_originals and s['category'] != 'WHITELIST']
 
     final_list = []
     used_ips = []
     
-    # 🏆 1. GITHUB FRESH CUP (Гарантированные 3 места для новинок)
-    # Запускаем первым, чтобы они точно попали
     if b_github_fresh:
         github_winners = run_tournament(b_github_fresh, 3, "GITHUB FRESH CUP", "github_only")
         for g in github_winners:
-            g['category'] = 'Fresh GitHub' # Помечаем их красиво
+            g['category'] = 'Fresh GitHub' 
             used_ips.append(g['ip'])
         final_list.extend(github_winners)
     
-    # 🏆 2. Остальные кубки (исключая уже победивших в GitHub Cup)
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
     game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP", "gaming")
     
@@ -708,7 +697,6 @@ def main():
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
-    # Сохраняем результат
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -734,7 +722,6 @@ def main():
         if calc_ping < 10: calc_ping = 15
 
         name = ""
-        # Красивые имена для категорий
         if s['category'] == 'Fresh GitHub':
              name = f"🔥 Fresh GitHub | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'Game Server': 
@@ -763,7 +750,7 @@ def main():
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-    save_history() # Сохраняем кэш в файл
+    save_history() 
     
     print(f"DONE. {len(result_links)} links saved.")
     print(f"Stats saved to {JSON_FILE}.")
