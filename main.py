@@ -45,9 +45,9 @@ XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
 MAX_WORKERS = 25        
-TIMEOUT = 0.8           
-REAL_TEST_TIMEOUT = 5.0 
-SPEED_TEST_TIMEOUT = 4.0 
+TIMEOUT = 1.0           # Чуть увеличили таймаут на пинг
+REAL_TEST_TIMEOUT = 8.0 # Увеличили время на реальный тест (было 5.0)
+SPEED_TEST_TIMEOUT = 6.0 # Увеличили время на тест скорости
 
 # --- КВОТЫ ---
 TARGET_GITHUB = 1     
@@ -363,7 +363,7 @@ def generate_xray_config(server, local_port):
         elif server['security'] == 'reality':
             reality_settings = {
                 "show": False,
-                "fingerprint": params.get('fp', ['chrome'])[0],
+                "fingerprint": params.get('fp', ['chrome'])[0], # Default to chrome
                 "serverName": params.get('sni', [''])[0],
                 "publicKey": params.get('pbk', [''])[0],
                 "shortId": params.get('sid', [''])[0],
@@ -391,7 +391,9 @@ def generate_xray_config(server, local_port):
         return None
 
 def measure_speed(local_port):
-    url = "https://speed.cloudflare.com/__down?bytes=1500000"
+    # Используем Google Android Studio DL (тяжелый файл, хорошая скорость, HTTPS)
+    # Это гарантирует, что мы не просто пингуем, а качаем через шифрованный канал.
+    url = "https://dl.google.com/dl/android/studio/install/3.4.1.0/android-studio-ide-183.5522156-windows.exe"
     proxies = {
         "http": f"socks5h://127.0.0.1:{local_port}",
         "https": f"socks5h://127.0.0.1:{local_port}"
@@ -401,8 +403,12 @@ def measure_speed(local_port):
         with requests.get(url, proxies=proxies, timeout=SPEED_TEST_TIMEOUT, stream=True) as r:
             r.raise_for_status()
             total_bytes = 0
-            for chunk in r.iter_content(chunk_size=8192):
-                if chunk: total_bytes += len(chunk)
+            # Качаем до 3 МБ или пока не выйдет время
+            for chunk in r.iter_content(chunk_size=32768):
+                if chunk: 
+                    total_bytes += len(chunk)
+                if total_bytes > 3 * 1024 * 1024: # Limit 3MB download test
+                    break
             
             duration = time.time() - start_time
             if duration <= 0: duration = 0.1
@@ -430,19 +436,23 @@ def check_real_connection(server):
             stdout=subprocess.DEVNULL, 
             stderr=subprocess.PIPE     
         )
-        time.sleep(1.5) 
+        time.sleep(2.0) # Увеличили время ожидания запуска Xray
         if xray_process.poll() is not None: raise Exception("Xray process died")
 
         proxies = { 'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}' }
-        target_url = "http://cp.cloudflare.com/"
+        
+        # --- CRITICAL FIX: Проверка через HTTPS Google (а не HTTP Cloudflare) ---
+        target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
-        resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
+        # verify=False чтобы не падать на специфичных сертификатах, но сам факт HTTPS важен
+        resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=False)
         end_time = time.perf_counter()
         
-        if 200 <= resp.status_code < 300:
+        # 204 = No Content (Google), 200 = OK
+        if resp.status_code == 204 or (200 <= resp.status_code < 300):
             result_latency = (end_time - start_time) * 1000
-            if result_latency < 800:
+            if result_latency < 2000: # Если пинг до Google адекватный
                  result_speed = measure_speed(local_port)
             update_history(server['ip'], server['port'], True)
         else:
@@ -554,7 +564,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         real_lat, real_speed = check_real_connection(f)
         
         if real_lat is None:
-            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
+            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray (Google Check)")
             continue
 
         avg, jitter = stress_test_server(f)
@@ -654,7 +664,7 @@ def fetch_fresh_github_links(max_repos=80):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V81 (STRICT SPEED PENALTY + FIXED NAMES) ---")
+    print("--- ЗАПУСК V82 (GOOGLE HTTPS CHECK + HEAVY DL) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
