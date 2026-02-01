@@ -20,8 +20,13 @@ import subprocess
 import tempfile
 import random
 import shutil
+import urllib3
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
+
+# --- V86: SILENT LOGS + EXPANDED TIER 1 + ALWAYS FRESH ---
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# ---------------------------------------------------------
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
@@ -44,7 +49,7 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
-MAX_WORKERS = 25        
+MAX_WORKERS = 30        # Увеличили воркеры для обработки большего кол-ва репо
 TIMEOUT = 1.0           
 REAL_TEST_TIMEOUT = 8.0 
 SPEED_TEST_TIMEOUT = 6.0 
@@ -86,8 +91,8 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
 }
 
-# Строгий приоритет: Финляндия, Эстония, Швеция
-TIER_1_PLATINUM = ['FI', 'EE', 'SE']
+# --- V86: Расширенный Tier 1 (Добавили LT, LV, NO) ---
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO']
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ', 'RU']
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
 
@@ -442,6 +447,7 @@ def check_real_connection(server):
         target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
+        # ВАЖНО: verify=False вызывает предупреждения, которые мы отключили выше
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=False)
         end_time = time.perf_counter()
         
@@ -539,7 +545,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         seen_ips = set()
         unique_candidates = []
         for c in candidates:
-            # --- FIX: Теперь берем ТОЛЬКО REALITY и без дублей ---
+            # Берем только REALITY и без дублей
             if c['is_reality'] and c['ip'] not in seen_ips:
                 unique_candidates.append(c)
                 seen_ips.add(c['ip'])
@@ -562,14 +568,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
         avg, jitter = stress_test_server(f)
         
-        # --- GEO-PENALTY V83: STRICT ---
+        # --- GEO-PENALTY V86: STRICT PRIORITY (BUT NO AUTO-DROP) ---
         tier_penalty = 0
         if f['tier_rank'] == 1: 
-            tier_penalty = 0        # FI, EE, SE - приоритет
+            tier_penalty = 0        # FI, EE, SE, LT, LV
         elif f['tier_rank'] == 2: 
-            tier_penalty = 2000     # DE, NL, FR - берем только если нет Tier 1
+            tier_penalty = 2000     # DE, NL, FR (Штраф, чтобы они были ниже Tier 1)
         else: 
-            tier_penalty = 5000     # Остальные - мусор
+            tier_penalty = 5000     
             
         special_penalty = 0
         if mode == "gaming" and f.get('is_ss', False): special_penalty = -20 
@@ -620,7 +626,7 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-def fetch_fresh_github_links(max_repos=80): 
+def fetch_fresh_github_links(max_repos=150): 
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         print("   ⚠️ Warning: GITHUB_TOKEN не найден.")
@@ -630,7 +636,7 @@ def fetch_fresh_github_links(max_repos=80):
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
     query = f"vless pushed:>{date_filter} stars:<=100"
     
-    print(f"🔎 Smart Repo Search: '{query}'...")
+    print(f"🔎 Smart Repo Search: '{query}' (Scan Limit: {max_repos})...")
     repo_api_url = "https://api.github.com/search/repositories"
     repo_params = {"q": query, "sort": "updated", "order": "desc", "per_page": max_repos}
 
@@ -644,7 +650,7 @@ def fetch_fresh_github_links(max_repos=80):
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
                 full_name = repo.get("full_name")
-                print(f"      -> Сканируем репо: {full_name}")
+                # print(f"      -> Сканируем репо: {full_name}") # Silent scan
                 code_params = {"q": f'"vless://" repo:{full_name} size:1000..50000', "per_page": 5}
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
@@ -653,20 +659,20 @@ def fetch_fresh_github_links(max_repos=80):
                         for f in files:
                             raw_url = f.get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
                             if raw_url: found_files.append(raw_url)
-                    time.sleep(1) 
+                    time.sleep(0.5) 
                 except: pass
     except Exception as e: print(f"   ❌ Ошибка Smart Search: {e}")
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V84 (REALITY ONLY FOR GITHUB + STRICT GEO) ---")
+    print("--- ЗАПУСК V86 (SILENT LOGS + EXPANDED TIER 1 + ALWAYS FRESH) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
     init_geoip()
     
-    smart_urls = fetch_fresh_github_links(max_repos=80) 
+    smart_urls = fetch_fresh_github_links(max_repos=150) 
     
     all_servers = []
     github_candidates_raw = [] 
@@ -711,7 +717,7 @@ def main():
     github_added = False
     if 'github_winners' in locals() and github_winners:
         for g in github_winners:
-            # Берем только если скорость адекватная (> 1 Mbps), иначе лучше взять резерв
+            # --- V86: ALWAYS FRESH (Берем первого рабочего, даже если это NL, но сортировка предпочитает Tier 1) ---
             if g['speed_mbps'] > 1.0:
                 g['category'] = 'Fresh GitHub' 
                 used_ips.append(g['ip'])
@@ -721,7 +727,7 @@ def main():
                 print(f"   ⚠️ GitHub winner dropped due to low speed: {g['speed_mbps']} Mbps")
 
     if not github_added:
-        print("   ⚠️ GitHub Cup Failed (or too slow): Filling quota with best UNIVERSAL.")
+        print("   ⚠️ GitHub Cup Failed (or zero working): Filling quota with best UNIVERSAL.")
         extra_univ = run_tournament(b_univ, 1, "BACKUP CUP", "universal")
         if extra_univ:
             extra_univ[0]['category'] = 'Fresh GitHub (Backup)'
