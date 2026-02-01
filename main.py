@@ -49,12 +49,13 @@ TIMEOUT = 0.8
 REAL_TEST_TIMEOUT = 5.0 
 SPEED_TEST_TIMEOUT = 4.0 
 
-# --- КОЛИЧЕСТВО ПОБЕДИТЕЛЕЙ (ВЕРНУЛ ЭТОТ БЛОК) ---
-TARGET_GAME = 1       
-TARGET_UNIVERSAL = 3  
-TARGET_WARP = 2       
-TARGET_WHITELIST = 2  
-# -------------------------------------------------
+# --- ТВОИ НОВЫЕ КВОТЫ ---
+TARGET_GITHUB = 1     # 1 Фреш сервер
+TARGET_GAME = 1       # 1 Гейм
+TARGET_UNIVERSAL = 3  # 3 Универсал
+TARGET_WARP = 2       # 2 WARP
+TARGET_WHITELIST = 2  # 2 Whitelist
+# ------------------------
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -591,7 +592,7 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-def fetch_fresh_github_links(max_repos=12):
+def fetch_fresh_github_links(max_repos=50): 
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         print("   ⚠️ Warning: GITHUB_TOKEN не найден.")
@@ -599,7 +600,7 @@ def fetch_fresh_github_links(max_repos=12):
 
     headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    query = f"vless pushed:>{date_filter} stars:<=10"
+    query = f"vless pushed:>{date_filter} stars:<=50"
     
     print(f"🔎 Smart Repo Search: '{query}'...")
     repo_api_url = "https://api.github.com/search/repositories"
@@ -610,7 +611,7 @@ def fetch_fresh_github_links(max_repos=12):
         repo_resp = requests.get(repo_api_url, headers=headers, params=repo_params, timeout=10)
         if repo_resp.status_code == 200:
             repos = repo_resp.json().get("items", [])
-            print(f"   ✅ Найдено 'секретных' репозиториев: {len(repos)}")
+            print(f"   ✅ Найдено свежих репозиториев: {len(repos)}")
             
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
@@ -630,14 +631,14 @@ def fetch_fresh_github_links(max_repos=12):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V75 (FIXED NAMES + CACHE + GITHUB CUP) ---")
+    print("--- ЗАПУСК V77 (QUOTAS + EXPANDED GITHUB) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
     init_geoip()
     
-    smart_urls = fetch_fresh_github_links(max_repos=12)
+    smart_urls = fetch_fresh_github_links(max_repos=50) 
     
     all_servers = []
     github_candidates_raw = [] 
@@ -676,13 +677,17 @@ def main():
     final_list = []
     used_ips = []
     
+    # 🏆 1. GITHUB FRESH CUP (TARGET_GITHUB = 1)
     if b_github_fresh:
-        github_winners = run_tournament(b_github_fresh, 3, "GITHUB FRESH CUP", "github_only")
+        github_winners = run_tournament(b_github_fresh, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
         for g in github_winners:
             g['category'] = 'Fresh GitHub' 
             used_ips.append(g['ip'])
         final_list.extend(github_winners)
+    else:
+        print("   ⚠️ GitHub Cup Skipped: No alive candidates.")
     
+    # 🏆 2. Остальные кубки
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
     game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP", "gaming")
     
