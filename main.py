@@ -49,9 +49,10 @@ TARGET_WARP = 2
 TARGET_WHITELIST = 2  
 
 # БАЛАНС СКОРОСТИ И КАЧЕСТВА
+MAX_WORKERS = 15  # Ограничение потоков для стабильности Xray
 TIMEOUT = 0.8           
-REAL_TEST_TIMEOUT = 5.0 # Чуть уменьшили таймаут для ускорения
-SPEED_TEST_TIMEOUT = 4.0 # Таймаут на скачивание файла скорости
+REAL_TEST_TIMEOUT = 5.0 
+SPEED_TEST_TIMEOUT = 4.0 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
@@ -172,7 +173,7 @@ def parse_config_info(config_str, source_type):
                     "uuid": password,
                     "original": config_str, "original_remark": original_remark,
                     "latency": 9999, "jitter": 0, "final_score": 9999, "info": {},
-                    "speed_mbps": 0.0, # Новое поле скорости
+                    "speed_mbps": 0.0,
                     "transport": "tcp",
                     "security": "ss", 
                     "is_reality": False, "is_vision": False, "is_pure": False, "is_hy2": False, "is_ss": True,
@@ -194,16 +195,14 @@ def parse_config_info(config_str, source_type):
             
             is_reality = (security == 'reality')
             
-            # --- СТРОГИЙ ФИЛЬТР REALITY (LEVEL 2) ---
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                # Ключ Reality ВСЕГДА 43 символа. Если не 43 - это мусор.
+                # Ключ Reality ВСЕГДА 43 символа
                 if len(pbk) != 43: 
                     return None
                 sni = params.get('sni', [''])[0]
                 if sni == host: 
                     return None
-            # ----------------------------------------
             
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -216,7 +215,7 @@ def parse_config_info(config_str, source_type):
                 "ip": host, "port": int(port), "uuid": _uuid, "original": config_str, 
                 "original_remark": original_remark, "latency": 9999, "jitter": 0, 
                 "final_score": 9999, "info": {},
-                "speed_mbps": 0.0, # Новое поле скорости
+                "speed_mbps": 0.0,
                 "transport": transport, "security": security,
                 "is_reality": is_reality, "is_vision": is_vision, "is_pure": is_pure, "is_hy2": False, "is_ss": False,
                 "source_type": source_type, "tier_rank": 99,
@@ -333,7 +332,6 @@ def generate_xray_config(server, local_port):
     except Exception as e:
         return None
 
-# --- НОВАЯ ФУНКЦИЯ ЗАМЕРА СКОРОСТИ (LEVEL 3) ---
 def measure_speed(local_port):
     """
     Качает 1.5 МБ с CDN Cloudflare через локальный SOCKS-порт.
@@ -347,24 +345,20 @@ def measure_speed(local_port):
     
     start_time = time.time()
     try:
-        # stream=True чтобы не грузить память
         with requests.get(url, proxies=proxies, timeout=SPEED_TEST_TIMEOUT, stream=True) as r:
             r.raise_for_status()
             total_bytes = 0
             for chunk in r.iter_content(chunk_size=8192):
                 if chunk:
                     total_bytes += len(chunk)
-                    # Если скачали достаточно, можно прерывать, но тут файл и так маленький
             
             duration = time.time() - start_time
             if duration <= 0: duration = 0.1
             
-            # (Bytes * 8) / (Seconds * 1_000_000) = Mbps
             speed_mbps = (total_bytes * 8) / (duration * 1_000_000)
             return round(speed_mbps, 2)
     except:
         return 0.0
-# -----------------------------------------------
 
 def check_real_connection(server):
     local_port = random.randint(10000, 60000)
@@ -398,16 +392,12 @@ def check_real_connection(server):
         }
         target_url = "http://cp.cloudflare.com/"
         
-        # 1. Замер задержки (TTFB / Ping)
         start_time = time.perf_counter()
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         end_time = time.perf_counter()
         
         if 200 <= resp.status_code < 300:
             result_latency = (end_time - start_time) * 1000
-            
-            # 2. Если сервер жив, запускаем SPEED TEST
-            # Только для серверов с нормальным откликом (< 800ms)
             if result_latency < 800:
                  result_speed = measure_speed(local_port)
         else:
@@ -503,7 +493,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     scored_results = []
     for f in semifinalists:
-        # Возвращает теперь и скорость!
         real_lat, real_speed = check_real_connection(f)
         
         if real_lat is None:
@@ -534,8 +523,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             if f['is_reality']: special_penalty = 0
             else: special_penalty = 1000
             
-        # --- НОВАЯ ФОРМУЛА СКОРИНГА С УЧЕТОМ СКОРОСТИ ---
-        # 1 Mbps снимает 2 балла штрафа (до макс -100 баллов)
         speed_bonus = min(real_speed * 2, 100) 
         
         score = avg + (jitter * 5) + tier_penalty + special_penalty - speed_bonus
@@ -551,8 +538,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         elif f['transport'] == 'ws': proto_info = "WS"
         
         source_label = f.get('source_type', 'UNK').upper()
-        
-        # Вывод скорости в лог
         speed_str = f"{real_speed:.1f} Mbps" if real_speed > 0 else "---"
         
         print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | Ping: {int(avg)}ms | Speed: {speed_str:<9} | Score: {int(score)} | Src: {source_label}")
@@ -580,8 +565,8 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-# --- УМНЫЙ ПОИСК (REPO FIRST STRATEGY) ---
-def fetch_fresh_github_links(max_repos=8):
+# --- УМНЫЙ ПОИСК V2 ---
+def fetch_fresh_github_links(max_repos=10):
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         print("   ⚠️ Warning: GITHUB_TOKEN не найден. Поиск будет ограничен.")
@@ -593,11 +578,13 @@ def fetch_fresh_github_links(max_repos=8):
     }
 
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    print(f"🔎 Smart Repo Search: ищем активные репозитории (pushed > {date_filter})...")
+    query = f"vless pushed:>{date_filter} stars:<=10"
+    
+    print(f"🔎 Smart Repo Search: '{query}'...")
 
     repo_api_url = "https://api.github.com/search/repositories"
     repo_params = {
-        "q": f"vless pushed:>{date_filter}",
+        "q": query,
         "sort": "updated",
         "order": "desc",
         "per_page": max_repos
@@ -608,7 +595,7 @@ def fetch_fresh_github_links(max_repos=8):
         repo_resp = requests.get(repo_api_url, headers=headers, params=repo_params, timeout=10)
         if repo_resp.status_code == 200:
             repos = repo_resp.json().get("items", [])
-            print(f"   ✅ Найдено свежих репозиториев: {len(repos)}")
+            print(f"   ✅ Найдено 'секретных' репозиториев: {len(repos)}")
             
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
@@ -640,7 +627,7 @@ def fetch_fresh_github_links(max_repos=8):
 # ------------------------------------------------
 
 def main():
-    print("--- ЗАПУСК V71 (SMART REPO + SPEED TEST + STRICT FILTER) ---")
+    print("--- ЗАПУСК V73 (CLEAN NAMES + SPEED SORT) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -653,8 +640,8 @@ def main():
     smart_urls = fetch_fresh_github_links(max_repos=10)
     
     all_servers = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
-        print(f"🌐 Скачивание источников: {len(GENERAL_URLS)} static + {len(smart_urls)} smart_github + {len(WHITELIST_URLS)} whitelist...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        print(f"🌐 Скачивание источников (threads={MAX_WORKERS}): {len(GENERAL_URLS)} static + {len(smart_urls)} smart_github + {len(WHITELIST_URLS)} whitelist...")
         
         f1 = executor.submit(process_urls, GENERAL_URLS, 'static')
         f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
@@ -670,7 +657,7 @@ def main():
     print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan)...")
     
     working_servers = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
@@ -730,26 +717,16 @@ def main():
         if s['is_hy2']: calc_ping = int(calc_ping * 0.9)
         if calc_ping < 10: calc_ping = 15
 
-        type_label = "VLESS"
-        if s['is_hy2']: type_label = "Hy2"
-        elif s.get('is_ss', False): type_label = "SS"
-        elif s['is_reality']: type_label = "Reality"
-        elif s['is_pure']: type_label = "TCP"
-
-        # Формируем имя с отображением скорости, если она есть
-        speed_tag = ""
-        if s['speed_mbps'] > 0:
-            speed_tag = f" | 🚀 {s['speed_mbps']} Mbps"
-
+        # --- ЧИСТЫЕ ИМЕНА (БЕЗ СКОРОСТИ) ---
         name = ""
         if s['category'] == 'Game Server': 
-            name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms{speed_tag}"
+            name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'WHITELIST': 
-            name = f"⚪ {flag} RU (WhiteList) | {calc_ping}ms{speed_tag}"
+            name = f"⚪ {flag} RU (WhiteList) | {calc_ping}ms"
         elif s['category'] == 'WARP': 
-            name = f"🌀 {flag} {country_full} WARP | {calc_ping}ms{speed_tag}"
+            name = f"🌀 {flag} {country_full} WARP | {calc_ping}ms"
         else: 
-            name = f"⚡ {flag} {country_full} | {calc_ping}ms{speed_tag}"
+            name = f"⚡ {flag} {country_full} | {calc_ping}ms"
 
         base = s['original'].split('#')[0]
         final_link = f"{base}#{quote(name)}"
@@ -762,11 +739,11 @@ def main():
             "iso": code,
             "flag": flag,
             "ping": calc_ping,
-            "speed": s['speed_mbps'], # Добавили скорость в JSON
+            "speed": s['speed_mbps'], # Скорость сохраняем в поле для сайта
             "ip": s['ip'],
             "port": s['port'],
             "protocol": s['transport'].upper(),
-            "type": type_label
+            "type": s.get('is_reality') and "Reality" or "VLESS"
         })
 
     with open(OUTPUT_FILE, 'w') as f:
