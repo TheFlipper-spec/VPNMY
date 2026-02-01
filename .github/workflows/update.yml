@@ -2,14 +2,12 @@ name: Update VPN Configs
 
 on:
   schedule:
-    - cron: '0 * * * *' # Запуск каждый час (в 00 минут)
-  workflow_dispatch: # Возможность запустить кнопку вручную
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    # Права нужны для коммита файлов обратно в репо
     permissions:
       contents: write
 
@@ -17,13 +15,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1 # Скачиваем только последний коммит для скорости
+          fetch-depth: 1
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip' # Кэшируем пакеты для ускорения
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -32,8 +30,6 @@ jobs:
 
       - name: Run VPN Parser Script
         env:
-          # ВАЖНО: Мы берем твой секрет "TOKEN" и кладем его в переменную "GITHUB_TOKEN",
-          # которую ищет скрипт main.py (os.environ.get("GITHUB_TOKEN"))
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: python main.py
 
@@ -42,10 +38,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Добавляем только нужные файлы
-          git add FL1PVPN stats.json
+          # ТЕПЕРЬ СОХРАНЯЕМ И history.json
+          git add FL1PVPN stats.json history.json
           
-          # Проверяем, есть ли изменения перед коммитом
           if git diff --staged --quiet; then
             echo "Changes not detected. Skipping commit."
           else
