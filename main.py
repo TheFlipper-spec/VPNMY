@@ -24,18 +24,26 @@ import urllib3
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V88: WIDER SEARCH + PL/DE TIER 1 + BAN US/CA ---
+# --- V89: GOLDEN SOURCES + SURVIVOR BONUS + STRICT TIER 1 FRESH ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-# ----------------------------------------------------
+# ------------------------------------------------------------------
 
-# --- ИСТОЧНИКИ ---
+# --- 1. PREMIUM COLLECTORS (ЗОЛОТЫЕ ИСТОЧНИКИ) ---
+# Это агрегаторы, которые собирают ключи. Шанс найти тут живой Reality в разы выше.
+PREMIUM_URLS = [
+    "https://raw.githubusercontent.com/Yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
+    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/vless.txt",
+    "https://raw.githubusercontent.com/w1770946466/Auto_proxy/main/Long_term_subscription_num"
+]
+
+# --- 2. OTHERS ---
 GENERAL_URLS = [
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt"
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt"
 ]
 
 WHITELIST_URLS = [
@@ -48,10 +56,10 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
-MAX_WORKERS = 30        
+MAX_WORKERS = 35        # Еще больше потоков для скорости
 TIMEOUT = 1.0           
-REAL_TEST_TIMEOUT = 8.0 
-SPEED_TEST_TIMEOUT = 6.0 
+REAL_TEST_TIMEOUT = 10.0 # Даем больше времени на реальный тест
+SPEED_TEST_TIMEOUT = 7.0 
 
 # --- КВОТЫ ---
 TARGET_GITHUB = 1     
@@ -74,10 +82,9 @@ MAX_FAILURES = 2
 
 PING_BASE_MS = {
     'RU': 90, 
-    'FI': 40, 'EE': 45, 'SE': 55, 'DE': 65, 'NL': 70, 
-    'FR': 75, 'GB': 80, 'PL': 50, 'TR': 90, 'KZ': 60, 'UA': 50, 
-    'US': 160, 'BG': 55, 'AT': 60, 'CZ': 60, 'LV': 45, 'LT': 45,
-    'IT': 80, 'ES': 90, 'RO': 65, 'CH': 70, 'NO': 60
+    'FI': 40, 'EE': 45, 'SE': 55, 'NO': 60, 'LV': 45, 'LT': 45, # TIER 1
+    'DE': 70, 'NL': 75, 'FR': 80, 'PL': 60, # TIER 2 (Slower)
+    'US': 160, 'GB': 85 
 }
 
 RUS_NAMES = {
@@ -90,13 +97,13 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
 }
 
-# --- V88: Добавили PL и DE в элиту ---
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO', 'PL', 'DE']
-TIER_2_GOLD = ['NL', 'FR', 'KZ', 'RU'] # NL теперь здесь (резерв)
+# --- TIER 1: ТОЛЬКО СЕВЕР (БЕЗ DE/PL) ---
+TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO']
+TIER_2_GOLD = ['NL', 'DE', 'PL', 'FR', 'KZ', 'RU'] 
 TIER_3_SILVER = ['IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
 
-# ЧЕРНЫЙ СПИСОК (Не брать никогда)
-BLACKLIST_COUNTRIES = ['US', 'CA', 'GB'] 
+# БАН ЛИСТ
+BLACKLIST_COUNTRIES = ['US', 'CA', 'GB', 'CN', 'IR'] 
 
 geo_reader = None
 server_history = {} 
@@ -126,15 +133,26 @@ def save_history():
 
 def update_history(ip, port, is_alive):
     key = f"{ip}:{port}"
-    current = server_history.get(key, {'fails': 0, 'ts': 0})
+    current = server_history.get(key, {'fails': 0, 'ts': 0, 'success_streak': 0})
     
     if is_alive:
         current['fails'] = 0
+        current['success_streak'] = current.get('success_streak', 0) + 1
     else:
         current['fails'] += 1
+        current['success_streak'] = 0
     
     current['ts'] = time.time()
     server_history[key] = current
+
+def get_history_bonus(ip, port):
+    key = f"{ip}:{port}"
+    rec = server_history.get(key)
+    if not rec: return 0
+    # БОНУС ВЫЖИВШЕГО: Если сервер работал в прошлый раз, даем ему фору
+    if rec.get('success_streak', 0) > 0:
+        return -50 * rec['success_streak'] # -50 очков (лучше) за каждый успешный проход
+    return 0
 
 def should_check_server(ip, port):
     key = f"{ip}:{port}"
@@ -146,7 +164,6 @@ def should_check_server(ip, port):
         age_hours = (time.time() - rec['ts']) / 3600
         if age_hours < CACHE_TTL_HOURS:
             return False 
-    
     return True
 
 # --- GEO & UTILS ---
@@ -212,11 +229,9 @@ def parse_config_info(config_str, source_type):
             
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) != 43: 
-                    return None
+                if len(pbk) != 43: return None
                 sni = params.get('sni', [''])[0]
-                if sni == host: 
-                    return None
+                if sni == host: return None # Bad practice SNI=IP
             
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -253,10 +268,7 @@ def tcp_ping(host, port):
 def generate_xray_config(server, local_port):
     try:
         params = server['parsed_params']
-        user_obj = {
-            "id": server['uuid'],
-            "encryption": "none"
-        }
+        user_obj = { "id": server['uuid'], "encryption": "none" }
         if params.get('flow', [''])[0]:
             user_obj["flow"] = params.get('flow', [''])[0]
 
@@ -276,20 +288,15 @@ def generate_xray_config(server, local_port):
         if server['transport'] == 'ws':
             ws_settings = {"path": params.get('path', ['/'])[0]}
             host_val = params.get('host', [''])[0]
-            if host_val:
-                ws_settings["headers"] = {"Host": host_val}
+            if host_val: ws_settings["headers"] = {"Host": host_val}
             stream_settings["wsSettings"] = ws_settings
             
         elif server['transport'] == 'grpc':
             service_name = params.get('serviceName', [''])[0]
-            if service_name:
-                stream_settings["grpcSettings"] = {"serviceName": service_name}
+            if service_name: stream_settings["grpcSettings"] = {"serviceName": service_name}
 
         if server['security'] == 'tls':
-            tls_settings = {
-                "serverName": params.get('sni', [''])[0],
-                "allowInsecure": False
-            }
+            tls_settings = { "serverName": params.get('sni', [''])[0], "allowInsecure": False }
             fp = params.get('fp', ['chrome'])[0]
             tls_settings["fingerprint"] = fp
             stream_settings["tlsSettings"] = tls_settings
@@ -326,20 +333,15 @@ def generate_xray_config(server, local_port):
 
 def measure_speed(local_port):
     url = "https://dl.google.com/dl/android/studio/install/3.4.1.0/android-studio-ide-183.5522156-windows.exe"
-    proxies = {
-        "http": f"socks5h://127.0.0.1:{local_port}",
-        "https": f"socks5h://127.0.0.1:{local_port}"
-    }
+    proxies = { "http": f"socks5h://127.0.0.1:{local_port}", "https": f"socks5h://127.0.0.1:{local_port}" }
     start_time = time.time()
     try:
         with requests.get(url, proxies=proxies, timeout=SPEED_TEST_TIMEOUT, stream=True) as r:
             r.raise_for_status()
             total_bytes = 0
             for chunk in r.iter_content(chunk_size=32768):
-                if chunk: 
-                    total_bytes += len(chunk)
-                if total_bytes > 3 * 1024 * 1024: 
-                    break
+                if chunk: total_bytes += len(chunk)
+                if total_bytes > 3 * 1024 * 1024: break # 3MB limit
             
             duration = time.time() - start_time
             if duration <= 0: duration = 0.1
@@ -364,14 +366,12 @@ def check_real_connection(server):
     try:
         xray_process = subprocess.Popen(
             [XRAY_BIN, "-config", config_path],
-            stdout=subprocess.DEVNULL, 
-            stderr=subprocess.PIPE     
+            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE     
         )
         time.sleep(2.0)
         if xray_process.poll() is not None: raise Exception("Xray process died")
 
         proxies = { 'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}' }
-        
         target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
@@ -380,14 +380,14 @@ def check_real_connection(server):
         
         if resp.status_code == 204 or (200 <= resp.status_code < 300):
             result_latency = (end_time - start_time) * 1000
-            if result_latency < 2000:
+            if result_latency < 3000:
                  result_speed = measure_speed(local_port)
             update_history(server['ip'], server['port'], True)
         else:
             result_latency = None
             update_history(server['ip'], server['port'], False)
 
-    except Exception as e:
+    except Exception:
         result_latency = None
         update_history(server['ip'], server['port'], False)
     finally:
@@ -406,8 +406,7 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    if not should_check_server(server['ip'], server['port']):
-        return None 
+    if not should_check_server(server['ip'], server['port']): return None 
 
     is_warp = False
     rem = server['original_remark'].lower()
@@ -426,11 +425,10 @@ def check_server_initial(server):
     server['latency'] = int(p)
     code = get_ip_country_local(server['ip'])
     
-    # --- V88: HARD BLACKLIST CHECK ---
+    # HARD FILTER
     if code in BLACKLIST_COUNTRIES:
         update_history(server['ip'], server['port'], False)
         return None
-    # ---------------------------------
 
     server['info'] = {'countryCode': code}
     
@@ -438,11 +436,9 @@ def check_server_initial(server):
     if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
     elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
     elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
-    elif server['latency'] < 3: is_fake = True # Removed US/CA exception
+    elif server['latency'] < 3: is_fake = True 
     
-    if server['source_type'] == 'github': 
-        is_fake = False
-
+    if server['source_type'] in ['github', 'premium']: is_fake = False
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
     if is_fake and server['category'] != 'WHITELIST': return None
@@ -473,13 +469,20 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     elif mode == "warp":
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
     elif mode == "github_only": 
+        # For Fresh/GitHub cup, ONLY TIER 1 allowed initially
         seen_ips = set()
         unique_candidates = []
         for c in candidates:
             if c['is_reality'] and c['ip'] not in seen_ips:
-                unique_candidates.append(c)
-                seen_ips.add(c['ip'])
+                # FILTER: Only Tier 1 for Fresh!
+                if c['tier_rank'] == 1: 
+                    unique_candidates.append(c)
+                    seen_ips.add(c['ip'])
         filtered = unique_candidates
+
+    if not filtered and mode == "github_only":
+        print("   ⚠️ No Tier 1 found for Fresh Cup. This cup will fail (intended safety).")
+        return []
 
     if not filtered: return []
     
@@ -493,35 +496,31 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         real_lat, real_speed = check_real_connection(f)
         
         if real_lat is None:
-            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray (Google Check)")
+            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
             continue
 
         avg, jitter = stress_test_server(f)
         
-        # --- GEO-PENALTY ---
+        # --- SCORING ---
         tier_penalty = 0
-        if f['tier_rank'] == 1: 
-            tier_penalty = 0       
-        elif f['tier_rank'] == 2: 
-            tier_penalty = 2000     
-        else: 
-            tier_penalty = 5000     
+        if f['tier_rank'] == 1: tier_penalty = 0       
+        elif f['tier_rank'] == 2: tier_penalty = 5000 # Strict Penalty for non-Tier1
+        else: tier_penalty = 10000     
             
         special_penalty = 0
         if mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "whitelist" and not f['is_reality']: special_penalty = 1000
         
         speed_bonus = 0
-        if real_speed < 1.0:
-            speed_bonus = -500 
-        elif real_speed < 3.0:
-            speed_bonus = -100 
-        elif real_speed > 10.0:
-            speed_bonus = 150  
-        else:
-            speed_bonus = real_speed * 10 
-            
-        score = avg + (jitter * 5) + tier_penalty + special_penalty - speed_bonus
+        if real_speed < 1.0: speed_bonus = -500 
+        elif real_speed < 3.0: speed_bonus = -100 
+        elif real_speed > 10.0: speed_bonus = 150  
+        else: speed_bonus = real_speed * 10 
+        
+        # SURVIVOR BONUS
+        history_bonus = get_history_bonus(f['ip'], f['port'])
+
+        score = avg + (jitter * 5) + tier_penalty + special_penalty + history_bonus - speed_bonus
         
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -529,10 +528,10 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         f['final_score'] = score
         
         proto_info = "Reality" if f['is_reality'] else "TCP"
-        
         source_label = f.get('source_type', 'UNK').upper()
         speed_str = f"{real_speed:.1f} Mbps" if real_speed > 0 else "---"
-        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | Ping: {int(avg)}ms | Speed: {speed_str:<9} | Score: {int(score)} (Low=Best) | Src: {source_label}")
+        
+        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | Ping: {int(avg)}ms | Speed: {speed_str:<9} | Score: {int(score)} | Src: {source_label}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
@@ -560,11 +559,9 @@ def fetch_fresh_github_links(max_repos=150):
 
     headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    
-    # --- WIDER SEARCH QUERY (Repo Level) ---
     query = f'vless pushed:>{date_filter} stars:<=50'
     
-    print(f"🔎 Smart Repo Search: '{query}' (Scan Limit: {max_repos})...")
+    print(f"🔎 Smart Repo Search: '{query}'...")
     repo_api_url = "https://api.github.com/search/repositories"
     repo_params = {"q": query, "sort": "updated", "order": "desc", "per_page": max_repos}
 
@@ -578,7 +575,6 @@ def fetch_fresh_github_links(max_repos=150):
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
                 full_name = repo.get("full_name")
-                # --- STRICT CODE SEARCH ---
                 code_params = {"q": f'"vless://" "reality" repo:{full_name}', "per_page": 5}
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
@@ -587,13 +583,13 @@ def fetch_fresh_github_links(max_repos=150):
                         for f in files:
                             raw_url = f.get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
                             if raw_url: found_files.append(raw_url)
-                    time.sleep(0.5) 
+                    time.sleep(0.3) 
                 except: pass
     except Exception as e: print(f"   ❌ Ошибка Smart Search: {e}")
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V88 (WIDER SEARCH + PL/DE TIER 1 + BAN US/CA) ---")
+    print("--- ЗАПУСК V89 (GOLDEN SOURCES + SURVIVOR BONUS) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
@@ -609,7 +605,9 @@ def main():
         print(f"🌐 Скачивание источников...")
         f1 = executor.submit(process_urls, GENERAL_URLS, 'static')
         f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
-        static_results = f1.result() + f3.result()
+        f4 = executor.submit(process_urls, PREMIUM_URLS, 'premium') # GOLDEN SOURCE
+        
+        static_results = f1.result() + f3.result() + f4.result()
         
         f2 = executor.submit(process_urls, smart_urls, 'github')
         github_results = f2.result()
@@ -633,31 +631,39 @@ def main():
     b_univ = [s for s in working_servers if s['category'] == 'UNIVERSAL']
     b_warp = [s for s in working_servers if s['category'] == 'WARP']
     
+    # Fresh Mix: GitHub Search + Premium Sources
     github_originals = set(g['original'] for g in github_candidates_raw)
-    b_github_fresh = [s for s in working_servers if s['original'] in github_originals and s['category'] != 'WHITELIST']
+    premium_originals = set(p['original'] for p in f4.result())
+    
+    b_fresh_candidates = [
+        s for s in working_servers 
+        if (s['original'] in github_originals or s['original'] in premium_originals)
+        and s['category'] != 'WHITELIST'
+    ]
 
     final_list = []
     used_ips = []
     
-    if b_github_fresh:
-        github_winners = run_tournament(b_github_fresh, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
+    # GITHUB FRESH CUP (Now STRICT TIER 1)
+    if b_fresh_candidates:
+        github_winners = run_tournament(b_fresh_candidates, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
         
     github_added = False
     if 'github_winners' in locals() and github_winners:
         for g in github_winners:
             if g['speed_mbps'] > 1.0:
-                g['category'] = 'Fresh GitHub' 
+                g['category'] = 'Fresh Tier 1' 
                 used_ips.append(g['ip'])
                 final_list.extend([g])
                 github_added = True
-            else:
-                print(f"   ⚠️ GitHub winner dropped due to low speed: {g['speed_mbps']} Mbps")
 
     if not github_added:
-        print("   ⚠️ GitHub Cup Failed: Filling quota with best UNIVERSAL.")
-        extra_univ = run_tournament(b_univ, 1, "BACKUP CUP", "universal")
+        print("   ⚠️ Fresh Cup Failed (No Tier 1): Filling with best UNIVERSAL Tier 1.")
+        # Only take TIER 1 as backup for Fresh slot!
+        tier1_backup = [s for s in b_univ if s['tier_rank'] == 1 and s['ip'] not in used_ips]
+        extra_univ = run_tournament(tier1_backup, 1, "BACKUP CUP", "universal")
         if extra_univ:
-            extra_univ[0]['category'] = 'Fresh GitHub (Backup)'
+            extra_univ[0]['category'] = 'Fresh Backup (T1)'
             final_list.extend(extra_univ)
             used_ips.append(extra_univ[0]['ip'])
     
@@ -688,7 +694,7 @@ def main():
     result_links = [info_link]
     json_data = {"updated_at": time_str, "next_update": next_str, "servers": []}
 
-    print("\n🏆 --- FINAL SELECTION (These go into FL1PVPN) ---")
+    print("\n🏆 --- FINAL SELECTION ---")
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
@@ -701,7 +707,7 @@ def main():
         if calc_ping < 10: calc_ping = 15
 
         name = ""
-        if 'GitHub' in s['category']:
+        if 'Fresh' in s['category']:
              name = f"🔥 Fresh | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'Game Server': 
             name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
@@ -712,9 +718,7 @@ def main():
         else: 
             name = f"⚡ {flag} {country_full} | {calc_ping}ms"
 
-        # --- VISUAL CONFIRMATION IN LOGS ---
         print(f"   🌟 {name} | IP: {s['ip']}")
-        # -----------------------------------
 
         base = s['original'].split('#')[0]
         final_link = f"{base}#{quote(name)}"
@@ -734,10 +738,7 @@ def main():
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
     save_history() 
-    
     print(f"\nDONE. {len(result_links)} links saved.")
-    print(f"Stats saved to {JSON_FILE}.")
-    print(f"Cache saved to {HISTORY_FILE}.")
 
 if __name__ == "__main__":
     main()
