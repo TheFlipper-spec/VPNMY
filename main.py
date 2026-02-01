@@ -645,7 +645,7 @@ def fetch_fresh_github_links(max_repos=80):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V79 (UNIQUE IP SEARCH + FALLBACK) ---")
+    print("--- ЗАПУСК V80 (UNIQUE IP SEARCH + FALLBACK) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
@@ -750,8 +750,9 @@ def main():
         if calc_ping < 10: calc_ping = 15
 
         name = ""
+        # --- ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ ИМЕНИ ---
         if 'GitHub' in s['category']:
-             name = f"🔥 Fresh GitHub | {flag} {country_full} | {calc_ping}ms"
+             name = f"🔥 Fresh | {flag} {country_full} | {calc_ping}ms" # Было "Fresh GitHub"
         elif s['category'] == 'Game Server': 
             name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'WHITELIST': 
