@@ -45,9 +45,9 @@ XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
 MAX_WORKERS = 25        
-TIMEOUT = 1.0           # Чуть увеличили таймаут на пинг
-REAL_TEST_TIMEOUT = 8.0 # Увеличили время на реальный тест (было 5.0)
-SPEED_TEST_TIMEOUT = 6.0 # Увеличили время на тест скорости
+TIMEOUT = 1.0           
+REAL_TEST_TIMEOUT = 8.0 
+SPEED_TEST_TIMEOUT = 6.0 
 
 # --- КВОТЫ ---
 TARGET_GITHUB = 1     
@@ -86,6 +86,7 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
 }
 
+# Строгий приоритет: Финляндия, Эстония, Швеция
 TIER_1_PLATINUM = ['FI', 'EE', 'SE']
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ', 'RU']
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
@@ -363,7 +364,7 @@ def generate_xray_config(server, local_port):
         elif server['security'] == 'reality':
             reality_settings = {
                 "show": False,
-                "fingerprint": params.get('fp', ['chrome'])[0], # Default to chrome
+                "fingerprint": params.get('fp', ['chrome'])[0],
                 "serverName": params.get('sni', [''])[0],
                 "publicKey": params.get('pbk', [''])[0],
                 "shortId": params.get('sid', [''])[0],
@@ -391,8 +392,6 @@ def generate_xray_config(server, local_port):
         return None
 
 def measure_speed(local_port):
-    # Используем Google Android Studio DL (тяжелый файл, хорошая скорость, HTTPS)
-    # Это гарантирует, что мы не просто пингуем, а качаем через шифрованный канал.
     url = "https://dl.google.com/dl/android/studio/install/3.4.1.0/android-studio-ide-183.5522156-windows.exe"
     proxies = {
         "http": f"socks5h://127.0.0.1:{local_port}",
@@ -403,11 +402,10 @@ def measure_speed(local_port):
         with requests.get(url, proxies=proxies, timeout=SPEED_TEST_TIMEOUT, stream=True) as r:
             r.raise_for_status()
             total_bytes = 0
-            # Качаем до 3 МБ или пока не выйдет время
             for chunk in r.iter_content(chunk_size=32768):
                 if chunk: 
                     total_bytes += len(chunk)
-                if total_bytes > 3 * 1024 * 1024: # Limit 3MB download test
+                if total_bytes > 3 * 1024 * 1024: 
                     break
             
             duration = time.time() - start_time
@@ -436,23 +434,20 @@ def check_real_connection(server):
             stdout=subprocess.DEVNULL, 
             stderr=subprocess.PIPE     
         )
-        time.sleep(2.0) # Увеличили время ожидания запуска Xray
+        time.sleep(2.0)
         if xray_process.poll() is not None: raise Exception("Xray process died")
 
         proxies = { 'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}' }
         
-        # --- CRITICAL FIX: Проверка через HTTPS Google (а не HTTP Cloudflare) ---
         target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
-        # verify=False чтобы не падать на специфичных сертификатах, но сам факт HTTPS важен
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=False)
         end_time = time.perf_counter()
         
-        # 204 = No Content (Google), 200 = OK
         if resp.status_code == 204 or (200 <= resp.status_code < 300):
             result_latency = (end_time - start_time) * 1000
-            if result_latency < 2000: # Если пинг до Google адекватный
+            if result_latency < 2000:
                  result_speed = measure_speed(local_port)
             update_history(server['ip'], server['port'], True)
         else:
@@ -506,10 +501,8 @@ def check_server_initial(server):
     elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
     elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
     
-    # --- FIX: Не считаем GitHub сервера фейками из-за пинга ---
     if server['source_type'] == 'github': 
         is_fake = False
-    # ----------------------------------------------------------
 
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
@@ -543,7 +536,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     elif mode == "warp":
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
     elif mode == "github_only": 
-        # Фильтруем дубликаты по IP
         seen_ips = set()
         unique_candidates = []
         for c in candidates:
@@ -569,29 +561,31 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
         avg, jitter = stress_test_server(f)
         
+        # --- GEO-PENALTY V83: STRICT ---
         tier_penalty = 0
-        if f['tier_rank'] == 1: tier_penalty = 0     
-        elif f['tier_rank'] == 2: tier_penalty = 30  
-        else: tier_penalty = 70                      
+        if f['tier_rank'] == 1: 
+            tier_penalty = 0        # FI, EE, SE - приоритет
+        elif f['tier_rank'] == 2: 
+            tier_penalty = 2000     # DE, NL, FR - берем только если нет Tier 1
+        else: 
+            tier_penalty = 5000     # Остальные - мусор
             
         special_penalty = 0
         if mode == "gaming" and f.get('is_ss', False): special_penalty = -20 
         elif mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "whitelist" and not f['is_reality']: special_penalty = 1000
         
-        # --- НОВЫЙ СКОРИНГ (ЖЕСТКОЕ НАКАЗАНИЕ ЗА СКОРОСТЬ) ---
         speed_bonus = 0
         if real_speed < 1.0:
-            speed_bonus = -500 # Штраф за мусорную скорость (< 1 Mbps)
+            speed_bonus = -500 
         elif real_speed < 3.0:
-            speed_bonus = -100 # Штраф за низкую скорость (< 3 Mbps)
+            speed_bonus = -100 
         elif real_speed > 10.0:
-            speed_bonus = 150  # Супер бонус за > 10 Mbps
+            speed_bonus = 150  
         else:
-            speed_bonus = real_speed * 10 # Обычный бонус
+            speed_bonus = real_speed * 10 
             
         score = avg + (jitter * 5) + tier_penalty + special_penalty - speed_bonus
-        # -----------------------------------------------------
         
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -664,7 +658,7 @@ def fetch_fresh_github_links(max_repos=80):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V82 (GOOGLE HTTPS CHECK + HEAVY DL) ---")
+    print("--- ЗАПУСК V83 (STRICT GEO-PRIORITY + GOOGLE HTTPS) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
