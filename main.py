@@ -24,16 +24,15 @@ import urllib3
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V86: SILENT LOGS + EXPANDED TIER 1 + ALWAYS FRESH ---
+# --- V87: WINNERS LIST + NO SS + FIX FRESH SEARCH ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-# ---------------------------------------------------------
+# ----------------------------------------------------
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt"
@@ -49,7 +48,7 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
-MAX_WORKERS = 30        # Увеличили воркеры для обработки большего кол-ва репо
+MAX_WORKERS = 30        
 TIMEOUT = 1.0           
 REAL_TEST_TIMEOUT = 8.0 
 SPEED_TEST_TIMEOUT = 6.0 
@@ -91,7 +90,6 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
 }
 
-# --- V86: Расширенный Tier 1 (Добавили LT, LV, NO) ---
 TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO']
 TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ', 'RU']
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
@@ -194,59 +192,7 @@ def extract_links(text):
 def parse_config_info(config_str, source_type):
     try:
         if config_str.startswith("ss://"):
-            try:
-                rest = config_str[5:]
-                if "#" in rest:
-                    main_part, original_remark = rest.split("#", 1)
-                    original_remark = unquote(original_remark).strip()
-                else:
-                    main_part = rest
-                    original_remark = "Unknown"
-
-                method = ""
-                password = ""
-                host = ""
-                port = 0
-
-                if "@" in main_part:
-                    user_info, host_port = main_part.split("@", 1)
-                    try:
-                        decoded_user = safe_base64_decode(user_info)
-                        if ":" in decoded_user:
-                             method, password = decoded_user.split(":", 1)
-                        else:
-                             if ":" in user_info:
-                                 method, password = user_info.split(":", 1)
-                    except: return None
-                else:
-                    decoded = safe_base64_decode(main_part)
-                    if "@" in decoded:
-                        auth, host_port = decoded.split("@", 1)
-                        if ":" in auth:
-                            method, password = auth.split(":", 1)
-                    else: return None
-
-                if ":" in host_port:
-                    if "]" in host_port: 
-                        host = host_port.rsplit(":", 1)[0]
-                        port = host_port.rsplit(":", 1)[1]
-                    else:
-                        host, port = host_port.split(":")
-                else: return None
-                
-                return {
-                    "ip": host, "port": int(port), 
-                    "uuid": password,
-                    "original": config_str, "original_remark": original_remark,
-                    "latency": 9999, "jitter": 0, "final_score": 9999, "info": {},
-                    "speed_mbps": 0.0,
-                    "transport": "tcp",
-                    "security": "ss", 
-                    "is_reality": False, "is_vision": False, "is_pure": False, "is_hy2": False, "is_ss": True,
-                    "source_type": source_type, "tier_rank": 99,
-                    "parsed_params": {"method": method}
-                }
-            except: return None
+            return None # ОТКЛЮЧАЕМ SHADOWSOCKS ПОЛНОСТЬЮ
 
         part = config_str.split("@")[1].split("?")[0]
         if ":" in part:
@@ -303,28 +249,6 @@ def tcp_ping(host, port):
 def generate_xray_config(server, local_port):
     try:
         params = server['parsed_params']
-        
-        if server.get('is_ss', False):
-            outbound_config = {
-                "tag": "proxy",
-                "protocol": "shadowsocks",
-                "settings": {
-                    "servers": [{
-                        "address": server['ip'],
-                        "port": int(server['port']),
-                        "method": params.get('method', ''),
-                        "password": server['uuid'],
-                        "uot": True 
-                    }]
-                }
-            }
-            config = {
-                "log": {"loglevel": "error"},
-                "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}],
-                "outbounds": [outbound_config]
-            }
-            return config
-
         user_obj = {
             "id": server['uuid'],
             "encryption": "none"
@@ -447,7 +371,6 @@ def check_real_connection(server):
         target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
-        # ВАЖНО: verify=False вызывает предупреждения, которые мы отключили выше
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=False)
         end_time = time.perf_counter()
         
@@ -531,10 +454,9 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
+    # --- NO SHADOWSOCKS IN GAME CUP ---
     if mode == "gaming":
-        filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
-        tier1_candidates = [c for c in filtered if c['tier_rank'] == 1]
-        if tier1_candidates: filtered = tier1_candidates
+        filtered = [c for c in candidates if c['is_reality']] # Только Reality
     elif mode == "universal":
         filtered = [c for c in candidates if c['is_reality']]
     elif mode == "whitelist":
@@ -545,7 +467,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         seen_ips = set()
         unique_candidates = []
         for c in candidates:
-            # Берем только REALITY и без дублей
             if c['is_reality'] and c['ip'] not in seen_ips:
                 unique_candidates.append(c)
                 seen_ips.add(c['ip'])
@@ -568,18 +489,17 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
         avg, jitter = stress_test_server(f)
         
-        # --- GEO-PENALTY V86: STRICT PRIORITY (BUT NO AUTO-DROP) ---
+        # --- GEO-PENALTY ---
         tier_penalty = 0
         if f['tier_rank'] == 1: 
-            tier_penalty = 0        # FI, EE, SE, LT, LV
+            tier_penalty = 0       
         elif f['tier_rank'] == 2: 
-            tier_penalty = 2000     # DE, NL, FR (Штраф, чтобы они были ниже Tier 1)
+            tier_penalty = 2000     
         else: 
             tier_penalty = 5000     
             
         special_penalty = 0
-        if mode == "gaming" and f.get('is_ss', False): special_penalty = -20 
-        elif mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
+        if mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "whitelist" and not f['is_reality']: special_penalty = 1000
         
         speed_bonus = 0
@@ -599,14 +519,11 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         f['speed_mbps'] = real_speed
         f['final_score'] = score
         
-        proto_info = "TCP"
-        if f.get('is_ss', False): proto_info = "SS"
-        elif f['is_reality']: proto_info = "Reality"
-        elif f['transport'] == 'ws': proto_info = "WS"
+        proto_info = "Reality" if f['is_reality'] else "TCP"
         
         source_label = f.get('source_type', 'UNK').upper()
         speed_str = f"{real_speed:.1f} Mbps" if real_speed > 0 else "---"
-        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | Ping: {int(avg)}ms | Speed: {speed_str:<9} | Score: {int(score)} | Src: {source_label}")
+        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | Ping: {int(avg)}ms | Speed: {speed_str:<9} | Score: {int(score)} (Low=Best) | Src: {source_label}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
@@ -634,7 +551,8 @@ def fetch_fresh_github_links(max_repos=150):
 
     headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    query = f"vless pushed:>{date_filter} stars:<=100"
+    # --- ИЩЕМ ИМЕННО REALITY VLESS ---
+    query = f'"vless://" "reality" pushed:>{date_filter}'
     
     print(f"🔎 Smart Repo Search: '{query}' (Scan Limit: {max_repos})...")
     repo_api_url = "https://api.github.com/search/repositories"
@@ -650,8 +568,8 @@ def fetch_fresh_github_links(max_repos=150):
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
                 full_name = repo.get("full_name")
-                # print(f"      -> Сканируем репо: {full_name}") # Silent scan
-                code_params = {"q": f'"vless://" repo:{full_name} size:1000..50000', "per_page": 5}
+                # Убрали ограничение на размер файла
+                code_params = {"q": f'"vless://" repo:{full_name}', "per_page": 5}
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
                     if code_resp.status_code == 200:
@@ -665,7 +583,7 @@ def fetch_fresh_github_links(max_repos=150):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V86 (SILENT LOGS + EXPANDED TIER 1 + ALWAYS FRESH) ---")
+    print("--- ЗАПУСК V87 (WINNERS LIST + NO SS + FIX FRESH SEARCH) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
@@ -717,7 +635,6 @@ def main():
     github_added = False
     if 'github_winners' in locals() and github_winners:
         for g in github_winners:
-            # --- V86: ALWAYS FRESH (Берем первого рабочего, даже если это NL, но сортировка предпочитает Tier 1) ---
             if g['speed_mbps'] > 1.0:
                 g['category'] = 'Fresh GitHub' 
                 used_ips.append(g['ip'])
@@ -727,7 +644,7 @@ def main():
                 print(f"   ⚠️ GitHub winner dropped due to low speed: {g['speed_mbps']} Mbps")
 
     if not github_added:
-        print("   ⚠️ GitHub Cup Failed (or zero working): Filling quota with best UNIVERSAL.")
+        print("   ⚠️ GitHub Cup Failed: Filling quota with best UNIVERSAL.")
         extra_univ = run_tournament(b_univ, 1, "BACKUP CUP", "universal")
         if extra_univ:
             extra_univ[0]['category'] = 'Fresh GitHub (Backup)'
@@ -761,6 +678,7 @@ def main():
     result_links = [info_link]
     json_data = {"updated_at": time_str, "next_update": next_str, "servers": []}
 
+    print("\n🏆 --- FINAL SELECTION (These go into FL1PVPN) ---")
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
@@ -773,7 +691,6 @@ def main():
         if calc_ping < 10: calc_ping = 15
 
         name = ""
-        # --- FIX: Убрали 'GitHub' из названия ---
         if 'GitHub' in s['category']:
              name = f"🔥 Fresh | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'Game Server': 
@@ -784,6 +701,10 @@ def main():
             name = f"🌀 {flag} {country_full} WARP | {calc_ping}ms"
         else: 
             name = f"⚡ {flag} {country_full} | {calc_ping}ms"
+
+        # --- VISUAL CONFIRMATION IN LOGS ---
+        print(f"   🌟 {name} | IP: {s['ip']}")
+        # -----------------------------------
 
         base = s['original'].split('#')[0]
         final_link = f"{base}#{quote(name)}"
@@ -804,7 +725,7 @@ def main():
         
     save_history() 
     
-    print(f"DONE. {len(result_links)} links saved.")
+    print(f"\nDONE. {len(result_links)} links saved.")
     print(f"Stats saved to {JSON_FILE}.")
     print(f"Cache saved to {HISTORY_FILE}.")
 
