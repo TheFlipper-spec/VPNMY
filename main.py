@@ -21,11 +21,15 @@ import tempfile
 import random
 import shutil
 import urllib3
-import socks  # Требуется PySocks для теста UDP
+try:
+    import socks
+except ImportError:
+    # Если PySocks не установлен, скрипт не упадет сразу, но UDP тест не сработает
+    socks = None
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V91: TURBO PARALLEL MODE (27 min -> 5 min) ---
+# --- V92: STABLE ACTIONS FIX ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- 1. PREMIUM COLLECTORS ---
@@ -67,17 +71,17 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- НАСТРОЙКИ TURBO ---
-MAX_WORKERS_SCAN = 300   # Было 40. Ставим 300 для первичного скана 17к серверов
-MAX_WORKERS_CUP = 20     # Новое: Параллельная проверка финалистов (Xray)
-TIMEOUT = 0.8            # Чуть жестче таймаут на пинг (быстрее отсеиваем трупы)
+# --- НАСТРОЙКИ (Оптимизировано для GitHub Actions) ---
+MAX_WORKERS_SCAN = 150   # Снижено с 300 для стабильности на 2-ядерных раннерах
+MAX_WORKERS_CUP = 15     # Снижено с 20 для точности тестов скорости
+TIMEOUT = 0.8            
 REAL_TEST_TIMEOUT = 8.0 
 SPEED_TEST_TIMEOUT = 6.0 
 
 # --- КВОТЫ ---
-TARGET_GITHUB = 1     
+TARGET_GITHUB = 2     
 TARGET_GAME = 2       
-TARGET_UNIVERSAL = 2  
+TARGET_UNIVERSAL = 4  
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
@@ -389,6 +393,7 @@ def measure_speed(local_port):
         return 0.0
 
 def check_udp_dns(local_port):
+    if not socks: return False, 0.0 # Если PySocks не загрузился
     try:
         s = socks.socksocket(socket.AF_INET, socket.SOCK_DGRAM)
         s.set_proxy(socks.SOCKS5, "127.0.0.1", local_port)
@@ -423,7 +428,7 @@ def check_real_connection(server):
             [XRAY_BIN, "-config", config_path],
             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE     
         )
-        time.sleep(1.5) # Снизил паузу на запуск
+        time.sleep(1.5) 
         if xray_process.poll() is not None: raise Exception("Xray died")
 
         proxies = { 'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}' }
@@ -512,7 +517,6 @@ def stress_test_server(server):
     if len(pings) < 2: return 9999, 9999
     return statistics.mean(pings), statistics.stdev(pings)
 
-# --- ГЛАВНАЯ ОПТИМИЗАЦИЯ: ПАРАЛЛЕЛЬНАЯ ПРОВЕРКА КАНДИДАТОВ ---
 def check_single_candidate(f, mode):
     real_lat, real_speed, udp_ok = check_real_connection(f)
     
@@ -580,7 +584,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     scored_results = []
     
-    # ПАРАЛЛЕЛЬНЫЙ ЗАПУСК
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_CUP) as executor:
         futures = {executor.submit(check_single_candidate, f, mode): f for f in semifinalists}
         for future in concurrent.futures.as_completed(futures):
@@ -592,9 +595,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
                     speed_str = f"{res['speed_mbps']:.1f} Mbps" if res['speed_mbps'] > 0 else "---"
                     udp_str = "UDP✅" if res['udp_enabled'] else "no udp"
                     print(f"   ✅ {res['info']['countryCode']:<4} | {proto_info:<7} | {int(res['latency'])}ms | {speed_str:<9} | {udp_str} | Score: {int(res['final_score'])}")
-                else:
-                    # Можно вывести лог провала, но для чистоты пропустим
-                    pass 
             except Exception as e: pass
 
     scored_results.sort(key=lambda x: x['final_score'])
@@ -667,7 +667,7 @@ def fetch_fresh_github_links(max_repos=150):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V91 TURBO (PARALLEL CUPS) ---")
+    print("--- ЗАПУСК V92 (STABLE + PARALLEL) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
