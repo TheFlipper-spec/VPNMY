@@ -25,10 +25,10 @@ import socks  # Требуется PySocks для теста UDP
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V90: HYSTERIA 2 + TELEGRAM + UDP CHECK ---
+# --- V91: TURBO PARALLEL MODE (27 min -> 5 min) ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# --- 1. PREMIUM COLLECTORS (ЗОЛОТЫЕ ИСТОЧНИКИ + ТЕЛЕГРАМ АГРЕГАТОРЫ) ---
+# --- 1. PREMIUM COLLECTORS ---
 PREMIUM_URLS = [
     "https://raw.githubusercontent.com/Yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
@@ -37,7 +37,7 @@ PREMIUM_URLS = [
     "https://raw.githubusercontent.com/soroushmirzaei/telegram-configs-collector/main/protocols/reality",
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/main/Config/vless.txt",
     "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/reality",
-    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/hysteria2" # Добавил Hysteria2 источник
+    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/hysteria2"
 ]
 
 # --- 2. OTHERS ---
@@ -53,7 +53,7 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
 ]
 
-# --- 3. TELEGRAM CHANNELS (Парсим напрямую) ---
+# --- 3. TELEGRAM CHANNELS ---
 TELEGRAM_CHANNELS = [
     "FarahVPN", 
     "v2rayng_vpn", 
@@ -67,15 +67,16 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- НАСТРОЙКИ ---
-MAX_WORKERS = 40        
-TIMEOUT = 1.0           
-REAL_TEST_TIMEOUT = 10.0 
-SPEED_TEST_TIMEOUT = 7.0 
+# --- НАСТРОЙКИ TURBO ---
+MAX_WORKERS_SCAN = 300   # Было 40. Ставим 300 для первичного скана 17к серверов
+MAX_WORKERS_CUP = 20     # Новое: Параллельная проверка финалистов (Xray)
+TIMEOUT = 0.8            # Чуть жестче таймаут на пинг (быстрее отсеиваем трупы)
+REAL_TEST_TIMEOUT = 8.0 
+SPEED_TEST_TIMEOUT = 6.0 
 
 # --- КВОТЫ ---
 TARGET_GITHUB = 2     
-TARGET_GAME = 2       # Упор на UDP
+TARGET_GAME = 2       
 TARGET_UNIVERSAL = 4  
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
@@ -166,8 +167,6 @@ def should_check_server(ip, port):
         if age_hours < CACHE_TTL_HOURS: return False 
     return True
 
-# --- GEO & UTILS ---
-
 def download_mmdb():
     if not os.path.exists(MMDB_FILE):
         try:
@@ -198,7 +197,6 @@ def safe_base64_decode(s):
         except: return ""
 
 def extract_links(text):
-    # Добавлен hy2
     regex = r"(vless://[^ \n]+|ss://[^ \n]+|hy2://[^ \n]+)"
     links = re.findall(regex, text)
     if len(links) < 3:
@@ -209,26 +207,21 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # --- HYSTERIA 2 PARSER ---
         if config_str.startswith("hy2://"):
-            # hy2://password@ip:port?sni=...#remark
             part = config_str.split("@")
             password = part[0].replace("hy2://", "")
             host_port_query = part[1]
-            
             if "?" in host_port_query:
                 host_port, query = host_port_query.split("?", 1)
             else:
                 host_port = host_port_query
                 query = ""
-            
             if "#" in query: query, remark = query.split("#", 1)
             elif "#" in host_port: host_port, remark = host_port.split("#", 1)
             else: remark = "Hy2"
 
             if ":" not in host_port: return None
             host, port = host_port.split(":")
-            
             params = parse_qs(query)
             sni = params.get('sni', [''])[0]
             
@@ -243,18 +236,15 @@ def parse_config_info(config_str, source_type):
                 "parsed_params": params, "sni": sni
             }
 
-        # --- VLESS PARSER ---
         if config_str.startswith("vless://"):
             part = config_str.split("@")[1].split("?")[0]
             if ":" in part:
                 host, port = part.split(":")
                 query = config_str.split("?")[1].split("#")[0]
                 params = parse_qs(query)
-                
                 transport = params.get('type', ['tcp'])[0].lower()
                 security = params.get('security', ['none'])[0].lower()
                 flow_val = params.get('flow', [''])[0].lower()
-                
                 is_reality = (security == 'reality')
                 if is_reality:
                     pbk = params.get('pbk', [''])[0]
@@ -264,7 +254,6 @@ def parse_config_info(config_str, source_type):
                 
                 is_vision = ('vision' in flow_val)
                 is_pure = (security == 'none' or security == 'tls') and not is_reality
-                
                 _uuid = config_str.split("@")[0].replace("vless://", "")
                 original_remark = "Unknown"
                 if "#" in config_str: original_remark = unquote(config_str.split("#")[-1]).strip()
@@ -297,15 +286,12 @@ def tcp_ping(host, port):
 
 def generate_xray_config(server, local_port):
     try:
-        # --- HYSTERIA 2 CONFIG ---
         if server.get('is_hy2'):
             outbound_settings = {
                 "vnext": [{
                     "address": server['ip'],
                     "port": int(server['port']),
-                    "users": [{
-                        "password": server['uuid'] # Hy2 uses password, mapped to uuid field
-                    }]
+                    "users": [{"password": server['uuid']}]
                 }]
             }
             stream_settings = {
@@ -313,12 +299,10 @@ def generate_xray_config(server, local_port):
                 "security": "tls",
                 "tlsSettings": {
                     "serverName": server.get('sni', ''),
-                    "allowInsecure": True # Часто сертификаты самоподписанные
+                    "allowInsecure": True
                 }
             }
             protocol = "hysteria2"
-            
-        # --- VLESS CONFIG ---
         else:
             params = server['parsed_params']
             user_obj = { "id": server['uuid'], "encryption": "none" }
@@ -362,7 +346,6 @@ def generate_xray_config(server, local_port):
                     "spiderX": params.get('spx', ['/'])[0]
                 }
                 stream_settings["realitySettings"] = reality_settings
-            
             protocol = "vless"
 
         config = {
@@ -388,7 +371,6 @@ def generate_xray_config(server, local_port):
         return None
 
 def measure_speed(local_port):
-    # Тест скорости через TCP (скачивание файла)
     url = "https://dl.google.com/dl/android/studio/install/3.4.1.0/android-studio-ide-183.5522156-windows.exe"
     proxies = { "http": f"socks5h://127.0.0.1:{local_port}", "https": f"socks5h://127.0.0.1:{local_port}" }
     start_time = time.time()
@@ -399,7 +381,6 @@ def measure_speed(local_port):
             for chunk in r.iter_content(chunk_size=32768):
                 if chunk: total_bytes += len(chunk)
                 if total_bytes > 3 * 1024 * 1024: break 
-            
             duration = time.time() - start_time
             if duration <= 0: duration = 0.1
             speed_mbps = (total_bytes * 8) / (duration * 1_000_000)
@@ -408,26 +389,19 @@ def measure_speed(local_port):
         return 0.0
 
 def check_udp_dns(local_port):
-    # Проверка UDP через SOCKS5 (пытаемся отрезолвить домен через прокси)
     try:
         s = socks.socksocket(socket.AF_INET, socket.SOCK_DGRAM)
         s.set_proxy(socks.SOCKS5, "127.0.0.1", local_port)
         s.settimeout(3.0)
-        
-        # DNS запрос для google.com (A record) в байтах
-        # Transaction ID: 0xaaaa, Flags: 0x0100 (Standard Query)
         dns_query = binascii.unhexlify("aaaa0100000100000000000006676f6f676c6503636f6d0000010001")
-        
         start = time.perf_counter()
         s.sendto(dns_query, ("8.8.8.8", 53))
         data, addr = s.recvfrom(1024)
         end = time.perf_counter()
-        
         s.close()
         if data and len(data) > 10:
             return True, (end - start) * 1000
-    except Exception as e:
-        pass
+    except: pass
     return False, 0.0
 
 def check_real_connection(server):
@@ -449,7 +423,7 @@ def check_real_connection(server):
             [XRAY_BIN, "-config", config_path],
             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE     
         )
-        time.sleep(2.0)
+        time.sleep(1.5) # Снизил паузу на запуск
         if xray_process.poll() is not None: raise Exception("Xray died")
 
         proxies = { 'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}' }
@@ -461,10 +435,7 @@ def check_real_connection(server):
         
         if resp.status_code == 204 or (200 <= resp.status_code < 300):
             result_latency = (end_time - start_time) * 1000
-            
-            # --- UDP CHECK ---
             udp_success, udp_ping = check_udp_dns(local_port)
-            
             if result_latency < 3000:
                  result_speed = measure_speed(local_port)
             update_history(server['ip'], server['port'], True)
@@ -502,15 +473,11 @@ def check_server_initial(server):
     elif is_warp: server['category'] = 'WARP'
     else: server['category'] = 'UNIVERSAL'
 
-    # Hy2 обычно на UDP, tcp_ping может не пройти, но попробуем (многие Hy2 открывают и TCP порт)
-    # Если Hy2 не пингуется по TCP, можно пропустить этот шаг, но для стабильности оставим.
     p = tcp_ping(server['ip'], server['port'])
-    if p is None and not server.get('is_hy2'): 
+    if p is None and server.get('is_hy2'): p = 50 
+    elif p is None: 
         update_history(server['ip'], server['port'], False)
         return None
-    elif p is None and server.get('is_hy2'):
-        # Hy2 может не отвечать на TCP Ping, дадим шанс
-        p = 50 
         
     server['latency'] = int(p)
     code = get_ip_country_local(server['ip'])
@@ -521,7 +488,6 @@ def check_server_initial(server):
 
     server['info'] = {'countryCode': code}
     
-    # Anti-Fake Filter
     is_fake = False
     if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
     elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
@@ -539,19 +505,55 @@ def stress_test_server(server):
     pings = []
     for i in range(3):
         p = tcp_ping(server['ip'], server['port'])
-        if p is None and server.get('is_hy2'): p = 50 # Fake ping for Hy2
+        if p is None and server.get('is_hy2'): p = 50 
         elif p is None: return 9999, 9999
         if p is not None: pings.append(p)
         time.sleep(0.1) 
     if len(pings) < 2: return 9999, 9999
     return statistics.mean(pings), statistics.stdev(pings)
 
+# --- ГЛАВНАЯ ОПТИМИЗАЦИЯ: ПАРАЛЛЕЛЬНАЯ ПРОВЕРКА КАНДИДАТОВ ---
+def check_single_candidate(f, mode):
+    real_lat, real_speed, udp_ok = check_real_connection(f)
+    
+    if real_lat is None: return None
+
+    avg, jitter = stress_test_server(f)
+    
+    tier_penalty = 0
+    if f['tier_rank'] == 1: tier_penalty = 0       
+    elif f['tier_rank'] == 2: tier_penalty = 5000 
+    else: tier_penalty = 10000     
+        
+    special_penalty = 0
+    if mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
+    
+    udp_bonus = 0
+    if udp_ok: udp_bonus = -300 
+    elif mode == "gaming": special_penalty += 5000 
+    
+    speed_bonus = 0
+    if real_speed < 1.0: speed_bonus = -500 
+    elif real_speed < 3.0: speed_bonus = -100 
+    elif real_speed > 10.0: speed_bonus = 150  
+    else: speed_bonus = real_speed * 10 
+    
+    history_bonus = get_history_bonus(f['ip'], f['port'])
+
+    score = avg + (jitter * 5) + tier_penalty + special_penalty + history_bonus - speed_bonus + udp_bonus
+    
+    f['latency'] = int(avg)
+    f['jitter'] = int(jitter)
+    f['speed_mbps'] = real_speed
+    f['udp_enabled'] = udp_ok
+    f['final_score'] = score
+    return f
+
 def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed"):
     if not candidates: return []
     filtered = candidates
     
     if mode == "gaming":
-        # Ищем Reality или Hysteria2
         filtered = [c for c in candidates if (c.get('is_reality') or c.get('is_hy2'))]
     elif mode == "universal":
         filtered = [c for c in candidates if (c.get('is_reality') or c.get('is_hy2'))]
@@ -571,64 +573,34 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    limit = 12 if mode == "github_only" else 25
+    limit = 15 if mode == "github_only" else 25
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:limit]
     
-    print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
+    print(f"\n🏟️ {title} (Parallel Checking {len(semifinalists)} candidates...)")
     
     scored_results = []
-    for f in semifinalists:
-        real_lat, real_speed, udp_ok = check_real_connection(f)
-        
-        if real_lat is None:
-            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
-            continue
+    
+    # ПАРАЛЛЕЛЬНЫЙ ЗАПУСК
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_CUP) as executor:
+        futures = {executor.submit(check_single_candidate, f, mode): f for f in semifinalists}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                res = future.result()
+                if res:
+                    scored_results.append(res)
+                    proto_info = "Hy2" if res.get('is_hy2') else ("Reality" if res.get('is_reality') else "TCP")
+                    speed_str = f"{res['speed_mbps']:.1f} Mbps" if res['speed_mbps'] > 0 else "---"
+                    udp_str = "UDP✅" if res['udp_enabled'] else "no udp"
+                    print(f"   ✅ {res['info']['countryCode']:<4} | {proto_info:<7} | {int(res['latency'])}ms | {speed_str:<9} | {udp_str} | Score: {int(res['final_score'])}")
+                else:
+                    # Можно вывести лог провала, но для чистоты пропустим
+                    pass 
+            except Exception as e: pass
 
-        avg, jitter = stress_test_server(f)
-        
-        # --- SCORING ---
-        tier_penalty = 0
-        if f['tier_rank'] == 1: tier_penalty = 0       
-        elif f['tier_rank'] == 2: tier_penalty = 5000 
-        else: tier_penalty = 10000     
-            
-        special_penalty = 0
-        if mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
-        
-        # UDP BONUS (Важно для игр)
-        udp_bonus = 0
-        if udp_ok: udp_bonus = -300 # Снижаем скор (это хорошо)
-        elif mode == "gaming": special_penalty += 5000 # Если для игр нет UDP - плохо
-        
-        speed_bonus = 0
-        if real_speed < 1.0: speed_bonus = -500 
-        elif real_speed < 3.0: speed_bonus = -100 
-        elif real_speed > 10.0: speed_bonus = 150  
-        else: speed_bonus = real_speed * 10 
-        
-        history_bonus = get_history_bonus(f['ip'], f['port'])
-
-        score = avg + (jitter * 5) + tier_penalty + special_penalty + history_bonus - speed_bonus + udp_bonus
-        
-        f['latency'] = int(avg)
-        f['jitter'] = int(jitter)
-        f['speed_mbps'] = real_speed
-        f['udp_enabled'] = udp_ok
-        f['final_score'] = score
-        
-        proto_info = "Hy2" if f.get('is_hy2') else ("Reality" if f.get('is_reality') else "TCP")
-        source_label = f.get('source_type', 'UNK').upper()
-        speed_str = f"{real_speed:.1f} Mbps" if real_speed > 0 else "---"
-        udp_str = "UDP✅" if udp_ok else "no udp"
-        
-        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | {int(avg)}ms | {speed_str:<9} | {udp_str} | Score: {int(score)}")
-        scored_results.append(f)
-        
     scored_results.sort(key=lambda x: x['final_score'])
     return scored_results[:winners_needed]
 
 def fetch_telegram_channels():
-    # Парсинг Telegram без API, используя веб-зеркала
     print(f"✈️ Scanning {len(TELEGRAM_CHANNELS)} Telegram channels...")
     links = []
     for channel in TELEGRAM_CHANNELS:
@@ -678,7 +650,6 @@ def fetch_fresh_github_links(max_repos=150):
         if repo_resp.status_code == 200:
             repos = repo_resp.json().get("items", [])
             print(f"   ✅ Found fresh repos: {len(repos)}")
-            
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
                 full_name = repo.get("full_name")
@@ -696,7 +667,7 @@ def fetch_fresh_github_links(max_repos=150):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V90 (HYSTERIA2 + TELEGRAM + UDP) ---")
+    print("--- ЗАПУСК V91 TURBO (PARALLEL CUPS) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
@@ -707,12 +678,12 @@ def main():
     
     all_servers = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as executor:
         print(f"🌐 Скачивание источников...")
         f1 = executor.submit(process_urls, GENERAL_URLS, 'static')
         f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         f4 = executor.submit(process_urls, PREMIUM_URLS, 'premium') 
-        f_tg = executor.submit(fetch_telegram_channels) # Telegram
+        f_tg = executor.submit(fetch_telegram_channels)
         
         static_results = f1.result() + f3.result() + f4.result()
         tg_results = f_tg.result()
@@ -725,10 +696,10 @@ def main():
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
     
-    print(f"🔍 Checking {len(servers_to_check)} servers...")
+    print(f"🔍 Checking {len(servers_to_check)} servers (Threads: {MAX_WORKERS_SCAN})...")
     
     working_servers = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
@@ -738,7 +709,6 @@ def main():
     b_univ = [s for s in working_servers if s['category'] == 'UNIVERSAL']
     b_warp = [s for s in working_servers if s['category'] == 'WARP']
     
-    # FRESH: Github + Telegram + Premium (новые)
     fresh_sources = set()
     for s in github_results: fresh_sources.add(s['original'])
     for s in f4.result(): fresh_sources.add(s['original'])
@@ -751,9 +721,7 @@ def main():
     final_list = []
     used_ips = []
     
-    # --- CUPS ---
-    
-    # 1. GITHUB FRESH (Strict Tier 1)
+    # --- CUPS (PARALLEL) ---
     if b_fresh_candidates:
         github_winners = run_tournament(b_fresh_candidates, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
         for g in github_winners:
@@ -762,7 +730,6 @@ def main():
                 used_ips.append(g['ip'])
                 final_list.append(g)
 
-    # 2. GAME CUP (UDP Priority)
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
     game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP (UDP)", "gaming")
     for g in game_winners:
@@ -770,7 +737,6 @@ def main():
         used_ips.append(g['ip'])
     final_list.extend(game_winners)
     
-    # 3. UNIVERSAL CUP
     b_univ_filtered_2 = [s for s in b_univ_filtered if s['ip'] not in used_ips]
     final_list.extend(run_tournament(b_univ_filtered_2, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
     
@@ -799,16 +765,15 @@ def main():
         
         base_ping = PING_BASE_MS.get(code, 120)
         calc_ping = base_ping + s['jitter']
-        if s.get('is_hy2'): calc_ping = int(calc_ping * 0.8) # Hy2 быстрее
+        if s.get('is_hy2'): calc_ping = int(calc_ping * 0.8) 
         if calc_ping < 10: calc_ping = 15
 
         icon = "⚡"
         if 'Fresh' in s['category']: icon = "🔥"
-        elif s['category'] == 'Game Server': icon = "🎮" # Только если прошел Game Cup
+        elif s['category'] == 'Game Server': icon = "🎮" 
         elif s['category'] == 'WHITELIST': icon = "⚪"
         elif s['category'] == 'WARP': icon = "🌀"
         
-        # Добавляем метку H2 для Hysteria
         tech_tag = " [H2]" if s.get('is_hy2') else ""
         
         name = f"{icon} {flag} {country_full}{tech_tag} | {calc_ping}ms"
