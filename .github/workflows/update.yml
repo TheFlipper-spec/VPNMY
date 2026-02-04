@@ -48,7 +48,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Добавляем файлы, включая историю (важно для удаления мертвых серверов)
+          # Добавляем только нужные файлы
           git add FL1PVPN stats.json history.json
           
           if git diff --staged --quiet; then
@@ -56,7 +56,12 @@ jobs:
           else
             git commit -m "🚀 Auto-update: $(date -u)"
             
-            # Забираем изменения с сервера, чтобы избежать конфликтов
+            # --- ИСПРАВЛЕНИЕ: Сбрасываем изменения в xray/geoip перед pull ---
+            # Это удалит изменения в бинарниках, которые мы не хотим коммитить,
+            # и сделает рабочую директорию чистой для rebase.
+            git reset --hard
+            
+            # Забираем изменения с сервера
             git pull --rebase origin main
             
             git push
