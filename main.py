@@ -24,15 +24,14 @@ import urllib3
 try:
     import socks
 except ImportError:
-    # Если PySocks не установлен, скрипт не упадет сразу, но UDP тест не сработает
     socks = None
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V92: STABLE ACTIONS FIX ---
+# --- V95: COMPACT ELITE EDITION ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# --- 1. PREMIUM COLLECTORS ---
+# --- ИСТОЧНИКИ ---
 PREMIUM_URLS = [
     "https://raw.githubusercontent.com/Yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
@@ -44,7 +43,6 @@ PREMIUM_URLS = [
     "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/hysteria2"
 ]
 
-# --- 2. OTHERS ---
 GENERAL_URLS = [
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
@@ -57,33 +55,28 @@ WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
 ]
 
-# --- 3. TELEGRAM CHANNELS ---
 TELEGRAM_CHANNELS = [
-    "FarahVPN", 
-    "v2rayng_vpn", 
-    "v2ray_outlineir",
-    "v2ray_configs_pool",
-    "VlessConfig",
-    "v2ray1_ng"
+    "FarahVPN", "v2rayng_vpn", "v2ray_outlineir",
+    "v2ray_configs_pool", "VlessConfig", "v2ray1_ng"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- НАСТРОЙКИ (Оптимизировано для GitHub Actions) ---
-MAX_WORKERS_SCAN = 150   # Снижено с 300 для стабильности на 2-ядерных раннерах
-MAX_WORKERS_CUP = 15     # Снижено с 20 для точности тестов скорости
-TIMEOUT = 0.8            
+# --- НАСТРОЙКИ (Оптимизировано для VPS Ubuntu 22) ---
+MAX_WORKERS_SCAN = 60    # Безопасно для стабильности
+MAX_WORKERS_CUP = 15     # Для финальных тестов
+TIMEOUT = 1.0            
 REAL_TEST_TIMEOUT = 8.0 
 SPEED_TEST_TIMEOUT = 6.0 
 
-# --- КВОТЫ ---
-TARGET_GITHUB = 2     
-TARGET_GAME = 2       
-TARGET_UNIVERSAL = 4  
-TARGET_WARP = 2       
-TARGET_WHITELIST = 2  
+# --- НОВЫЕ КВОТЫ (COMPACT) ---
+TARGET_GITHUB = 2     # Fresh
+TARGET_GAME = 2       # Game
+TARGET_UNIVERSAL = 3  # Universal
+TARGET_WARP = 2       # WARP
+TARGET_WHITELIST = 2  # Whitelist
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -95,10 +88,8 @@ CACHE_TTL_HOURS = 4
 MAX_FAILURES = 2         
 
 PING_BASE_MS = {
-    'RU': 90, 
-    'FI': 40, 'EE': 45, 'SE': 55, 'NO': 60, 'LV': 45, 'LT': 45, 
-    'DE': 70, 'NL': 75, 'FR': 80, 'PL': 60, 
-    'US': 160, 'GB': 85 
+    'RU': 90, 'FI': 40, 'EE': 45, 'SE': 55, 'NO': 60, 'LV': 45, 'LT': 45, 
+    'DE': 70, 'NL': 75, 'FR': 80, 'PL': 60, 'US': 160, 'GB': 85 
 }
 
 RUS_NAMES = {
@@ -111,11 +102,7 @@ RUS_NAMES = {
     'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
 }
 
-TIER_1_PLATINUM = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO']
-TIER_2_GOLD = ['NL', 'DE', 'PL', 'FR', 'KZ', 'RU'] 
-TIER_3_SILVER = ['IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
-
-BLACKLIST_COUNTRIES = ['US', 'CA', 'GB', 'CN', 'IR'] 
+BLACKLIST_COUNTRIES = ['CN', 'IR', 'KP'] 
 
 geo_reader = None
 server_history = {} 
@@ -134,12 +121,14 @@ def save_history():
     current_ts = time.time()
     clean_history = {}
     for key, val in server_history.items():
+        if val.get('fails', 0) >= MAX_FAILURES:
+            continue
         if current_ts - val['ts'] < (24 * 3600): 
             clean_history[key] = val
     try:
         with open(HISTORY_FILE, 'w') as f:
             json.dump(clean_history, f)
-        print("💾 История сохранена.")
+        print("💾 История очищена и сохранена.")
     except: pass
 
 def update_history(ip, port, is_alive):
@@ -159,7 +148,7 @@ def get_history_bonus(ip, port):
     rec = server_history.get(key)
     if not rec: return 0
     if rec.get('success_streak', 0) > 0:
-        return -50 * rec['success_streak'] 
+        return -50 * min(rec['success_streak'], 10) 
     return 0
 
 def should_check_server(ip, port):
@@ -384,7 +373,7 @@ def measure_speed(local_port):
             total_bytes = 0
             for chunk in r.iter_content(chunk_size=32768):
                 if chunk: total_bytes += len(chunk)
-                if total_bytes > 3 * 1024 * 1024: break 
+                if total_bytes > 2 * 1024 * 1024: break 
             duration = time.time() - start_time
             if duration <= 0: duration = 0.1
             speed_mbps = (total_bytes * 8) / (duration * 1_000_000)
@@ -393,7 +382,7 @@ def measure_speed(local_port):
         return 0.0
 
 def check_udp_dns(local_port):
-    if not socks: return False, 0.0 # Если PySocks не загрузился
+    if not socks: return False, 0.0 
     try:
         s = socks.socksocket(socket.AF_INET, socket.SOCK_DGRAM)
         s.set_proxy(socks.SOCKS5, "127.0.0.1", local_port)
@@ -461,10 +450,11 @@ def check_real_connection(server):
     return result_latency, result_speed, udp_success
 
 def calculate_tier_rank(country_code):
-    if country_code in TIER_1_PLATINUM: return 1
-    if country_code in TIER_2_GOLD: return 2
-    if country_code in TIER_3_SILVER: return 3
-    return 4
+    tier1 = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO']
+    tier2 = ['NL', 'DE', 'PL', 'FR', 'KZ', 'RU'] 
+    if country_code in tier1: return 1
+    if country_code in tier2: return 2
+    return 3
 
 def check_server_initial(server):
     if not should_check_server(server['ip'], server['port']): return None 
@@ -492,17 +482,6 @@ def check_server_initial(server):
         return None
 
     server['info'] = {'countryCode': code}
-    
-    is_fake = False
-    if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
-    elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
-    elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
-    
-    if server['source_type'] in ['github', 'premium', 'telegram']: is_fake = False
-    if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
-
-    if is_fake and server['category'] != 'WHITELIST': return None
-
     server['tier_rank'] = calculate_tier_rank(code)
     return server
 
@@ -577,10 +556,10 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    limit = 15 if mode == "github_only" else 25
+    limit = 20
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:limit]
     
-    print(f"\n🏟️ {title} (Parallel Checking {len(semifinalists)} candidates...)")
+    print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
     
     scored_results = []
     
@@ -594,14 +573,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
                     proto_info = "Hy2" if res.get('is_hy2') else ("Reality" if res.get('is_reality') else "TCP")
                     speed_str = f"{res['speed_mbps']:.1f} Mbps" if res['speed_mbps'] > 0 else "---"
                     udp_str = "UDP✅" if res['udp_enabled'] else "no udp"
-                    print(f"   ✅ {res['info']['countryCode']:<4} | {proto_info:<7} | {int(res['latency'])}ms | {speed_str:<9} | {udp_str} | Score: {int(res['final_score'])}")
+                    print(f"   ✅ {res['info']['countryCode']:<4} | {proto_info:<7} | {int(res['latency'])}ms | {speed_str:<9} | {udp_str}")
             except Exception as e: pass
 
     scored_results.sort(key=lambda x: x['final_score'])
     return scored_results[:winners_needed]
 
 def fetch_telegram_channels():
-    print(f"✈️ Scanning {len(TELEGRAM_CHANNELS)} Telegram channels...")
+    print(f"✈️ Scanning Telegram...")
     links = []
     for channel in TELEGRAM_CHANNELS:
         try:
@@ -613,7 +592,6 @@ def fetch_telegram_channels():
                     p = parse_config_info(link, 'telegram')
                     if p: links.append(p)
         except: pass
-    print(f"   ✅ Telegram extraction: {len(links)} configs found.")
     return links
 
 def process_urls(urls, source_type):
@@ -630,7 +608,7 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-def fetch_fresh_github_links(max_repos=150): 
+def fetch_fresh_github_links(max_repos=100): 
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
         print("   ⚠️ GITHUB_TOKEN not found.")
@@ -640,7 +618,7 @@ def fetch_fresh_github_links(max_repos=150):
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
     query = f'vless pushed:>{date_filter} stars:<=50'
     
-    print(f"🔎 Github Smart Search: '{query}'...")
+    print(f"🔎 Github Smart Search...")
     repo_api_url = "https://api.github.com/search/repositories"
     repo_params = {"q": query, "sort": "updated", "order": "desc", "per_page": max_repos}
 
@@ -649,7 +627,6 @@ def fetch_fresh_github_links(max_repos=150):
         repo_resp = requests.get(repo_api_url, headers=headers, params=repo_params, timeout=10)
         if repo_resp.status_code == 200:
             repos = repo_resp.json().get("items", [])
-            print(f"   ✅ Found fresh repos: {len(repos)}")
             code_api_url = "https://api.github.com/search/code"
             for repo in repos:
                 full_name = repo.get("full_name")
@@ -661,20 +638,20 @@ def fetch_fresh_github_links(max_repos=150):
                         for f in files:
                             raw_url = f.get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
                             if raw_url: found_files.append(raw_url)
-                    time.sleep(0.3) 
+                    time.sleep(0.5) 
                 except: pass
     except: pass
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V92 (STABLE + PARALLEL) ---")
+    print("--- ЗАПУСК V95 (COMPACT ELITE) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
     init_geoip()
     
-    smart_urls = fetch_fresh_github_links(max_repos=150) 
+    smart_urls = fetch_fresh_github_links(max_repos=100) 
     
     all_servers = []
     
@@ -684,19 +661,21 @@ def main():
         f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         f4 = executor.submit(process_urls, PREMIUM_URLS, 'premium') 
         f_tg = executor.submit(fetch_telegram_channels)
-        
-        static_results = f1.result() + f3.result() + f4.result()
-        tg_results = f_tg.result()
-        
         f2 = executor.submit(process_urls, smart_urls, 'github')
-        github_results = f2.result()
         
-        all_servers = static_results + tg_results + github_results
+        all_servers = f1.result() + f3.result() + f4.result() + f_tg.result() + f2.result()
     
-    unique_map = {s['original']: s for s in all_servers}
-    servers_to_check = list(unique_map.values())
-    
-    print(f"🔍 Checking {len(servers_to_check)} servers (Threads: {MAX_WORKERS_SCAN})...")
+    unique_servers_map = {}
+    for s in all_servers:
+        key = f"{s['ip']}:{s['port']}"
+        if key not in unique_servers_map:
+            unique_servers_map[key] = s
+        else:
+            if s['source_type'] in ['premium', 'github']:
+                unique_servers_map[key] = s
+
+    servers_to_check = list(unique_servers_map.values())
+    print(f"🔍 Всего ссылок: {len(all_servers)}. Уникальных серверов: {len(servers_to_check)}")
     
     working_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as executor:
@@ -710,32 +689,29 @@ def main():
     b_warp = [s for s in working_servers if s['category'] == 'WARP']
     
     fresh_sources = set()
-    for s in github_results: fresh_sources.add(s['original'])
-    for s in f4.result(): fresh_sources.add(s['original'])
+    for s in smart_urls: fresh_sources.add(s)
     
-    b_fresh_candidates = [
+    b_fresh = [
         s for s in working_servers 
-        if (s['original'] in fresh_sources) and s['category'] != 'WHITELIST'
+        if (s['source_type'] == 'github' or s['source_type'] == 'premium') and s['category'] != 'WHITELIST'
     ]
 
     final_list = []
     used_ips = []
     
-    # --- CUPS (PARALLEL) ---
-    if b_fresh_candidates:
-        github_winners = run_tournament(b_fresh_candidates, TARGET_GITHUB, "GITHUB FRESH CUP", "github_only")
+    if b_fresh:
+        github_winners = run_tournament(b_fresh, TARGET_GITHUB, "FRESH CUP", "github_only")
         for g in github_winners:
-            if g['speed_mbps'] > 1.0:
-                g['category'] = 'Fresh Tier 1' 
-                used_ips.append(g['ip'])
-                final_list.append(g)
+            g['category'] = 'Fresh Tier 1' 
+            used_ips.append(g['ip'])
+            final_list.append(g)
 
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
     game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP (UDP)", "gaming")
     for g in game_winners:
         g['category'] = 'Game Server'
         used_ips.append(g['ip'])
-    final_list.extend(game_winners)
+        final_list.append(g)
     
     b_univ_filtered_2 = [s for s in b_univ_filtered if s['ip'] not in used_ips]
     final_list.extend(run_tournament(b_univ_filtered_2, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
@@ -743,7 +719,6 @@ def main():
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
-    # --- OUTPUT ---
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -799,7 +774,7 @@ def main():
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
     save_history() 
-    print(f"\nDONE. {len(result_links)} links saved.")
+    print(f"\nDONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
 
 if __name__ == "__main__":
     main()
