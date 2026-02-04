@@ -2,12 +2,12 @@ name: Update VPN Configs
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Запуск каждый час
-  workflow_dispatch:      # Возможность запуска вручную
+    - cron: '*/20 * * * *'  # Запуск каждые 20 минут
+  workflow_dispatch:        # Возможность запуска кнопкой вручную
 
 jobs:
   build:
-    runs-on: self-hosted  # ВАЖНО: Запуск на твоем VPS
+    runs-on: self-hosted    # Работает на твоем сервере (VPS)
     permissions:
       contents: write
 
@@ -30,13 +30,19 @@ jobs:
 
       - name: Update Xray Core
         run: |
-          # Скачиваем свежее ядро Xray для поддержки новых протоколов
-          echo "⬇️ Updating Xray Core..."
+          # 1. Устанавливаем unzip (если вдруг нет), игнорируем ошибки установки
+          sudo apt-get update && sudo apt-get install -y unzip || true
+          
+          # 2. Скачиваем свежее ядро Xray
+          echo "⬇️ Downloading Xray..."
           wget -q -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+          
+          # 3. Распаковываем только нужное
           unzip -o -q xray.zip xray geoip.dat geosite.dat
+          
+          # 4. Чистим и даем права
           rm xray.zip
           chmod +x xray
-          ./xray -version
 
       - name: Run VPN Parser Script
         env:
@@ -45,24 +51,24 @@ jobs:
 
       - name: Commit and Push Changes
         run: |
+          # Настраиваем Git
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Добавляем только нужные файлы
+          # Добавляем ТОЛЬКО файлы результатов
           git add FL1PVPN stats.json history.json
           
+          # Проверяем, есть ли что коммитить
           if git diff --staged --quiet; then
-            echo "Changes not detected. Skipping commit."
+            echo "No changes in subscription. Skipping commit."
           else
-            git commit -m "🚀 Auto-update: $(date -u)"
+            git commit -m "🚀 Update 4 Servers: $(date -u)"
             
-            # --- ИСПРАВЛЕНИЕ: Сбрасываем изменения в xray/geoip перед pull ---
-            # Это удалит изменения в бинарниках, которые мы не хотим коммитить,
-            # и сделает рабочую директорию чистой для rebase.
+            # ВАЖНО: Удаляем мусор (xray, логи) из рабочей папки,
+            # чтобы git pull --rebase прошел без ошибок "unstaged changes"
             git reset --hard
             
-            # Забираем изменения с сервера
+            # Синхронизируем и отправляем
             git pull --rebase origin main
-            
             git push
           fi
