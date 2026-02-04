@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V98: NEIGHBORS FORCE EDITION ---
+# --- V99: SMART NEIGHBORS (NO BROKEN SERVERS) ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -78,9 +78,10 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-# --- ЛИМИТЫ ---
-MIN_SPEED_MBPS = 3.0     # Минимум 3 Мбит/с
-MAX_LATENCY_MS = 600     
+# --- ЖЕСТКИЕ ЛИМИТЫ ---
+MIN_SPEED_MBPS = 3.0     # Скорость ниже 3 Мбит = брак
+MAX_LATENCY_MS = 400     # Пинг выше 400 мс = брак (даже для Финляндии)
+TIER_1_MAX_LATENCY = 100 # Если Финляндия имеет пинг > 100, она теряет статус "Элиты"
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -91,7 +92,6 @@ UPDATE_INTERVAL_HOURS = 1
 CACHE_TTL_HOURS = 4      
 MAX_FAILURES = 2         
 
-# Базовый пинг (визуальный, для пользователя)
 PING_BASE_MS = {
     'RU': 90, 'FI': 35, 'EE': 40, 'SE': 45, 'NO': 50, 'LV': 40, 'LT': 40, 
     'DE': 60, 'NL': 65, 'FR': 70, 'PL': 55, 'US': 160, 'GB': 75 
@@ -454,13 +454,22 @@ def check_real_connection(server):
 
     return result_latency, result_speed, udp_success
 
-def calculate_tier_rank(country_code):
+def calculate_tier_rank(country_code, latency=0):
     # Tier 1: Ближние соседи (приоритет)
     tier1 = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO'] 
-    # Tier 2: Хорошая Европа (штраф, если не супер скорость)
+    
+    if country_code in tier1:
+        # ВАЖНАЯ ПРОВЕРКА:
+        # Если "Сосед" имеет высокий пинг (например, > 100мс), 
+        # значит он перегружен или маршрут кривой. Он теряет статус Элиты.
+        if latency > 100:
+            return 3 # Ссылкается в мусорку (Tier 3)
+        return 1 # Реальная элита
+        
+    # Tier 2: Хорошая Европа
     tier2 = ['DE', 'NL', 'PL', 'FR', 'GB'] 
-    if country_code in tier1: return 1
     if country_code in tier2: return 2
+    
     return 3
 
 def check_server_initial(server):
@@ -489,7 +498,8 @@ def check_server_initial(server):
         return None
 
     server['info'] = {'countryCode': code}
-    server['tier_rank'] = calculate_tier_rank(code)
+    # Пока ставим ранк без учета пинга, уточним позже в финале
+    server['tier_rank'] = 3 
     return server
 
 def stress_test_server(server):
@@ -509,27 +519,31 @@ def check_single_candidate(f, mode):
     if real_lat is None: return None
     
     # --- HARD FILTER ---
-    # Меньше 3 Мбит/с = смерть
+    # Скорость меньше 3 Мбит = брак
     if real_speed < MIN_SPEED_MBPS:
         update_history(f['ip'], f['port'], False) 
         return None
         
+    # Пинг больше 400 мс = брак (даже если работает)
     if real_lat > MAX_LATENCY_MS:
         return None
 
     avg, jitter = stress_test_server(f)
     
+    # --- SMART TIER CALCULATION ---
+    # Пересчитываем ранг с учетом реального пинга
+    current_tier = calculate_tier_rank(f['info']['countryCode'], avg)
+    f['tier_rank'] = current_tier
+
     # --- VPS LOCAL PING FIX ---
-    # Мы в Германии. Пинг до DE ~1ms. Для юзера в РФ это не так.
-    # Добавляем "виртуальное расстояние" для DE/NL
     scoring_ping = avg
     if f['info']['countryCode'] in ['DE', 'NL']:
-        scoring_ping += 40 # Штраф к пингу, чтобы Эстония (20ms) выигрывала
+        scoring_ping += 40 
 
     tier_penalty = 0
-    if f['tier_rank'] == 1: tier_penalty = 0       
-    elif f['tier_rank'] == 2: tier_penalty = 2000 # Небольшой штраф, можно перебить скоростью
-    else: tier_penalty = 10000     
+    if current_tier == 1: tier_penalty = 0       
+    elif current_tier == 2: tier_penalty = 2000 
+    else: tier_penalty = 10000 # Tier 3 (или разжалованный Tier 1) получает огромный штраф
         
     special_penalty = 0
     if mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
@@ -570,15 +584,15 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         unique_candidates = []
         for c in candidates:
             if (c.get('is_reality') or c.get('is_hy2')) and c['ip'] not in seen_ips:
-                if c['tier_rank'] == 1: 
-                    unique_candidates.append(c)
-                    seen_ips.add(c['ip'])
+                # В пре-фильтре пускаем всех, разберемся в финале
+                unique_candidates.append(c)
+                seen_ips.add(c['ip'])
         filtered = unique_candidates
 
     if not filtered: return []
     
     limit = 25 
-    semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:limit]
+    semifinalists = sorted(filtered, key=lambda x: (x['latency']))[:limit]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
     
@@ -665,7 +679,7 @@ def fetch_fresh_github_links(max_repos=100):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V98 (NEIGHBORS FORCE) ---")
+    print("--- ЗАПУСК V99 (SMART NEIGHBORS) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
