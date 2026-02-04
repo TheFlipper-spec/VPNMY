@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V96: HARD FILTER EDITION (NO DEAD SERVERS) ---
+# --- V97: GERMAN POWER EDITION ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -68,7 +68,7 @@ XRAY_BIN = "./xray"
 MAX_WORKERS_SCAN = 60    
 MAX_WORKERS_CUP = 15     
 TIMEOUT = 1.0            
-REAL_TEST_TIMEOUT = 10.0 # Даем чуть больше времени на честный тест
+REAL_TEST_TIMEOUT = 10.0 
 SPEED_TEST_TIMEOUT = 7.0 
 
 # --- КВОТЫ (Elite) ---
@@ -78,9 +78,9 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-# --- ЖЕСТКИЕ ЛИМИТЫ (Новое) ---
-MIN_SPEED_MBPS = 0.5     # Если скорость ниже 0.5 Мбит — сервер удаляется
-MAX_LATENCY_MS = 800     # Если пинг выше 800 мс — сервер удаляется
+# --- ЖЕСТКИЕ ЛИМИТЫ (ПОДНЯЛИ ПОРОГ) ---
+MIN_SPEED_MBPS = 3.0     # Теперь минимум 3 Мбит/с. Всё что медленнее — мусор.
+MAX_LATENCY_MS = 600     # Пинг выше 600 — удаляем.
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -93,7 +93,7 @@ MAX_FAILURES = 2
 
 PING_BASE_MS = {
     'RU': 90, 'FI': 40, 'EE': 45, 'SE': 55, 'NO': 60, 'LV': 45, 'LT': 45, 
-    'DE': 70, 'NL': 75, 'FR': 80, 'PL': 60, 'US': 160, 'GB': 85 
+    'DE': 35, 'NL': 40, 'FR': 50, 'PL': 45, 'US': 160, 'GB': 55 # Подкорректировал базу для DE/NL
 }
 
 RUS_NAMES = {
@@ -454,8 +454,9 @@ def check_real_connection(server):
     return result_latency, result_speed, udp_success
 
 def calculate_tier_rank(country_code):
-    tier1 = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO']
-    tier2 = ['NL', 'DE', 'PL', 'FR', 'KZ', 'RU'] 
+    # Добавили DE и NL в ЭЛИТУ. Теперь у них штраф 0.
+    tier1 = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO', 'DE', 'NL', 'GB'] 
+    tier2 = ['PL', 'FR', 'KZ', 'RU', 'TR', 'IT'] 
     if country_code in tier1: return 1
     if country_code in tier2: return 2
     return 3
@@ -505,18 +506,18 @@ def check_single_candidate(f, mode):
     
     if real_lat is None: return None
     
-    # --- HARD FILTER FIX ---
-    # Если скорость меньше порога (0.5 Mbps), считаем сервер мертвым
+    # --- HARD FILTER ---
+    # Меньше 3 Мбит/с = смерть
     if real_speed < MIN_SPEED_MBPS:
-        update_history(f['ip'], f['port'], False) # Снижаем рейтинг в истории
+        update_history(f['ip'], f['port'], False) 
         return None
         
-    # Если задержка слишком большая (даже при рабочей скорости)
     if real_lat > MAX_LATENCY_MS:
         return None
 
     avg, jitter = stress_test_server(f)
     
+    # Штрафы по странам (DE теперь Tier 1 = 0 штрафа)
     tier_penalty = 0
     if f['tier_rank'] == 1: tier_penalty = 0       
     elif f['tier_rank'] == 2: tier_penalty = 5000 
@@ -529,14 +530,15 @@ def check_single_candidate(f, mode):
     if udp_ok: udp_bonus = -300 
     elif mode == "gaming": special_penalty += 5000 
     
+    # --- SPEED SCALING FIX ---
+    # Линейный бонус. 100 Мбит = 500 баллов. 1000 Мбит = 5000 баллов.
     speed_bonus = 0
-    if real_speed < 1.0: speed_bonus = -500 
-    elif real_speed < 3.0: speed_bonus = -100 
-    elif real_speed > 10.0: speed_bonus = 150  
-    else: speed_bonus = real_speed * 10 
+    if real_speed > 0:
+        speed_bonus = real_speed * 5 
     
     history_bonus = get_history_bonus(f['ip'], f['port'])
 
+    # Чем меньше score, тем лучше. Поэтому вычитаем speed_bonus.
     score = avg + (jitter * 5) + tier_penalty + special_penalty + history_bonus - speed_bonus + udp_bonus
     
     f['latency'] = int(avg)
@@ -570,7 +572,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    limit = 20
+    limit = 25 # Увеличили выборку для точности
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:limit]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
@@ -658,7 +660,7 @@ def fetch_fresh_github_links(max_repos=100):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V96 (HARD FILTER EDITION) ---")
+    print("--- ЗАПУСК V97 (GERMAN POWER) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
