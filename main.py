@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V100: NEIGHBOR SUPREMACY & QUOTAS ---
+# --- V102: RUSSIAN NAMING EDITION ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -65,38 +65,30 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
-MAX_WORKERS_SCAN = 60    
-MAX_WORKERS_CUP = 15     
-TIMEOUT = 1.0            
-REAL_TEST_TIMEOUT = 10.0 
-SPEED_TEST_TIMEOUT = 7.0 
+MAX_WORKERS_SCAN = 80    
+MAX_WORKERS_CUP = 20     
+TIMEOUT = 0.8            
+REAL_TEST_TIMEOUT = 8.0 
+SPEED_TEST_TIMEOUT = 6.0 
 
-# --- КВОТЫ СТРАН ---
-# Скрипт БУДЕТ искать именно эти страны.
-PRIORITY_COUNTRIES = ['FI', 'EE', 'SE', 'NO', 'LT', 'LV']
+# --- ПАРАМЕТРЫ ОТБОРА ---
+MIN_SPEED_GOD = 15.0     
+MIN_SPEED_STABLE = 1.0   
+MIN_SPEED_RU = 1.0       
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
 HISTORY_FILE = 'history.json' 
 
 TIMEZONE_OFFSET = 3 
-UPDATE_INTERVAL_HOURS = 1
 CACHE_TTL_HOURS = 4      
 MAX_FAILURES = 2         
-
-PING_BASE_MS = {
-    'RU': 90, 'FI': 35, 'EE': 40, 'SE': 45, 'NO': 50, 'LV': 40, 'LT': 40, 
-    'DE': 60, 'NL': 65, 'FR': 70, 'PL': 55, 'US': 160, 'GB': 75 
-}
 
 RUS_NAMES = {
     'US': 'США', 'DE': 'Германия', 'NL': 'Нидерланды', 'FI': 'Финляндия', 
     'RU': 'Россия', 'TR': 'Турция', 'GB': 'Великобритания', 'FR': 'Франция', 
-    'SE': 'Швеция', 'CA': 'Канада', 'PL': 'Польша', 'UA': 'Украина',
-    'KZ': 'Казахстан', 'BY': 'Беларусь', 'EE': 'Эстония', 'LV': 'Латвия', 
-    'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур', 'BG': 'Болгария',
-    'CZ': 'Чехия', 'RO': 'Румыния', 'IT': 'Италия', 'ES': 'Испания',
-    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
+    'SE': 'Швеция', 'PL': 'Польша', 'EE': 'Эстония', 'LV': 'Латвия', 
+    'LT': 'Литва', 'NO': 'Норвегия'
 }
 
 BLACKLIST_COUNTRIES = ['CN', 'IR', 'KP'] 
@@ -125,7 +117,6 @@ def save_history():
     try:
         with open(HISTORY_FILE, 'w') as f:
             json.dump(clean_history, f)
-        print("💾 История очищена и сохранена.")
     except: pass
 
 def update_history(ip, port, is_alive):
@@ -140,13 +131,9 @@ def update_history(ip, port, is_alive):
     current['ts'] = time.time()
     server_history[key] = current
 
-def get_history_bonus(ip, port):
+def get_streak(ip, port):
     key = f"{ip}:{port}"
-    rec = server_history.get(key)
-    if not rec: return 0
-    if rec.get('success_streak', 0) > 0:
-        return -50 * min(rec['success_streak'], 10) 
-    return 0
+    return server_history.get(key, {}).get('success_streak', 0)
 
 def should_check_server(ip, port):
     key = f"{ip}:{port}"
@@ -220,10 +207,7 @@ def parse_config_info(config_str, source_type):
                 "original_remark": unquote(remark).strip(), "latency": 9999, "jitter": 0,
                 "final_score": 9999, "info": {}, "speed_mbps": 0.0,
                 "transport": "udp", "security": "tls",
-                "is_reality": False, "is_vision": False, "is_pure": False, 
-                "is_hy2": True, "is_ss": False,
-                "source_type": source_type, "tier_rank": 99,
-                "parsed_params": params, "sni": sni
+                "is_reality": False, "source_type": source_type, "parsed_params": params, "sni": sni, "is_hy2": True
             }
 
         if config_str.startswith("vless://"):
@@ -234,7 +218,6 @@ def parse_config_info(config_str, source_type):
                 params = parse_qs(query)
                 transport = params.get('type', ['tcp'])[0].lower()
                 security = params.get('security', ['none'])[0].lower()
-                flow_val = params.get('flow', [''])[0].lower()
                 is_reality = (security == 'reality')
                 if is_reality:
                     pbk = params.get('pbk', [''])[0]
@@ -242,8 +225,6 @@ def parse_config_info(config_str, source_type):
                     sni = params.get('sni', [''])[0]
                     if sni == host: return None 
                 
-                is_vision = ('vision' in flow_val)
-                is_pure = (security == 'none' or security == 'tls') and not is_reality
                 _uuid = config_str.split("@")[0].replace("vless://", "")
                 original_remark = "Unknown"
                 if "#" in config_str: original_remark = unquote(config_str.split("#")[-1]).strip()
@@ -254,9 +235,9 @@ def parse_config_info(config_str, source_type):
                     "final_score": 9999, "info": {},
                     "speed_mbps": 0.0,
                     "transport": transport, "security": security,
-                    "is_reality": is_reality, "is_vision": is_vision, "is_pure": is_pure, 
-                    "is_hy2": False, "is_ss": False,
-                    "source_type": source_type, "tier_rank": 99,
+                    "is_reality": is_reality,
+                    "is_hy2": False,
+                    "source_type": source_type,
                     "parsed_params": params
                 }
     except: pass
@@ -278,39 +259,18 @@ def generate_xray_config(server, local_port):
     try:
         if server.get('is_hy2'):
             outbound_settings = {
-                "vnext": [{
-                    "address": server['ip'],
-                    "port": int(server['port']),
-                    "users": [{"password": server['uuid']}]
-                }]
+                "vnext": [{"address": server['ip'], "port": int(server['port']), "users": [{"password": server['uuid']}]}]
             }
             stream_settings = {
-                "network": "udp",
-                "security": "tls",
-                "tlsSettings": {
-                    "serverName": server.get('sni', ''),
-                    "allowInsecure": True
-                }
+                "network": "udp", "security": "tls", "tlsSettings": {"serverName": server.get('sni', ''), "allowInsecure": True}
             }
             protocol = "hysteria2"
         else:
             params = server['parsed_params']
             user_obj = { "id": server['uuid'], "encryption": "none" }
-            if params.get('flow', [''])[0]:
-                user_obj["flow"] = params.get('flow', [''])[0]
-
-            outbound_settings = {
-                "vnext": [{
-                    "address": server['ip'],
-                    "port": int(server['port']),
-                    "users": [user_obj]
-                }]
-            }
-
-            stream_settings = {
-                "network": server['transport'],
-                "security": server['security']
-            }
+            if params.get('flow', [''])[0]: user_obj["flow"] = params.get('flow', [''])[0]
+            outbound_settings = { "vnext": [{"address": server['ip'], "port": int(server['port']), "users": [user_obj]}] }
+            stream_settings = { "network": server['transport'], "security": server['security'] }
 
             if server['transport'] == 'ws':
                 ws_settings = {"path": params.get('path', ['/'])[0]}
@@ -322,43 +282,23 @@ def generate_xray_config(server, local_port):
                 if service_name: stream_settings["grpcSettings"] = {"serviceName": service_name}
 
             if server['security'] == 'tls':
-                tls_settings = { "serverName": params.get('sni', [''])[0], "allowInsecure": False }
-                fp = params.get('fp', ['chrome'])[0]
-                tls_settings["fingerprint"] = fp
+                tls_settings = { "serverName": params.get('sni', [''])[0], "allowInsecure": False, "fingerprint": params.get('fp', ['chrome'])[0] }
                 stream_settings["tlsSettings"] = tls_settings
             elif server['security'] == 'reality':
                 reality_settings = {
-                    "show": False,
-                    "fingerprint": params.get('fp', ['chrome'])[0],
-                    "serverName": params.get('sni', [''])[0],
-                    "publicKey": params.get('pbk', [''])[0],
-                    "shortId": params.get('sid', [''])[0],
-                    "spiderX": params.get('spx', ['/'])[0]
+                    "show": False, "fingerprint": params.get('fp', ['chrome'])[0], "serverName": params.get('sni', [''])[0],
+                    "publicKey": params.get('pbk', [''])[0], "shortId": params.get('sid', [''])[0], "spiderX": params.get('spx', ['/'])[0]
                 }
                 stream_settings["realitySettings"] = reality_settings
             protocol = "vless"
 
         config = {
             "log": {"loglevel": "error"},
-            "inbounds": [{
-                "port": local_port,
-                "listen": "127.0.0.1",
-                "protocol": "socks",
-                "settings": {
-                    "udp": True,
-                    "auth": "noauth"
-                }
-            }],
-            "outbounds": [{
-                "tag": "proxy",
-                "protocol": protocol,
-                "settings": outbound_settings,
-                "streamSettings": stream_settings
-            }]
+            "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True, "auth": "noauth"}}],
+            "outbounds": [{"tag": "proxy", "protocol": protocol, "settings": outbound_settings, "streamSettings": stream_settings}]
         }
         return config
-    except Exception as e:
-        return None
+    except: return None
 
 def measure_speed(local_port):
     url = "https://dl.google.com/dl/android/studio/install/3.4.1.0/android-studio-ide-183.5522156-windows.exe"
@@ -373,27 +313,21 @@ def measure_speed(local_port):
                 if total_bytes > 2 * 1024 * 1024: break 
             duration = time.time() - start_time
             if duration <= 0: duration = 0.1
-            speed_mbps = (total_bytes * 8) / (duration * 1_000_000)
-            return round(speed_mbps, 2)
-    except:
-        return 0.0
+            return round((total_bytes * 8) / (duration * 1_000_000), 2)
+    except: return 0.0
 
 def check_udp_dns(local_port):
-    if not socks: return False, 0.0 
+    if not socks: return False
     try:
         s = socks.socksocket(socket.AF_INET, socket.SOCK_DGRAM)
         s.set_proxy(socks.SOCKS5, "127.0.0.1", local_port)
         s.settimeout(3.0)
         dns_query = binascii.unhexlify("aaaa0100000100000000000006676f6f676c6503636f6d0000010001")
-        start = time.perf_counter()
         s.sendto(dns_query, ("8.8.8.8", 53))
         data, addr = s.recvfrom(1024)
-        end = time.perf_counter()
         s.close()
-        if data and len(data) > 10:
-            return True, (end - start) * 1000
-    except: pass
-    return False, 0.0
+        return True
+    except: return False
 
 def check_real_connection(server):
     local_port = random.randint(10000, 60000)
@@ -410,32 +344,23 @@ def check_real_connection(server):
     udp_success = False
 
     try:
-        xray_process = subprocess.Popen(
-            [XRAY_BIN, "-config", config_path],
-            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE     
-        )
-        time.sleep(1.5) 
+        xray_process = subprocess.Popen([XRAY_BIN, "-config", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        time.sleep(1.0) # Быстрый старт
         if xray_process.poll() is not None: raise Exception("Xray died")
 
         proxies = { 'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}' }
-        target_url = "https://www.google.com/generate_204"
-        
         start_time = time.perf_counter()
-        resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=False)
+        resp = requests.get("https://www.google.com/generate_204", proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=False)
         end_time = time.perf_counter()
         
-        if resp.status_code == 204 or (200 <= resp.status_code < 300):
+        if 200 <= resp.status_code < 300:
             result_latency = (end_time - start_time) * 1000
-            udp_success, udp_ping = check_udp_dns(local_port)
-            if result_latency < 3000:
-                 result_speed = measure_speed(local_port)
+            udp_success = check_udp_dns(local_port)
+            result_speed = measure_speed(local_port)
             update_history(server['ip'], server['port'], True)
         else:
-            result_latency = None
             update_history(server['ip'], server['port'], False)
-
-    except Exception:
-        result_latency = None
+    except:
         update_history(server['ip'], server['port'], False)
     finally:
         if xray_process:
@@ -446,177 +371,58 @@ def check_real_connection(server):
 
     return result_latency, result_speed, udp_success
 
-def calculate_tier_rank(country_code, latency=0):
-    if country_code in PRIORITY_COUNTRIES:
-        # Соседи всегда Tier 1, НО
-        # Если пинг > 200, то штраф
-        if latency > 200: return 2
-        return 1
-    return 3
-
 def check_server_initial(server):
     if not should_check_server(server['ip'], server['port']): return None 
-
-    is_warp = False
-    rem = server['original_remark'].lower()
-    if 'warp' in rem or 'cloudflare' in rem: is_warp = True
-    if server['transport'] in ['ws', 'grpc']: is_warp = True 
     
-    if server['source_type'] == 'whitelist': server['category'] = 'WHITELIST'
-    elif is_warp: server['category'] = 'WARP'
-    else: server['category'] = 'UNIVERSAL'
+    code = get_ip_country_local(server['ip'])
+    if code in BLACKLIST_COUNTRIES: return None
 
     p = tcp_ping(server['ip'], server['port'])
-    if p is None and server.get('is_hy2'): p = 50 
-    elif p is None: 
+    if p is None: 
         update_history(server['ip'], server['port'], False)
         return None
         
     server['latency'] = int(p)
-    code = get_ip_country_local(server['ip'])
-    
-    if code in BLACKLIST_COUNTRIES:
-        update_history(server['ip'], server['port'], False)
-        return None
-
     server['info'] = {'countryCode': code}
-    server['tier_rank'] = 3
+    server['streak'] = get_streak(server['ip'], server['port'])
     return server
 
-def stress_test_server(server):
-    pings = []
-    for i in range(3):
-        p = tcp_ping(server['ip'], server['port'])
-        if p is None and server.get('is_hy2'): p = 50 
-        elif p is None: return 9999, 9999
-        if p is not None: pings.append(p)
-        time.sleep(0.1) 
-    if len(pings) < 2: return 9999, 9999
-    return statistics.mean(pings), statistics.stdev(pings)
+def check_full_server(server):
+    lat, speed, udp = check_real_connection(server)
+    if lat is None: return None
+    server['real_latency'] = lat
+    server['speed_mbps'] = speed
+    server['udp_enabled'] = udp
+    
+    # Визуальный пинг (коррекция для VPS)
+    display_ping = lat
+    if server['info']['countryCode'] in ['DE', 'NL', 'GB', 'FR']:
+        display_ping += 35
+    server['display_ping'] = int(display_ping)
+    
+    return server
 
-def check_single_candidate(f, mode):
-    real_lat, real_speed, udp_ok = check_real_connection(f)
-    
-    if real_lat is None: return None
-    
-    # --- DYNAMIC SPEED THRESHOLD ---
-    # Для Соседей порог ниже (чтобы они вообще попали)
-    min_speed = 0.5 
-    if f['info']['countryCode'] not in PRIORITY_COUNTRIES:
-        min_speed = 15.0 # Для Германии/Остальных нужна ВЫСОКАЯ скорость
-        
-    if real_speed < min_speed:
-        update_history(f['ip'], f['port'], False) 
-        return None
-        
-    if real_lat > 600: return None # Мертвые пинги
-
-    avg, jitter = stress_test_server(f)
-    f['tier_rank'] = calculate_tier_rank(f['info']['countryCode'], avg)
-
-    # --- SCORE CALCULATION ---
-    # Огромный бонус соседям (Гарантия победы в сортировке)
-    tier_bonus = 0
-    if f['tier_rank'] == 1:
-        tier_bonus = -1000000 
-    
-    # Виртуальный пинг для Германии (для красоты в логе и баланса)
-    display_ping = avg
-    if f['info']['countryCode'] in ['DE', 'NL', 'GB']:
-        display_ping += 40 
-
-    speed_bonus = real_speed * 10
-    
-    score = display_ping + (jitter * 5) + tier_bonus - speed_bonus
-    
-    f['latency'] = int(avg)
-    f['jitter'] = int(jitter)
-    f['speed_mbps'] = real_speed
-    f['udp_enabled'] = udp_ok
-    f['final_score'] = score
-    return f
-
-def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed"):
-    if not candidates: return []
-    filtered = candidates
-    
-    if mode == "gaming":
-        filtered = [c for c in candidates if (c.get('is_reality') or c.get('is_hy2'))]
-    elif mode == "universal":
-        filtered = [c for c in candidates if (c.get('is_reality') or c.get('is_hy2'))]
-    elif mode == "whitelist":
-        filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
-    elif mode == "warp":
-        filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
-    elif mode == "github_only": 
-        seen_ips = set()
-        unique_candidates = []
-        for c in candidates:
-            if (c.get('is_reality') or c.get('is_hy2')) and c['ip'] not in seen_ips:
-                unique_candidates.append(c)
-                seen_ips.add(c['ip'])
-        filtered = unique_candidates
-
-    if not filtered: return []
-    
-    # Умная предварительная сортировка:
-    # Сначала пробуем Соседей, потом остальных
-    def pre_sort(x):
-        is_neighbor = x['info']['countryCode'] in PRIORITY_COUNTRIES
-        return (not is_neighbor, x['latency'])
-        
-    limit = 35 # Проверяем больше кандидатов
-    semifinalists = sorted(filtered, key=pre_sort)[:limit]
-    
-    print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
-    
-    scored_results = []
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_CUP) as executor:
-        futures = {executor.submit(check_single_candidate, f, mode): f for f in semifinalists}
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                res = future.result()
-                if res:
-                    scored_results.append(res)
-                    proto_info = "Hy2" if res.get('is_hy2') else ("Reality" if res.get('is_reality') else "TCP")
-                    speed_str = f"{res['speed_mbps']:.1f} Mbps" if res['speed_mbps'] > 0 else "---"
-                    udp_str = "UDP✅" if res['udp_enabled'] else "no udp"
-                    print(f"   ✅ {res['info']['countryCode']:<4} | {proto_info:<7} | {int(res['latency'])}ms | {speed_str:<9} | {udp_str}")
-            except Exception as e: pass
-
-    scored_results.sort(key=lambda x: x['final_score'])
-    
-    # DIVERSITY FILTER (Фильтр разнообразия)
-    # Не пускаем больше 1 сервера от одной страны (кроме соседей)
-    final_selection = []
-    country_counts = {}
-    
-    for s in scored_results:
-        if len(final_selection) >= winners_needed: break
-        
+def get_best_candidates(servers, limit=100):
+    # Сортировка для очереди на проверку:
+    # 1. Приоритет соседям и Германии
+    # 2. Меньше TCP пинг
+    def sort_key(s):
         cc = s['info']['countryCode']
-        # Соседей берем сколько угодно (но в рамках winners_needed)
-        # А вот Германию/Остальных - по 1 шт макс.
-        if cc not in PRIORITY_COUNTRIES:
-            if country_counts.get(cc, 0) >= 1:
-                continue
-                
-        final_selection.append(s)
-        country_counts[cc] = country_counts.get(cc, 0) + 1
-        
-    return final_selection
+        prio = 0
+        if cc in ['FI', 'EE', 'SE', 'NO']: prio = -2
+        elif cc in ['DE', 'NL']: prio = -1
+        return (prio, s['latency'])
+    
+    return sorted(servers, key=sort_key)[:limit]
 
 def fetch_telegram_channels():
-    print(f"✈️ Scanning Telegram...")
+    print(f"✈️ Telegram...")
     links = []
     for channel in TELEGRAM_CHANNELS:
         try:
-            url = f"https://t.me/s/{channel}"
-            resp = requests.get(url, timeout=5)
+            resp = requests.get(f"https://t.me/s/{channel}", timeout=5)
             if resp.status_code == 200:
-                found = extract_links(resp.text)
-                for link in found:
+                for link in extract_links(resp.text):
                     p = parse_config_info(link, 'telegram')
                     if p: links.append(p)
         except: pass
@@ -628,187 +434,157 @@ def process_urls(urls, source_type):
         try:
             resp = requests.get(url, timeout=6)
             if resp.status_code == 200:
-                content = resp.text
-                found = extract_links(content)
-                for link in found:
+                for link in extract_links(resp.text):
                     p = parse_config_info(link, source_type)
                     if p: links.append(p)
         except: pass
     return links
 
-def fetch_fresh_github_links(max_repos=100): 
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        print("   ⚠️ GITHUB_TOKEN not found.")
-        return []
-
-    headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
-    date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
-    query = f'vless pushed:>{date_filter} stars:<=50'
-    
-    print(f"🔎 Github Smart Search...")
-    repo_api_url = "https://api.github.com/search/repositories"
-    repo_params = {"q": query, "sort": "updated", "order": "desc", "per_page": max_repos}
-
-    found_files = []
-    try:
-        repo_resp = requests.get(repo_api_url, headers=headers, params=repo_params, timeout=10)
-        if repo_resp.status_code == 200:
-            repos = repo_resp.json().get("items", [])
-            code_api_url = "https://api.github.com/search/code"
-            for repo in repos:
-                full_name = repo.get("full_name")
-                code_params = {"q": f'"vless://" "reality" repo:{full_name}', "per_page": 5}
-                try:
-                    code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
-                    if code_resp.status_code == 200:
-                        files = code_resp.json().get("items", [])
-                        for f in files:
-                            raw_url = f.get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
-                            if raw_url: found_files.append(raw_url)
-                    time.sleep(0.5) 
-                except: pass
-    except: pass
-    return list(set(found_files))
-
 def main():
-    print("--- ЗАПУСК V100 (NEIGHBOR SUPREMACY) ---")
+    print("--- ЗАПУСК V102 (RUSSIAN NAMING) ---")
     load_history()
-    
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
     init_geoip()
     
-    smart_urls = fetch_fresh_github_links(max_repos=100) 
-    
-    all_servers = []
-    
+    # 1. СБОР
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as executor:
-        print(f"🌐 Скачивание источников...")
         f1 = executor.submit(process_urls, GENERAL_URLS, 'static')
         f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         f4 = executor.submit(process_urls, PREMIUM_URLS, 'premium') 
         f_tg = executor.submit(fetch_telegram_channels)
-        f2 = executor.submit(process_urls, smart_urls, 'github')
-        
-        all_servers = f1.result() + f3.result() + f4.result() + f_tg.result() + f2.result()
+        all_servers = f1.result() + f3.result() + f4.result() + f_tg.result()
     
-    unique_servers_map = {}
+    # Дедупликация
+    unique_servers = {}
     for s in all_servers:
-        key = f"{s['ip']}:{s['port']}"
-        if key not in unique_servers_map:
-            unique_servers_map[key] = s
-        else:
-            if s['source_type'] in ['premium', 'github']:
-                unique_servers_map[key] = s
+        unique_servers[f"{s['ip']}:{s['port']}"] = s
+    candidates = list(unique_servers.values())
+    print(f"🔍 Найдено: {len(candidates)}")
 
-    servers_to_check = list(unique_servers_map.values())
-    print(f"🔍 Всего ссылок: {len(all_servers)}. Уникальных серверов: {len(servers_to_check)}")
-    
-    working_servers = []
+    # 2. ПИНГ ТЕСТ
+    alive_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as executor:
-        futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
+        futures = [executor.submit(check_server_initial, s) for s in candidates]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
-            if res: working_servers.append(res)
-
-    b_white = [s for s in working_servers if s['category'] == 'WHITELIST']
-    b_univ = [s for s in working_servers if s['category'] == 'UNIVERSAL']
-    b_warp = [s for s in working_servers if s['category'] == 'WARP']
+            if res: alive_servers.append(res)
+            
+    print(f"⚡ Живых TCP: {len(alive_servers)}")
     
-    fresh_sources = set()
-    for s in smart_urls: fresh_sources.add(s)
+    # 3. РАЗДЕЛЕНИЕ НА ГРУППЫ
+    ru_candidates = [s for s in alive_servers if s['info']['countryCode'] == 'RU']
+    global_candidates = [s for s in alive_servers if s['info']['countryCode'] != 'RU']
     
-    b_fresh = [
-        s for s in working_servers 
-        if (s['source_type'] == 'github' or s['source_type'] == 'premium') and s['category'] != 'WHITELIST'
-    ]
-
-    final_list = []
+    # Берем топ-50 глобальных и топ-10 RU для детальной проверки
+    top_global = get_best_candidates(global_candidates, 50)
+    top_ru = sorted(ru_candidates, key=lambda x: x['latency'])[:15]
+    
+    full_check_list = top_global + top_ru
+    verified_servers = []
+    
+    print(f"🧪 Глубокая проверка {len(full_check_list)} серверов...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_CUP) as executor:
+        futures = {executor.submit(check_full_server, s): s for s in full_check_list}
+        for future in concurrent.futures.as_completed(futures):
+            res = future.result()
+            if res: verified_servers.append(res)
+            
+    # 4. ФИНАЛЬНЫЙ ОТБОР
+    final_4 = []
     used_ips = []
     
-    # Сначала пытаемся найти соседей в Fresh
-    if b_fresh:
-        # Для Fresh квота 2. Пытаемся найти 2 разных соседей.
-        github_winners = run_tournament(b_fresh, 2, "FRESH CUP", "github_only")
-        for g in github_winners:
-            g['category'] = 'Fresh Tier 1' 
-            used_ips.append(g['ip'])
-            final_list.append(g)
-
-    b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
-    game_winners = run_tournament(b_univ_filtered, 2, "GAME CUP (UDP)", "gaming")
-    for g in game_winners:
-        g['category'] = 'Game Server'
-        used_ips.append(g['ip'])
-        final_list.append(g)
+    verified_ru = [s for s in verified_servers if s['info']['countryCode'] == 'RU']
+    verified_global = [s for s in verified_servers if s['info']['countryCode'] != 'RU']
     
-    b_univ_filtered_2 = [s for s in b_univ_filtered if s['ip'] not in used_ips]
-    final_list.extend(run_tournament(b_univ_filtered_2, 3, "UNIVERSAL CUP", "universal"))
+    # --- 1. ОСНОВНОЙ (GOD MODE) ---
+    god_candidates = sorted(
+        [s for s in verified_global if s['speed_mbps'] > MIN_SPEED_GOD and s['udp_enabled']],
+        key=lambda x: x['speed_mbps'], reverse=True
+    )
     
-    final_list.extend(run_tournament(b_warp, 2, "WARP CUP", "warp"))
-    final_list.extend(run_tournament(b_white, 2, "WHITELIST CUP", "whitelist"))
-
-    utc_now = datetime.now(timezone.utc)
-    msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
-    next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
-    
-    time_str = msk_now.strftime('%H:%M')
-    next_str = next_update.strftime('%H:%M')
-    
-    update_msg = f"📅 Обновлено: {time_str} (МСК) | След. обновление: {next_str}"
-    info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
-    
-    result_links = [info_link]
-    json_data = {"updated_at": time_str, "next_update": next_str, "servers": []}
-
-    print("\n🏆 --- FINAL SELECTION ---")
-    for s in final_list:
-        code = s['info'].get('countryCode', 'XX')
-        flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
-        country_full = RUS_NAMES.get(code, code)
+    server_god = None
+    if god_candidates:
+        server_god = god_candidates[0]
+        used_ips.append(server_god['ip'])
         
-        base_ping = PING_BASE_MS.get(code, 120)
-        calc_ping = base_ping + s['jitter']
-        if s.get('is_hy2'): calc_ping = int(calc_ping * 0.8) 
-        if calc_ping < 10: calc_ping = 15
+        msk_time = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%H:%M')
+        flag = "".join([chr(127397 + ord(c)) for c in server_god['info']['countryCode'].upper()])
         
-        # Визуальная коррекция для Германии/Нидерландов, чтобы не смущать пользователя "1ms"
-        if code in ['DE', 'NL', 'GB', 'FR']:
-             calc_ping += 30
-
-        icon = "⚡"
-        if 'Fresh' in s['category']: icon = "🔥"
-        elif s['category'] == 'Game Server': icon = "🎮" 
-        elif s['category'] == 'WHITELIST': icon = "⚪"
-        elif s['category'] == 'WARP': icon = "🌀"
+        # ФОРМАТ: ОСНОВНОЙ 🇩🇪 (Обн. 14:30)
+        server_god['final_name'] = f"ОСНОВНОЙ {flag} (Обн. {msk_time})"
+        final_4.append(server_god)
+    
+    # --- 2. ЗАПАСНОЙ ---
+    backup_candidates = sorted(
+        [s for s in verified_global if s['ip'] not in used_ips and s['speed_mbps'] > 5.0],
+        key=lambda x: (x['udp_enabled'], x['speed_mbps']), reverse=True
+    )
+    
+    if backup_candidates:
+        server_backup = backup_candidates[0]
+        used_ips.append(server_backup['ip'])
+        flag = "".join([chr(127397 + ord(c)) for c in server_backup['info']['countryCode'].upper()])
         
-        tech_tag = " [H2]" if s.get('is_hy2') else ""
+        # ФОРМАТ: ЗАПАСНОЙ 🇳🇱
+        server_backup['final_name'] = f"ЗАПАСНОЙ {flag}"
+        final_4.append(server_backup)
         
-        name = f"{icon} {flag} {country_full}{tech_tag} | {calc_ping}ms"
+    # --- 3. РЕЗЕРВНЫЙ (Стабильность) ---
+    stable_candidates = sorted(
+        [s for s in verified_global if s['ip'] not in used_ips and s['speed_mbps'] > MIN_SPEED_STABLE],
+        key=lambda x: (x['streak'], x['speed_mbps']), reverse=True
+    )
+    
+    if stable_candidates:
+        server_stable = stable_candidates[0]
+        used_ips.append(server_stable['ip'])
+        flag = "".join([chr(127397 + ord(c)) for c in server_stable['info']['countryCode'].upper()])
+        
+        # ФОРМАТ: РЕЗЕРВНЫЙ 🇫🇮
+        server_stable['final_name'] = f"РЕЗЕРВНЫЙ {flag}"
+        final_4.append(server_stable)
+        
+    # --- 4. WHITELIST (RU) ---
+    ru_final = sorted(
+        [s for s in verified_ru if s['speed_mbps'] > MIN_SPEED_RU],
+        key=lambda x: x['speed_mbps'], reverse=True
+    )
+    
+    if ru_final:
+        server_ru = ru_final[0]
+        flag = "".join([chr(127397 + ord(c)) for c in server_ru['info']['countryCode'].upper()])
+        
+        # ФОРМАТ: WHITELIST 🇷🇺
+        server_ru['final_name'] = f"WHITELIST {flag}"
+        final_4.append(server_ru)
 
-        print(f"   🌟 {name} | IP: {s['ip']}")
-
+    # ЗАПИСЬ
+    result_links = []
+    json_data = {"servers": []}
+    
+    print("\n🏆 --- THE CHOSEN FOUR ---")
+    for s in final_4:
+        print(f"   🌟 {s['final_name']} ({s['ip']})")
         base = s['original'].split('#')[0]
-        final_link = f"{base}#{quote(name)}"
-        result_links.append(final_link)
+        link = f"{base}#{quote(s['final_name'])}"
+        result_links.append(link)
         
         json_data["servers"].append({
-            "name": name, "category": s['category'], "country": country_full, "iso": code,
-            "flag": flag, "ping": calc_ping, "speed": s['speed_mbps'], "ip": s['ip'],
-            "port": s['port'], "protocol": "HY2" if s.get('is_hy2') else s['transport'].upper(), 
-            "type": "Hysteria2" if s.get('is_hy2') else (s.get('is_reality') and "Reality" or "VLESS"),
-            "udp": s.get('udp_enabled', False)
+            "name": s['final_name'],
+            "ip": s['ip'],
+            "country": s['info']['countryCode'],
+            "speed": s['speed_mbps']
         })
 
     with open(OUTPUT_FILE, 'w') as f:
         f.write(base64.b64encode("\n".join(result_links).encode('utf-8')).decode('utf-8'))
-        
+    
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-    save_history() 
-    print(f"\nDONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
+    save_history()
+    print("DONE.")
 
 if __name__ == "__main__":
     main()
