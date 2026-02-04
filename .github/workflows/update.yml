@@ -2,12 +2,12 @@ name: Update VPN Configs
 
 on:
   schedule:
-    - cron: '0 * * * *'
-  workflow_dispatch:
+    - cron: '0 * * * *'  # Запуск каждый час
+  workflow_dispatch:      # Возможность запуска вручную
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # ВАЖНО: Запуск на твоем VPS
     permissions:
       contents: write
 
@@ -28,6 +28,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests geoip2 PySocks
 
+      - name: Update Xray Core
+        run: |
+          # Скачиваем свежее ядро Xray для поддержки новых протоколов
+          echo "⬇️ Updating Xray Core..."
+          wget -q -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+          unzip -o -q xray.zip xray geoip.dat geosite.dat
+          rm xray.zip
+          chmod +x xray
+          ./xray -version
+
       - name: Run VPN Parser Script
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
@@ -38,6 +48,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
+          # Добавляем файлы, включая историю (важно для удаления мертвых серверов)
           git add FL1PVPN stats.json history.json
           
           if git diff --staged --quiet; then
@@ -45,7 +56,7 @@ jobs:
           else
             git commit -m "🚀 Auto-update: $(date -u)"
             
-            # --- FIX: Забираем изменения с удаленного сервера перед отправкой ---
+            # Забираем изменения с сервера, чтобы избежать конфликтов
             git pull --rebase origin main
             
             git push
