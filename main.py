@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V104: MASSIVE SCALE (2000+ CHECKS) ---
+# --- V105: ANTI-CRASH MASSIVE EDITION ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -64,9 +64,10 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- НАСТРОЙКИ (АГРЕССИВНЫЕ) ---
-MAX_WORKERS_SCAN = 100   # Быстро скачиваем и пингуем
-MAX_WORKERS_CUP = 100    # 100 потоков для Xray (VPS выдержит)
+# --- НАСТРОЙКИ (БЕЗОПАСНЫЕ) ---
+# Снижаем нагрузку, чтобы не вылетать по памяти (OOM Killer)
+MAX_WORKERS_SCAN = 60    # Скачивание легкое, оставляем 60
+MAX_WORKERS_CUP = 15     # ВАЖНО: Только 15 одновременных проверок Xray (вместо 100)
 TIMEOUT = 0.8            
 REAL_TEST_TIMEOUT = 10.0 
 SPEED_TEST_TIMEOUT = 7.0 
@@ -394,7 +395,6 @@ def check_full_server(server):
     server['speed_mbps'] = speed
     server['udp_enabled'] = udp
     
-    # Визуальный пинг (коррекция для VPS)
     display_ping = lat
     if server['info']['countryCode'] in ['DE', 'NL', 'GB', 'FR']:
         display_ping += 35
@@ -403,14 +403,12 @@ def check_full_server(server):
     return server
 
 def get_best_candidates(servers, limit=100):
-    # Сортировка: Сначала Соседи/DE/NL, потом остальные, по пингу
     def sort_key(s):
         cc = s['info']['countryCode']
         prio = 0
         if cc in ['FI', 'EE', 'SE', 'NO']: prio = -2
         elif cc in ['DE', 'NL']: prio = -1
         return (prio, s['latency'])
-    
     return sorted(servers, key=sort_key)[:limit]
 
 def fetch_telegram_channels():
@@ -439,7 +437,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V104 (MASSIVE SCALE) ---")
+    print("--- ЗАПУСК V105 (ANTI-CRASH) ---")
     load_history()
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
@@ -459,7 +457,7 @@ def main():
     candidates = list(unique_servers.values())
     print(f"🔍 Найдено: {len(candidates)}")
 
-    # 2. ПИНГ ТЕСТ (ОТБОР ЖИВЫХ)
+    # 2. ПИНГ ТЕСТ
     alive_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as executor:
         futures = [executor.submit(check_server_initial, s) for s in candidates]
@@ -469,19 +467,19 @@ def main():
             
     print(f"⚡ Живых TCP: {len(alive_servers)}")
     
-    # 3. ОТБОР КАНДИДАТОВ НА ГЛУБОКУЮ ПРОВЕРКУ
+    # 3. ОТБОР КАНДИДАТОВ
     ru_candidates = [s for s in alive_servers if s['info']['countryCode'] == 'RU']
     global_candidates = [s for s in alive_servers if s['info']['countryCode'] != 'RU']
     
-    # --- MASSIVE SCALE CHANGE ---
-    # Берем 2000 лучших глобальных и ВСЕ русские
-    top_global = get_best_candidates(global_candidates, 2000)
-    top_ru = ru_candidates # Проверяем ВСЕХ живых русских, чтобы точно найти вайтлист
+    # Берем 1500 (безопасное число) вместо 2000
+    top_global = get_best_candidates(global_candidates, 1500)
+    top_ru = ru_candidates # Все RU
     
     full_check_list = top_global + top_ru
     verified_servers = []
     
     print(f"🧪 Глубокая проверка {len(full_check_list)} серверов...")
+    # ТУТ ГЛАВНОЕ ИЗМЕНЕНИЕ: max_workers=MAX_WORKERS_CUP (15)
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_CUP) as executor:
         futures = {executor.submit(check_full_server, s): s for s in full_check_list}
         for future in concurrent.futures.as_completed(futures):
@@ -497,30 +495,28 @@ def main():
     verified_ru = [s for s in verified_servers if s['info']['countryCode'] == 'RU']
     verified_global = [s for s in verified_servers if s['info']['countryCode'] != 'RU']
     
-    # --- 1. ОСНОВНОЙ (GOD MODE) ---
+    # --- 1. ОСНОВНОЙ ---
     god_candidates = sorted(
         [s for s in verified_global if s['speed_mbps'] > MIN_SPEED_GOD and s['udp_enabled']],
         key=lambda x: x['speed_mbps'], reverse=True
     )
-    
-    if not god_candidates: # Fallback
+    if not god_candidates:
          god_candidates = sorted(verified_global, key=lambda x: x['speed_mbps'], reverse=True)
 
     if god_candidates:
         server_god = god_candidates[0]
         used_ips.append(server_god['ip'])
-        
         msk_time = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%H:%M')
         flag = "".join([chr(127397 + ord(c)) for c in server_god['info']['countryCode'].upper()])
         server_god['final_name'] = f"ОСНОВНОЙ {flag} (Обн. {msk_time})"
         final_4.append(server_god)
     
-    # --- 2. ЗАПАСНОЙ (BACKUP) ---
+    # --- 2. ЗАПАСНОЙ ---
     backup_candidates = sorted(
         [s for s in verified_global if s['ip'] not in used_ips and s['speed_mbps'] > MIN_SPEED_BACKUP],
         key=lambda x: x['speed_mbps'], reverse=True
     )
-    if not backup_candidates: # Fallback
+    if not backup_candidates:
         backup_candidates = sorted(
              [s for s in verified_global if s['ip'] not in used_ips],
              key=lambda x: x['speed_mbps'], reverse=True
@@ -533,7 +529,7 @@ def main():
         server_backup['final_name'] = f"ЗАПАСНОЙ {flag}"
         final_4.append(server_backup)
         
-    # --- 3. РЕЗЕРВНЫЙ (STABILITY) ---
+    # --- 3. РЕЗЕРВНЫЙ ---
     stable_candidates = sorted(
         [s for s in verified_global if s['ip'] not in used_ips],
         key=lambda x: (x['streak'], x['speed_mbps']), reverse=True
@@ -546,12 +542,12 @@ def main():
         server_stable['final_name'] = f"РЕЗЕРВНЫЙ {flag}"
         final_4.append(server_stable)
         
-    # --- 4. WHITELIST (RU) ---
+    # --- 4. WHITELIST ---
     ru_final = sorted(
         [s for s in verified_ru if s['speed_mbps'] > MIN_SPEED_RU],
         key=lambda x: x['speed_mbps'], reverse=True
     )
-    if not ru_final: # Fallback
+    if not ru_final:
          ru_final = sorted(verified_ru, key=lambda x: x['speed_mbps'], reverse=True)
     
     if ru_final:
