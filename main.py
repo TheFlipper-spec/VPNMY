@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V95: COMPACT ELITE EDITION ---
+# --- V96: HARD FILTER EDITION (NO DEAD SERVERS) ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -64,19 +64,23 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- НАСТРОЙКИ (Оптимизировано для VPS Ubuntu 22) ---
-MAX_WORKERS_SCAN = 60    # Безопасно для стабильности
-MAX_WORKERS_CUP = 15     # Для финальных тестов
+# --- НАСТРОЙКИ ---
+MAX_WORKERS_SCAN = 60    
+MAX_WORKERS_CUP = 15     
 TIMEOUT = 1.0            
-REAL_TEST_TIMEOUT = 8.0 
-SPEED_TEST_TIMEOUT = 6.0 
+REAL_TEST_TIMEOUT = 10.0 # Даем чуть больше времени на честный тест
+SPEED_TEST_TIMEOUT = 7.0 
 
-# --- НОВЫЕ КВОТЫ (COMPACT) ---
-TARGET_GITHUB = 2     # Fresh
-TARGET_GAME = 2       # Game
-TARGET_UNIVERSAL = 3  # Universal
-TARGET_WARP = 2       # WARP
-TARGET_WHITELIST = 2  # Whitelist
+# --- КВОТЫ (Elite) ---
+TARGET_GITHUB = 2     
+TARGET_GAME = 2       
+TARGET_UNIVERSAL = 3  
+TARGET_WARP = 2       
+TARGET_WHITELIST = 2  
+
+# --- ЖЕСТКИЕ ЛИМИТЫ (Новое) ---
+MIN_SPEED_MBPS = 0.5     # Если скорость ниже 0.5 Мбит — сервер удаляется
+MAX_LATENCY_MS = 800     # Если пинг выше 800 мс — сервер удаляется
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -500,6 +504,16 @@ def check_single_candidate(f, mode):
     real_lat, real_speed, udp_ok = check_real_connection(f)
     
     if real_lat is None: return None
+    
+    # --- HARD FILTER FIX ---
+    # Если скорость меньше порога (0.5 Mbps), считаем сервер мертвым
+    if real_speed < MIN_SPEED_MBPS:
+        update_history(f['ip'], f['port'], False) # Снижаем рейтинг в истории
+        return None
+        
+    # Если задержка слишком большая (даже при рабочей скорости)
+    if real_lat > MAX_LATENCY_MS:
+        return None
 
     avg, jitter = stress_test_server(f)
     
@@ -644,7 +658,7 @@ def fetch_fresh_github_links(max_repos=100):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V95 (COMPACT ELITE) ---")
+    print("--- ЗАПУСК V96 (HARD FILTER EDITION) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
