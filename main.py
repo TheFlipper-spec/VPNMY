@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V102: RUSSIAN NAMING EDITION ---
+# --- V103: RELIABILITY FIX (NO EMPTY SLOTS) ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -66,15 +66,15 @@ XRAY_BIN = "./xray"
 
 # --- НАСТРОЙКИ ---
 MAX_WORKERS_SCAN = 80    
-MAX_WORKERS_CUP = 20     
+MAX_WORKERS_CUP = 30     # Больше потоков для проверки
 TIMEOUT = 0.8            
-REAL_TEST_TIMEOUT = 8.0 
-SPEED_TEST_TIMEOUT = 6.0 
+REAL_TEST_TIMEOUT = 10.0 # Даем больше времени на коннект
+SPEED_TEST_TIMEOUT = 7.0 
 
 # --- ПАРАМЕТРЫ ОТБОРА ---
-MIN_SPEED_GOD = 15.0     
-MIN_SPEED_STABLE = 1.0   
-MIN_SPEED_RU = 1.0       
+MIN_SPEED_GOD = 10.0     # Чуть снизил порог для "Бога", чтобы точно нашелся
+MIN_SPEED_BACKUP = 3.0   
+MIN_SPEED_RU = 0.5       # Для RU главное чтобы работал
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -403,9 +403,7 @@ def check_full_server(server):
     return server
 
 def get_best_candidates(servers, limit=100):
-    # Сортировка для очереди на проверку:
-    # 1. Приоритет соседям и Германии
-    # 2. Меньше TCP пинг
+    # Сортировка: Сначала Соседи/DE/NL, потом остальные, по пингу
     def sort_key(s):
         cc = s['info']['countryCode']
         prio = 0
@@ -441,7 +439,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V102 (RUSSIAN NAMING) ---")
+    print("--- ЗАПУСК V103 (RELIABILITY FIX) ---")
     load_history()
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
@@ -455,14 +453,13 @@ def main():
         f_tg = executor.submit(fetch_telegram_channels)
         all_servers = f1.result() + f3.result() + f4.result() + f_tg.result()
     
-    # Дедупликация
     unique_servers = {}
     for s in all_servers:
         unique_servers[f"{s['ip']}:{s['port']}"] = s
     candidates = list(unique_servers.values())
     print(f"🔍 Найдено: {len(candidates)}")
 
-    # 2. ПИНГ ТЕСТ
+    # 2. ПИНГ ТЕСТ (ОТБОР ЖИВЫХ)
     alive_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as executor:
         futures = [executor.submit(check_server_initial, s) for s in candidates]
@@ -472,13 +469,13 @@ def main():
             
     print(f"⚡ Живых TCP: {len(alive_servers)}")
     
-    # 3. РАЗДЕЛЕНИЕ НА ГРУППЫ
+    # 3. ОТБОР КАНДИДАТОВ НА ГЛУБОКУЮ ПРОВЕРКУ
     ru_candidates = [s for s in alive_servers if s['info']['countryCode'] == 'RU']
     global_candidates = [s for s in alive_servers if s['info']['countryCode'] != 'RU']
     
-    # Берем топ-50 глобальных и топ-10 RU для детальной проверки
-    top_global = get_best_candidates(global_candidates, 50)
-    top_ru = sorted(ru_candidates, key=lambda x: x['latency'])[:15]
+    # РАСШИРЕННАЯ ВЫБОРКА (300 + 50)
+    top_global = get_best_candidates(global_candidates, 300)
+    top_ru = sorted(ru_candidates, key=lambda x: x['latency'])[:50]
     
     full_check_list = top_global + top_ru
     verified_servers = []
@@ -489,6 +486,8 @@ def main():
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
             if res: verified_servers.append(res)
+    
+    print(f"✅ Проверку прошли: {len(verified_servers)}")
             
     # 4. ФИНАЛЬНЫЙ ОТБОР
     final_4 = []
@@ -503,36 +502,41 @@ def main():
         key=lambda x: x['speed_mbps'], reverse=True
     )
     
-    server_god = None
+    if not god_candidates: # Если нет "Бога", берем просто самый быстрый
+         god_candidates = sorted(verified_global, key=lambda x: x['speed_mbps'], reverse=True)
+
     if god_candidates:
         server_god = god_candidates[0]
         used_ips.append(server_god['ip'])
         
         msk_time = (datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%H:%M')
         flag = "".join([chr(127397 + ord(c)) for c in server_god['info']['countryCode'].upper()])
-        
-        # ФОРМАТ: ОСНОВНОЙ 🇩🇪 (Обн. 14:30)
         server_god['final_name'] = f"ОСНОВНОЙ {flag} (Обн. {msk_time})"
         final_4.append(server_god)
     
-    # --- 2. ЗАПАСНОЙ ---
+    # --- 2. ЗАПАСНОЙ (BACKUP) ---
+    # Попытка 1: Хорошая скорость
     backup_candidates = sorted(
-        [s for s in verified_global if s['ip'] not in used_ips and s['speed_mbps'] > 5.0],
-        key=lambda x: (x['udp_enabled'], x['speed_mbps']), reverse=True
+        [s for s in verified_global if s['ip'] not in used_ips and s['speed_mbps'] > MIN_SPEED_BACKUP],
+        key=lambda x: x['speed_mbps'], reverse=True
     )
+    # Попытка 2: Хоть какая-то скорость (Fallback)
+    if not backup_candidates:
+        backup_candidates = sorted(
+             [s for s in verified_global if s['ip'] not in used_ips],
+             key=lambda x: x['speed_mbps'], reverse=True
+        )
     
     if backup_candidates:
         server_backup = backup_candidates[0]
         used_ips.append(server_backup['ip'])
         flag = "".join([chr(127397 + ord(c)) for c in server_backup['info']['countryCode'].upper()])
-        
-        # ФОРМАТ: ЗАПАСНОЙ 🇳🇱
         server_backup['final_name'] = f"ЗАПАСНОЙ {flag}"
         final_4.append(server_backup)
         
-    # --- 3. РЕЗЕРВНЫЙ (Стабильность) ---
+    # --- 3. РЕЗЕРВНЫЙ (STABILITY) ---
     stable_candidates = sorted(
-        [s for s in verified_global if s['ip'] not in used_ips and s['speed_mbps'] > MIN_SPEED_STABLE],
+        [s for s in verified_global if s['ip'] not in used_ips],
         key=lambda x: (x['streak'], x['speed_mbps']), reverse=True
     )
     
@@ -540,8 +544,6 @@ def main():
         server_stable = stable_candidates[0]
         used_ips.append(server_stable['ip'])
         flag = "".join([chr(127397 + ord(c)) for c in server_stable['info']['countryCode'].upper()])
-        
-        # ФОРМАТ: РЕЗЕРВНЫЙ 🇫🇮
         server_stable['final_name'] = f"РЕЗЕРВНЫЙ {flag}"
         final_4.append(server_stable)
         
@@ -550,12 +552,12 @@ def main():
         [s for s in verified_ru if s['speed_mbps'] > MIN_SPEED_RU],
         key=lambda x: x['speed_mbps'], reverse=True
     )
+    if not ru_final: # Fallback
+         ru_final = sorted(verified_ru, key=lambda x: x['speed_mbps'], reverse=True)
     
     if ru_final:
         server_ru = ru_final[0]
         flag = "".join([chr(127397 + ord(c)) for c in server_ru['info']['countryCode'].upper()])
-        
-        # ФОРМАТ: WHITELIST 🇷🇺
         server_ru['final_name'] = f"WHITELIST {flag}"
         final_4.append(server_ru)
 
