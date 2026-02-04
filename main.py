@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V103: RELIABILITY FIX (NO EMPTY SLOTS) ---
+# --- V104: MASSIVE SCALE (2000+ CHECKS) ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -64,17 +64,17 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- НАСТРОЙКИ ---
-MAX_WORKERS_SCAN = 80    
-MAX_WORKERS_CUP = 30     # Больше потоков для проверки
+# --- НАСТРОЙКИ (АГРЕССИВНЫЕ) ---
+MAX_WORKERS_SCAN = 100   # Быстро скачиваем и пингуем
+MAX_WORKERS_CUP = 100    # 100 потоков для Xray (VPS выдержит)
 TIMEOUT = 0.8            
-REAL_TEST_TIMEOUT = 10.0 # Даем больше времени на коннект
+REAL_TEST_TIMEOUT = 10.0 
 SPEED_TEST_TIMEOUT = 7.0 
 
 # --- ПАРАМЕТРЫ ОТБОРА ---
-MIN_SPEED_GOD = 10.0     # Чуть снизил порог для "Бога", чтобы точно нашелся
+MIN_SPEED_GOD = 10.0     
 MIN_SPEED_BACKUP = 3.0   
-MIN_SPEED_RU = 0.5       # Для RU главное чтобы работал
+MIN_SPEED_RU = 0.5       
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -439,7 +439,7 @@ def process_urls(urls, source_type):
     return links
 
 def main():
-    print("--- ЗАПУСК V103 (RELIABILITY FIX) ---")
+    print("--- ЗАПУСК V104 (MASSIVE SCALE) ---")
     load_history()
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
     download_mmdb()
@@ -473,9 +473,10 @@ def main():
     ru_candidates = [s for s in alive_servers if s['info']['countryCode'] == 'RU']
     global_candidates = [s for s in alive_servers if s['info']['countryCode'] != 'RU']
     
-    # РАСШИРЕННАЯ ВЫБОРКА (300 + 50)
-    top_global = get_best_candidates(global_candidates, 300)
-    top_ru = sorted(ru_candidates, key=lambda x: x['latency'])[:50]
+    # --- MASSIVE SCALE CHANGE ---
+    # Берем 2000 лучших глобальных и ВСЕ русские
+    top_global = get_best_candidates(global_candidates, 2000)
+    top_ru = ru_candidates # Проверяем ВСЕХ живых русских, чтобы точно найти вайтлист
     
     full_check_list = top_global + top_ru
     verified_servers = []
@@ -502,7 +503,7 @@ def main():
         key=lambda x: x['speed_mbps'], reverse=True
     )
     
-    if not god_candidates: # Если нет "Бога", берем просто самый быстрый
+    if not god_candidates: # Fallback
          god_candidates = sorted(verified_global, key=lambda x: x['speed_mbps'], reverse=True)
 
     if god_candidates:
@@ -515,13 +516,11 @@ def main():
         final_4.append(server_god)
     
     # --- 2. ЗАПАСНОЙ (BACKUP) ---
-    # Попытка 1: Хорошая скорость
     backup_candidates = sorted(
         [s for s in verified_global if s['ip'] not in used_ips and s['speed_mbps'] > MIN_SPEED_BACKUP],
         key=lambda x: x['speed_mbps'], reverse=True
     )
-    # Попытка 2: Хоть какая-то скорость (Fallback)
-    if not backup_candidates:
+    if not backup_candidates: # Fallback
         backup_candidates = sorted(
              [s for s in verified_global if s['ip'] not in used_ips],
              key=lambda x: x['speed_mbps'], reverse=True
