@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V99: SMART NEIGHBORS (NO BROKEN SERVERS) ---
+# --- V100: NEIGHBOR SUPREMACY & QUOTAS ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -71,17 +71,9 @@ TIMEOUT = 1.0
 REAL_TEST_TIMEOUT = 10.0 
 SPEED_TEST_TIMEOUT = 7.0 
 
-# --- КВОТЫ ---
-TARGET_GITHUB = 2     
-TARGET_GAME = 2       
-TARGET_UNIVERSAL = 3  
-TARGET_WARP = 2       
-TARGET_WHITELIST = 2  
-
-# --- ЖЕСТКИЕ ЛИМИТЫ ---
-MIN_SPEED_MBPS = 3.0     # Скорость ниже 3 Мбит = брак
-MAX_LATENCY_MS = 400     # Пинг выше 400 мс = брак (даже для Финляндии)
-TIER_1_MAX_LATENCY = 100 # Если Финляндия имеет пинг > 100, она теряет статус "Элиты"
+# --- КВОТЫ СТРАН ---
+# Скрипт БУДЕТ искать именно эти страны.
+PRIORITY_COUNTRIES = ['FI', 'EE', 'SE', 'NO', 'LT', 'LV']
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -455,21 +447,11 @@ def check_real_connection(server):
     return result_latency, result_speed, udp_success
 
 def calculate_tier_rank(country_code, latency=0):
-    # Tier 1: Ближние соседи (приоритет)
-    tier1 = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO'] 
-    
-    if country_code in tier1:
-        # ВАЖНАЯ ПРОВЕРКА:
-        # Если "Сосед" имеет высокий пинг (например, > 100мс), 
-        # значит он перегружен или маршрут кривой. Он теряет статус Элиты.
-        if latency > 100:
-            return 3 # Ссылкается в мусорку (Tier 3)
-        return 1 # Реальная элита
-        
-    # Tier 2: Хорошая Европа
-    tier2 = ['DE', 'NL', 'PL', 'FR', 'GB'] 
-    if country_code in tier2: return 2
-    
+    if country_code in PRIORITY_COUNTRIES:
+        # Соседи всегда Tier 1, НО
+        # Если пинг > 200, то штраф
+        if latency > 200: return 2
+        return 1
     return 3
 
 def check_server_initial(server):
@@ -498,8 +480,7 @@ def check_server_initial(server):
         return None
 
     server['info'] = {'countryCode': code}
-    # Пока ставим ранк без учета пинга, уточним позже в финале
-    server['tier_rank'] = 3 
+    server['tier_rank'] = 3
     return server
 
 def stress_test_server(server):
@@ -518,47 +499,35 @@ def check_single_candidate(f, mode):
     
     if real_lat is None: return None
     
-    # --- HARD FILTER ---
-    # Скорость меньше 3 Мбит = брак
-    if real_speed < MIN_SPEED_MBPS:
+    # --- DYNAMIC SPEED THRESHOLD ---
+    # Для Соседей порог ниже (чтобы они вообще попали)
+    min_speed = 0.5 
+    if f['info']['countryCode'] not in PRIORITY_COUNTRIES:
+        min_speed = 15.0 # Для Германии/Остальных нужна ВЫСОКАЯ скорость
+        
+    if real_speed < min_speed:
         update_history(f['ip'], f['port'], False) 
         return None
         
-    # Пинг больше 400 мс = брак (даже если работает)
-    if real_lat > MAX_LATENCY_MS:
-        return None
+    if real_lat > 600: return None # Мертвые пинги
 
     avg, jitter = stress_test_server(f)
-    
-    # --- SMART TIER CALCULATION ---
-    # Пересчитываем ранг с учетом реального пинга
-    current_tier = calculate_tier_rank(f['info']['countryCode'], avg)
-    f['tier_rank'] = current_tier
+    f['tier_rank'] = calculate_tier_rank(f['info']['countryCode'], avg)
 
-    # --- VPS LOCAL PING FIX ---
-    scoring_ping = avg
-    if f['info']['countryCode'] in ['DE', 'NL']:
-        scoring_ping += 40 
+    # --- SCORE CALCULATION ---
+    # Огромный бонус соседям (Гарантия победы в сортировке)
+    tier_bonus = 0
+    if f['tier_rank'] == 1:
+        tier_bonus = -1000000 
+    
+    # Виртуальный пинг для Германии (для красоты в логе и баланса)
+    display_ping = avg
+    if f['info']['countryCode'] in ['DE', 'NL', 'GB']:
+        display_ping += 40 
 
-    tier_penalty = 0
-    if current_tier == 1: tier_penalty = 0       
-    elif current_tier == 2: tier_penalty = 2000 
-    else: tier_penalty = 10000 # Tier 3 (или разжалованный Tier 1) получает огромный штраф
-        
-    special_penalty = 0
-    if mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
+    speed_bonus = real_speed * 10
     
-    udp_bonus = 0
-    if udp_ok: udp_bonus = -300 
-    elif mode == "gaming": special_penalty += 5000 
-    
-    speed_bonus = 0
-    if real_speed > 0:
-        speed_bonus = real_speed * 5 
-    
-    history_bonus = get_history_bonus(f['ip'], f['port'])
-
-    score = scoring_ping + (jitter * 5) + tier_penalty + special_penalty + history_bonus - speed_bonus + udp_bonus
+    score = display_ping + (jitter * 5) + tier_bonus - speed_bonus
     
     f['latency'] = int(avg)
     f['jitter'] = int(jitter)
@@ -584,15 +553,20 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         unique_candidates = []
         for c in candidates:
             if (c.get('is_reality') or c.get('is_hy2')) and c['ip'] not in seen_ips:
-                # В пре-фильтре пускаем всех, разберемся в финале
                 unique_candidates.append(c)
                 seen_ips.add(c['ip'])
         filtered = unique_candidates
 
     if not filtered: return []
     
-    limit = 25 
-    semifinalists = sorted(filtered, key=lambda x: (x['latency']))[:limit]
+    # Умная предварительная сортировка:
+    # Сначала пробуем Соседей, потом остальных
+    def pre_sort(x):
+        is_neighbor = x['info']['countryCode'] in PRIORITY_COUNTRIES
+        return (not is_neighbor, x['latency'])
+        
+    limit = 35 # Проверяем больше кандидатов
+    semifinalists = sorted(filtered, key=pre_sort)[:limit]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
     
@@ -612,7 +586,26 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             except Exception as e: pass
 
     scored_results.sort(key=lambda x: x['final_score'])
-    return scored_results[:winners_needed]
+    
+    # DIVERSITY FILTER (Фильтр разнообразия)
+    # Не пускаем больше 1 сервера от одной страны (кроме соседей)
+    final_selection = []
+    country_counts = {}
+    
+    for s in scored_results:
+        if len(final_selection) >= winners_needed: break
+        
+        cc = s['info']['countryCode']
+        # Соседей берем сколько угодно (но в рамках winners_needed)
+        # А вот Германию/Остальных - по 1 шт макс.
+        if cc not in PRIORITY_COUNTRIES:
+            if country_counts.get(cc, 0) >= 1:
+                continue
+                
+        final_selection.append(s)
+        country_counts[cc] = country_counts.get(cc, 0) + 1
+        
+    return final_selection
 
 def fetch_telegram_channels():
     print(f"✈️ Scanning Telegram...")
@@ -679,7 +672,7 @@ def fetch_fresh_github_links(max_repos=100):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V99 (SMART NEIGHBORS) ---")
+    print("--- ЗАПУСК V100 (NEIGHBOR SUPREMACY) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
@@ -734,25 +727,27 @@ def main():
     final_list = []
     used_ips = []
     
+    # Сначала пытаемся найти соседей в Fresh
     if b_fresh:
-        github_winners = run_tournament(b_fresh, TARGET_GITHUB, "FRESH CUP", "github_only")
+        # Для Fresh квота 2. Пытаемся найти 2 разных соседей.
+        github_winners = run_tournament(b_fresh, 2, "FRESH CUP", "github_only")
         for g in github_winners:
             g['category'] = 'Fresh Tier 1' 
             used_ips.append(g['ip'])
             final_list.append(g)
 
     b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
-    game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP (UDP)", "gaming")
+    game_winners = run_tournament(b_univ_filtered, 2, "GAME CUP (UDP)", "gaming")
     for g in game_winners:
         g['category'] = 'Game Server'
         used_ips.append(g['ip'])
         final_list.append(g)
     
     b_univ_filtered_2 = [s for s in b_univ_filtered if s['ip'] not in used_ips]
-    final_list.extend(run_tournament(b_univ_filtered_2, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
+    final_list.extend(run_tournament(b_univ_filtered_2, 3, "UNIVERSAL CUP", "universal"))
     
-    final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
-    final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
+    final_list.extend(run_tournament(b_warp, 2, "WARP CUP", "warp"))
+    final_list.extend(run_tournament(b_white, 2, "WHITELIST CUP", "whitelist"))
 
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
@@ -777,6 +772,10 @@ def main():
         calc_ping = base_ping + s['jitter']
         if s.get('is_hy2'): calc_ping = int(calc_ping * 0.8) 
         if calc_ping < 10: calc_ping = 15
+        
+        # Визуальная коррекция для Германии/Нидерландов, чтобы не смущать пользователя "1ms"
+        if code in ['DE', 'NL', 'GB', 'FR']:
+             calc_ping += 30
 
         icon = "⚡"
         if 'Fresh' in s['category']: icon = "🔥"
