@@ -28,7 +28,7 @@ except ImportError:
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
-# --- V97: GERMAN POWER EDITION ---
+# --- V98: NEIGHBORS FORCE EDITION ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- ИСТОЧНИКИ ---
@@ -71,16 +71,16 @@ TIMEOUT = 1.0
 REAL_TEST_TIMEOUT = 10.0 
 SPEED_TEST_TIMEOUT = 7.0 
 
-# --- КВОТЫ (Elite) ---
+# --- КВОТЫ ---
 TARGET_GITHUB = 2     
 TARGET_GAME = 2       
 TARGET_UNIVERSAL = 3  
 TARGET_WARP = 2       
 TARGET_WHITELIST = 2  
 
-# --- ЖЕСТКИЕ ЛИМИТЫ (ПОДНЯЛИ ПОРОГ) ---
-MIN_SPEED_MBPS = 3.0     # Теперь минимум 3 Мбит/с. Всё что медленнее — мусор.
-MAX_LATENCY_MS = 600     # Пинг выше 600 — удаляем.
+# --- ЛИМИТЫ ---
+MIN_SPEED_MBPS = 3.0     # Минимум 3 Мбит/с
+MAX_LATENCY_MS = 600     
 
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
@@ -91,9 +91,10 @@ UPDATE_INTERVAL_HOURS = 1
 CACHE_TTL_HOURS = 4      
 MAX_FAILURES = 2         
 
+# Базовый пинг (визуальный, для пользователя)
 PING_BASE_MS = {
-    'RU': 90, 'FI': 40, 'EE': 45, 'SE': 55, 'NO': 60, 'LV': 45, 'LT': 45, 
-    'DE': 35, 'NL': 40, 'FR': 50, 'PL': 45, 'US': 160, 'GB': 55 # Подкорректировал базу для DE/NL
+    'RU': 90, 'FI': 35, 'EE': 40, 'SE': 45, 'NO': 50, 'LV': 40, 'LT': 40, 
+    'DE': 60, 'NL': 65, 'FR': 70, 'PL': 55, 'US': 160, 'GB': 75 
 }
 
 RUS_NAMES = {
@@ -454,9 +455,10 @@ def check_real_connection(server):
     return result_latency, result_speed, udp_success
 
 def calculate_tier_rank(country_code):
-    # Добавили DE и NL в ЭЛИТУ. Теперь у них штраф 0.
-    tier1 = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO', 'DE', 'NL', 'GB'] 
-    tier2 = ['PL', 'FR', 'KZ', 'RU', 'TR', 'IT'] 
+    # Tier 1: Ближние соседи (приоритет)
+    tier1 = ['FI', 'EE', 'SE', 'LT', 'LV', 'NO'] 
+    # Tier 2: Хорошая Европа (штраф, если не супер скорость)
+    tier2 = ['DE', 'NL', 'PL', 'FR', 'GB'] 
     if country_code in tier1: return 1
     if country_code in tier2: return 2
     return 3
@@ -517,10 +519,16 @@ def check_single_candidate(f, mode):
 
     avg, jitter = stress_test_server(f)
     
-    # Штрафы по странам (DE теперь Tier 1 = 0 штрафа)
+    # --- VPS LOCAL PING FIX ---
+    # Мы в Германии. Пинг до DE ~1ms. Для юзера в РФ это не так.
+    # Добавляем "виртуальное расстояние" для DE/NL
+    scoring_ping = avg
+    if f['info']['countryCode'] in ['DE', 'NL']:
+        scoring_ping += 40 # Штраф к пингу, чтобы Эстония (20ms) выигрывала
+
     tier_penalty = 0
     if f['tier_rank'] == 1: tier_penalty = 0       
-    elif f['tier_rank'] == 2: tier_penalty = 5000 
+    elif f['tier_rank'] == 2: tier_penalty = 2000 # Небольшой штраф, можно перебить скоростью
     else: tier_penalty = 10000     
         
     special_penalty = 0
@@ -530,16 +538,13 @@ def check_single_candidate(f, mode):
     if udp_ok: udp_bonus = -300 
     elif mode == "gaming": special_penalty += 5000 
     
-    # --- SPEED SCALING FIX ---
-    # Линейный бонус. 100 Мбит = 500 баллов. 1000 Мбит = 5000 баллов.
     speed_bonus = 0
     if real_speed > 0:
         speed_bonus = real_speed * 5 
     
     history_bonus = get_history_bonus(f['ip'], f['port'])
 
-    # Чем меньше score, тем лучше. Поэтому вычитаем speed_bonus.
-    score = avg + (jitter * 5) + tier_penalty + special_penalty + history_bonus - speed_bonus + udp_bonus
+    score = scoring_ping + (jitter * 5) + tier_penalty + special_penalty + history_bonus - speed_bonus + udp_bonus
     
     f['latency'] = int(avg)
     f['jitter'] = int(jitter)
@@ -572,7 +577,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    limit = 25 # Увеличили выборку для точности
+    limit = 25 
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:limit]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
@@ -660,7 +665,7 @@ def fetch_fresh_github_links(max_repos=100):
     return list(set(found_files))
 
 def main():
-    print("--- ЗАПУСК V97 (GERMAN POWER) ---")
+    print("--- ЗАПУСК V98 (NEIGHBORS FORCE) ---")
     load_history()
     
     if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
