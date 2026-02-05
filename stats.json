@@ -1,40 +1,49 @@
 {
   "servers": [
     {
-      "name": "🇩🇪 ОСНОВНОЙ | 🕐00:34",
-      "ip": "87.120.84.221",
-      "country": "DE",
-      "country_name": "Германия",
-      "country_flag": "🇩🇪",
-      "speed_mbps": 110.27,
-      "latency_ms": 46.67001999041531,
+      "name": "🇽🇽 ОСНОВНОЙ🛡️ | 🕐01:10",
+      "ip": "osn.takovpn.ru",
+      "country": "XX",
+      "country_name": "XX",
+      "country_flag": "🇽🇽",
+      "speed_mbps": 100.95,
+      "latency_ms": 94.87507133356605,
       "udp": true,
-      "streak": 26,
-      "source_type": "general"
+      "streak": 0,
+      "is_reality": true,
+      "reality_score": 100,
+      "sni": "google.com",
+      "source_type": "whitelist"
     },
     {
-      "name": "🇳🇱 ЗАПАСНОЙ",
-      "ip": "51.158.206.80",
+      "name": "🇳🇱 ЗАПАСНОЙ🛡️",
+      "ip": "144.31.100.120",
       "country": "NL",
       "country_name": "Нидерланды",
       "country_flag": "🇳🇱",
-      "speed_mbps": 101.63,
-      "latency_ms": 431.8549930030713,
+      "speed_mbps": 98.28,
+      "latency_ms": 92.08374832815025,
       "udp": true,
-      "streak": 1,
-      "source_type": "premium"
+      "streak": 2,
+      "is_reality": true,
+      "reality_score": 100,
+      "sni": "google.com",
+      "source_type": "whitelist"
     },
     {
-      "name": "🇳🇱 РЕЗЕРВНЫЙ",
+      "name": "🇳🇱 РЕЗЕРВНЫЙ🛡️",
       "ip": "185.21.14.199",
       "country": "NL",
       "country_name": "Нидерланды",
       "country_flag": "🇳🇱",
-      "speed_mbps": 26.47,
-      "latency_ms": 200.14944800641388,
+      "speed_mbps": 27.25,
+      "latency_ms": 164.98704899762137,
       "udp": true,
-      "streak": 38,
-      "source_type": "general"
+      "streak": 39,
+      "is_reality": true,
+      "reality_score": 90,
+      "sni": "apple.com",
+      "source_type": "whitelist"
     },
     {
       "name": "🇷🇺 WHITELIST",
@@ -42,20 +51,24 @@
       "country": "RU",
       "country_name": "Россия",
       "country_flag": "🇷🇺",
-      "speed_mbps": 70.19,
-      "latency_ms": 86.56441599305253,
+      "speed_mbps": 47.35,
+      "latency_ms": 766.0235133371316,
       "udp": true,
-      "streak": 13,
-      "source_type": "general"
+      "streak": 14,
+      "is_reality": false,
+      "reality_score": 0,
+      "sni": "sni.111000.indevs.in",
+      "source_type": "whitelist"
     }
   ],
-  "updated": "2026-02-05T21:34:31.739294+00:00",
-  "updated_msk": "2026-02-06 00:34:31 MSK",
+  "updated": "2026-02-05T22:10:38.427145+00:00",
+  "updated_msk": "2026-02-06 01:10:38 MSK",
   "stats": {
-    "total_sources": 64,
-    "total_found": 37089,
-    "unique_servers": 18011,
-    "alive_tcp": 10060,
-    "verified": 323
+    "total_found": 37059,
+    "unique_servers": 18008,
+    "reality_servers": 2017,
+    "alive_tcp": 9704,
+    "verified": 464,
+    "reality_verified": 395
   }
 }
