@@ -80,38 +80,53 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
+          # ⚠️ ВАЖНО: Сначала чистим рабочую директорию от мусора
+          rm -f xray geoip.dat geosite.dat vpn_scanner.log *.zip *.tmp *.json.tmp 2>/dev/null || true
+          
           # Добавляем файлы результатов И логи
           git add FL1PVPN stats.json history.json
-          git add logs/*.log 2>/dev/null || true  # Добавляем логи, игнорируя ошибки если их нет
+          git add logs/*.log 2>/dev/null || true
           
           # Проверяем, есть ли что коммитить
           if git diff --staged --quiet; then
             echo "No changes in subscription. Skipping commit."
           else
-            # Получаем статистику из stats.json для красивого коммита
+            # Получаем статистику из stats.json
             if [ -f stats.json ]; then
               SERVER_COUNT=$(python -c "import json; data=json.load(open('stats.json')); print(len(data.get('servers', [])))" 2>/dev/null || echo "4")
             else
               SERVER_COUNT="4"
             fi
             
+            # Коммитим изменения
             git commit -m "🚀 Update $SERVER_COUNT Servers | $(date -u '+%Y-%m-%d %H:%M UTC')"
             
-            # Чистим временные файлы перед синхронизацией
-            rm -f xray geoip.dat geosite.dat vpn_scanner.log *.json.tmp 2>/dev/null || true
+            # ⚠️ ИСПРАВЛЕНИЕ: Используем stash для сохранения локальных изменений
+            # Сохраняем все незакоммиченные изменения
+            git stash save "Temporary stash before pull"
             
-            # Синхронизируем и отправляем
+            # Теперь безопасно делаем pull с rebase
             git pull --rebase origin main
+            
+            # Пушим изменения
             git push
+            
+            # Очищаем stash (если он остался)
+            git stash drop 2>/dev/null || true
           fi
 
-      - name: Cleanup workspace
+      - name: Final cleanup
         if: always()
         run: |
-          # Удаляем временные файлы после завершения
-          rm -f xray geoip.dat geosite.dat vpn_scanner.log *.zip *.tmp 2>/dev/null || true
+          # Финальная очистка временных файлов
+          rm -f xray geoip.dat geosite.dat vpn_scanner.log *.zip *.tmp *.json.tmp 2>/dev/null || true
+          
+          # Сбрасываем все незакоммиченные изменения на всякий случай
+          git checkout -- . 2>/dev/null || true
+          git clean -fd 2>/dev/null || true
           
           # Показываем размер папки с логами
           if [ -d logs ]; then
             echo "📊 Logs folder size: $(du -sh logs | cut -f1)"
+            echo "📊 Number of logs: $(ls -1 logs/*.log 2>/dev/null | wc -l)"
           fi
