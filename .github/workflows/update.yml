@@ -47,7 +47,32 @@ jobs:
       - name: Run VPN Parser Script
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        run: python main.py
+        run: |
+          # Запускаем скрипт
+          python main.py
+          
+          # Показываем последние 50 строк лога в консоли GitHub Actions
+          echo "📄 Last 50 lines of log:"
+          tail -n 50 vpn_scanner.log || echo "Log file not found"
+
+      - name: Prepare logs for commit
+        run: |
+          # Создаем папку для логов если её нет
+          mkdir -p logs
+          
+          # Копируем лог с временной меткой
+          if [ -f vpn_scanner.log ]; then
+            # Сохраняем последний лог с датой
+            cp vpn_scanner.log "logs/last_scan_$(date -u +%Y%m%d_%H%M%S).log"
+            
+            # Также сохраняем как latest.log для быстрого доступа
+            cp vpn_scanner.log logs/latest.log
+            
+            # Оставляем только последние 10 логов (чистим старые)
+            cd logs
+            ls -t *.log | tail -n +11 | xargs -r rm
+            cd ..
+          fi
 
       - name: Commit and Push Changes
         run: |
@@ -55,20 +80,38 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Добавляем ТОЛЬКО файлы результатов
+          # Добавляем файлы результатов И логи
           git add FL1PVPN stats.json history.json
+          git add logs/*.log 2>/dev/null || true  # Добавляем логи, игнорируя ошибки если их нет
           
           # Проверяем, есть ли что коммитить
           if git diff --staged --quiet; then
             echo "No changes in subscription. Skipping commit."
           else
-            git commit -m "🚀 Update 4 Servers: $(date -u)"
+            # Получаем статистику из stats.json для красивого коммита
+            if [ -f stats.json ]; then
+              SERVER_COUNT=$(python -c "import json; data=json.load(open('stats.json')); print(len(data.get('servers', [])))" 2>/dev/null || echo "4")
+            else
+              SERVER_COUNT="4"
+            fi
             
-            # ВАЖНО: Удаляем мусор (xray, логи) из рабочей папки,
-            # чтобы git pull --rebase прошел без ошибок "unstaged changes"
-            git reset --hard
+            git commit -m "🚀 Update $SERVER_COUNT Servers | $(date -u '+%Y-%m-%d %H:%M UTC')"
+            
+            # Чистим временные файлы перед синхронизацией
+            rm -f xray geoip.dat geosite.dat vpn_scanner.log *.json.tmp 2>/dev/null || true
             
             # Синхронизируем и отправляем
             git pull --rebase origin main
             git push
+          fi
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          # Удаляем временные файлы после завершения
+          rm -f xray geoip.dat geosite.dat vpn_scanner.log *.zip *.tmp 2>/dev/null || true
+          
+          # Показываем размер папки с логами
+          if [ -d logs ]; then
+            echo "📊 Logs folder size: $(du -sh logs | cut -f1)"
           fi
