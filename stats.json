@@ -1,45 +1,61 @@
 {
   "servers": [
     {
-      "name": "ОСНОВНОЙ 🇩🇪 (Обн. 23:33)",
-      "ip": "80.66.87.77",
-      "country": "DE",
-      "country_name": "Германия",
-      "speed_mbps": 78.91,
-      "latency_ms": 434.8744210001314,
-      "udp": true,
-      "streak": 16
-    },
-    {
-      "name": "ЗАПАСНОЙ 🇳🇱",
-      "ip": "185.82.73.195",
+      "name": "🇳🇱 ОСНОВНОЙ | 🕐00:16",
+      "ip": "149.115.110.173",
       "country": "NL",
       "country_name": "Нидерланды",
-      "speed_mbps": 78.85,
-      "latency_ms": 4941.33204400714,
+      "country_flag": "🇳🇱",
+      "speed_mbps": 107.55,
+      "latency_ms": 73.52459500543773,
       "udp": true,
-      "streak": 30
+      "streak": 0,
+      "source_type": "subscription"
     },
     {
-      "name": "РЕЗЕРВНЫЙ 🇳🇱",
+      "name": "🇩🇪 ЗАПАСНОЙ",
+      "ip": "57.129.53.180",
+      "country": "DE",
+      "country_name": "Германия",
+      "country_flag": "🇩🇪",
+      "speed_mbps": 104.16,
+      "latency_ms": 33.4500089957146,
+      "udp": true,
+      "streak": 0,
+      "source_type": "subscription"
+    },
+    {
+      "name": "🇳🇱 РЕЗЕРВНЫЙ",
       "ip": "185.21.14.199",
       "country": "NL",
       "country_name": "Нидерланды",
-      "speed_mbps": 16.6,
-      "latency_ms": 3417.781650990946,
+      "country_flag": "🇳🇱",
+      "speed_mbps": 38.53,
+      "latency_ms": 167.5062799913576,
       "udp": true,
-      "streak": 36
+      "streak": 37,
+      "source_type": "general"
     },
     {
-      "name": "WHITELIST 🇷🇺",
+      "name": "🇷🇺 WHITELIST",
       "ip": "193.233.21.138",
       "country": "RU",
       "country_name": "Россия",
-      "speed_mbps": 47.55,
-      "latency_ms": 83.39199000329245,
+      "country_flag": "🇷🇺",
+      "speed_mbps": 101.36,
+      "latency_ms": 116.08459099079482,
       "udp": true,
-      "streak": 11
+      "streak": 12,
+      "source_type": "general"
     }
   ],
-  "updated": "2026-02-05T20:33:16.884211+00:00"
+  "updated": "2026-02-05T21:16:54.013537+00:00",
+  "updated_msk": "2026-02-06 00:16:54 MSK",
+  "stats": {
+    "total_sources": 64,
+    "total_found": 37566,
+    "unique_servers": 17970,
+    "alive_tcp": 10100,
+    "verified": 320
+  }
 }
