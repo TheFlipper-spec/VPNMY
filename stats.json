@@ -1,84 +1,68 @@
 {
+  "updated": "13:42:03",
   "servers": [
     {
-      "name": "🇨🇭 ОСНОВНОЙ🛡️ | 🕐16:14",
-      "ip": "144.31.94.99",
-      "port": 443,
-      "country": "CH",
-      "country_name": "Швейцария",
-      "country_flag": "🇨🇭",
-      "speed_mbps": 105.44,
-      "latency_ms": 67.86960667038026,
-      "udp": true,
-      "is_reality": true,
-      "reality_score": 100,
-      "sni": "google.com",
-      "streak": 2,
-      "source_type": "premium",
-      "original": "vless://bbed94d9-1120-4b54-8a9c-72d81e411fb8@144.31.94.99:443?security=reality&encryption=none&pbk=-1F5A8N32UdC6w2NqnAc5-GkQW1dgcrImiQPl4WRikk&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=google.com&sid=ef0b40e707663781#Config"
-    },
-    {
-      "name": "🇬🇧 ЗАПАСНОЙ🛡️",
-      "ip": "144.31.94.36",
-      "port": 443,
-      "country": "GB",
-      "country_name": "Великобритания",
-      "country_flag": "🇬🇧",
-      "speed_mbps": 97.69,
-      "latency_ms": 57.16921233154911,
-      "udp": true,
-      "is_reality": true,
-      "reality_score": 100,
-      "sni": "google.com",
-      "streak": 14,
-      "source_type": "premium",
-      "original": "vless://bbed94d9-1120-4b54-8a9c-72d81e411fb8@144.31.94.36:443?security=reality&encryption=none&pbk=5HagS4nvr0CaCOv8SUfGTT0HyjarC0VqQ0JgPhmlgQg&headerType=&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=google.com&sid=2adb11b6886a079a#%F0%9F%94%98%20T.me/V2HUBIR%20%7C%20Join%20Now%20%E2%9C%85%EF%B8%8F"
-    },
-    {
-      "name": "🇳🇱 РЕЗЕРВНЫЙ🛡️",
-      "ip": "185.21.14.199",
-      "port": 443,
-      "country": "NL",
-      "country_name": "Нидерланды",
-      "country_flag": "🇳🇱",
-      "speed_mbps": 1.95,
-      "latency_ms": 1639.153074999437,
-      "udp": true,
-      "is_reality": true,
-      "reality_score": 100,
-      "sni": "apple.com",
-      "streak": 52,
-      "source_type": "whitelist",
-      "original": "vless://a44e0875-210f-4941-9062-89b6361a14c6@185.21.14.199:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=apple.com&fp=firefox&pbk=i5a8i2AWUSMZ-rYA6hGBRCBBoe7W5ah33SCdF5JkMk4&sid=8bcfe256cf216fd8&type=tcp&headerType=none#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%2C%20Amsterdam%20%5BBL%5D"
-    },
-    {
-      "name": "🇷🇺 WHITELIST",
-      "ip": "45.87.154.19",
-      "port": 2053,
+      "name": "🇷🇺 WHITELIST 1 | 16:42",
+      "ip": "109.120.191.63",
       "country": "RU",
-      "country_name": "Россия",
-      "country_flag": "🇷🇺",
-      "speed_mbps": 69.67,
-      "latency_ms": 111.75655300394283,
-      "udp": true,
-      "is_reality": false,
-      "reality_score": 0,
-      "sni": "sni.111000.indevs.in",
-      "streak": 7,
-      "source_type": "subscription",
-      "original": "vless://6202b230-417c-4d8e-b624-0f71afa9c75d@45.87.154.19:2053?path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%20%40WangCai2&security=tls&encryption=none&insecure=1&host=sni.111000.indevs.in&type=ws&allowInsecure=1&sni=sni.111000.indevs.in#%E8%8D%B7%E5%85%B0_020618711"
+      "speed": 26.91,
+      "ping": 2041.5442483329873
+    },
+    {
+      "name": "🇷🇺 WHITELIST 2 | 16:42",
+      "ip": "109.120.191.40",
+      "country": "RU",
+      "speed": 22.29,
+      "ping": 472.7061364974361
+    },
+    {
+      "name": "🏳️ WARP 1 | 16:42",
+      "ip": "104.21.13.210",
+      "country": "XX",
+      "speed": 46.57,
+      "ping": 196.2271466642657
+    },
+    {
+      "name": "🏳️ WARP 2 | 16:42",
+      "ip": "104.17.73.206",
+      "country": "XX",
+      "speed": 35.47,
+      "ping": 191.54343833603585
+    },
+    {
+      "name": "🇩🇪 GAME 1 | 16:42",
+      "ip": "57.129.53.180",
+      "country": "DE",
+      "speed": 69.84,
+      "ping": 106.96294033065594
+    },
+    {
+      "name": "🇩🇪 GAME 2 | 16:42",
+      "ip": "94.159.104.1",
+      "country": "DE",
+      "speed": 35.82,
+      "ping": 137.41259650123538
+    },
+    {
+      "name": "🏳️ UNIVERSAL 1 | 16:42",
+      "ip": "c6.play2go.cloud",
+      "country": "XX",
+      "speed": 57.83,
+      "ping": 608.6941989997285
+    },
+    {
+      "name": "🇺🇸 UNIVERSAL 2 | 16:42",
+      "ip": "143.20.236.203",
+      "country": "US",
+      "speed": 55.96,
+      "ping": 195.28384149816702
+    },
+    {
+      "name": "🇳🇱 UNIVERSAL 3 | 16:42",
+      "ip": "51.158.206.103",
+      "country": "NL",
+      "speed": 50.37,
+      "ping": 139.9621203333178
     }
-  ],
-  "updated": "2026-02-06T13:14:42.458351+00:00",
-  "updated_msk": "2026-02-06 16:14:42 MSK",
-  "stats": {
-    "total_found": 38224,
-    "unique": 18448,
-    "reality_unique": 1999,
-    "alive_tcp": 13553,
-    "reality_alive": 1313,
-    "verified": 460,
-    "reality_verified": 365,
-    "reserve_pool_size": 20
-  }
+  ]
 }
