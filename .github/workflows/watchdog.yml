@@ -2,20 +2,33 @@ name: Watchdog Health Check
 
 on:
   schedule:
-    - cron: '*/7 * * * *'  # Каждые 7 минут
+    - cron: '5,12,19,26,33,40,47,54 * * * *'  # Каждые ~7 минут
   workflow_dispatch:
+
+concurrency:
+  group: vpn-update
+  cancel-in-progress: false
 
 jobs:
   health-check:
     runs-on: self-hosted
+    timeout-minutes: 5
     permissions:
       contents: write
 
     steps:
+      - name: Check main.py not running
+        run: |
+          if pgrep -f "main.py" > /dev/null; then
+            echo "⏳ main.py работает, пропускаем"
+            exit 0
+          fi
+
+      - name: Kill zombies
+        run: pkill -9 -f "xray" || true
+
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -23,47 +36,37 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install deps
         run: pip install requests PySocks
 
-      - name: Download Xray (if needed)
+      - name: Get Xray
         run: |
           if [ ! -f xray ]; then
             wget -q -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-            unzip -o -q xray.zip xray
-            rm -f xray.zip
+            unzip -o -q xray.zip xray && rm -f xray.zip
           fi
           chmod +x xray
 
       - name: Run Watchdog
+        timeout-minutes: 3
         run: python watchdog.py
 
-      - name: Prepare logs
-        run: |
-          mkdir -p logs
-          if [ -f watchdog.log ]; then
-            cp watchdog.log logs/latest_watchdog.log
-          fi
-
       - name: Cleanup
-        run: rm -f watchdog.log *.zip *.tmp
+        run: rm -f xray watchdog.log *.zip *.tmp 2>/dev/null || true
 
-      - name: Commit changes
+      - name: Commit
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
           git add FL1PVPN stats.json reserve_pool.json 2>/dev/null || true
-          git add logs/latest_watchdog.log 2>/dev/null || true
-          
           if git diff --staged --quiet; then
-            echo "✅ No changes needed"
+            echo "✅ No changes"
           else
-            git commit -m "🐕 Watchdog: health check at $(date -u '+%H:%M UTC')"
+            git commit -m "🐕 Watchdog $(date -u '+%H:%M')"
             git pull --rebase origin main || true
             git push origin main
           fi
 
       - name: Final cleanup
         if: always()
-        run: rm -f xray *.zip *.tmp
+        run: pkill -9 -f "xray" || true
