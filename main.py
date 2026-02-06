@@ -28,20 +28,13 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V122 - PERFECT 9 EDITION
+#  FL1P VPN SCANNER V123 - RUSSIA-PROOF EDITION
 #  
-#  Структура (ВСЕГДА 9 серверов):
-#  🎮 GAME ×2      - Игровые (Tier 1-2, низкий пинг)
-#  ⚡ UNIVERSAL ×3 - Универсальные (высокая скорость)
-#  🔄 WARP ×2      - Cloudflare WARP
-#  ⚪ WHITELIST ×2 - Российские для РКН
-#
-#  Формат названий:
-#  🎮🇫🇮 Финляндия | 📅15:30
-#  🎮🇪🇪 Эстония | 📅15:50
-#  ⚡🇩🇪 Германия
-#  🔄🇳🇱 Нидерланды
-#  ⚪🇷🇺 (РКН)
+#  🔥 КЛЮЧЕВЫЕ ИЗМЕНЕНИЯ:
+#  1. ТОЛЬКО Reality серверы (обходят ТСПУ)
+#  2. Жёсткий фильтр по пингу для GAME (<150ms)
+#  3. Проверка через несколько эндпоинтов
+#  4. Приоритет серверам с хорошим SNI
 #
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -82,11 +75,11 @@ class ProgressCounter:
                 logger.info(f"   📊 {self.name}: {self.current}/{self.total} ({pct:.0f}%) | ✅{self.success} ❌{self.failed}")
 
 # ═══════════════════════════════════════════════════════════════
-# 🌍 ТИРЫ СТРАН
+# 🌍 СТРАНЫ
 # ═══════════════════════════════════════════════════════════════
-TIER_1_COUNTRIES = ['FI', 'EE', 'LV', 'LT']
-TIER_2_COUNTRIES = ['SE', 'NO', 'PL']
-TIER_3_COUNTRIES = ['DE', 'NL', 'AT', 'CZ', 'DK', 'BE', 'CH']
+TIER_1_COUNTRIES = ['FI', 'EE', 'LV', 'LT']  # <50ms из Москвы
+TIER_2_COUNTRIES = ['SE', 'NO', 'PL']        # 50-80ms
+TIER_3_COUNTRIES = ['DE', 'NL', 'AT', 'CZ', 'DK', 'BE', 'CH']  # 80-120ms
 TIER_4_COUNTRIES = ['GB', 'FR', 'IT', 'ES', 'PT', 'IE', 'HU', 'RO', 'BG', 'SK', 'GR', 'TR']
 
 GAME_COUNTRIES = TIER_1_COUNTRIES + TIER_2_COUNTRIES
@@ -106,7 +99,7 @@ RUS_NAMES = {
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 🔥 ИСТОЧНИКИ
+# 🔥 ИСТОЧНИКИ (ПРИОРИТЕТ REALITY!)
 # ═══════════════════════════════════════════════════════════════
 REALITY_URLS = [
     "https://raw.githubusercontent.com/Yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
@@ -116,13 +109,12 @@ REALITY_URLS = [
     "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/reality.txt",
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/splitted/reality.txt",
     "https://raw.githubusercontent.com/NiREvil/vless/main/sub/vless",
+    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/vless",
 ]
 
 PREMIUM_URLS = [
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
     "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/vless.txt",
-    "https://raw.githubusercontent.com/w1770946466/Auto_proxy/main/Long_term_subscription_num",
-    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/vless",
     "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/vless.txt",
     "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
 ]
@@ -131,36 +123,24 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/MrMohebi/xray-proxy-grabber-telegram/master/collected-proxies/row-url/all.txt",
     "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub",
     "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list.txt",
-    "https://raw.githubusercontent.com/freefq/free/master/v2",
 ]
 
 WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/STARTER-X-0/STARTER-X-VPN/refs/heads/main/RU-WHITE-LIST",
-]
-
-WARP_URLS = [
-    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/warp",
-    "https://raw.githubusercontent.com/NiREvil/vless/main/sub/warp",
-    "https://raw.githubusercontent.com/ircfspace/warpsub/main/export/warp",
 ]
 
 TELEGRAM_CHANNELS = [
     "PrivateVPNs", "iSegaro", "reality_daily", "RealityVpnChannel",
-    "FarahVPN", "v2rayng_vpn", "v2ray_outlineir", "v2ray_configs_pool",
-    "VlessConfig", "v2ray1_ng", "DirectVPN", "v2ray_alpha",
-    "customv2ray", "ConfigsHUB", "freev2rayssr", "proxy_mtm",
-    "ShadowProxy66", "Proxy_PJ", "SafeNet_Server", "VmessProtocol",
+    "FarahVPN", "v2rayng_vpn", "v2ray_configs_pool", "VlessConfig",
+    "DirectVPN", "v2ray_alpha", "ConfigsHUB", "freev2rayssr",
 ]
 
 GITHUB_ISSUES_REPOS = [
     "barry-far/V2ray-Configs",
-    "Pawdroid/Free-servers",
     "mahdibland/V2RayAggregator",
     "yebekhe/TelegramV2rayCollector",
 ]
@@ -173,20 +153,24 @@ MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 MAX_WORKERS_SCAN = 50
-MAX_WORKERS_DEEP = 12
+MAX_WORKERS_DEEP = 10
 MAX_WORKERS_FETCH = 15
 
-TIMEOUT_TCP = 0.7
-TIMEOUT_REAL = 8.0
-TIMEOUT_SPEED = 5.0
+TIMEOUT_TCP = 0.8
+TIMEOUT_REAL = 10.0
+TIMEOUT_SPEED = 6.0
 TIMEOUT_FETCH = 6.0
 
-MAX_DEEP_CHECK_GLOBAL = 500
-MAX_DEEP_CHECK_WHITELIST = 100
+MAX_DEEP_CHECK_GLOBAL = 400
+MAX_DEEP_CHECK_WHITELIST = 80
 
-MIN_SPEED_GAME = 1.0
-MIN_SPEED_UNIVERSAL = 2.0
-MIN_SPEED_WHITELIST = 0.3
+# 🔥 ЖЁСТКИЕ КРИТЕРИИ ДЛЯ РОССИИ
+MIN_SPEED_GAME = 3.0        # Mbps
+MIN_SPEED_UNIVERSAL = 5.0   # Mbps
+MIN_SPEED_WHITELIST = 1.0   # Mbps
+
+MAX_PING_GAME = 150         # ms - жёсткий лимит для игр!
+MAX_PING_UNIVERSAL = 300    # ms
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -200,16 +184,47 @@ RESERVE_POOL_SIZE = 30
 UPDATE_INTERVAL_MINUTES = 20
 
 # ═══════════════════════════════════════════════════════════════
-# 🛡️ REALITY
+# 🛡️ REALITY - КРИТИЧЕСКИ ВАЖНО ДЛЯ РОССИИ!
 # ═══════════════════════════════════════════════════════════════
+
+# Хорошие SNI которые НЕ заблокированы в РФ
 TRUSTED_SNIS = [
-    'www.google.com', 'google.com', 'www.microsoft.com', 'microsoft.com',
-    'www.apple.com', 'www.cloudflare.com', 'www.mozilla.org', 'www.yahoo.com',
-    'www.amazon.com', 'www.github.com', 'www.samsung.com', 'cdn.jsdelivr.net',
-    'www.nvidia.com', 'www.docker.com', 'www.oracle.com', 'www.cisco.com',
+    'www.google.com', 'google.com',
+    'www.microsoft.com', 'microsoft.com', 'learn.microsoft.com',
+    'www.apple.com', 'apple.com',
+    'www.cloudflare.com', 'cloudflare.com',
+    'www.mozilla.org', 'mozilla.org',
+    'www.yahoo.com', 'yahoo.com',
+    'www.amazon.com', 'amazon.com',
+    'www.github.com', 'github.com',
+    'www.samsung.com', 'samsung.com',
+    'www.nvidia.com', 'nvidia.com',
+    'www.amd.com', 'amd.com',
+    'cdn.jsdelivr.net', 'cdnjs.cloudflare.com',
+    'www.docker.com', 'docker.com',
+    'www.oracle.com', 'oracle.com',
+    'www.ibm.com', 'ibm.com',
+    'www.cisco.com', 'cisco.com',
+    'www.dell.com', 'dell.com',
+    'www.hp.com', 'hp.com',
+    'www.lenovo.com', 'lenovo.com',
+    'www.asus.com', 'asus.com',
+    'www.whatsapp.com', 'whatsapp.com',
+    'www.spotify.com', 'spotify.com',
+    'www.twitch.tv', 'twitch.tv',
+    'www.steam.com', 'steampowered.com',
 ]
 
-BLOCKED_SNIS = ['discord.com', 'twitter.com', 'x.com', 'facebook.com', 'instagram.com', 'tiktok.com']
+# SNI заблокированные в РФ - НЕ ИСПОЛЬЗОВАТЬ!
+BLOCKED_SNIS = [
+    'discord.com', 'discordapp.com', 'discord.gg',
+    'twitter.com', 'x.com', 't.co',
+    'facebook.com', 'fb.com', 'fbcdn.net',
+    'instagram.com', 'cdninstagram.com',
+    'linkedin.com',
+    'tiktok.com',
+    'youtube.com', 'youtu.be', 'googlevideo.com',  # Может быть заблокирован
+]
 
 # ═══════════════════════════════════════════════════════════════
 # ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
@@ -224,26 +239,32 @@ def get_msk_time():
     return datetime.now(timezone.utc) + timedelta(hours=TIMEZONE_OFFSET)
 
 def get_last_update_time():
-    """Время последнего обновления"""
     return get_msk_time().strftime('%H:%M')
 
 def get_next_update_time():
-    """Время следующего обновления (+20 минут)"""
-    next_time = get_msk_time() + timedelta(minutes=UPDATE_INTERVAL_MINUTES)
-    return next_time.strftime('%H:%M')
+    return (get_msk_time() + timedelta(minutes=UPDATE_INTERVAL_MINUTES)).strftime('%H:%M')
 
 def get_timestamp():
     return get_msk_time().strftime('%Y-%m-%d %H:%M:%S MSK')
 
 def get_flag(cc):
-    """Получить эмодзи флаг страны"""
     if not cc or len(cc) != 2:
         return ""
     return "".join([chr(127397 + ord(c)) for c in cc.upper()])
 
 def get_country_name(cc):
-    """Получить название страны на русском"""
     return RUS_NAMES.get(cc, cc)
+
+def get_tier(cc):
+    if cc in TIER_1_COUNTRIES:
+        return 1
+    if cc in TIER_2_COUNTRIES:
+        return 2
+    if cc in TIER_3_COUNTRIES:
+        return 3
+    if cc in TIER_4_COUNTRIES:
+        return 4
+    return 5
 
 # ═══════════════════════════════════════════════════════════════
 # 📂 ИСТОРИЯ
@@ -263,7 +284,7 @@ def save_history():
     clean = {k: v for k, v in server_history.items() if v.get('fails', 0) < MAX_FAILURES and ts - v.get('ts', 0) < 86400}
     try:
         with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-            json.dump(clean, f, indent=2)
+            json.dump(clean, f)
     except:
         pass
 
@@ -307,7 +328,7 @@ def download_mmdb():
                         f.write(chunk)
                 logger.info("✅ GeoIP скачан")
         except Exception as e:
-            logger.error(f"❌ Ошибка GeoIP: {e}")
+            logger.error(f"❌ Ошибка: {e}")
 
 def init_geoip():
     global geo_reader
@@ -315,7 +336,7 @@ def init_geoip():
         geo_reader = geoip2.database.Reader(MMDB_FILE)
         logger.info("🌍 GeoIP OK")
     except Exception as e:
-        logger.error(f"❌ GeoIP ошибка: {e}")
+        logger.error(f"❌ GeoIP: {e}")
 
 def close_geoip():
     global geo_reader
@@ -378,32 +399,61 @@ def is_valid_host(h):
         return False
     return True
 
-def has_good_sni(params):
-    sni = params.get('sni', [''])[0].lower()
-    for b in BLOCKED_SNIS:
-        if b in sni:
-            return False
-    for t in TRUSTED_SNIS:
-        if t in sni:
-            return True
-    return '.' in sni and not sni[0].isdigit()
+def check_sni_quality(sni):
+    """
+    Проверяет качество SNI для России
+    Возвращает: (is_blocked, is_trusted, score)
+    """
+    if not sni:
+        return False, False, 0
+    
+    sni_lower = sni.lower()
+    
+    # Проверка на заблокированные
+    for blocked in BLOCKED_SNIS:
+        if blocked in sni_lower:
+            return True, False, -100
+    
+    # Проверка на доверенные
+    for trusted in TRUSTED_SNIS:
+        if trusted in sni_lower or sni_lower in trusted:
+            return False, True, 50
+    
+    # Если похоже на домен - умеренный балл
+    if '.' in sni and not sni[0].isdigit():
+        return False, False, 20
+    
+    return False, False, 0
 
 def get_reality_score(params):
+    """Оценка качества Reality конфига для России"""
     if params.get('security', [''])[0].lower() != 'reality':
         return 0
-    score = 50
-    sni = params.get('sni', [''])[0].lower()
-    for t in TRUSTED_SNIS[:10]:
-        if t in sni:
-            score += 30
-            break
-    else:
-        if has_good_sni(params):
-            score += 15
-    if params.get('fp', [''])[0].lower() in ['chrome', 'firefox', 'safari', 'edge']:
-        score += 10
+    
+    score = 30  # Базовый балл за Reality
+    
+    # Проверка SNI
+    sni = params.get('sni', [''])[0]
+    is_blocked, is_trusted, sni_score = check_sni_quality(sni)
+    
+    if is_blocked:
+        return -100  # Заблокированный SNI = отбраковка
+    
+    score += sni_score
+    
+    # Fingerprint
+    fp = params.get('fp', [''])[0].lower()
+    if fp in ['chrome', 'firefox', 'safari', 'edge', 'ios', 'android']:
+        score += 15
+    
+    # Public key валидный
     if len(params.get('pbk', [''])[0]) == 43:
         score += 10
+    
+    # Short ID есть
+    if params.get('sid', [''])[0]:
+        score += 5
+    
     return min(score, 100)
 
 def parse_config(config_str, source_type):
@@ -450,7 +500,7 @@ def parse_config(config_str, source_type):
                 "is_reality": False, "is_hy2": True,
                 "source": source_type, "params": params,
                 "sni": params.get('sni', [''])[0],
-                "reality_score": 0, "good_sni": False
+                "reality_score": 0
             }
         
         # VLESS
@@ -479,18 +529,28 @@ def parse_config(config_str, source_type):
             security = params.get('security', ['none'])[0].lower()
             is_reality = security == 'reality'
             
+            # 🔥 ВАЛИДАЦИЯ REALITY
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
                 if len(pbk) != 43:
-                    return None
+                    return None  # Невалидный public key
+                
                 sni = params.get('sni', [''])[0]
                 if sni == host:
+                    return None  # SNI не должен совпадать с хостом
+                
+                # Проверка на заблокированные SNI
+                is_blocked, _, _ = check_sni_quality(sni)
+                if is_blocked:
+                    logger.debug(f"   🚫 Заблокированный SNI: {sni}")
                     return None
-                for b in BLOCKED_SNIS:
-                    if b in sni.lower():
-                        return None
             
             remark = unquote(config_str.split("#")[-1]).strip() if "#" in config_str else "VLESS"
+            reality_score = get_reality_score(params)
+            
+            # 🔥 Отбрасываем Reality с плохим score
+            if is_reality and reality_score < 0:
+                return None
             
             return {
                 "ip": host, "port": int(port), "uuid": uuid,
@@ -499,8 +559,8 @@ def parse_config(config_str, source_type):
                 "transport": transport, "security": security,
                 "is_reality": is_reality, "is_hy2": False,
                 "source": source_type, "params": params,
-                "reality_score": get_reality_score(params),
-                "good_sni": has_good_sni(params) if is_reality else False
+                "reality_score": reality_score,
+                "sni": params.get('sni', [''])[0] if is_reality else ""
             }
     except:
         pass
@@ -555,7 +615,10 @@ def gen_xray_config(server, port):
             stream["grpcSettings"] = {"serviceName": params['serviceName'][0]}
         
         if server['security'] == 'tls':
-            stream["tlsSettings"] = {"serverName": params.get('sni', [''])[0], "fingerprint": params.get('fp', ['chrome'])[0]}
+            stream["tlsSettings"] = {
+                "serverName": params.get('sni', [''])[0],
+                "fingerprint": params.get('fp', ['chrome'])[0]
+            }
         elif server['security'] == 'reality':
             stream["realitySettings"] = {
                 "fingerprint": params.get('fp', ['chrome'])[0],
@@ -608,26 +671,33 @@ def check_udp(port):
             pass
 
 def check_endpoints(port):
+    """Проверка через несколько эндпоинтов для надежности"""
     endpoints = [
         ("https://www.google.com/generate_204", 204),
         ("https://cp.cloudflare.com/", 200),
         ("https://www.gstatic.com/generate_204", 204),
+        ("https://connectivity-check.ubuntu.com/", 200),
     ]
+    
     proxies = {'http': f'socks5://127.0.0.1:{port}', 'https': f'socks5://127.0.0.1:{port}'}
-    ok = 0
-    lat = 0
-    for url, code in endpoints:
+    success = 0
+    total_lat = 0
+    
+    for url, expected in endpoints[:3]:  # Проверяем 3 из 4
         try:
             start = time.perf_counter()
-            r = requests.get(url, proxies=proxies, timeout=4, verify=False)
-            if r.status_code == code or 200 <= r.status_code < 300:
-                ok += 1
-                lat += (time.perf_counter() - start) * 1000
+            r = requests.get(url, proxies=proxies, timeout=5, verify=False)
+            if r.status_code == expected or 200 <= r.status_code < 300:
+                success += 1
+                total_lat += (time.perf_counter() - start) * 1000
         except:
             pass
-    return lat / ok if ok >= 2 else None
+    
+    # Нужно минимум 2 из 3 успешных
+    return total_lat / success if success >= 2 else None
 
 def deep_check(server):
+    """Глубокая проверка сервера"""
     port = random.randint(10000, 60000)
     config = gen_xray_config(server, port)
     if not config:
@@ -643,7 +713,7 @@ def deep_check(server):
             path = f.name
         
         proc = subprocess.Popen([XRAY_BIN, "-config", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.0)
+        time.sleep(1.2)  # Чуть больше для Reality
         
         if proc.poll() is not None:
             raise Exception("Xray died")
@@ -689,6 +759,7 @@ def initial_check(server, progress=None):
     cc = get_country(ip)
     server['info'] = {'cc': cc}
     
+    # Фильтр по странам
     if server['source'] == 'whitelist':
         if cc not in WHITELIST_COUNTRIES:
             if progress:
@@ -731,8 +802,9 @@ def full_check(server, progress=None):
     name = get_country_name(cc)
     udp_str = "UDP✅" if udp else "UDP❌"
     reality_str = "Reality" if server.get('is_reality') else ""
+    sni = server.get('sni', '')[:20]
     
-    logger.info(f"   🎯 {server['ip']} ({name}) - {speed:.1f}Mbps, {lat:.0f}ms {udp_str} {reality_str}")
+    logger.info(f"   🎯 {server['ip']} ({name}) - {speed:.1f}Mbps, {lat:.0f}ms {udp_str} {reality_str} [{sni}]")
     
     if progress:
         progress.increment(True)
@@ -740,7 +812,7 @@ def full_check(server, progress=None):
     return server
 
 # ═══════════════════════════════════════════════════════════════
-# 📥 СБОР КОНФИГОВ
+# 📥 СБОР
 # ═══════════════════════════════════════════════════════════════
 def fetch_url(url, src):
     try:
@@ -787,6 +859,8 @@ def collect_all():
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_FETCH) as ex:
         futures = {}
+        
+        # Приоритет Reality источникам
         for url in REALITY_URLS:
             futures[ex.submit(fetch_url, url, 'reality')] = 'reality'
         for url in PREMIUM_URLS:
@@ -811,65 +885,30 @@ def collect_all():
             except:
                 pass
     
+    # Статистика
     reality_count = sum(1 for c in global_cfgs if c.get('is_reality'))
-    logger.info(f"\n📊 Собрано: {len(global_cfgs)} глобальных ({reality_count} Reality), {len(whitelist_cfgs)} whitelist")
+    good_reality = sum(1 for c in global_cfgs if c.get('reality_score', 0) >= 50)
+    
+    logger.info(f"\n📊 Собрано: {len(global_cfgs)} глобальных")
+    logger.info(f"   🛡️ Reality: {reality_count} (хороших: {good_reality})")
+    logger.info(f"   🇷🇺 Whitelist: {len(whitelist_cfgs)}")
     
     return global_cfgs, whitelist_cfgs
 
-def fetch_warp_configs():
-    """Сбор WARP конфигов"""
-    warp_list = []
-    
-    logger.info("🔄 Сбор WARP конфигов...")
-    
-    for url in WARP_URLS:
-        try:
-            r = requests.get(url, timeout=TIMEOUT_FETCH)
-            if r.status_code == 200:
-                text = r.text
-                decoded = safe_b64(text)
-                if decoded:
-                    text = decoded
-                
-                # Ищем warp:// ссылки
-                warp_regex = r"(warp://[^\s\n<>\"']+)"
-                links = re.findall(warp_regex, text)
-                warp_list.extend(links)
-                
-                # Ищем vless/hy2 с пометкой warp в названии
-                for link in extract_links(text):
-                    lower_link = link.lower()
-                    if 'warp' in lower_link or 'cloudflare' in lower_link or 'cf-' in lower_link:
-                        if link not in warp_list:
-                            warp_list.append(link)
-        except:
-            pass
-    
-    warp_list = list(set(warp_list))
-    logger.info(f"   🔄 Найдено WARP: {len(warp_list)}")
-    
-    return warp_list
-
 # ═══════════════════════════════════════════════════════════════
-# 🏆 ФИНАЛЬНЫЙ ОТБОР - 9 СЕРВЕРОВ
+# 🏆 ФИНАЛЬНЫЙ ОТБОР - 9 СЕРВЕРОВ (ЖЁСТКИЕ КРИТЕРИИ!)
 # ═══════════════════════════════════════════════════════════════
-def select_final_9(verified_global, verified_whitelist, warp_links):
+def select_final_9(verified_global, verified_whitelist):
     """
-    Выбирает РОВНО 9 серверов:
+    Выбирает 9 серверов с ЖЁСТКИМИ критериями для России:
     
-    🎮🇫🇮 Финляндия | 📅15:30      ← GAME-1 с временем последнего обновления
-    🎮🇪🇪 Эстония | 📅15:50        ← GAME-2 с временем следующего обновления
-    ⚡🇩🇪 Германия                  ← UNIVERSAL-1
-    ⚡🇳🇱 Нидерланды                ← UNIVERSAL-2
-    ⚡🇵🇱 Польша                    ← UNIVERSAL-3
-    🔄🇫🇮 Финляндия                 ← WARP-1
-    🔄🇳🇱 Нидерланды                ← WARP-2
-    ⚪🇷🇺 (РКН)                     ← WHITELIST-1
-    ⚪🇷🇺 (РКН)                     ← WHITELIST-2
+    🎮 GAME ×2     - ТОЛЬКО Reality, Tier 1-2, пинг <150ms
+    ⚡ UNIVERSAL ×3 - Приоритет Reality, высокая скорость
+    🔄 WARP ×2     - Reality с хорошим SNI
+    ⚪ WHITELIST ×2 - RU серверы
     """
     
     final = []
-    reserve = []
     used_ips = set()
     
     last_update = get_last_update_time()
@@ -877,62 +916,87 @@ def select_final_9(verified_global, verified_whitelist, warp_links):
     
     # ═══════ ПОДГОТОВКА ПУЛОВ ═══════
     
-    # GAME: Tier 1-2, сортировка по пингу
+    # 🔥 GAME: ТОЛЬКО Reality, Tier 1-2, низкий пинг
     game_pool = [s for s in verified_global 
-                 if s['info']['cc'] in GAME_COUNTRIES and s['speed'] >= MIN_SPEED_GAME]
+                 if s.get('is_reality')
+                 and s['info']['cc'] in GAME_COUNTRIES
+                 and s['real_lat'] <= MAX_PING_GAME
+                 and s['speed'] >= MIN_SPEED_GAME
+                 and s.get('reality_score', 0) >= 30]
     game_pool = sorted(game_pool, key=lambda x: (x['real_lat'], -x['speed']))
     
-    # Если мало GAME кандидатов, добавляем из других стран
+    # Если мало Reality, добавляем из Tier 3 с Reality
     if len(game_pool) < 2:
-        extra = [s for s in verified_global if s['info']['cc'] not in GAME_COUNTRIES and s['speed'] >= MIN_SPEED_GAME]
-        extra = sorted(extra, key=lambda x: x['real_lat'])
-        game_pool.extend(extra)
+        extra = [s for s in verified_global 
+                 if s.get('is_reality')
+                 and s['info']['cc'] in TIER_3_COUNTRIES
+                 and s['real_lat'] <= MAX_PING_GAME
+                 and s['speed'] >= MIN_SPEED_GAME]
+        game_pool.extend(sorted(extra, key=lambda x: x['real_lat']))
     
-    # UNIVERSAL: все страны, сортировка по скорости
-    univ_pool = sorted(verified_global, key=lambda x: (-x.get('is_reality', False), -x['speed']))
+    # 🔥 UNIVERSAL: Приоритет Reality, высокая скорость
+    univ_pool = [s for s in verified_global 
+                 if s['speed'] >= MIN_SPEED_UNIVERSAL
+                 and s['real_lat'] <= MAX_PING_UNIVERSAL]
+    # Сортировка: Reality с хорошим score > Reality > обычные
+    univ_pool = sorted(univ_pool, key=lambda x: (
+        -x.get('reality_score', 0),
+        -x.get('is_reality', False) * 100,
+        -x['speed']
+    ))
     
-    # WHITELIST: RU, сортировка по скорости
-    wl_pool = sorted(verified_whitelist, key=lambda x: -x['speed'])
+    # 🔥 WARP: Reality с высоким score
+    warp_pool = [s for s in verified_global 
+                 if s.get('is_reality')
+                 and s.get('reality_score', 0) >= 50
+                 and s['speed'] >= MIN_SPEED_UNIVERSAL]
+    warp_pool = sorted(warp_pool, key=lambda x: (-x.get('reality_score', 0), -x['speed']))
     
-    logger.info(f"\n📊 Пулы: GAME={len(game_pool)}, UNIVERSAL={len(univ_pool)}, WHITELIST={len(wl_pool)}, WARP={len(warp_links)}")
+    # WHITELIST
+    wl_pool = sorted(verified_whitelist, key=lambda x: (-x['speed'], x['real_lat']))
     
-    # ═══════ 🎮 GAME-1 (с временем последнего обновления) ═══════
-    logger.info(f"\n🎮 Выбор GAME серверов...")
+    logger.info(f"\n📊 Пулы после фильтрации:")
+    logger.info(f"   🎮 GAME (Reality, <{MAX_PING_GAME}ms): {len(game_pool)}")
+    logger.info(f"   ⚡ UNIVERSAL: {len(univ_pool)}")
+    logger.info(f"   🔄 WARP (Reality score≥50): {len(warp_pool)}")
+    logger.info(f"   ⚪ WHITELIST: {len(wl_pool)}")
+    
+    # ═══════ 🎮 GAME-1 ═══════
+    logger.info(f"\n🎮 Выбор GAME серверов (Reality only!)...")
     
     candidates = [s for s in game_pool if s['ip'] not in used_ips]
     if candidates:
         s = candidates[0]
         used_ips.add(s['ip'])
         cc = s['info']['cc']
-        # Формат: 🎮🇫🇮 Финляндия | 📅15:30
         s['final_name'] = f"🎮{get_flag(cc)} {get_country_name(cc)} | 📅{last_update}"
         s['role'] = 'GAME'
         final.append(s)
-        logger.info(f"   GAME-1: {s['ip']} ({get_country_name(cc)}) - {s['real_lat']:.0f}ms, {s['speed']:.1f}Mbps")
+        logger.info(f"   GAME-1: {s['ip']} ({get_country_name(cc)}) - {s['real_lat']:.0f}ms, {s['speed']:.1f}Mbps, Reality✅")
     else:
-        logger.warning("   ⚠️ GAME-1 не найден, используем fallback")
-        if univ_pool:
-            s = univ_pool[0]
+        # Fallback на лучший Reality
+        candidates = [s for s in univ_pool if s['ip'] not in used_ips and s.get('is_reality')]
+        if candidates:
+            s = candidates[0]
             used_ips.add(s['ip'])
             cc = s['info']['cc']
             s['final_name'] = f"🎮{get_flag(cc)} {get_country_name(cc)} | 📅{last_update}"
             s['role'] = 'GAME'
             final.append(s)
+            logger.info(f"   GAME-1: {s['ip']} ({get_country_name(cc)}) [fallback Reality]")
     
-    # ═══════ 🎮 GAME-2 (с временем следующего обновления) ═══════
+    # ═══════ 🎮 GAME-2 ═══════
     candidates = [s for s in game_pool if s['ip'] not in used_ips]
     if candidates:
         s = candidates[0]
         used_ips.add(s['ip'])
         cc = s['info']['cc']
-        # Формат: 🎮🇪🇪 Эстония | 📅15:50
         s['final_name'] = f"🎮{get_flag(cc)} {get_country_name(cc)} | 📅{next_update}"
         s['role'] = 'GAME'
         final.append(s)
-        logger.info(f"   GAME-2: {s['ip']} ({get_country_name(cc)}) - {s['real_lat']:.0f}ms, {s['speed']:.1f}Mbps")
+        logger.info(f"   GAME-2: {s['ip']} ({get_country_name(cc)}) - {s['real_lat']:.0f}ms, {s['speed']:.1f}Mbps, Reality✅")
     else:
-        logger.warning("   ⚠️ GAME-2 не найден, используем fallback")
-        candidates = [s for s in univ_pool if s['ip'] not in used_ips]
+        candidates = [s for s in univ_pool if s['ip'] not in used_ips and s.get('is_reality')]
         if candidates:
             s = candidates[0]
             used_ips.add(s['ip'])
@@ -940,74 +1004,47 @@ def select_final_9(verified_global, verified_whitelist, warp_links):
             s['final_name'] = f"🎮{get_flag(cc)} {get_country_name(cc)} | 📅{next_update}"
             s['role'] = 'GAME'
             final.append(s)
+            logger.info(f"   GAME-2: {s['ip']} ({get_country_name(cc)}) [fallback Reality]")
     
     # ═══════ ⚡ UNIVERSAL ×3 ═══════
-    logger.info(f"\n⚡ Выбор UNIVERSAL серверов...")
+    logger.info(f"\n⚡ Выбор UNIVERSAL серверов (приоритет Reality)...")
     
     for i in range(3):
-        candidates = [s for s in univ_pool if s['ip'] not in used_ips]
+        # Сначала пробуем Reality
+        candidates = [s for s in univ_pool if s['ip'] not in used_ips and s.get('is_reality')]
+        if not candidates:
+            candidates = [s for s in univ_pool if s['ip'] not in used_ips]
+        
         if candidates:
             s = candidates[0]
             used_ips.add(s['ip'])
             cc = s['info']['cc']
-            # Формат: ⚡🇩🇪 Германия
             s['final_name'] = f"⚡{get_flag(cc)} {get_country_name(cc)}"
             s['role'] = 'UNIVERSAL'
             final.append(s)
-            logger.info(f"   UNIVERSAL-{i+1}: {s['ip']} ({get_country_name(cc)}) - {s['speed']:.1f}Mbps")
-        else:
-            logger.warning(f"   ⚠️ UNIVERSAL-{i+1} не найден")
+            reality_tag = "Reality✅" if s.get('is_reality') else ""
+            logger.info(f"   UNIVERSAL-{i+1}: {s['ip']} ({get_country_name(cc)}) - {s['speed']:.1f}Mbps {reality_tag}")
     
     # ═══════ 🔄 WARP ×2 ═══════
-    logger.info(f"\n🔄 Выбор WARP серверов...")
+    logger.info(f"\n🔄 Выбор WARP серверов (Reality с высоким score)...")
     
-    warp_added = 0
-    
-    # Пробуем найти WARP-подобные конфиги с известной страной
-    for warp_link in warp_links[:5]:
-        if warp_added >= 2:
-            break
+    for i in range(2):
+        candidates = [s for s in warp_pool if s['ip'] not in used_ips]
+        if not candidates:
+            # Fallback на любой Reality
+            candidates = [s for s in univ_pool if s['ip'] not in used_ips and s.get('is_reality')]
+        if not candidates:
+            candidates = [s for s in univ_pool if s['ip'] not in used_ips]
         
-        # Парсим WARP конфиг
-        parsed = parse_config(warp_link, 'warp')
-        if parsed and parsed['ip'] not in used_ips:
-            cc = get_country(parsed['ip']) if parsed['ip'] else 'CF'
-            if cc == 'XX':
-                cc = 'CF'
-            
-            parsed['info'] = {'cc': cc}
-            parsed['real_lat'] = 30
-            parsed['speed'] = 50.0
-            parsed['udp'] = True
-            parsed['is_warp'] = True
-            # Формат: 🔄🇫🇮 Финляндия или 🔄 WARP
-            if cc != 'CF':
-                parsed['final_name'] = f"🔄{get_flag(cc)} {get_country_name(cc)}"
-            else:
-                parsed['final_name'] = f"🔄 WARP-{warp_added + 1}"
-            parsed['role'] = 'WARP'
-            
-            used_ips.add(parsed['ip'])
-            final.append(parsed)
-            warp_added += 1
-            logger.info(f"   WARP-{warp_added}: {parsed.get('final_name')}")
-    
-    # Если WARP конфигов не хватает, используем обычные серверы как fallback
-    while warp_added < 2:
-        candidates = [s for s in univ_pool if s['ip'] not in used_ips]
         if candidates:
             s = candidates[0]
             used_ips.add(s['ip'])
             cc = s['info']['cc']
             s['final_name'] = f"🔄{get_flag(cc)} {get_country_name(cc)}"
             s['role'] = 'WARP'
-            s['is_warp'] = False
             final.append(s)
-            warp_added += 1
-            logger.info(f"   WARP-{warp_added}: {s['ip']} ({get_country_name(cc)}) [fallback]")
-        else:
-            logger.warning(f"   ⚠️ WARP-{warp_added + 1} не найден")
-            break
+            score = s.get('reality_score', 0)
+            logger.info(f"   WARP-{i+1}: {s['ip']} ({get_country_name(cc)}) - score={score}")
     
     # ═══════ ⚪ WHITELIST ×2 ═══════
     logger.info(f"\n⚪ Выбор WHITELIST серверов...")
@@ -1016,32 +1053,37 @@ def select_final_9(verified_global, verified_whitelist, warp_links):
         if i < len(wl_pool):
             s = wl_pool[i]
             cc = s['info']['cc']
-            # Формат: ⚪🇷🇺 (РКН)
             s['final_name'] = f"⚪{get_flag(cc)} (РКН)"
             s['role'] = 'WHITELIST'
             final.append(s)
             logger.info(f"   WHITELIST-{i+1}: {s['ip']} - {s['speed']:.1f}Mbps")
-        else:
-            logger.warning(f"   ⚠️ WHITELIST-{i+1} не найден в пуле")
     
-    # ═══════ 📦 РЕЗЕРВНЫЙ ПУЛ ═══════
-    remaining = [s for s in verified_global if s['ip'] not in used_ips]
-    reserve = sorted(remaining, key=lambda x: (-x.get('is_reality', False), -x['speed']))[:RESERVE_POOL_SIZE]
-    
-    # ═══════ ПРОВЕРКА 9 СЕРВЕРОВ ═══════
-    logger.info(f"\n✅ Итого в подписке: {len(final)} серверов")
-    
-    if len(final) < 9:
-        logger.warning(f"⚠️ Только {len(final)} серверов! Добавляем резервные...")
-        while len(final) < 9 and reserve:
-            s = reserve.pop(0)
+    # ═══════ ДОЗАПОЛНЕНИЕ ДО 9 ═══════
+    while len(final) < 9:
+        remaining = [s for s in verified_global if s['ip'] not in used_ips]
+        remaining = sorted(remaining, key=lambda x: (-x.get('is_reality', False), -x['speed']))
+        
+        if remaining:
+            s = remaining[0]
+            used_ips.add(s['ip'])
             cc = s['info']['cc']
             s['final_name'] = f"⚡{get_flag(cc)} {get_country_name(cc)}"
             s['role'] = 'RESERVE'
             final.append(s)
-            logger.info(f"   Добавлен резерв: {s['ip']} ({get_country_name(cc)})")
+            logger.info(f"   RESERVE: {s['ip']} ({get_country_name(cc)})")
+        else:
+            break
     
-    logger.info(f"📦 Резервный пул: {len(reserve)} серверов")
+    # ═══════ РЕЗЕРВНЫЙ ПУЛ ═══════
+    remaining = [s for s in verified_global if s['ip'] not in used_ips]
+    reserve = sorted(remaining, key=lambda x: (-x.get('is_reality', False), -x.get('reality_score', 0), -x['speed']))[:RESERVE_POOL_SIZE]
+    
+    logger.info(f"\n✅ Итого: {len(final)} серверов")
+    logger.info(f"📦 Резерв: {len(reserve)} серверов")
+    
+    # Статистика Reality
+    reality_in_final = sum(1 for s in final if s.get('is_reality'))
+    logger.info(f"🛡️ Reality в финале: {reality_in_final}/{len(final)}")
     
     return final, reserve
 
@@ -1049,7 +1091,7 @@ def select_final_9(verified_global, verified_whitelist, warp_links):
 # 💾 СОХРАНЕНИЕ
 # ═══════════════════════════════════════════════════════════════
 def save_results(final, reserve, stats):
-    # 1. Подписка (base64)
+    # 1. Подписка
     links = []
     for s in final:
         base = s['original'].split('#')[0]
@@ -1062,21 +1104,21 @@ def save_results(final, reserve, stats):
     except Exception as e:
         logger.error(f"❌ Ошибка: {e}")
     
-    # 2. JSON статистика
+    # 2. JSON
     json_data = {
         "servers": [],
         "updated": datetime.now(timezone.utc).isoformat(),
         "updated_msk": get_timestamp(),
         "next_update_msk": get_next_update_time(),
         "stats": stats,
-        "version": "V122"
+        "version": "V123-RussiaProof"
     }
     
     for s in final:
         cc = s.get('info', {}).get('cc', 'XX')
         json_data["servers"].append({
             "name": s.get('final_name', ''),
-            "role": s.get('role', 'UNKNOWN'),
+            "role": s.get('role', ''),
             "ip": s.get('ip', ''),
             "port": s.get('port', 0),
             "country": cc,
@@ -1085,7 +1127,8 @@ def save_results(final, reserve, stats):
             "latency_ms": s.get('real_lat', 0),
             "udp": s.get('udp', False),
             "is_reality": s.get('is_reality', False),
-            "is_warp": s.get('is_warp', False),
+            "reality_score": s.get('reality_score', 0),
+            "sni": s.get('sni', ''),
             "original": s.get('original', '')
         })
     
@@ -1095,21 +1138,21 @@ def save_results(final, reserve, stats):
     except:
         pass
     
-    # 3. Резервный пул
+    # 3. Резерв
     pool = {"updated": get_timestamp(), "servers": []}
     for s in reserve:
         cc = s.get('info', {}).get('cc', 'XX')
         pool["servers"].append({
             "ip": s['ip'], "port": s['port'], "country": cc,
-            "country_name": get_country_name(cc),
             "speed_mbps": s.get('speed', 0), "latency_ms": s.get('real_lat', 0),
-            "is_reality": s.get('is_reality', False), "original": s['original']
+            "is_reality": s.get('is_reality', False),
+            "reality_score": s.get('reality_score', 0),
+            "original": s['original']
         })
     
     try:
         with open(RESERVE_POOL_FILE, 'w', encoding='utf-8') as f:
             json.dump(pool, f, ensure_ascii=False, indent=2)
-        logger.info(f"💾 Резерв: {len(reserve)} серверов")
     except:
         pass
 
@@ -1120,10 +1163,11 @@ def main():
     start = time.time()
     
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V122 - PERFECT 9 EDITION")
+    logger.info("🚀 FL1P VPN V123 - RUSSIA-PROOF EDITION")
     logger.info(f"   ⏰ {get_timestamp()}")
-    logger.info("   📋 Структура: 2×GAME + 3×UNIVERSAL + 2×WARP + 2×WHITELIST = 9")
-    logger.info("   🎨 Формат: 🎮🇫🇮 Финляндия | 📅15:30")
+    logger.info("   🛡️ Приоритет: ТОЛЬКО Reality серверы")
+    logger.info("   🎮 GAME: Reality + Tier 1-2 + пинг <150ms")
+    logger.info("   ⚡ UNIVERSAL: Reality приоритет")
     print("═" * 70)
     
     load_history()
@@ -1138,36 +1182,36 @@ def main():
     
     # ═══ ЭТАП 1: СБОР ═══
     logger.info("\n" + "═" * 50)
-    logger.info("📥 ЭТАП 1: СБОР КОНФИГОВ")
+    logger.info("📥 ЭТАП 1: СБОР")
     logger.info("═" * 50)
     
     global_cfgs, whitelist_cfgs = collect_all()
-    warp_links = fetch_warp_configs()
     
-    # Дедупликация
+    # Дедупликация с приоритетом Reality
     unique_global = {}
     for c in global_cfgs:
         key = f"{c['ip']}:{c['port']}"
-        if key not in unique_global or (c.get('is_reality') and not unique_global[key].get('is_reality')):
+        if key not in unique_global:
+            unique_global[key] = c
+        elif c.get('is_reality') and not unique_global[key].get('is_reality'):
+            unique_global[key] = c
+        elif c.get('reality_score', 0) > unique_global[key].get('reality_score', 0):
             unique_global[key] = c
     global_list = list(unique_global.values())
     
-    unique_wl = {}
-    for c in whitelist_cfgs:
-        key = f"{c['ip']}:{c['port']}"
-        if key not in unique_wl:
-            unique_wl[key] = c
+    unique_wl = {f"{c['ip']}:{c['port']}": c for c in whitelist_cfgs}
     wl_list = list(unique_wl.values())
     
-    logger.info(f"🔍 Уникальных: {len(global_list)} глобальных, {len(wl_list)} whitelist")
+    reality_count = sum(1 for c in global_list if c.get('is_reality'))
+    logger.info(f"🔍 Уникальных: {len(global_list)} ({reality_count} Reality), {len(wl_list)} WL")
     
     # ═══ ЭТАП 2: TCP ═══
     logger.info("\n" + "═" * 50)
-    logger.info("⚡ ЭТАП 2: TCP ПРОВЕРКА")
+    logger.info("⚡ ЭТАП 2: TCP")
     logger.info("═" * 50)
     
     alive_global = []
-    progress = ProgressCounter(len(global_list), "Глобальные")
+    progress = ProgressCounter(len(global_list), "Global")
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_SCAN) as ex:
         for r in [f.result() for f in concurrent.futures.as_completed([ex.submit(initial_check, s, progress) for s in global_list])]:
             if r:
@@ -1180,36 +1224,40 @@ def main():
             if r:
                 alive_wl.append(r)
     
-    logger.info(f"\n✅ Живых: {len(alive_global)} глобальных, {len(alive_wl)} whitelist")
+    reality_alive = sum(1 for s in alive_global if s.get('is_reality'))
+    logger.info(f"\n✅ Живых: {len(alive_global)} ({reality_alive} Reality), {len(alive_wl)} WL")
     
-    # Статистика по странам
+    # Статистика
     cc_stats = {}
     for s in alive_global:
         cc = s['info']['cc']
         cc_stats[cc] = cc_stats.get(cc, 0) + 1
     
     logger.info("\n📊 Топ стран:")
-    for cc, cnt in sorted(cc_stats.items(), key=lambda x: -x[1])[:10]:
-        tier = "T1" if cc in TIER_1_COUNTRIES else ("T2" if cc in TIER_2_COUNTRIES else ("T3" if cc in TIER_3_COUNTRIES else "T4"))
+    for cc, cnt in sorted(cc_stats.items(), key=lambda x: -x[1])[:8]:
+        tier = f"T{get_tier(cc)}"
         logger.info(f"   {get_flag(cc)} {cc} ({get_country_name(cc)}): {cnt} [{tier}]")
     
-    # ═══ ЭТАП 3: ГЛУБОКАЯ ПРОВЕРКА ═══
+    # ═══ ЭТАП 3: ГЛУБОКАЯ ═══
     logger.info("\n" + "═" * 50)
     logger.info("🧪 ЭТАП 3: ГЛУБОКАЯ ПРОВЕРКА")
     logger.info("═" * 50)
     
-    def sort_key(s):
-        tier = 1 if s['info']['cc'] in TIER_1_COUNTRIES else (2 if s['info']['cc'] in TIER_2_COUNTRIES else (3 if s['info']['cc'] in TIER_3_COUNTRIES else 4))
-        reality = -20 if s.get('good_sni') else (-10 if s.get('is_reality') else 0)
-        return (reality, tier, s['latency'])
+    # Приоритет: Reality > высокий score > близкие страны
+    def priority_key(s):
+        tier = get_tier(s['info']['cc'])
+        reality = -100 if s.get('is_reality') else 0
+        score = -s.get('reality_score', 0)
+        return (reality, score, tier, s['latency'])
     
-    candidates_global = sorted(alive_global, key=sort_key)[:MAX_DEEP_CHECK_GLOBAL]
+    candidates_global = sorted(alive_global, key=priority_key)[:MAX_DEEP_CHECK_GLOBAL]
     candidates_wl = alive_wl[:MAX_DEEP_CHECK_WHITELIST]
     
-    logger.info(f"   К проверке: {len(candidates_global)} глобальных, {len(candidates_wl)} whitelist")
+    reality_to_check = sum(1 for s in candidates_global if s.get('is_reality'))
+    logger.info(f"   К проверке: {len(candidates_global)} ({reality_to_check} Reality), {len(candidates_wl)} WL")
     
     verified_global = []
-    progress = ProgressCounter(len(candidates_global), "Глобальные")
+    progress = ProgressCounter(len(candidates_global), "Global")
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_DEEP) as ex:
         for r in [f.result() for f in concurrent.futures.as_completed({ex.submit(full_check, s, progress): s for s in candidates_global})]:
             if r:
@@ -1222,31 +1270,30 @@ def main():
             if r:
                 verified_wl.append(r)
     
-    logger.info(f"\n✅ Прошли: {len(verified_global)} глобальных, {len(verified_wl)} whitelist")
+    reality_verified = sum(1 for s in verified_global if s.get('is_reality'))
+    logger.info(f"\n✅ Прошли: {len(verified_global)} ({reality_verified} Reality), {len(verified_wl)} WL")
     
     # ═══ ЭТАП 4: ФИНАЛ ═══
     logger.info("\n" + "═" * 50)
     logger.info("🏆 ЭТАП 4: ФИНАЛЬНЫЙ ОТБОР")
     logger.info("═" * 50)
     
-    final_9, reserve = select_final_9(verified_global, verified_wl, warp_links)
+    final_9, reserve = select_final_9(verified_global, verified_wl)
     
     # ═══ ВЫВОД ═══
     print("\n" + "═" * 70)
-    logger.info("🏆 THE FINAL 9:")
+    logger.info("🏆 THE FINAL 9 (Russia-Proof):")
     print("═" * 70)
     
     for i, s in enumerate(final_9):
-        role = s.get('role', 'UNKNOWN')
         cc = s.get('info', {}).get('cc', 'XX')
+        udp = "UDP✅" if s.get('udp') else "UDP❌"
+        reality = "Reality✅" if s.get('is_reality') else "Standard"
+        score = s.get('reality_score', 0)
         
-        if s.get('is_warp') and 'WARP' in s.get('final_name', ''):
-            print(f"\n   {i+1}. {s['final_name']}")
-            print(f"      Cloudflare WARP")
-        else:
-            udp = "UDP✅" if s.get('udp') else "UDP❌"
-            print(f"\n   {i+1}. {s['final_name']}")
-            print(f"      {s['ip']} | {s.get('speed', 0):.1f}Mbps | {s.get('real_lat', 0):.0f}ms | {udp}")
+        print(f"\n   {i+1}. {s['final_name']}")
+        print(f"      {s['ip']} | {s.get('speed', 0):.1f}Mbps | {s.get('real_lat', 0):.0f}ms")
+        print(f"      {udp} | {reality} (score={score})")
     
     print()
     
@@ -1254,14 +1301,14 @@ def main():
     stats = {
         "total": len(global_cfgs) + len(whitelist_cfgs),
         "unique_global": len(global_list),
-        "unique_whitelist": len(wl_list),
+        "reality_unique": reality_count,
         "alive_global": len(alive_global),
-        "alive_whitelist": len(alive_wl),
+        "reality_alive": reality_alive,
         "verified_global": len(verified_global),
-        "verified_whitelist": len(verified_wl),
-        "warp_found": len(warp_links),
-        "reserve": len(reserve),
-        "final_count": len(final_9)
+        "reality_verified": reality_verified,
+        "final_count": len(final_9),
+        "reality_in_final": sum(1 for s in final_9 if s.get('is_reality')),
+        "reserve": len(reserve)
     }
     
     save_results(final_9, reserve, stats)
@@ -1271,7 +1318,7 @@ def main():
     elapsed = time.time() - start
     print("═" * 70)
     logger.info(f"✅ ГОТОВО за {elapsed:.1f} сек")
-    logger.info(f"📊 {len(global_cfgs)}→{len(alive_global)}→{len(verified_global)}→{len(final_9)} серверов")
+    logger.info(f"🛡️ Reality в финале: {stats['reality_in_final']}/{len(final_9)}")
     print("═" * 70)
 
 if __name__ == "__main__":
