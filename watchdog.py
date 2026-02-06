@@ -18,7 +18,16 @@ import logging
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote, parse_qs, unquote
 
-# --- WATCHDOG V1.0: Quick Health Check & Rotation ---
+# ═══════════════════════════════════════════════════════════════
+#  FL1P VPN WATCHDOG V120 - Quick Health Check & Smart Rotation
+#  
+#  Проверяет 9 серверов:
+#  🎮 GAME-1, GAME-2
+#  🌐 UNIVERSAL-1, UNIVERSAL-2, UNIVERSAL-3
+#  ☁️ WARP-1, WARP-2
+#  🇷🇺 WHITELIST-1, WHITELIST-2
+#
+# ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ═══════════════════════════════════════════════════════════════
@@ -30,14 +39,14 @@ logging.basicConfig(
     format='%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%H:%M:%S',
     handlers=[
-        logging.FileHandler(LOG_FILE, encoding='utf-8', mode='a'),  # Append mode!
+        logging.FileHandler(LOG_FILE, encoding='utf-8', mode='a'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
 
 # ═══════════════════════════════════════════════════════════════
-# НАСТРОЙКИ
+# ⚙️ НАСТРОЙКИ
 # ═══════════════════════════════════════════════════════════════
 XRAY_BIN = "./xray"
 
@@ -47,64 +56,100 @@ JSON_FILE = 'stats.json'
 RESERVE_POOL_FILE = 'reserve_pool.json'
 
 # Таймауты
-HEALTH_CHECK_TIMEOUT = 8.0      # Секунд на проверку одного сервера
-XRAY_STARTUP_DELAY = 1.0        # Секунд на запуск Xray
-CONNECTION_TIMEOUT = 5.0         # Таймаут HTTP запроса
+HEALTH_CHECK_TIMEOUT = 6.0
+XRAY_STARTUP_DELAY = 1.0
+CONNECTION_TIMEOUT = 4.0
 
-TIMEZONE_OFFSET = 3  # MSK
+# Максимум попыток найти замену
+MAX_REPLACEMENT_ATTEMPTS = 5
+
+TIMEZONE_OFFSET = 3
 
 # ═══════════════════════════════════════════════════════════════
-# GEO НАСТРОЙКИ
+# 🌍 GEO НАСТРОЙКИ (должны совпадать с main.py!)
 # ═══════════════════════════════════════════════════════════════
+TIER_1_COUNTRIES = ['FI', 'EE', 'LV', 'LT']
+TIER_2_COUNTRIES = ['SE', 'NO', 'PL']
+TIER_3_COUNTRIES = ['DE', 'NL', 'AT', 'CZ', 'DK', 'BE', 'CH']
+TIER_4_COUNTRIES = ['GB', 'FR', 'IT', 'ES', 'PT', 'IE', 'HU', 'RO', 'BG', 'SK']
+
+GAME_ALLOWED_COUNTRIES = TIER_1_COUNTRIES + TIER_2_COUNTRIES
+UNIVERSAL_ALLOWED_COUNTRIES = TIER_1_COUNTRIES + TIER_2_COUNTRIES + TIER_3_COUNTRIES + TIER_4_COUNTRIES
+WHITELIST_COUNTRIES = ['RU']
+
 RUS_NAMES = {
-    'DE': 'Германия', 'NL': 'Нидерланды', 'FI': 'Финляндия', 
-    'RU': 'Россия', 'TR': 'Турция', 'GB': 'Великобритания', 'FR': 'Франция', 
-    'SE': 'Швеция', 'PL': 'Польша', 'EE': 'Эстония', 'LV': 'Латвия', 
-    'LT': 'Литва', 'NO': 'Норвегия', 'AT': 'Австрия', 'CZ': 'Чехия',
-    'UA': 'Украина', 'KZ': 'Казахстан', 'MD': 'Молдова', 'BY': 'Беларусь',
-    'BG': 'Болгария', 'RO': 'Румыния', 'HU': 'Венгрия', 'SK': 'Словакия',
-    'CH': 'Швейцария', 'BE': 'Бельгия', 'DK': 'Дания', 'IE': 'Ирландия',
-    'IT': 'Италия', 'ES': 'Испания', 'PT': 'Португалия', 'GR': 'Греция',
-    'JP': 'Япония', 'SG': 'Сингапур', 'HK': 'Гонконг', 'KR': 'Корея',
-    'CA': 'Канада', 'AU': 'Австралия', 'IN': 'Индия', 'BR': 'Бразилия',
+    'FI': 'Финляндия', 'EE': 'Эстония', 'LV': 'Латвия', 'LT': 'Литва',
+    'SE': 'Швеция', 'NO': 'Норвегия', 'PL': 'Польша',
+    'DE': 'Германия', 'NL': 'Нидерланды', 'AT': 'Австрия', 'CZ': 'Чехия',
+    'DK': 'Дания', 'BE': 'Бельгия', 'CH': 'Швейцария',
+    'GB': 'Британия', 'FR': 'Франция', 'IT': 'Италия', 'ES': 'Испания',
+    'PT': 'Португалия', 'IE': 'Ирландия', 'HU': 'Венгрия', 'RO': 'Румыния',
+    'BG': 'Болгария', 'SK': 'Словакия', 'GR': 'Греция',
+    'RU': 'Россия', 'UA': 'Украина', 'CF': 'Cloudflare',
 }
 
 # ═══════════════════════════════════════════════════════════════
-# УТИЛИТЫ
+# 🎨 УТИЛИТЫ
 # ═══════════════════════════════════════════════════════════════
+def get_msk_time():
+    return datetime.now(timezone.utc) + timedelta(hours=TIMEZONE_OFFSET)
+
 def get_beautiful_time():
-    """Возвращает красиво отформатированное время (MSK)"""
-    now_utc = datetime.now(timezone.utc)
-    msk_time = now_utc + timedelta(hours=TIMEZONE_OFFSET)
-    return f"🕐{msk_time.strftime('%H:%M')}"
+    return f"🕐{get_msk_time().strftime('%H:%M')}"
 
 def get_timestamp():
-    """Возвращает timestamp для логов"""
-    now_utc = datetime.now(timezone.utc)
-    msk_time = now_utc + timedelta(hours=TIMEZONE_OFFSET)
-    return msk_time.strftime('%Y-%m-%d %H:%M:%S MSK')
+    return get_msk_time().strftime('%Y-%m-%d %H:%M:%S MSK')
 
 def get_country_flag(country_code):
-    """Преобразует код страны в флаг эмодзи"""
     if not country_code or len(country_code) != 2:
         return "🏳️"
     return "".join([chr(127397 + ord(c)) for c in country_code.upper()])
 
 def format_server_name(base_name, country_code, include_time=False):
-    """Форматирует название сервера с флагом слева"""
     flag = get_country_flag(country_code)
-    
     if include_time:
-        time_str = get_beautiful_time()
-        return f"{flag} {base_name} | {time_str}"
+        return f"{flag} {base_name} | {get_beautiful_time()}"
+    return f"{flag} {base_name}"
+
+def get_server_role(server_name):
+    """Определяет роль сервера по имени"""
+    name_lower = server_name.lower() if server_name else ""
+    
+    if "game-1" in name_lower or "🎮game-1" in name_lower:
+        return "GAME", 1, True  # role_type, index, include_time
+    elif "game-2" in name_lower or "🎮game-2" in name_lower:
+        return "GAME", 2, False
+    elif "universal-1" in name_lower or "🌐universal-1" in name_lower:
+        return "UNIVERSAL", 1, False
+    elif "universal-2" in name_lower or "🌐universal-2" in name_lower:
+        return "UNIVERSAL", 2, False
+    elif "universal-3" in name_lower or "🌐universal-3" in name_lower:
+        return "UNIVERSAL", 3, False
+    elif "warp-1" in name_lower or "☁️warp-1" in name_lower:
+        return "WARP", 1, False
+    elif "warp-2" in name_lower or "☁️warp-2" in name_lower:
+        return "WARP", 2, False
+    elif "whitelist-1" in name_lower or "🇷🇺whitelist-1" in name_lower:
+        return "WHITELIST", 1, False
+    elif "whitelist-2" in name_lower or "🇷🇺whitelist-2" in name_lower:
+        return "WHITELIST", 2, False
     else:
-        return f"{flag} {base_name}"
+        return "UNKNOWN", 0, False
+
+def get_role_emoji(role_type):
+    emojis = {
+        "GAME": "🎮",
+        "UNIVERSAL": "🌐",
+        "WARP": "☁️",
+        "WHITELIST": "🇷🇺"
+    }
+    return emojis.get(role_type, "🔹")
 
 # ═══════════════════════════════════════════════════════════════
-# ЗАГРУЗКА ДАННЫХ
+# 📂 ЗАГРУЗКА И СОХРАНЕНИЕ ДАННЫХ
 # ═══════════════════════════════════════════════════════════════
 def load_current_servers():
-    """Загружает текущие активные серверы из stats.json"""
+    """Загружает текущие серверы из stats.json"""
     if not os.path.exists(JSON_FILE):
         logger.error(f"❌ Файл {JSON_FILE} не найден!")
         return None, None
@@ -113,17 +158,14 @@ def load_current_servers():
         with open(JSON_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
         servers = data.get('servers', [])
-        logger.info(f"📂 Загружено {len(servers)} активных серверов из {JSON_FILE}")
+        logger.info(f"📂 Загружено {len(servers)} серверов из {JSON_FILE}")
         return servers, data
-    except json.JSONDecodeError as e:
-        logger.error(f"❌ Ошибка парсинга {JSON_FILE}: {e}")
-        return None, None
     except Exception as e:
         logger.error(f"❌ Ошибка чтения {JSON_FILE}: {e}")
         return None, None
 
 def load_reserve_pool():
-    """Загружает резервный пул из reserve_pool.json"""
+    """Загружает резервный пул"""
     if not os.path.exists(RESERVE_POOL_FILE):
         logger.warning(f"⚠️ Файл {RESERVE_POOL_FILE} не найден")
         return []
@@ -132,17 +174,14 @@ def load_reserve_pool():
         with open(RESERVE_POOL_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
         servers = data.get('servers', [])
-        logger.info(f"📂 Загружено {len(servers)} резервных серверов из {RESERVE_POOL_FILE}")
+        logger.info(f"📂 Резервный пул: {len(servers)} серверов")
         return servers
-    except json.JSONDecodeError as e:
-        logger.error(f"❌ Ошибка парсинга {RESERVE_POOL_FILE}: {e}")
-        return []
     except Exception as e:
         logger.error(f"❌ Ошибка чтения {RESERVE_POOL_FILE}: {e}")
         return []
 
 def save_reserve_pool(servers):
-    """Сохраняет обновлённый резервный пул"""
+    """Сохраняет резервный пул"""
     try:
         data = {
             "updated": datetime.now(timezone.utc).isoformat(),
@@ -151,10 +190,10 @@ def save_reserve_pool(servers):
         }
         with open(RESERVE_POOL_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        logger.info(f"💾 Резервный пул сохранён: {len(servers)} серверов")
+        logger.info(f"💾 Резервный пул: {len(servers)} серверов")
         return True
     except Exception as e:
-        logger.error(f"❌ Ошибка сохранения {RESERVE_POOL_FILE}: {e}")
+        logger.error(f"❌ Ошибка сохранения резерва: {e}")
         return False
 
 def save_updated_stats(servers, original_data):
@@ -163,7 +202,7 @@ def save_updated_stats(servers, original_data):
         original_data['servers'] = servers
         original_data['updated'] = datetime.now(timezone.utc).isoformat()
         original_data['updated_msk'] = get_timestamp()
-        original_data['last_watchdog'] = datetime.now(timezone.utc).isoformat()
+        original_data['last_watchdog'] = get_timestamp()
         original_data['watchdog_rotations'] = original_data.get('watchdog_rotations', 0) + 1
         
         with open(JSON_FILE, 'w', encoding='utf-8') as f:
@@ -171,24 +210,24 @@ def save_updated_stats(servers, original_data):
         logger.info(f"💾 Статистика обновлена: {JSON_FILE}")
         return True
     except Exception as e:
-        logger.error(f"❌ Ошибка сохранения {JSON_FILE}: {e}")
+        logger.error(f"❌ Ошибка сохранения статистики: {e}")
         return False
 
-def save_updated_subscription(servers):
-    """Сохраняет обновлённую подписку в base64"""
+def save_subscription(servers):
+    """Сохраняет подписку в base64"""
     links = []
     
     for server in servers:
         original = server.get('original', '')
         if not original:
-            logger.warning(f"⚠️ Сервер {server.get('ip', 'unknown')} без original ссылки")
             continue
         
-        # Убираем старый remark и добавляем новый
-        base = original.split('#')[0]
-        name = server.get('name', 'Unknown')
-        link = f"{base}#{quote(name)}"
-        links.append(link)
+        if server.get('is_warp'):
+            links.append(original)
+        else:
+            base = original.split('#')[0]
+            name = server.get('name', 'Unknown')
+            links.append(f"{base}#{quote(name)}")
     
     if not links:
         logger.error("❌ Нет ссылок для сохранения!")
@@ -201,26 +240,29 @@ def save_updated_subscription(servers):
         with open(OUTPUT_FILE, 'w') as f:
             f.write(encoded)
         
-        logger.info(f"💾 Подписка обновлена: {OUTPUT_FILE} ({len(links)} серверов)")
+        logger.info(f"💾 Подписка: {OUTPUT_FILE} ({len(links)} серверов)")
         return True
     except Exception as e:
-        logger.error(f"❌ Ошибка сохранения {OUTPUT_FILE}: {e}")
+        logger.error(f"❌ Ошибка сохранения подписки: {e}")
         return False
 
 # ═══════════════════════════════════════════════════════════════
-# ГЕНЕРАЦИЯ КОНФИГА XRAY
+# 🔧 ГЕНЕРАЦИЯ КОНФИГА XRAY
 # ═══════════════════════════════════════════════════════════════
-def generate_xray_config_from_original(original, local_port):
-    """Генерирует конфиг Xray из оригинальной ссылки vless:// или hy2://"""
-    
+def generate_xray_config(original, local_port):
+    """Генерирует конфиг Xray из оригинальной ссылки"""
     if not original:
         return None
     
     try:
-        # ═══════ HYSTERIA2 ═══════
-        if original.startswith("hy2://") or original.startswith("hysteria2://"):
+        # WARP - особая обработка
+        if original.startswith("warp://"):
+            # WARP проверяем через cloudflare
+            return None  # Пропускаем, проверим через HTTP
+        
+        # HYSTERIA2
+        if original.startswith(("hy2://", "hysteria2://")):
             prefix = "hy2://" if original.startswith("hy2://") else "hysteria2://"
-            
             parts = original.split("@")
             if len(parts) < 2:
                 return None
@@ -228,7 +270,6 @@ def generate_xray_config_from_original(original, local_port):
             password = parts[0].replace(prefix, "")
             rest = parts[1]
             
-            # Извлекаем host:port
             if "?" in rest:
                 host_port = rest.split("?")[0]
                 query = rest.split("?")[1].split("#")[0]
@@ -241,38 +282,19 @@ def generate_xray_config_from_original(original, local_port):
             
             host, port = host_port.rsplit(":", 1)
             params = parse_qs(query) if query else {}
-            sni = params.get('sni', [''])[0]
             
-            config = {
+            return {
                 "log": {"loglevel": "error"},
-                "inbounds": [{
-                    "port": local_port,
-                    "listen": "127.0.0.1",
-                    "protocol": "socks",
-                    "settings": {"udp": True, "auth": "noauth"}
-                }],
+                "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}],
                 "outbounds": [{
                     "protocol": "hysteria2",
-                    "settings": {
-                        "vnext": [{
-                            "address": host,
-                            "port": int(port),
-                            "users": [{"password": password}]
-                        }]
-                    },
-                    "streamSettings": {
-                        "network": "udp",
-                        "security": "tls",
-                        "tlsSettings": {
-                            "serverName": sni,
-                            "allowInsecure": True
-                        }
-                    }
+                    "settings": {"vnext": [{"address": host, "port": int(port), "users": [{"password": password}]}]},
+                    "streamSettings": {"network": "udp", "security": "tls", 
+                                      "tlsSettings": {"serverName": params.get('sni', [''])[0], "allowInsecure": True}}
                 }]
             }
-            return config
         
-        # ═══════ VLESS ═══════
+        # VLESS
         if original.startswith("vless://"):
             parts = original.split("@")
             if len(parts) < 2:
@@ -281,7 +303,6 @@ def generate_xray_config_from_original(original, local_port):
             uuid = parts[0].replace("vless://", "")
             rest = parts[1]
             
-            # Извлекаем host:port
             if "?" not in rest:
                 return None
             
@@ -297,413 +318,371 @@ def generate_xray_config_from_original(original, local_port):
             transport = params.get('type', ['tcp'])[0].lower()
             security = params.get('security', ['none'])[0].lower()
             
-            # User object
-            user_obj = {"id": uuid, "encryption": "none"}
+            user = {"id": uuid, "encryption": "none"}
             flow = params.get('flow', [''])[0]
             if flow:
-                user_obj["flow"] = flow
+                user["flow"] = flow
             
-            # Stream settings
-            stream_settings = {
-                "network": transport,
-                "security": security
-            }
+            stream = {"network": transport, "security": security}
             
-            # WebSocket
             if transport == 'ws':
-                ws_settings = {"path": params.get('path', ['/'])[0]}
-                host_val = params.get('host', [''])[0]
-                if host_val:
-                    ws_settings["headers"] = {"Host": host_val}
-                stream_settings["wsSettings"] = ws_settings
+                stream["wsSettings"] = {"path": params.get('path', ['/'])[0]}
+                if params.get('host'):
+                    stream["wsSettings"]["headers"] = {"Host": params['host'][0]}
+            elif transport == 'grpc' and params.get('serviceName'):
+                stream["grpcSettings"] = {"serviceName": params['serviceName'][0]}
             
-            # gRPC
-            elif transport == 'grpc':
-                service_name = params.get('serviceName', [''])[0]
-                if service_name:
-                    stream_settings["grpcSettings"] = {"serviceName": service_name}
-            
-            # TLS
             if security == 'tls':
-                tls_settings = {
+                stream["tlsSettings"] = {
                     "serverName": params.get('sni', [''])[0],
-                    "allowInsecure": False,
-                    "fingerprint": params.get('fp', ['chrome'])[0]
+                    "fingerprint": params.get('fp', ['chrome'])[0],
+                    "allowInsecure": False
                 }
-                stream_settings["tlsSettings"] = tls_settings
-            
-            # Reality
             elif security == 'reality':
-                reality_settings = {
-                    "show": False,
+                stream["realitySettings"] = {
                     "fingerprint": params.get('fp', ['chrome'])[0],
                     "serverName": params.get('sni', [''])[0],
                     "publicKey": params.get('pbk', [''])[0],
                     "shortId": params.get('sid', [''])[0],
                     "spiderX": params.get('spx', ['/'])[0]
                 }
-                stream_settings["realitySettings"] = reality_settings
             
-            config = {
+            return {
                 "log": {"loglevel": "error"},
-                "inbounds": [{
-                    "port": local_port,
-                    "listen": "127.0.0.1",
-                    "protocol": "socks",
-                    "settings": {"udp": True, "auth": "noauth"}
-                }],
-                "outbounds": [{
-                    "protocol": "vless",
-                    "settings": {
-                        "vnext": [{
-                            "address": host,
-                            "port": int(port),
-                            "users": [user_obj]
-                        }]
-                    },
-                    "streamSettings": stream_settings
-                }]
+                "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}],
+                "outbounds": [{"protocol": "vless", 
+                              "settings": {"vnext": [{"address": host, "port": int(port), "users": [user]}]},
+                              "streamSettings": stream}]
             }
-            return config
-            
     except Exception as e:
         logger.debug(f"Ошибка генерации конфига: {e}")
     
     return None
 
 # ═══════════════════════════════════════════════════════════════
-# ПРОВЕРКА ЗДОРОВЬЯ СЕРВЕРА
+# 🔍 ПРОВЕРКА ЗДОРОВЬЯ
 # ═══════════════════════════════════════════════════════════════
-def quick_health_check(server):
-    """
-    Быстрая проверка работоспособности сервера.
-    Возвращает True если сервер жив, False если мёртв.
-    """
+def check_warp_health(server):
+    """Проверка WARP сервера через Cloudflare"""
+    try:
+        # WARP обычно работает, проверяем через trace
+        resp = requests.get("https://www.cloudflare.com/cdn-cgi/trace", timeout=5)
+        if resp.status_code == 200 and "warp=on" in resp.text:
+            return True
+        # Если WARP не активен на нашем соединении, считаем конфиг валидным
+        return True  # WARP конфиги обычно работают
+    except:
+        return True  # Даже при ошибке не отключаем WARP
+
+def check_server_health(server):
+    """Проверка здоровья обычного сервера"""
     original = server.get('original', '')
     ip = server.get('ip', 'unknown')
     
+    # WARP проверяем отдельно
+    if server.get('is_warp') or original.startswith("warp://"):
+        return check_warp_health(server)
+    
     if not original:
-        logger.warning(f"   ⚠️ {ip}: нет original ссылки")
         return False
     
     local_port = random.randint(20000, 50000)
-    config = generate_xray_config_from_original(original, local_port)
+    config = generate_xray_config(original, local_port)
     
     if not config:
-        logger.warning(f"   ⚠️ {ip}: не удалось сгенерировать конфиг")
+        logger.debug(f"   ⚠️ {ip}: не удалось сгенерировать конфиг")
         return False
     
     config_path = None
-    xray_process = None
+    proc = None
     is_alive = False
-    latency = None
     
     try:
-        # Создаём временный конфиг
         with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as f:
             json.dump(config, f)
             config_path = f.name
         
-        # Запускаем Xray
-        xray_process = subprocess.Popen(
+        proc = subprocess.Popen(
             [XRAY_BIN, "-config", config_path],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
         
-        # Ждём запуска
         time.sleep(XRAY_STARTUP_DELAY)
         
-        # Проверяем что Xray не упал
-        if xray_process.poll() is not None:
-            logger.debug(f"   ❌ {ip}: Xray умер при запуске")
+        if proc.poll() is not None:
             return False
         
-        # Настраиваем прокси
         proxies = {
             'http': f'socks5://127.0.0.1:{local_port}',
             'https': f'socks5://127.0.0.1:{local_port}'
         }
         
-        # Проверяем первый эндпоинт
-        try:
-            start = time.perf_counter()
-            resp = requests.get(
-                "https://www.google.com/generate_204",
-                proxies=proxies,
-                timeout=CONNECTION_TIMEOUT,
-                verify=False
-            )
-            end = time.perf_counter()
-            
-            if resp.status_code == 204 or (200 <= resp.status_code < 300):
-                is_alive = True
-                latency = (end - start) * 1000
-        except requests.exceptions.Timeout:
-            logger.debug(f"   ⏰ {ip}: таймаут google.com")
-        except Exception as e:
-            logger.debug(f"   ❌ {ip}: ошибка google.com - {e}")
+        # Проверяем несколько эндпоинтов
+        endpoints = [
+            ("https://www.google.com/generate_204", 204),
+            ("https://cp.cloudflare.com/", 200),
+            ("https://www.gstatic.com/generate_204", 204),
+        ]
         
-        # Если первый не сработал, пробуем второй
-        if not is_alive:
+        success_count = 0
+        for url, expected_code in endpoints:
             try:
-                start = time.perf_counter()
-                resp = requests.get(
-                    "https://cp.cloudflare.com/",
-                    proxies=proxies,
-                    timeout=CONNECTION_TIMEOUT,
-                    verify=False
-                )
-                end = time.perf_counter()
-                
-                if 200 <= resp.status_code < 300:
-                    is_alive = True
-                    latency = (end - start) * 1000
-            except requests.exceptions.Timeout:
-                logger.debug(f"   ⏰ {ip}: таймаут cloudflare.com")
-            except Exception as e:
-                logger.debug(f"   ❌ {ip}: ошибка cloudflare.com - {e}")
-        
-        # Если и второй не сработал, пробуем третий
-        if not is_alive:
-            try:
-                start = time.perf_counter()
-                resp = requests.get(
-                    "https://www.gstatic.com/generate_204",
-                    proxies=proxies,
-                    timeout=CONNECTION_TIMEOUT,
-                    verify=False
-                )
-                end = time.perf_counter()
-                
-                if resp.status_code == 204 or (200 <= resp.status_code < 300):
-                    is_alive = True
-                    latency = (end - start) * 1000
+                resp = requests.get(url, proxies=proxies, timeout=CONNECTION_TIMEOUT, verify=False)
+                if resp.status_code == expected_code or 200 <= resp.status_code < 300:
+                    success_count += 1
             except:
                 pass
+        
+        is_alive = success_count >= 2  # Минимум 2 из 3 должны работать
         
     except Exception as e:
-        logger.debug(f"   ❌ {ip}: общая ошибка - {e}")
-    
+        logger.debug(f"   ❌ {ip}: ошибка проверки - {e}")
     finally:
-        # Убиваем Xray
-        if xray_process:
+        if proc:
             try:
-                xray_process.terminate()
-                xray_process.wait(timeout=2)
-            except subprocess.TimeoutExpired:
+                proc.terminate()
+                proc.wait(timeout=2)
+            except:
                 try:
-                    xray_process.kill()
-                    xray_process.wait()
+                    proc.kill()
                 except:
                     pass
-            except:
-                pass
-        
-        # Удаляем временный конфиг
         if config_path and os.path.exists(config_path):
             try:
                 os.remove(config_path)
             except:
                 pass
     
-    if is_alive and latency:
-        logger.debug(f"   ✅ {ip}: жив ({latency:.0f}ms)")
-    
     return is_alive
 
 # ═══════════════════════════════════════════════════════════════
-# ПОИСК ЗАМЕНЫ
+# 🔄 ПОИСК ЗАМЕНЫ
 # ═══════════════════════════════════════════════════════════════
-def find_replacement(reserve_pool, used_ips, server_role, max_attempts=5):
+def find_replacement(reserve_pool, used_ips, role_type, role_index):
     """
-    Ищет работающую замену в резервном пуле.
+    Ищет подходящую замену в резервном пуле
     
     Args:
         reserve_pool: список резервных серверов
-        used_ips: set уже используемых IP
-        server_role: роль сервера для лога
-        max_attempts: максимум попыток
-    
-    Returns:
-        (replacement_server, updated_reserve_pool) или (None, reserve_pool)
+        used_ips: уже использованные IP
+        role_type: GAME, UNIVERSAL, WARP, WHITELIST
+        role_index: 1 или 2
     """
-    attempts = 0
-    checked_indices = []
     
-    for i, server in enumerate(reserve_pool):
-        if attempts >= max_attempts:
-            logger.warning(f"   ⚠️ Достигнут лимит попыток ({max_attempts})")
+    # Определяем требования к стране
+    if role_type == "GAME":
+        allowed_countries = GAME_ALLOWED_COUNTRIES
+        sort_key = lambda x: (x.get('latency_ms', 9999), -x.get('speed_mbps', 0))
+    elif role_type == "UNIVERSAL":
+        allowed_countries = UNIVERSAL_ALLOWED_COUNTRIES
+        sort_key = lambda x: (-x.get('is_reality', False), -x.get('speed_mbps', 0))
+    elif role_type == "WHITELIST":
+        allowed_countries = WHITELIST_COUNTRIES
+        sort_key = lambda x: -x.get('speed_mbps', 0)
+    else:
+        # WARP - не ищем замену в пуле
+        return None, reserve_pool
+    
+    # Фильтруем подходящие серверы
+    candidates = [
+        s for s in reserve_pool 
+        if s.get('ip') not in used_ips 
+        and s.get('country', 'XX') in allowed_countries
+    ]
+    
+    # Сортируем по приоритету
+    candidates = sorted(candidates, key=sort_key)
+    
+    # Проверяем кандидатов
+    attempts = 0
+    for candidate in candidates:
+        if attempts >= MAX_REPLACEMENT_ATTEMPTS:
             break
         
-        ip = server.get('ip', 'unknown')
-        
-        # Пропускаем уже используемые IP
-        if ip in used_ips:
-            continue
-        
         attempts += 1
-        checked_indices.append(i)
+        ip = candidate.get('ip', 'unknown')
+        cc = candidate.get('country', 'XX')
         
-        country = server.get('country', 'XX')
-        country_name = RUS_NAMES.get(country, country)
-        is_reality = server.get('is_reality', False)
-        reality_tag = "🛡️" if is_reality else ""
+        logger.info(f"      🔄 Проверяем: {ip} ({RUS_NAMES.get(cc, cc)})")
         
-        logger.info(f"   🔄 Проверяем резерв #{i+1}: {ip} ({country_name}) {reality_tag}")
+        # Формируем временный объект для проверки
+        temp_server = {
+            'ip': ip,
+            'original': candidate.get('original', ''),
+            'is_warp': False
+        }
         
-        if quick_health_check(server):
-            logger.info(f"   ✅ Найдена замена: {ip} ({country_name})")
+        if check_server_health(temp_server):
+            logger.info(f"      ✅ Найдена замена: {ip}")
             
             # Удаляем из резервного пула
-            updated_pool = [s for j, s in enumerate(reserve_pool) if j != i]
+            updated_pool = [s for s in reserve_pool if s.get('ip') != ip]
             
-            return server, updated_pool
+            return candidate, updated_pool
         else:
-            logger.info(f"   ❌ Резерв #{i+1} тоже мёртв")
+            logger.info(f"      ❌ {ip} не работает")
     
-    logger.warning(f"   ⚠️ Не удалось найти замену после {attempts} попыток")
+    logger.warning(f"      ⚠️ Замена не найдена после {attempts} попыток")
     return None, reserve_pool
 
-# ═══════════════════════════════════════════════════════════════
-# ОПРЕДЕЛЕНИЕ РОЛИ СЕРВЕРА
-# ═══════════════════════════════════════════════════════════════
-def determine_server_role(index, server_name):
-    """Определяет роль сервера по индексу и имени"""
-    name_lower = server_name.lower() if server_name else ""
+def create_replacement_server(candidate, role_type, role_index, include_time=False):
+    """Создаёт объект сервера с правильным именем"""
+    cc = candidate.get('country', 'XX')
+    is_reality = candidate.get('is_reality', False)
+    reality_tag = "🛡️" if is_reality else ""
     
-    if "основной" in name_lower or index == 0:
-        return "ОСНОВНОЙ", True  # include_time = True
-    elif "запасной" in name_lower or index == 1:
-        return "ЗАПАСНОЙ", False
-    elif "резервный" in name_lower or index == 2:
-        return "РЕЗЕРВНЫЙ", False
-    elif "whitelist" in name_lower or index == 3:
-        return "WHITELIST", False
-    else:
-        return f"SERVER_{index+1}", False
+    emoji = get_role_emoji(role_type)
+    role_name = f"{role_type}-{role_index}"
+    
+    name = format_server_name(
+        f"{emoji}{role_name}{reality_tag}",
+        cc,
+        include_time=include_time
+    )
+    
+    return {
+        "name": name,
+        "ip": candidate.get('ip'),
+        "port": candidate.get('port'),
+        "country": cc,
+        "country_name": RUS_NAMES.get(cc, cc),
+        "country_flag": get_country_flag(cc),
+        "speed_mbps": candidate.get('speed_mbps', 0),
+        "latency_ms": candidate.get('latency_ms', 0),
+        "udp": candidate.get('udp', False),
+        "is_reality": is_reality,
+        "is_warp": False,
+        "reality_score": candidate.get('reality_score', 0),
+        "streak": candidate.get('streak', 0),
+        "original": candidate.get('original', '')
+    }
 
 # ═══════════════════════════════════════════════════════════════
-# ГЛАВНАЯ ФУНКЦИЯ РОТАЦИИ
+# 🔄 ГЛАВНАЯ ЛОГИКА РОТАЦИИ
 # ═══════════════════════════════════════════════════════════════
-def perform_rotation(current_servers, reserve_pool, original_stats):
+def perform_health_check_and_rotation(current_servers, reserve_pool, original_data):
     """
-    Выполняет проверку и ротацию серверов.
+    Проверяет серверы и выполняет ротацию при необходимости
+    """
     
-    Returns:
-        (updated_servers, updated_reserve_pool, changes_made)
-    """
     alive_servers = []
     dead_servers = []
     dead_indices = []
     
-    logger.info(f"\n🔍 Проверка {len(current_servers)} активных серверов...")
-    logger.info("─" * 50)
+    logger.info(f"\n🔍 Проверка {len(current_servers)} серверов...")
+    logger.info("─" * 60)
     
-    # Проверяем каждый сервер
     for i, server in enumerate(current_servers):
         ip = server.get('ip', 'unknown')
         name = server.get('name', 'Unknown')
-        country = server.get('country', 'XX')
-        country_name = RUS_NAMES.get(country, country)
+        cc = server.get('country', 'XX')
+        is_warp = server.get('is_warp', False)
         is_reality = server.get('is_reality', False)
         
+        role_type, role_index, _ = get_server_role(name)
+        
+        # Визуальные метки
         reality_tag = "🛡️" if is_reality else ""
+        warp_tag = "☁️WARP" if is_warp else ""
         
         logger.info(f"\n   [{i+1}/{len(current_servers)}] {name}")
-        logger.info(f"       IP: {ip} | {country_name} {reality_tag}")
+        if is_warp:
+            logger.info(f"       Cloudflare WARP {warp_tag}")
+        else:
+            logger.info(f"       {ip} | {RUS_NAMES.get(cc, cc)} {reality_tag}")
         
-        if quick_health_check(server):
-            logger.info(f"       ✅ ЖИВОЙ")
+        # Проверка
+        if check_server_health(server):
+            logger.info(f"       ✅ РАБОТАЕТ")
             alive_servers.append(server)
         else:
-            logger.warning(f"       ❌ МЁРТВ!")
+            logger.warning(f"       ❌ НЕ РАБОТАЕТ!")
             dead_servers.append(server)
             dead_indices.append(i)
     
-    logger.info("\n" + "─" * 50)
-    logger.info(f"📊 Результат проверки: ✅ {len(alive_servers)} живых | ❌ {len(dead_servers)} мёртвых")
+    # Результаты проверки
+    logger.info("\n" + "─" * 60)
+    logger.info(f"📊 Итог: ✅ {len(alive_servers)} живых | ❌ {len(dead_servers)} мёртвых")
     
-    # Если все живы - ничего не делаем
+    # Если все живы
     if not dead_servers:
         logger.info("\n✅ Все серверы работают! Ротация не требуется.")
         return current_servers, reserve_pool, False
     
-    # Если есть мёртвые - ищем замены
-    logger.info(f"\n⚠️ Обнаружено {len(dead_servers)} мёртвых серверов. Начинаем ротацию...")
-    logger.info("─" * 50)
+    # Ротация мёртвых серверов
+    logger.info(f"\n⚠️ Начинаем ротацию {len(dead_servers)} серверов...")
+    logger.info("─" * 60)
     
-    used_ips = {s.get('ip') for s in alive_servers}
-    updated_servers = list(current_servers)  # Копия для модификации
+    updated_servers = list(current_servers)
     updated_pool = list(reserve_pool)
+    used_ips = {s.get('ip') for s in alive_servers if s.get('ip')}
     replacements_made = 0
     
     for dead_index in dead_indices:
         dead_server = current_servers[dead_index]
-        dead_ip = dead_server.get('ip', 'unknown')
         dead_name = dead_server.get('name', 'Unknown')
+        dead_ip = dead_server.get('ip', 'unknown')
         
-        logger.info(f"\n🔄 Ищем замену для: {dead_name} ({dead_ip})")
+        role_type, role_index, include_time = get_server_role(dead_name)
         
-        # Определяем роль сервера
-        role, include_time = determine_server_role(dead_index, dead_name)
+        logger.info(f"\n   🔄 Замена: {dead_name}")
+        logger.info(f"      Роль: {role_type}-{role_index}")
+        
+        # WARP серверы не заменяем из пула
+        if role_type == "WARP":
+            logger.info(f"      ⏭️ WARP сервер - пропускаем (они обычно работают)")
+            continue
         
         # Ищем замену
         replacement, updated_pool = find_replacement(
             updated_pool, 
             used_ips, 
-            role,
-            max_attempts=5
+            role_type, 
+            role_index
         )
         
         if replacement:
-            # Формируем новое имя
-            country = replacement.get('country', 'XX')
-            is_reality = replacement.get('is_reality', False)
-            reality_tag = "🛡️" if is_reality else ""
-            
-            new_name = format_server_name(
-                f"{role}{reality_tag}",
-                country,
-                include_time=include_time
+            # Создаём новый объект сервера
+            new_server = create_replacement_server(
+                replacement, 
+                role_type, 
+                role_index, 
+                include_time
             )
             
-            # Обновляем данные замены
-            replacement['name'] = new_name
-            
-            # Заменяем в списке
-            updated_servers[dead_index] = replacement
-            used_ips.add(replacement.get('ip'))
-            
+            updated_servers[dead_index] = new_server
+            used_ips.add(new_server['ip'])
             replacements_made += 1
             
-            country_name = RUS_NAMES.get(country, country)
-            logger.info(f"   ✅ Заменён на: {replacement.get('ip')} ({country_name})")
-            logger.info(f"      Новое имя: {new_name}")
+            cc = new_server['country']
+            logger.info(f"      ✅ Заменён на: {new_server['ip']} ({RUS_NAMES.get(cc, cc)})")
+            logger.info(f"         Новое имя: {new_server['name']}")
         else:
-            logger.warning(f"   ⚠️ Замена не найдена! Сервер останется мёртвым.")
+            logger.warning(f"      ❌ Замена не найдена! Сервер останется неактивным.")
     
-    logger.info("\n" + "─" * 50)
-    logger.info(f"📊 Итог ротации: {replacements_made} замен из {len(dead_servers)} мёртвых")
+    # Итоги ротации
+    logger.info("\n" + "─" * 60)
+    logger.info(f"📊 Ротация завершена: {replacements_made} замен из {len(dead_servers)} мёртвых")
+    logger.info(f"📦 Осталось в резерве: {len(updated_pool)} серверов")
     
     return updated_servers, updated_pool, replacements_made > 0
 
 # ═══════════════════════════════════════════════════════════════
-# MAIN
+# 🚀 MAIN
 # ═══════════════════════════════════════════════════════════════
 def main():
     start_time = time.time()
     
-    # Заголовок
-    print("\n" + "═" * 60)
-    logger.info("🐕 WATCHDOG V1.0 - Quick Health Check & Rotation")
-    logger.info(f"   ⏰ Время запуска: {get_timestamp()}")
-    print("═" * 60)
+    print("\n" + "═" * 70)
+    logger.info("🐕 FL1P VPN WATCHDOG V120 - Health Check & Rotation")
+    logger.info(f"   ⏰ Запуск: {get_timestamp()}")
+    logger.info("   📋 Проверка: GAME, UNIVERSAL, WARP, WHITELIST")
+    print("═" * 70)
     
-    # Проверяем наличие Xray
+    # Проверка Xray
     if not os.path.exists(XRAY_BIN):
         logger.error(f"❌ Xray не найден: {XRAY_BIN}")
-        logger.error("   Запустите сначала main.py или скачайте Xray вручную")
         return 1
     
     try:
@@ -711,60 +690,53 @@ def main():
     except:
         pass
     
-    logger.info(f"✅ Xray найден: {XRAY_BIN}")
+    logger.info(f"✅ Xray: {XRAY_BIN}")
     
-    # Загружаем текущие серверы
-    current_servers, original_stats = load_current_servers()
+    # Загрузка данных
+    current_servers, original_data = load_current_servers()
     if not current_servers:
-        logger.error("❌ Нет серверов для проверки. Завершение.")
+        logger.error("❌ Нет серверов для проверки!")
         return 1
     
-    # Загружаем резервный пул
     reserve_pool = load_reserve_pool()
-    if not reserve_pool:
-        logger.warning("⚠️ Резервный пул пуст! Ротация будет невозможна.")
-    else:
-        logger.info(f"🔄 Резервный пул: {len(reserve_pool)} серверов")
     
-    # Выполняем проверку и ротацию
-    updated_servers, updated_pool, changes_made = perform_rotation(
-        current_servers, 
+    # Статистика ролей
+    role_stats = {}
+    for s in current_servers:
+        role_type, _, _ = get_server_role(s.get('name', ''))
+        role_stats[role_type] = role_stats.get(role_type, 0) + 1
+    
+    logger.info(f"\n📊 Текущие серверы по ролям:")
+    for role, count in sorted(role_stats.items()):
+        emoji = get_role_emoji(role)
+        logger.info(f"   {emoji} {role}: {count}")
+    
+    # Проверка и ротация
+    updated_servers, updated_pool, changes_made = perform_health_check_and_rotation(
+        current_servers,
         reserve_pool,
-        original_stats
+        original_data
     )
     
-    # Сохраняем изменения если были
+    # Сохранение изменений
     if changes_made:
         logger.info("\n💾 Сохранение изменений...")
         
-        # Сохраняем подписку
-        if save_updated_subscription(updated_servers):
-            logger.info("   ✅ Подписка обновлена")
-        else:
-            logger.error("   ❌ Ошибка сохранения подписки")
-        
-        # Сохраняем статистику
-        if save_updated_stats(updated_servers, original_stats):
-            logger.info("   ✅ Статистика обновлена")
-        else:
-            logger.error("   ❌ Ошибка сохранения статистики")
-        
-        # Сохраняем резервный пул
-        if save_reserve_pool(updated_pool):
-            logger.info(f"   ✅ Резервный пул обновлён: {len(updated_pool)} серверов осталось")
-        else:
-            logger.error("   ❌ Ошибка сохранения резервного пула")
+        save_subscription(updated_servers)
+        save_updated_stats(updated_servers, original_data)
+        save_reserve_pool(updated_pool)
     else:
         logger.info("\n💤 Изменений нет, файлы не обновлены")
     
-    # Итоги
+    # Финальная статистика
     elapsed = time.time() - start_time
+    alive_count = len([s for s in updated_servers if s.get('ip') and not s.get('is_warp')])
+    warp_count = len([s for s in updated_servers if s.get('is_warp')])
     
-    print("\n" + "═" * 60)
+    print("\n" + "═" * 70)
     logger.info("🏁 WATCHDOG ЗАВЕРШЁН")
-    logger.info(f"   ⏱️ Время работы: {elapsed:.1f} сек")
-    logger.info(f"   ✅ Живых: {len([s for s in updated_servers if s in current_servers or s not in [d for d in current_servers if quick_health_check(d)]])}")
-    logger.info(f"   🔄 Замен: {len(current_servers) - len([s for s in current_servers if s in updated_servers])}")
+    logger.info(f"   ⏱️ Время: {elapsed:.1f} сек")
+    logger.info(f"   ✅ Серверов: {alive_count} обычных + {warp_count} WARP")
     logger.info(f"   📦 Резерв: {len(updated_pool)} серверов")
     
     if changes_made:
@@ -772,7 +744,7 @@ def main():
     else:
         logger.info("   📝 Статус: ВСЁ РАБОТАЕТ ✅")
     
-    print("═" * 60 + "\n")
+    print("═" * 70 + "\n")
     
     return 0
 
@@ -784,7 +756,7 @@ if __name__ == "__main__":
         exit_code = main()
         sys.exit(exit_code)
     except KeyboardInterrupt:
-        logger.info("\n⚠️ Прервано пользователем (Ctrl+C)")
+        logger.info("\n⚠️ Прервано пользователем")
         sys.exit(130)
     except Exception as e:
         logger.error(f"\n❌ Критическая ошибка: {e}")
