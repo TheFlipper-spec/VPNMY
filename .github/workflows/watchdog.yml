@@ -1,92 +1,143 @@
-name: Watchdog Health Check
+import json
+import os
+import sys
+import time
+import subprocess
+import requests
+import base64
+from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 
-on:
-  schedule:
-    - cron: '5,12,19,26,33,40,47,54 * * * *'  # Запуск каждые ~7 минут
-  workflow_dispatch:
+STATS_FILE = 'stats.json'
+RESERVE_FILE = 'reserve_pool.json'
+OUTPUT_FILE = 'FL1PVPN'
+LOG_FILE = 'logs/latest_watchdog.log'
+XRAY_BIN = "./xray"
 
-concurrency:
-  group: vpn-update
-  cancel-in-progress: false
+if not os.path.exists('logs'): os.makedirs('logs')
 
-jobs:
-  health-check:
-    runs-on: self-hosted
-    timeout-minutes: 5
-    permissions:
-      contents: write
+def log(msg, level="INFO"):
+    ts = datetime.now(timezone.utc).strftime('%H:%M:%S')
+    print(f"{ts} [{level}] {msg}")
+    try:
+        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(f"{ts} [{level}] {msg}\n")
+    except: pass
 
-    steps:
-      - name: Check main.py execution
-        run: |
-          # Если основной скрипт обновления работает, watchdog должен ждать
-          if pgrep -f "main.py" > /dev/null; then
-            echo "⏳ main.py is currently running. Skipping watchdog scan."
-            exit 0
-          fi
+def check_server_alive(ip, port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2.0)
+        result = sock.connect_ex((ip, int(port)))
+        sock.close()
+        return result == 0
+    except: return False
 
-      - name: Kill zombie processes
-        run: pkill -9 -f "xray" || true
+def guess_role(name):
+    """Определяет роль сервера по его названию (иконке)"""
+    if "🎮" in name: return "GAME"
+    if "⚡" in name: return "UNIVERSAL"
+    if "🌀" in name: return "WARP"
+    if "⚪" in name: return "WHITELIST"
+    return "UNIVERSAL" # По умолчанию
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Нужна история для rebase
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: pip install requests PySocks
-
-      - name: Install Xray Core (v1.8.4)
-        run: |
-          # Используем ту же версию, что и в основном скрипте, чтобы конфиги подходили
-          if [ ! -f xray ]; then
-            echo "⬇️ Downloading Xray 1.8.4..."
-            wget -q -O xray.zip https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip
-            unzip -o -q xray.zip xray geoip.dat geosite.dat
-            rm -f xray.zip
-          fi
-          chmod +x xray
-
-      - name: Run Watchdog Script
-        timeout-minutes: 3
-        run: python watchdog.py
-
-      - name: Commit and Push changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # Добавляем все критически важные файлы, которые мог изменить Watchdog
-          git add FL1PVPN stats.json reserve_pool.json logs/ 2>/dev/null || true
-          
-          if git diff --staged --quiet; then
-            echo "✅ No rotation needed. Everything is healthy."
-          else
-            echo "🔄 Servers rotated. Pushing changes..."
-            git commit -m "🐕 Watchdog Rotation | $(date -u '+%H:%M UTC')"
+def get_reserve_server(role):
+    try:
+        if not os.path.exists(RESERVE_FILE): return None, None
+        with open(RESERVE_FILE, 'r', encoding='utf-8') as f:
+            pool = json.load(f)
+        
+        servers = pool.get('servers', [])
+        candidates = [s for s in servers if s.get('role') == role]
+        
+        if role == 'GAME' and not candidates:
+            # Если нет игровых, берем универсальные с низким пингом
+            candidates = sorted([s for s in servers if s.get('role') == 'UNIVERSAL'], key=lambda x: x.get('ping', 999))
             
-            # --- ЗАЩИТА ОТ КОНФЛИКТОВ ---
-            # 1. Прячем наши коммиты во временное хранилище
-            git stash save "Watchdog Stash" 2>/dev/null || true
-            
-            # 2. Скачиваем обновления с сервера (rebase накладывает их "под" наши)
-            git pull --rebase origin main
-            
-            # 3. Возвращаем наши изменения (если stash что-то спрятал)
-            git stash pop 2>/dev/null || true
-            
-            # 4. Отправляем
-            git push origin main
-          fi
+        if not candidates: return None, pool
 
-      - name: Final cleanup
-        if: always()
-        run: |
-          pkill -9 -f "xray" || true
-          rm -f *.zip *.tmp *.json.tmp 2>/dev/null || true
+        best = candidates[0]
+        pool['servers'].remove(best)
+        pool['count'] = len(pool['servers'])
+        
+        return best, pool
+    except Exception as e:
+        log(f"Error reading reserve: {e}", "ERROR")
+        return None, None
+
+def main():
+    log("🐕 FL1P VPN WATCHDOG - STARTED")
+    
+    if not os.path.exists(STATS_FILE):
+        log("Stats file not found", "ERROR")
+        return
+
+    with open(STATS_FILE, 'r', encoding='utf-8') as f:
+        stats = json.load(f)
+
+    active_servers = stats.get('servers', [])
+    new_servers = []
+    modified = False
+    
+    for s in active_servers:
+        # 1. Определяем роль (если её нет - угадываем)
+        role = s.get('role', 'UNKNOWN')
+        if role == 'UNKNOWN':
+            role = guess_role(s.get('name', ''))
+            s['role'] = role # Сохраняем угаданную роль
+            
+        # 2. Проверяем доступность
+        # Здесь упрощенная проверка по порту 443/80
+        # В идеале нужно делать Xray тест, но для быстроты пока так:
+        is_alive = True 
+        # (Тут должна быть ваша логика проверки, например ping или tcp connect)
+        # Если у вас нет порта в stats.json, используйте порт 443 по умолчанию
+        port = s.get('port', 443) 
+        if not check_server_alive(s['ip'], port):
+            is_alive = False
+            
+        if is_alive:
+            new_servers.append(s)
+        else:
+            log(f"💀 Server {s['name']} (Role: {role}) is DEAD!", "WARNING")
+            replacement, new_pool = get_reserve_server(role)
+            
+            if replacement:
+                log(f"✅ Replaced with: {replacement['cc']} ({replacement['ip']})", "INFO")
+                # Формируем структуру как в основном скрипте
+                rep_s = {
+                    "name": s['name'], # Оставляем старое имя (слот)
+                    "ip": replacement['ip'],
+                    "cc": replacement['cc'],
+                    "speed": replacement['speed'],
+                    "ping": replacement['ping'],
+                    "type": "Recovered",
+                    "role": role,
+                    "original": replacement['link']
+                }
+                new_servers.append(rep_s)
+                
+                # Сохраняем обновленный резерв
+                with open(RESERVE_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(new_pool, f, indent=2)
+                modified = True
+            else:
+                log(f"❌ No replacement found for {role}", "ERROR")
+                new_servers.append(s) # Оставляем мертвый, если нет замены
+
+    if modified:
+        stats['servers'] = new_servers
+        with open(STATS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(stats, f, indent=2, ensure_ascii=False)
+            
+        # Обновляем сам файл подписки
+        links = [f"{s['original']}#{quote(s['name'])}" for s in new_servers]
+        with open(OUTPUT_FILE, 'w') as f:
+            f.write(base64.b64encode("\n".join(links).encode()).decode())
+            
+        log("🔄 Subscription updated successfully")
+    else:
+        log("💤 No changes needed")
+
+if __name__ == "__main__":
+    main()
