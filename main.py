@@ -28,7 +28,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V3.0 - RESURRECTION (20K+ SERVERS)
+#  FL1P VPN SCANNER V3.2 - ULTIMATE (AVENCORES + FIXES)
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -70,6 +70,7 @@ class ProgressCounter:
 # ═══════════════════════════════════════════════════════════════
 # 🌍 СТРАНЫ И ПРИОРИТЕТЫ
 # ═══════════════════════════════════════════════════════════════
+# Эти страны ОБЯЗАНЫ быть в топе Game, если доступны
 PRIORITY_COUNTRIES = ['FI', 'EE', 'LV', 'SE'] 
 
 TIER_1_COUNTRIES = ['FI', 'EE', 'LV', 'LT', 'SE'] 
@@ -95,41 +96,31 @@ RUS_NAMES = {
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 🔥 ИСТОЧНИКИ (20,000+ SERVERS)
+# 🔥 ИСТОЧНИКИ (AVENCORES ADDED)
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
-    # 1. Matin Ghanbari (Huge ~7500+)
+    # --- AVENCORES (TOP PRIORITY) ---
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/reality.txt",
+
+    # --- MASSIVE AGGREGATORS ---
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt",
-    
-    # 2. Hamedcode (Huge ~5000+ VLESS only)
     "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
-    
-    # 3. Yebekhe (Fixed URL)
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/vless",
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
-    
-    # 4. Barry-Far (Fixed URL - New Repo)
     "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/vless.txt",
-    
-    # 5. Epodonios (Stable ~2000)
     "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/vless.txt",
-    
-    # 6. Lalatina (Massive)
     "https://raw.githubusercontent.com/LalatinaHub/Mineral/master/result/nodes",
     
-    # 7. Mahdibland (Fallback)
-    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
-    
-    # 8. Igareck (Specials)
+    # --- SPECIALS ---
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
     
-    # 9. Backup Mix
+    # --- BACKUP ---
     "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
     "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt",
     "https://raw.githubusercontent.com/mttsh/v2ray/main/vless.txt",
-    "https://raw.githubusercontent.com/tbbatbb/Proxy/master/dist/v2ray.config.txt",
 ]
 
 WHITELIST_URLS = [
@@ -153,16 +144,16 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-MAX_WORKERS_SCAN = 120      # Increased for massive lists
+MAX_WORKERS_SCAN = 120      
 MAX_WORKERS_DEEP = 35
 MAX_WORKERS_FETCH = 25
 
 TIMEOUT_TCP = 0.7
 TIMEOUT_REAL = 10.0
 TIMEOUT_SPEED = 7.0
-TIMEOUT_FETCH = 35.0        # Extra time for huge files
+TIMEOUT_FETCH = 35.0        
 
-MAX_DEEP_CHECK_GLOBAL = 2500 # Scan top 2500 candidates
+MAX_DEEP_CHECK_GLOBAL = 2500 
 MAX_DEEP_CHECK_WHITELIST = 200
 
 MIN_SPEED_GAME = 1.0        
@@ -315,7 +306,7 @@ def get_country(ip):
         return 'XX'
 
 # ═══════════════════════════════════════════════════════════════
-# 🔍 ПАРСИНГ (ULTIMATE)
+# 🔍 ПАРСИНГ
 # ═══════════════════════════════════════════════════════════════
 def aggressive_decode(text):
     candidates = []
@@ -339,17 +330,14 @@ def extract_links(text):
     all_links = set()
     regex = r"vless://[a-zA-Z0-9\-@.:?=&%#]+"
     
-    # 1. Raw search
     found = re.findall(regex, text)
     for link in found: all_links.add(link)
     
-    # 2. Decode full text
     decoded_variants = aggressive_decode(text)
     for variant in decoded_variants:
         found_in_decoded = re.findall(regex, variant)
         for link in found_in_decoded: all_links.add(link)
         
-    # 3. Line by line (for mixed content)
     if len(all_links) < 100:
         lines = text.split('\n')
         for line in lines:
@@ -361,7 +349,6 @@ def extract_links(text):
                     all_links.add(line[start:])
                 except: pass
             else:
-                # Try decoding the line itself
                 dec = aggressive_decode(line)
                 for d in dec:
                     found = re.findall(regex, d)
@@ -416,7 +403,7 @@ def parse_config(config_str, source_type):
                 pbk = params.get('pbk', [''])[0]
                 sni = params.get('sni', [''])[0]
                 if len(pbk) != 43 or sni == host: return None
-                if check_sni_quality(sni)[0]: return None # Blocked SNI
+                if check_sni_quality(sni)[0]: return None 
             
             reality_score = get_reality_score(params) if is_reality else 0
             is_warp_named = any(k in remark.lower() for k in ['warp', 'cloudflare', 'cf', 'cloud'])
@@ -625,7 +612,7 @@ def collect_all():
     global_cfgs = []
     whitelist_cfgs = []
     raw_count = 0
-    logger.info("📥 Сбор конфигураций (Titan Mode)...")
+    logger.info("📥 Сбор конфигураций (Titan Mode + AvenCores)...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_FETCH) as ex:
         futures = {}
@@ -661,21 +648,34 @@ def select_final_9(verified_global, verified_whitelist):
     
     valid_global = [s for s in verified_global if s['speed'] > 0.1]
     
-    # 1. GAME POOL (2 slots) - Priority: FI/EE/LV/SE > RU/Europe
-    game_pool_strict = [s for s in valid_global if s.get('is_reality') and s['info']['cc'] in PRIORITY_COUNTRIES and s['real_lat'] <= MAX_PING_GAME]
-    game_pool_fallback = [s for s in valid_global if s.get('is_reality') and s['info']['cc'] in GAME_COUNTRIES]
+    # 1. GAME POOL (2 slots) 
+    # Logic: If ANY priority country server exists (FI/EE/LV/SE), use it even if speed is mediocre.
+    priority_servers = [s for s in valid_global 
+                        if s.get('is_reality') 
+                        and s['info']['cc'] in PRIORITY_COUNTRIES]
+    
+    # Sort priority: Ping first
+    priority_servers = sorted(priority_servers, key=lambda x: x['real_lat'])
+    
+    # Fallback: Just Reality (Europe/RU etc)
+    fallback_servers = sorted([s for s in valid_global if s.get('is_reality')], key=lambda x: x['real_lat'])
 
     def fill_game_slot(time_label):
         s = None
-        cands = sorted([x for x in game_pool_strict if x['ip'] not in used_ips], key=lambda x: x['real_lat'])
-        if cands: s = cands[0]
+        # Try priority list first
+        cands = [x for x in priority_servers if x['ip'] not in used_ips]
+        if cands: 
+            s = cands[0]
         else:
-            cands = sorted([x for x in game_pool_fallback if x['ip'] not in used_ips], key=lambda x: x['real_lat'])
+            # Fallback
+            cands = [x for x in fallback_servers if x['ip'] not in used_ips]
             if cands: s = cands[0]
+            
         if s:
             used_ips.add(s['ip'])
             cc = s['info']['cc']
-            s['final_name'] = f"🎮 {get_flag(cc)} {get_country_name(cc)} | 📅 {time_label}"
+            flag = get_flag(cc)
+            s['final_name'] = f"🎮 {flag} {get_country_name(cc)} | 📅 {time_label}"
             s['role'] = 'GAME'
             final.append(s)
             
@@ -719,12 +719,57 @@ def select_final_9(verified_global, verified_whitelist):
     return final, reserve
 
 # ═══════════════════════════════════════════════════════════════
+# 💾 СОХРАНЕНИЕ
+# ═══════════════════════════════════════════════════════════════
+def save_results(final, reserve, stats):
+    links = []
+    for s in final:
+        base = s['original'].split('#')[0]
+        links.append(f"{base}#{quote(s['final_name'])}")
+    
+    try:
+        with open(OUTPUT_FILE, 'w') as f:
+            f.write(base64.b64encode("\n".join(links).encode()).decode())
+        logger.info(f"💾 Подписка: {OUTPUT_FILE} ({len(links)} серверов)")
+    except Exception as e:
+        logger.error(f"❌ Ошибка сохранения подписки: {e}")
+        
+    json_data = {
+        "updated_msk": get_timestamp(),
+        "stats": stats,
+        "servers": []
+    }
+    for s in final:
+        json_data["servers"].append({
+            "name": s['final_name'],
+            "ip": s['ip'],
+            "cc": s['info']['cc'],
+            "speed": s['speed'],
+            "ping": s['real_lat'],
+            "type": "Reality" if s.get('is_reality') else "Warp/Other"
+        })
+    try:
+        with open(JSON_FILE, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"❌ Ошибка JSON: {e}")
+
+    pool = {"updated": get_timestamp(), "servers": []}
+    for s in reserve:
+         pool["servers"].append({"ip": s['ip'], "cc": s['info']['cc'], "link": s['original']})
+    try:
+        with open(RESERVE_POOL_FILE, 'w', encoding='utf-8') as f:
+            json.dump(pool, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"❌ Ошибка Reserve Pool: {e}")
+
+# ═══════════════════════════════════════════════════════════════
 # 🚀 MAIN
 # ═══════════════════════════════════════════════════════════════
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V3.0 - RESURRECTION (20K+ FIX)")
+    logger.info("🚀 FL1P VPN V3.2 - ULTIMATE (AVENCORES + FIXES)")
     logger.info(f"   🔥 Priority Countries: {', '.join(PRIORITY_COUNTRIES)}")
     print("═" * 70)
     
@@ -760,6 +805,7 @@ def main():
             if r: alive_wl.append(r)
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
+    # Sort by priority to check them first
     alive_global.sort(key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, x['latency']))
     
     candidates = alive_global[:MAX_DEEP_CHECK_GLOBAL]
