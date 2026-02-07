@@ -1,132 +1,79 @@
-name: Update VPN Configs
+name: Update VPN Subscription
 
 on:
   schedule:
-    - cron: '*/20 * * * *'  # Запуск каждые 20 минут
-  workflow_dispatch:        # Возможность запуска кнопкой вручную
+    - cron: '0 * * * *' # Запуск каждый час (в 00 минут)
+  workflow_dispatch:      # Ручной запуск кнопкой
 
 jobs:
   build:
-    runs-on: self-hosted    # Работает на твоем сервере (VPS)
+    runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Разрешаем запись в репозиторий
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0 # Скачиваем всю историю для корректного rebase
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.10'
           cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests geoip2 PySocks
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Update Xray Core
+      - name: Download Xray Core
         run: |
-          # 1. Устанавливаем unzip (если вдруг нет), игнорируем ошибки установки
-          sudo apt-get update && sudo apt-get install -y unzip || true
-          
-          # 2. Скачиваем свежее ядро Xray
-          echo "⬇️ Downloading Xray..."
-          wget -q -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-          
-          # 3. Распаковываем только нужное
-          unzip -o -q xray.zip xray geoip.dat geosite.dat
-          
-          # 4. Чистим и даем права
-          rm xray.zip
+          # Используем стабильную версию 1.8.4
+          wget -q https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip
+          unzip -o -q Xray-linux-64.zip xray geoip.dat geosite.dat
           chmod +x xray
+          rm Xray-linux-64.zip
 
-      - name: Run VPN Parser Script
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          # Запускаем скрипт
-          python main.py
-          
-          # Показываем последние 50 строк лога в консоли GitHub Actions
-          echo "📄 Last 50 lines of log:"
-          tail -n 50 vpn_scanner.log || echo "Log file not found"
+      - name: Run VPN Scanner (Main Script)
+        run: python main.py
 
-      - name: Prepare logs for commit
+      - name: Prepare logs
         run: |
-          # Создаем папку для логов если её нет
           mkdir -p logs
-          
-          # Копируем лог с временной меткой
           if [ -f vpn_scanner.log ]; then
-            # Сохраняем последний лог с датой
             cp vpn_scanner.log "logs/last_scan_$(date -u +%Y%m%d_%H%M%S).log"
-            
-            # Также сохраняем как latest.log для быстрого доступа
             cp vpn_scanner.log logs/latest.log
-            
-            # Оставляем только последние 10 логов (чистим старые)
-            cd logs
-            ls -t *.log | tail -n +11 | xargs -r rm
-            cd ..
+            # Оставляем только 20 последних логов
+            cd logs && ls -t last_scan_*.log | tail -n +21 | xargs -r rm --
           fi
 
-      - name: Commit and Push Changes
+      - name: Commit and Push changes
         run: |
-          # Настраиваем Git
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           
-          # ⚠️ ВАЖНО: Сначала чистим рабочую директорию от мусора
-          rm -f xray geoip.dat geosite.dat vpn_scanner.log *.zip *.tmp *.json.tmp 2>/dev/null || true
+          # 1. Добавляем важные файлы (включая reserve_pool.json!)
+          git add FL1PVPN stats.json history.json reserve_pool.json
           
-          # Добавляем файлы результатов И логи
-          git add FL1PVPN stats.json history.json
+          # 2. Добавляем логи (игнорируя ошибки если нет новых)
           git add logs/*.log 2>/dev/null || true
           
-          # Проверяем, есть ли что коммитить
+          # 3. Проверяем статус
           if git diff --staged --quiet; then
-            echo "No changes in subscription. Skipping commit."
-          else
-            # Получаем статистику из stats.json
-            if [ -f stats.json ]; then
-              SERVER_COUNT=$(python -c "import json; data=json.load(open('stats.json')); print(len(data.get('servers', [])))" 2>/dev/null || echo "4")
-            else
-              SERVER_COUNT="4"
-            fi
-            
-            # Коммитим изменения
-            git commit -m "🚀 Update $SERVER_COUNT Servers | $(date -u '+%Y-%m-%d %H:%M UTC')"
-            
-            # ⚠️ ИСПРАВЛЕНИЕ: Используем stash для сохранения локальных изменений
-            # Сохраняем все незакоммиченные изменения
-            git stash save "Temporary stash before pull"
-            
-            # Теперь безопасно делаем pull с rebase
-            git pull --rebase origin main
-            
-            # Пушим изменения
-            git push
-            
-            # Очищаем stash (если он остался)
-            git stash drop 2>/dev/null || true
+            echo "No changes to commit"
+            exit 0
           fi
-
-      - name: Final cleanup
-        if: always()
-        run: |
-          # Финальная очистка временных файлов
-          rm -f xray geoip.dat geosite.dat vpn_scanner.log *.zip *.tmp *.json.tmp 2>/dev/null || true
           
-          # Сбрасываем все незакоммиченные изменения на всякий случай
-          git checkout -- . 2>/dev/null || true
-          git clean -fd 2>/dev/null || true
+          # 4. Создаем коммит
+          # Пытаемся получить кол-во серверов для красивого сообщения
+          COUNT=$(python3 -c "import json; print(len(json.load(open('stats.json'))['servers']))" 2>/dev/null || echo "?")
+          git commit -m "🚀 Update $COUNT Servers | $(date -u +'%Y-%m-%d %H:%M UTC')"
           
-          # Показываем размер папки с логами
-          if [ -d logs ]; then
-            echo "📊 Logs folder size: $(du -sh logs | cut -f1)"
-            echo "📊 Number of logs: $(ls -1 logs/*.log 2>/dev/null | wc -l)"
-          fi
+          # 5. СТРАТЕГИЯ ОТ КОНФЛИКТОВ (Rebase)
+          # Сначала скачиваем чужие изменения (от Watchdog) и накладываем свои сверху
+          git pull --rebase origin main
+          
+          # 6. Отправляем
+          git push origin main
