@@ -12,7 +12,6 @@ import concurrent.futures
 import re
 import os
 import json
-import binascii 
 import geoip2.database 
 import subprocess
 import tempfile
@@ -20,15 +19,11 @@ import random
 import urllib3
 import logging
 from threading import Lock
-try:
-    import socks
-except ImportError:
-    socks = None
-from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
+from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V3.2 - ULTIMATE (AVENCORES + FIXES)
+#  FL1P VPN SCANNER V3.3 - CPU SAVER EDITION
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -70,7 +65,6 @@ class ProgressCounter:
 # ═══════════════════════════════════════════════════════════════
 # 🌍 СТРАНЫ И ПРИОРИТЕТЫ
 # ═══════════════════════════════════════════════════════════════
-# Эти страны ОБЯЗАНЫ быть в топе Game, если доступны
 PRIORITY_COUNTRIES = ['FI', 'EE', 'LV', 'SE'] 
 
 TIER_1_COUNTRIES = ['FI', 'EE', 'LV', 'LT', 'SE'] 
@@ -79,7 +73,6 @@ TIER_3_COUNTRIES = ['AT', 'CZ', 'BE', 'CH', 'GB', 'FR']
 TIER_4_COUNTRIES = ['IT', 'ES', 'PT', 'IE', 'HU', 'RO', 'BG', 'SK', 'GR', 'TR']
 
 GAME_COUNTRIES = TIER_1_COUNTRIES + TIER_2_COUNTRIES + TIER_3_COUNTRIES + ['RU', 'UA', 'BY', 'KZ']
-
 WHITELIST_COUNTRIES = ['RU']
 BLACKLIST_COUNTRIES = ['CN', 'IR', 'KP', 'US', 'BY', 'XX']
 
@@ -96,35 +89,12 @@ RUS_NAMES = {
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 🔥 ИСТОЧНИКИ (AVENCORES ADDED)
+# 🔥 ИСТОЧНИКИ
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
     # --- AVENCORES (TOP PRIORITY) ---
-    "https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/all_valid_proxies.txt",
-    "https://raw.githubusercontent.com/sevcator/5ubscrpt10n/main/protocols/vl.txt",
-    "https://raw.githubusercontent.com/yitong2333/proxy-minging/refs/heads/main/v2ray.txt",
-    "https://raw.githubusercontent.com/acymz/AutoVPN/refs/heads/main/data/V2.txt",
-    "https://raw.githubusercontent.com/miladtahanian/V2RayCFGDumper/refs/heads/main/config.txt",
-    "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt",
-    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/trojan.txt",
-    "https://raw.githubusercontent.com/YasserDivaR/pr0xy/refs/heads/main/ShadowSocks2021.txt",
-    "https://raw.githubusercontent.com/mohamadfg-dev/telegram-v2ray-configs-collector/refs/heads/main/category/vless.txt",
-    "https://raw.githubusercontent.com/mheidari98/.proxy/refs/heads/main/vless",
-    "https://raw.githubusercontent.com/youfoundamin/V2rayCollector/main/mixed_iran.txt",
-    "https://raw.githubusercontent.com/Kwinshadow/TelegramV2rayCollector/refs/heads/main/sublinks/mix.txt",
-    "https://raw.githubusercontent.com/LalatinaHub/Mineral/refs/heads/master/result/nodes",
-    "https://raw.githubusercontent.com/miladtahanian/Config-Collector/refs/heads/main/vless_iran.txt",
-    "https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub",
-    "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector_Py/refs/heads/main/sub/Mix/mix.txt",
-    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/vmess.txt",
-    "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix",
-    "https://raw.githubusercontent.com/shabane/kamaji/master/hub/merged.txt",
-    "https://raw.githubusercontent.com/wuqb2i4f/xray-config-toolkit/main/output/base64/mix-uri",
-    "https://raw.githubusercontent.com/AzadNetCH/Clash/refs/heads/main/AzadNet.txt",
-    "https://raw.githubusercontent.com/STR97/STRUGOV/refs/heads/main/STR.BYPASS#STR.BYPASS%F0%9F%91%BE",
-    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
-    "",
-    
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/reality.txt",
 
     # --- MASSIVE AGGREGATORS ---
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt",
@@ -149,8 +119,7 @@ GLOBAL_URLS = [
 WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-all.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt"
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt"
 ]
 
 TELEGRAM_CHANNELS = [
@@ -162,23 +131,25 @@ TELEGRAM_CHANNELS = [
 ]
 
 # ═══════════════════════════════════════════════════════════════
-# ⚙️ НАСТРОЙКИ
+# ⚙️ НАСТРОЙКИ (ОПТИМИЗАЦИЯ ПОД СЛАБЫЙ VPS)
 # ═══════════════════════════════════════════════════════════════
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-MAX_WORKERS_SCAN = 120      
-MAX_WORKERS_DEEP = 35
-MAX_WORKERS_FETCH = 25
+# ОПТИМИЗИРОВАННЫЕ ПАРАМЕТРЫ
+MAX_WORKERS_SCAN = 50       # Снижено со 120 до 50 (снижает нагрузку на CPU)
+MAX_WORKERS_DEEP = 6        # Снижено до 6 (Xray тяжелый процесс, больше 6 убьет CPU)
+MAX_WORKERS_FETCH = 15
 
-TIMEOUT_TCP = 0.7
-TIMEOUT_REAL = 10.0
-TIMEOUT_SPEED = 7.0
-TIMEOUT_FETCH = 35.0        
+TIMEOUT_TCP = 0.6           # Быстрый отсев мертвых
+TIMEOUT_REAL = 9.0
+TIMEOUT_SPEED = 6.0
+TIMEOUT_FETCH = 25.0        
 
-MAX_DEEP_CHECK_GLOBAL = 2500 
-MAX_DEEP_CHECK_WHITELIST = 200
+# ПРОВЕРЯЕМ ТОЛЬКО ЛУЧШИЕ
+MAX_DEEP_CHECK_GLOBAL = 300 # Проверяем только топ 300 самых быстрых по TCP
+MAX_DEEP_CHECK_WHITELIST = 100
 
 MIN_SPEED_GAME = 1.0        
 MIN_SPEED_UNIVERSAL = 2.0   
@@ -357,12 +328,13 @@ def extract_links(text):
     found = re.findall(regex, text)
     for link in found: all_links.add(link)
     
-    decoded_variants = aggressive_decode(text)
-    for variant in decoded_variants:
-        found_in_decoded = re.findall(regex, variant)
-        for link in found_in_decoded: all_links.add(link)
+    if len(all_links) < 50:
+        decoded_variants = aggressive_decode(text)
+        for variant in decoded_variants:
+            found_in_decoded = re.findall(regex, variant)
+            for link in found_in_decoded: all_links.add(link)
         
-    if len(all_links) < 100:
+    if len(all_links) < 50:
         lines = text.split('\n')
         for line in lines:
             line = line.strip()
@@ -601,7 +573,7 @@ def initial_check(server, progress=None):
 
 def full_check(server, progress=None):
     lat, speed, udp = deep_check(server)
-    if lat is None or speed < 0.1: # Drop dead/zero speed servers
+    if lat is None or speed < 0.1: 
         if progress: progress.increment(False)
         return None
     server['real_lat'] = lat
@@ -672,26 +644,18 @@ def select_final_9(verified_global, verified_whitelist):
     
     valid_global = [s for s in verified_global if s['speed'] > 0.1]
     
-    # 1. GAME POOL (2 slots) 
-    # Logic: If ANY priority country server exists (FI/EE/LV/SE), use it even if speed is mediocre.
-    priority_servers = [s for s in valid_global 
-                        if s.get('is_reality') 
-                        and s['info']['cc'] in PRIORITY_COUNTRIES]
-    
-    # Sort priority: Ping first
+    # 1. GAME POOL
+    priority_servers = [s for s in valid_global if s.get('is_reality') and s['info']['cc'] in PRIORITY_COUNTRIES]
     priority_servers = sorted(priority_servers, key=lambda x: x['real_lat'])
     
-    # Fallback: Just Reality (Europe/RU etc)
     fallback_servers = sorted([s for s in valid_global if s.get('is_reality')], key=lambda x: x['real_lat'])
 
     def fill_game_slot(time_label):
         s = None
-        # Try priority list first
         cands = [x for x in priority_servers if x['ip'] not in used_ips]
         if cands: 
             s = cands[0]
         else:
-            # Fallback
             cands = [x for x in fallback_servers if x['ip'] not in used_ips]
             if cands: s = cands[0]
             
@@ -706,7 +670,7 @@ def select_final_9(verified_global, verified_whitelist):
     fill_game_slot(last_update)
     fill_game_slot(next_update)
 
-    # 2. UNIVERSAL (3 slots)
+    # 2. UNIVERSAL
     univ_pool = sorted([s for s in valid_global if s.get('is_reality') and s['ip'] not in used_ips], key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, -x['speed']))
     for _ in range(3):
         if univ_pool:
@@ -717,7 +681,7 @@ def select_final_9(verified_global, verified_whitelist):
             s['role'] = 'UNIVERSAL'
             final.append(s)
 
-    # 3. WARP (2 slots)
+    # 3. WARP
     warp_pool = [s for s in valid_global if s['ip'] not in used_ips and (s.get('is_warp') or s.get('is_reality'))]
     warp_pool = sorted(warp_pool, key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
     for _ in range(2):
@@ -729,7 +693,7 @@ def select_final_9(verified_global, verified_whitelist):
             s['role'] = 'WARP'
             final.append(s)
 
-    # 4. WHITELIST (2 slots)
+    # 4. WHITELIST
     wl_pool = sorted([s for s in verified_whitelist if s['speed'] > 0.1], key=lambda x: -x['speed'])
     for _ in range(2):
         if wl_pool:
@@ -756,7 +720,7 @@ def save_results(final, reserve, stats):
             f.write(base64.b64encode("\n".join(links).encode()).decode())
         logger.info(f"💾 Подписка: {OUTPUT_FILE} ({len(links)} серверов)")
     except Exception as e:
-        logger.error(f"❌ Ошибка сохранения подписки: {e}")
+        logger.error(f"❌ Ошибка сохранения: {e}")
         
     json_data = {
         "updated_msk": get_timestamp(),
@@ -785,7 +749,7 @@ def save_results(final, reserve, stats):
         with open(RESERVE_POOL_FILE, 'w', encoding='utf-8') as f:
             json.dump(pool, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"❌ Ошибка Reserve Pool: {e}")
+        logger.error(f"❌ Ошибка Pool: {e}")
 
 # ═══════════════════════════════════════════════════════════════
 # 🚀 MAIN
@@ -793,7 +757,7 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V3.2 - ULTIMATE (AVENCORES + FIXES)")
+    logger.info("🚀 FL1P VPN V3.3 - CPU SAVER EDITION")
     logger.info(f"   🔥 Priority Countries: {', '.join(PRIORITY_COUNTRIES)}")
     print("═" * 70)
     
@@ -829,9 +793,10 @@ def main():
             if r: alive_wl.append(r)
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
-    # Sort by priority to check them first
+    # Оптимизация: сортируем по приоритету и пингу
     alive_global.sort(key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, x['latency']))
     
+    # Ограничиваем количество проверок для экономии CPU
     candidates = alive_global[:MAX_DEEP_CHECK_GLOBAL]
     
     verified_global = []
