@@ -2,7 +2,7 @@ name: Watchdog Health Check
 
 on:
   schedule:
-    - cron: '5,12,19,26,33,40,47,54 * * * *'  # Каждые ~7 минут
+    - cron: '5,12,19,26,33,40,47,54 * * * *'  # Запуск каждые ~7 минут
   workflow_dispatch:
 
 concurrency:
@@ -17,18 +17,21 @@ jobs:
       contents: write
 
     steps:
-      - name: Check main.py not running
+      - name: Check main.py execution
         run: |
+          # Если основной скрипт обновления работает, watchdog должен ждать
           if pgrep -f "main.py" > /dev/null; then
-            echo "⏳ main.py работает, пропускаем"
+            echo "⏳ main.py is currently running. Skipping watchdog scan."
             exit 0
           fi
 
-      - name: Kill zombies
+      - name: Kill zombie processes
         run: pkill -9 -f "xray" || true
 
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Нужна история для rebase
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -36,37 +39,54 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install deps
+      - name: Install dependencies
         run: pip install requests PySocks
 
-      - name: Get Xray
+      - name: Install Xray Core (v1.8.4)
         run: |
+          # Используем ту же версию, что и в основном скрипте, чтобы конфиги подходили
           if [ ! -f xray ]; then
-            wget -q -O xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-            unzip -o -q xray.zip xray && rm -f xray.zip
+            echo "⬇️ Downloading Xray 1.8.4..."
+            wget -q -O xray.zip https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip
+            unzip -o -q xray.zip xray geoip.dat geosite.dat
+            rm -f xray.zip
           fi
           chmod +x xray
 
-      - name: Run Watchdog
+      - name: Run Watchdog Script
         timeout-minutes: 3
         run: python watchdog.py
 
-      - name: Cleanup
-        run: rm -f xray watchdog.log *.zip *.tmp 2>/dev/null || true
-
-      - name: Commit
+      - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add FL1PVPN stats.json reserve_pool.json 2>/dev/null || true
+          
+          # Добавляем все критически важные файлы, которые мог изменить Watchdog
+          git add FL1PVPN stats.json reserve_pool.json logs/ 2>/dev/null || true
+          
           if git diff --staged --quiet; then
-            echo "✅ No changes"
+            echo "✅ No rotation needed. Everything is healthy."
           else
-            git commit -m "🐕 Watchdog $(date -u '+%H:%M')"
-            git pull --rebase origin main || true
+            echo "🔄 Servers rotated. Pushing changes..."
+            git commit -m "🐕 Watchdog Rotation | $(date -u '+%H:%M UTC')"
+            
+            # --- ЗАЩИТА ОТ КОНФЛИКТОВ ---
+            # 1. Прячем наши коммиты во временное хранилище
+            git stash save "Watchdog Stash" 2>/dev/null || true
+            
+            # 2. Скачиваем обновления с сервера (rebase накладывает их "под" наши)
+            git pull --rebase origin main
+            
+            # 3. Возвращаем наши изменения (если stash что-то спрятал)
+            git stash pop 2>/dev/null || true
+            
+            # 4. Отправляем
             git push origin main
           fi
 
       - name: Final cleanup
         if: always()
-        run: pkill -9 -f "xray" || true
+        run: |
+          pkill -9 -f "xray" || true
+          rm -f *.zip *.tmp *.json.tmp 2>/dev/null || true
