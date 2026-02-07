@@ -57,7 +57,7 @@ jobs:
           # 1. Добавляем важные файлы (включая reserve_pool.json!)
           git add FL1PVPN stats.json history.json reserve_pool.json
           
-          # 2. Добавляем логи (игнорируя ошибки если нет новых)
+          # 2. Добавляем логи
           git add logs/*.log 2>/dev/null || true
           
           # 3. Проверяем статус
@@ -67,12 +67,15 @@ jobs:
           fi
           
           # 4. Создаем коммит
-          # Пытаемся получить кол-во серверов для красивого сообщения
           COUNT=$(python3 -c "import json; print(len(json.load(open('stats.json'))['servers']))" 2>/dev/null || echo "?")
           git commit -m "🚀 Update $COUNT Servers | $(date -u +'%Y-%m-%d %H:%M UTC')"
           
+          # 🔥 ВАЖНОЕ ИСПРАВЛЕНИЕ: Прячем любые незакоммиченные файлы (мусор),
+          # которые могли появиться в последнюю секунду, чтобы rebase прошел успешно.
+          git stash
+          
           # 5. СТРАТЕГИЯ ОТ КОНФЛИКТОВ (Rebase)
-          # Сначала скачиваем чужие изменения (от Watchdog) и накладываем свои сверху
+          # Скачиваем изменения (от Watchdog) и накладываем свои сверху
           git pull --rebase origin main
           
           # 6. Отправляем
