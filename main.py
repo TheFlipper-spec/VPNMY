@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V4.0 - UDP GAME MODE
+#  FL1P VPN SCANNER V3.7 - FINAL STABLE (ALL SOURCES + UDP)
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -90,10 +90,10 @@ RUS_NAMES = {
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 🔥 ИСТОЧНИКИ
+# 🔥 ИСТОЧНИКИ (ПОЛНЫЙ СПИСОК)
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
-    # --- AVENCORES & REQUESTED ---
+    # --- AVENCORES & CUSTOM REQUESTS ---
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/reality.txt",
     "https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/all_valid_proxies.txt",
@@ -120,13 +120,12 @@ GLOBAL_URLS = [
     "https://raw.githubusercontent.com/STR97/STRUGOV/refs/heads/main/STR.BYPASS#STR.BYPASS%F0%9F%91%BE",
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
 
-    # --- MASSIVE AGGREGATORS ---
+    # --- MASSIVE AGGREGATORS (FOUNDATION) ---
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt",
     "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/vless",
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
     "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/vless.txt",
-    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/vless.txt",
     
     # --- SPECIALS ---
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
@@ -154,28 +153,27 @@ TELEGRAM_CHANNELS = [
 ]
 
 # ═══════════════════════════════════════════════════════════════
-# ⚙️ НАСТРОЙКИ
+# ⚙️ НАСТРОЙКИ (ОПТИМИЗАЦИЯ)
 # ═══════════════════════════════════════════════════════════════
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-MAX_WORKERS_SCAN = 50       # Оптимально для CPU
-MAX_WORKERS_DEEP = 6        # Мало потоков для Xray
+MAX_WORKERS_SCAN = 50       
+MAX_WORKERS_DEEP = 6        # Бережем CPU
 MAX_WORKERS_FETCH = 20
 
 TIMEOUT_TCP = 0.6
 TIMEOUT_REAL = 8.0
 TIMEOUT_SPEED = 6.0
-TIMEOUT_FETCH = 25.0        
+TIMEOUT_FETCH = 30.0        
 
 MAX_DEEP_CHECK_GLOBAL = 400
 MAX_DEEP_CHECK_WHITELIST = 120
 
-# Критерии
-MIN_SPEED_GAME = 0.5        # Для игровых важен пинг, скорость вторична
+MIN_SPEED_GAME = 0.5        
 MIN_SPEED_UNIVERSAL = 2.0   
-MAX_PING_GAME = 150         
+MAX_PING_GAME = 180         
 MAX_PING_UNIVERSAL = 450    
 
 OUTPUT_FILE = 'FL1PVPN'
@@ -509,59 +507,38 @@ def check_endpoints(port):
         except: pass
     return total_lat / success if success >= 2 else None
 
-# 🔥 НОВЫЙ UDP TEST ЧЕРЕЗ SOCKS5 (ДЛЯ ИГР)
+# 🔥 UDP ТЕСТ (ДЛЯ ИГРОВЫХ СЕРВЕРОВ)
 def check_udp_dns(local_port):
     try:
-        # Create a SOCKS5 UDP Associate request
         socks_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socks_socket.settimeout(3.0)
         socks_socket.connect(('127.0.0.1', local_port))
         
-        # Handshake
         socks_socket.sendall(b'\x05\x01\x00')
         if socks_socket.recv(2) != b'\x05\x00': return None
         
-        # UDP Associate
         socks_socket.sendall(b'\x05\x03\x00\x01\x00\x00\x00\x00\x00\x00')
         resp = socks_socket.recv(10)
         if len(resp) < 10 or resp[1] != 0x00: return None
         
-        # Get Relay Info
-        relay_ip_bytes = resp[4:8]
+        relay_ip = socket.inet_ntoa(resp[4:8])
         relay_port = struct.unpack('>H', resp[8:10])[0]
-        relay_ip = socket.inet_ntoa(relay_ip_bytes)
         
-        # Create UDP socket
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         udp_socket.settimeout(2.0)
         
-        # Simple DNS Query for google.com (A record)
-        # Header: ID, Flags (Recursion Desired), Questions=1, others=0
-        dns_query = b'\xAA\xAA\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00' 
-        # QNAME: 6google3com0
-        dns_query += b'\x06google\x03com\x00'
-        # QTYPE (A=1) + QCLASS (IN=1)
-        dns_query += b'\x00\x01\x00\x01'
-        
-        # SOCKS5 UDP Header: RSV(2) + FRAG(1) + ATYP(1) + DST.ADDR(4) + DST.PORT(2) + DATA
-        # Target: 8.8.8.8:53
+        dns_query = b'\xAA\xAA\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x06google\x03com\x00\x00\x01\x00\x01'
         socks_header = b'\x00\x00\x00\x01' + socket.inet_aton('8.8.8.8') + struct.pack('>H', 53)
         packet = socks_header + dns_query
         
         start = time.perf_counter()
         udp_socket.sendto(packet, (relay_ip, relay_port))
-        
-        # Receive
         data, _ = udp_socket.recvfrom(512)
         rtt = (time.perf_counter() - start) * 1000
         
-        # Basic validation (Check ID)
-        # SOCKS5 header (10+ bytes depends on address) + DNS Header (2 bytes ID)
         if len(data) > 12 and data[10:12] == b'\xAA\xAA':
             return rtt
-            
-    except:
-        pass
+    except: pass
     finally:
         try: socks_socket.close()
         except: pass
@@ -586,16 +563,16 @@ def deep_check(server):
         time.sleep(1.5)
         
         if proc.poll() is None:
-            # 🔥 SPECIAL LOGIC FOR GAME SERVERS
+            # Спец. проверка для игровых серверов (UDP Ping)
             if server['info']['cc'] in PRIORITY_COUNTRIES:
                 udp_lat = check_udp_dns(port)
                 if udp_lat:
                     lat = udp_lat
-                    speed = 1.0 # Fake speed for sorting
+                    speed = 1.0 # Фиктивная скорость для сортировки
                     udp = True
                     update_history(server['ip'], server['port'], True, server.get('is_reality', False))
             
-            # Standard Logic for others
+            # Обычная проверка для остальных
             if not lat:
                 lat = check_endpoints(port)
                 if lat:
@@ -655,7 +632,7 @@ def full_check(server, progress=None):
     server['udp'] = udp
     name = get_country_name(server['info']['cc'])
     mode = "Reality" if server.get('is_reality') else ("WARP" if server.get('is_warp') else "TCP")
-    if server['info']['cc'] in PRIORITY_COUNTRIES and udp:
+    if server['info']['cc'] in PRIORITY_COUNTRIES and udp and speed == 1.0:
         mode = "UDP-GAME"
         
     logger.info(f"   🎯 {server['ip']} ({name}) - {speed:.1f}Mbps, {lat:.0f}ms [{mode}]")
@@ -722,7 +699,6 @@ def select_final_9(verified_global, verified_whitelist):
     valid_global = [s for s in verified_global if s['speed'] > 0.1]
     
     # 1. GAME POOL
-    # Prioritize Priority Countries that PASSED the UDP check
     priority_servers = [s for s in valid_global if s['info']['cc'] in PRIORITY_COUNTRIES]
     priority_servers = sorted(priority_servers, key=lambda x: x['real_lat'])
     
@@ -753,7 +729,8 @@ def select_final_9(verified_global, verified_whitelist):
             s = univ_pool.pop(0)
             used_ips.add(s['ip'])
             cc = s['info']['cc']
-            s['final_name'] = f"⚡ {get_flag(cc)} {get_country_name(cc)}"
+            flag = get_flag(cc)
+            s['final_name'] = f"⚡ {flag} {get_country_name(cc)}"
             s['role'] = 'UNIVERSAL'
             final.append(s)
 
@@ -765,7 +742,8 @@ def select_final_9(verified_global, verified_whitelist):
             s = warp_pool.pop(0)
             used_ips.add(s['ip'])
             cc = s['info']['cc']
-            s['final_name'] = f"🌀 {get_flag(cc)} {get_country_name(cc)} (WARP)"
+            flag = get_flag(cc)
+            s['final_name'] = f"🌀 {flag} {get_country_name(cc)} (WARP)"
             s['role'] = 'WARP'
             final.append(s)
 
@@ -775,7 +753,8 @@ def select_final_9(verified_global, verified_whitelist):
         if wl_pool:
             s = wl_pool.pop(0)
             cc = s['info']['cc']
-            s['final_name'] = f"⚪ {get_flag(cc)} {get_country_name(cc)} (РКН)"
+            flag = get_flag(cc)
+            s['final_name'] = f"⚪ {flag} {get_country_name(cc)} (РКН)"
             s['role'] = 'WHITELIST'
             final.append(s)
 
@@ -829,7 +808,7 @@ def save_results(final, reserve, stats):
         role = "UNIVERSAL"
         if s.get('source') == 'whitelist': role = "WHITELIST"
         elif s.get('is_warp_named') or s.get('is_warp'): role = "WARP"
-        elif s.get('is_reality') and s['info']['cc'] in PRIORITY_COUNTRIES: role = "GAME"
+        elif s.get('is_reality') and s['info']['cc'] in PRIORITY_COUNTRIES and s['real_lat'] < 200: role = "GAME"
             
         pool["servers"].append({
             "ip": s['ip'],
@@ -852,7 +831,7 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V4.0 - UDP GAME MODE")
+    logger.info("🚀 FL1P VPN V3.7 - FINAL STABLE (ALL SOURCES + UDP)")
     logger.info(f"   🔥 Priority Countries: {', '.join(PRIORITY_COUNTRIES)}")
     print("═" * 70)
     
@@ -888,7 +867,7 @@ def main():
             if r: alive_wl.append(r)
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
-    # Сначала проверяем приоритетные страны (FI/EE/LV/SE), чтобы успеть найти игровые сервера
+    # Сначала проверяем приоритетные страны, чтобы набрать игровые сервера
     alive_global.sort(key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, x['latency']))
     
     candidates = alive_global[:MAX_DEEP_CHECK_GLOBAL]
