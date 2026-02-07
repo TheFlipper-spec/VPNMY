@@ -28,7 +28,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V2.4 - STRUCTURE & MASSIVE FIX
+#  FL1P VPN SCANNER V2.5 - TITAN EDITION (20k+ FIX)
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -77,7 +77,9 @@ TIER_2_COUNTRIES = ['NO', 'PL', 'DE', 'NL', 'DK']
 TIER_3_COUNTRIES = ['AT', 'CZ', 'BE', 'CH', 'GB', 'FR']  
 TIER_4_COUNTRIES = ['IT', 'ES', 'PT', 'IE', 'HU', 'RO', 'BG', 'SK', 'GR', 'TR']
 
-GAME_COUNTRIES = TIER_1_COUNTRIES + TIER_2_COUNTRIES
+# Игровые сервера - строго Европа и соседи. Никакой Азии.
+GAME_COUNTRIES = TIER_1_COUNTRIES + TIER_2_COUNTRIES + TIER_3_COUNTRIES + ['RU', 'UA', 'BY', 'KZ']
+
 WHITELIST_COUNTRIES = ['RU']
 BLACKLIST_COUNTRIES = ['CN', 'IR', 'KP', 'US', 'BY', 'XX']
 
@@ -94,22 +96,29 @@ RUS_NAMES = {
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 🔥 ИСТОЧНИКИ
+# 🔥 ИСТОЧНИКИ (МЕГА-АГРЕГАТОРЫ)
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
-    # Massive Aggregators
+    # Yebekhe (База ~4000)
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/vless",
+    # Barry-far (База ~5000)
     "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/vless.txt",
+    # Mahdibland (База ~3000)
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/splitted/reality.txt",
+    # Ermaozi (База ~2000)
+    "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt",
+    # Mfuu
+    "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
+    # Mttsh
+    "https://raw.githubusercontent.com/mttsh/v2ray/main/vless.txt",
+    # Tone (Доп. база)
+    "https://raw.githubusercontent.com/ToneWT/v2ray-subscribe/master/vless.txt",
     
-    # Specific & Backup
+    # Igareck (Specials)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
-    "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
-    "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt",
-    "https://raw.githubusercontent.com/mttsh/v2ray/main/vless.txt",
 ]
 
 WHITELIST_URLS = [
@@ -122,7 +131,8 @@ TELEGRAM_CHANNELS = [
     "PrivateVPNs", "iSegaro", "reality_daily", "RealityVpnChannel",
     "FarahVPN", "v2rayng_vpn", "v2ray_configs_pool", "VlessConfig",
     "DirectVPN", "v2ray_alpha", "ConfigsHUB", "freev2rayssr",
-    "v2rayng_org", "v2ray_outline", "flyvless"
+    "v2rayng_org", "v2ray_outline", "flyvless", "v2ray_freedom",
+    "vmess_vless_v2ray"
 ]
 
 # ═══════════════════════════════════════════════════════════════
@@ -132,22 +142,22 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-MAX_WORKERS_SCAN = 80       # High concurrency for scanning
-MAX_WORKERS_DEEP = 25
-MAX_WORKERS_FETCH = 20
+MAX_WORKERS_SCAN = 100      # Максимум потоков для обработки тысяч
+MAX_WORKERS_DEEP = 30
+MAX_WORKERS_FETCH = 25
 
-TIMEOUT_TCP = 0.8
+TIMEOUT_TCP = 0.75
 TIMEOUT_REAL = 10.0
 TIMEOUT_SPEED = 7.0
-TIMEOUT_FETCH = 30.0        # Increased for large files
+TIMEOUT_FETCH = 30.0        
 
-MAX_DEEP_CHECK_GLOBAL = 2000 # Check up to 2000 servers deeply
-MAX_DEEP_CHECK_WHITELIST = 150
+MAX_DEEP_CHECK_GLOBAL = 2000 # Проверяем топ 2000 из 30к
+MAX_DEEP_CHECK_WHITELIST = 200
 
-MIN_SPEED_GAME = 2.0        
-MIN_SPEED_UNIVERSAL = 3.0   
+MIN_SPEED_GAME = 1.5        
+MIN_SPEED_UNIVERSAL = 2.5   
 MAX_PING_GAME = 180         
-MAX_PING_UNIVERSAL = 350    
+MAX_PING_UNIVERSAL = 400    
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -157,7 +167,7 @@ RESERVE_POOL_FILE = 'reserve_pool.json'
 TIMEZONE_OFFSET = 3
 CACHE_TTL_HOURS = 4
 MAX_FAILURES = 2
-RESERVE_POOL_SIZE = 50
+RESERVE_POOL_SIZE = 60
 UPDATE_INTERVAL_MINUTES = 20
 
 # ═══════════════════════════════════════════════════════════════
@@ -294,59 +304,63 @@ def get_country(ip):
         return 'XX'
 
 # ═══════════════════════════════════════════════════════════════
-# 🔍 ПАРСИНГ (OPTIMIZED)
+# 🔍 ПАРСИНГ (AGRESSIVE & ROBUST)
 # ═══════════════════════════════════════════════════════════════
-def safe_decode(s):
-    if not s or len(s) < 4: return s
-    s = s.strip().replace('\n', '').replace('\r', '')
-    pad = len(s) % 4
-    if pad: s += '=' * (4 - pad)
+def aggressive_decode(text):
+    """Пытается декодировать текст, даже если он кривой, содержит пробелы или является списком."""
+    candidates = []
+    
+    # 1. Если текст выглядит как одна большая base64 строка
+    text_clean = text.strip().replace(" ", "").replace("\n", "").replace("\r", "")
     try:
-        return base64.urlsafe_b64decode(s).decode('utf-8', errors='ignore')
+        # Добиваем padding
+        pad = len(text_clean) % 4
+        if pad: text_clean += '=' * (4 - pad)
+        decoded = base64.b64decode(text_clean).decode('utf-8', errors='ignore')
+        candidates.append(decoded)
     except:
-        try:
-            return base64.b64decode(s).decode('utf-8', errors='ignore')
-        except:
-            return s
+        pass
+
+    # 2. Если это URL-safe base64
+    try:
+        decoded = base64.urlsafe_b64decode(text_clean).decode('utf-8', errors='ignore')
+        candidates.append(decoded)
+    except:
+        pass
+        
+    return candidates
 
 def extract_links(text):
     if not text: return []
-    # Use simple regex first for speed on huge files
-    regex = r"vless://[a-zA-Z0-9\-@.:?=&%#]+"
-    links = re.findall(regex, text)
+    all_links = set()
     
-    # If partial/low count, try decoding
-    if len(links) < 10:
-        decoded = safe_decode(text)
-        if decoded != text:
-            links.extend(re.findall(regex, decoded))
-            
-    # Fallback line-by-line for mixed content
-    if len(links) < 10:
-        for line in text.split('\n'):
+    # Базовый поиск в сыром тексте
+    regex = r"vless://[a-zA-Z0-9\-@.:?=&%#]+"
+    
+    # 1. Ищем в исходнике
+    found = re.findall(regex, text)
+    for link in found: all_links.add(link)
+    
+    # 2. Пробуем агрессивное декодирование всего ответа
+    decoded_variants = aggressive_decode(text)
+    for variant in decoded_variants:
+        found_in_decoded = re.findall(regex, variant)
+        for link in found_in_decoded: all_links.add(link)
+        
+    # 3. Если ссылок все еще мало, пробуем построчное декодирование (микс)
+    if len(all_links) < 50:
+        lines = text.split('\n')
+        for line in lines:
             line = line.strip()
             if not line: continue
-            if "vless://" in line:
-                # Basic extraction if regex missed
-                try:
-                    start = line.find("vless://")
-                    links.append(line[start:])
-                except: pass
-            else:
-                d = safe_decode(line)
-                if "vless://" in d:
-                    links.extend(re.findall(regex, d))
+            # Если линия сама похожа на base64
+            if not line.startswith("vless://"):
+                dec = aggressive_decode(line)
+                for d in dec:
+                    found = re.findall(regex, d)
+                    for link in found: all_links.add(link)
 
-    # Dedup and clean
-    cleaned = []
-    seen = set()
-    for link in links:
-        link = link.strip()
-        base = link.split('#')[0]
-        if base not in seen:
-            seen.add(base)
-            cleaned.append(link)
-    return cleaned
+    return list(all_links)
 
 def check_sni_quality(sni):
     if not sni: return False, False, 0
@@ -373,7 +387,6 @@ def parse_config(config_str, source_type):
     if not config_str or len(config_str) < 15: return None
     
     try:
-        # VLESS
         if config_str.startswith("vless://"):
             if "@" not in config_str or "?" not in config_str: return None
             uuid = config_str.split("@")[0].replace("vless://", "")
@@ -391,9 +404,7 @@ def parse_config(config_str, source_type):
             remark = unquote(config_str.split("#")[-1]).strip() if "#" in config_str else "VLESS"
             
             is_reality = (security == 'reality')
-            # WARP logic: Any WS/GRPC/HTTPUPGRADE is a candidate
             is_warp_proto = transport in ['ws', 'grpc', 'httpupgrade']
-            
             is_whitelist = (source_type == 'whitelist')
             
             valid = False
@@ -412,8 +423,6 @@ def parse_config(config_str, source_type):
             if not valid: return None
             
             reality_score = get_reality_score(params) if is_reality else 0
-            
-            # Helper for naming priority
             is_warp_named = any(k in remark.lower() for k in ['warp', 'cloudflare', 'cf', 'cloud'])
             
             return {
@@ -631,8 +640,9 @@ def fetch_tg(channel):
 def collect_all():
     global_cfgs = []
     whitelist_cfgs = []
+    raw_count = 0
     
-    logger.info("📥 Сбор конфигураций (расширенный)...")
+    logger.info("📥 Сбор конфигураций (Titan Mode)...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_FETCH) as ex:
         futures = {}
@@ -647,12 +657,14 @@ def collect_all():
             try:
                 configs = future.result()
                 if configs:
+                    raw_count += len(configs)
                     for c in configs:
                         if c and c['source'] == 'whitelist': whitelist_cfgs.append(c)
                         elif c: global_cfgs.append(c)
             except: pass
             
-    logger.info(f"\n📊 Собрано: {len(global_cfgs)} глобальных, {len(whitelist_cfgs)} WL")
+    logger.info(f"\n📊 Найдено ссылок (Raw): {raw_count}")
+    logger.info(f"📊 Отфильтровано: {len(global_cfgs)} глобальных, {len(whitelist_cfgs)} WL")
     return global_cfgs, whitelist_cfgs
 
 # ═══════════════════════════════════════════════════════════════
@@ -664,36 +676,31 @@ def select_final_9(verified_global, verified_whitelist):
     last_update = get_last_update_time()
     next_update = get_next_update_time()
     
+    # ФИЛЬТРАЦИЯ КАЧЕСТВА: Исключаем 0.0 Mbps
+    # Только "живые" с реальной скоростью > 0
+    valid_global = [s for s in verified_global if s['speed'] > 0.1]
+    valid_whitelist = [s for s in verified_whitelist if s['speed'] > 0.1]
+
     # 1. GAME POOL (Slots 1, 2)
-    # Filter Strict: Reality + Priority Country + Low Ping
-    game_pool_strict = [s for s in verified_global 
+    # Strict: Reality + Priority Country (FI/EE/LV/SE)
+    game_pool_strict = [s for s in valid_global 
                  if s.get('is_reality') 
                  and s['info']['cc'] in PRIORITY_COUNTRIES
                  and s['real_lat'] <= MAX_PING_GAME]
     
-    # Filter Relaxed: Reality + Any Game Country
-    game_pool_relaxed = [s for s in verified_global 
+    # Fallback: Reality + Game Country (Europe/RU/UA/KZ) - NO ASIA
+    game_pool_europe = [s for s in valid_global 
                  if s.get('is_reality') 
                  and s['info']['cc'] in GAME_COUNTRIES]
-                 
-    # Filter Fallback: Just Reality (best ping)
-    game_pool_fallback = [s for s in verified_global if s.get('is_reality')]
 
-    # Helper to fill slots
     def fill_game_slot(time_label):
         s = None
-        # Try strict first
-        cands = [x for x in game_pool_strict if x['ip'] not in used_ips]
-        if cands: s = cands[0]
-        
-        # Try relaxed
-        if not s:
-            cands = sorted([x for x in game_pool_relaxed if x['ip'] not in used_ips], key=lambda x: x['real_lat'])
-            if cands: s = cands[0]
-            
-        # Try fallback
-        if not s:
-            cands = sorted([x for x in game_pool_fallback if x['ip'] not in used_ips], key=lambda x: x['real_lat'])
+        cands = sorted([x for x in game_pool_strict if x['ip'] not in used_ips], key=lambda x: x['real_lat'])
+        if cands: 
+            s = cands[0]
+        else:
+            # Fallback to Europe
+            cands = sorted([x for x in game_pool_europe if x['ip'] not in used_ips], key=lambda x: x['real_lat'])
             if cands: s = cands[0]
             
         if s:
@@ -707,8 +714,9 @@ def select_final_9(verified_global, verified_whitelist):
     fill_game_slot(last_update)
     fill_game_slot(next_update)
 
-    # 2. UNIVERSAL POOL (Slots 3, 4, 5)
-    univ_pool = sorted([s for s in verified_global 
+    # 2. UNIVERSAL POOL (Slots 3, 4, 5) - Strictly 3
+    # Sort: Priority first, then High Speed
+    univ_pool = sorted([s for s in valid_global 
                  if s.get('is_reality') and s['ip'] not in used_ips], 
                  key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, -x['speed']))
                  
@@ -722,8 +730,8 @@ def select_final_9(verified_global, verified_whitelist):
             s['role'] = 'UNIVERSAL'
             final.append(s)
 
-    # 3. WARP POOL (Slots 6, 7)
-    warp_pool = [s for s in verified_global if s['ip'] not in used_ips and (s.get('is_warp') or s.get('is_reality'))]
+    # 3. WARP POOL (Slots 6, 7) - Strictly 2
+    warp_pool = [s for s in valid_global if s['ip'] not in used_ips and (s.get('is_warp') or s.get('is_reality'))]
     warp_pool = sorted(warp_pool, key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
     
     for i in range(2):
@@ -732,13 +740,12 @@ def select_final_9(verified_global, verified_whitelist):
             used_ips.add(s['ip'])
             cc = s['info']['cc']
             flag = get_flag(cc)
-            # Use '🌀' as requested
             s['final_name'] = f"🌀 {flag} {get_country_name(cc)} (WARP)"
             s['role'] = 'WARP'
             final.append(s)
 
-    # 4. WHITELIST POOL (Slots 8, 9)
-    wl_pool = sorted([s for s in verified_whitelist if s['ip'] not in used_ips], key=lambda x: -x['speed'])
+    # 4. WHITELIST POOL (Slots 8, 9) - Strictly 2
+    wl_pool = sorted([s for s in valid_whitelist if s['ip'] not in used_ips], key=lambda x: -x['speed'])
     for i in range(2):
         if wl_pool:
             s = wl_pool.pop(0)
@@ -748,7 +755,7 @@ def select_final_9(verified_global, verified_whitelist):
             s['role'] = 'WHITELIST'
             final.append(s)
 
-    reserve = [s for s in verified_global if s['ip'] not in used_ips][:RESERVE_POOL_SIZE]
+    reserve = [s for s in valid_global if s['ip'] not in used_ips][:RESERVE_POOL_SIZE]
     return final, reserve
 
 # ═══════════════════════════════════════════════════════════════
@@ -800,7 +807,7 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V2.4 - STRUCTURE & MASSIVE FIX")
+    logger.info("🚀 FL1P VPN V2.5 - TITAN EDITION")
     logger.info(f"   🔥 Priority Countries: {', '.join(PRIORITY_COUNTRIES)}")
     print("═" * 70)
     
