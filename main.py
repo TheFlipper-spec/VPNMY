@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V3.7 - FINAL STABLE (ALL SOURCES + UDP)
+#  FL1P VPN SCANNER V3.8 - RELAXED SNI & SMART GAME CHECK
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -90,10 +90,9 @@ RUS_NAMES = {
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 🔥 ИСТОЧНИКИ (ПОЛНЫЙ СПИСОК)
+# 🔥 ИСТОЧНИКИ
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
-    # --- AVENCORES & CUSTOM REQUESTS ---
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/reality.txt",
     "https://raw.githubusercontent.com/sakha1370/OpenRay/refs/heads/main/output/all_valid_proxies.txt",
@@ -119,23 +118,18 @@ GLOBAL_URLS = [
     "https://raw.githubusercontent.com/AzadNetCH/Clash/refs/heads/main/AzadNet.txt",
     "https://raw.githubusercontent.com/STR97/STRUGOV/refs/heads/main/STR.BYPASS#STR.BYPASS%F0%9F%91%BE",
     "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
-
-    # --- MASSIVE AGGREGATORS (FOUNDATION) ---
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt",
     "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/vless",
     "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
     "https://raw.githubusercontent.com/barry-far/V2ray-Config/main/Splitted-By-Protocol/vless.txt",
-    
-    # --- SPECIALS ---
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
-    
-    # --- BACKUP ---
     "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
     "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt",
     "https://raw.githubusercontent.com/mttsh/v2ray/main/vless.txt",
+    # Специальные для РФ
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
 ]
 
 WHITELIST_URLS = [
@@ -153,28 +147,28 @@ TELEGRAM_CHANNELS = [
 ]
 
 # ═══════════════════════════════════════════════════════════════
-# ⚙️ НАСТРОЙКИ (ОПТИМИЗАЦИЯ)
+# ⚙️ НАСТРОЙКИ
 # ═══════════════════════════════════════════════════════════════
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 MAX_WORKERS_SCAN = 50       
-MAX_WORKERS_DEEP = 6        # Бережем CPU
+MAX_WORKERS_DEEP = 6        
 MAX_WORKERS_FETCH = 20
 
 TIMEOUT_TCP = 0.6
 TIMEOUT_REAL = 8.0
 TIMEOUT_SPEED = 6.0
-TIMEOUT_FETCH = 30.0        
+TIMEOUT_FETCH = 25.0        
 
-MAX_DEEP_CHECK_GLOBAL = 400
+MAX_DEEP_CHECK_GLOBAL = 450 # Чуть увеличили выборку
 MAX_DEEP_CHECK_WHITELIST = 120
 
 MIN_SPEED_GAME = 0.5        
-MIN_SPEED_UNIVERSAL = 2.0   
+MIN_SPEED_UNIVERSAL = 1.5   # Смягчили требование по скорости
 MAX_PING_GAME = 180         
-MAX_PING_UNIVERSAL = 450    
+MAX_PING_UNIVERSAL = 500    
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -204,14 +198,12 @@ TRUSTED_SNIS = [
     'www.twitch.tv', 'twitch.tv', 'www.steam.com', 'steampowered.com',
 ]
 
+# 🔥 ИЗМЕНЕНИЕ 1: Смягченный черный список SNI. 
+# Теперь мы НЕ блокируем популярные сайты, так как они часто используются в Reality.
+# Блокируем только откровенно "паленые" или мусорные домены.
 BLOCKED_SNIS = [
-    'discord.com', 'discordapp.com', 'discord.gg',
-    'twitter.com', 'x.com', 't.co',
-    'facebook.com', 'fb.com', 'fbcdn.net',
-    'instagram.com', 'cdninstagram.com',
-    'linkedin.com', 'tiktok.com',
-    'youtube.com', 'youtu.be', 'googlevideo.com',
-    'bbc.com', 'dw.com', 'meduza.io', 'rferl.org'
+    'pornhub', 'xvideos', # Только 18+ и откровенный мусор
+    'localhost', 'test', 'example.com' 
 ]
 
 geo_reader = None
@@ -361,9 +353,7 @@ def check_sni_quality(sni):
     sni_lower = sni.lower()
     for blocked in BLOCKED_SNIS:
         if blocked in sni_lower: return True, False, -100
-    for trusted in TRUSTED_SNIS:
-        if trusted in sni_lower or sni_lower in trusted: return False, True, 50
-    if '.' in sni and not sni[0].isdigit(): return False, False, 20
+    # Отключили жесткую проверку доверенных SNI, чтобы больше серверов попадало
     return False, False, 0
 
 def get_reality_score(params):
@@ -403,6 +393,7 @@ def parse_config(config_str, source_type):
                 pbk = params.get('pbk', [''])[0]
                 sni = params.get('sni', [''])[0]
                 if len(pbk) != 43 or sni == host: return None
+                # Смягченная проверка SNI
                 if check_sni_quality(sni)[0]: return None 
             
             reality_score = get_reality_score(params) if is_reality else 0
@@ -507,7 +498,7 @@ def check_endpoints(port):
         except: pass
     return total_lat / success if success >= 2 else None
 
-# 🔥 UDP ТЕСТ (ДЛЯ ИГРОВЫХ СЕРВЕРОВ)
+# 🔥 UDP TEST (ДЛЯ ИГР)
 def check_udp_dns(local_port):
     try:
         socks_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -563,16 +554,16 @@ def deep_check(server):
         time.sleep(1.5)
         
         if proc.poll() is None:
-            # Спец. проверка для игровых серверов (UDP Ping)
+            # 🔥 ИГРОВОЙ СЕРВЕР ОБЯЗАН ИМЕТЬ РАБОЧИЙ UDP
             if server['info']['cc'] in PRIORITY_COUNTRIES:
                 udp_lat = check_udp_dns(port)
                 if udp_lat:
                     lat = udp_lat
-                    speed = 1.0 # Фиктивная скорость для сортировки
+                    speed = 1.0 
                     udp = True
                     update_history(server['ip'], server['port'], True, server.get('is_reality', False))
             
-            # Обычная проверка для остальных
+            # Для остальных - стандартный тест
             if not lat:
                 lat = check_endpoints(port)
                 if lat:
@@ -624,7 +615,8 @@ def initial_check(server, progress=None):
 
 def full_check(server, progress=None):
     lat, speed, udp = deep_check(server)
-    if lat is None or speed < 0.1: 
+    # Если скорость ниже плинтуса и это не игровой сервер - в мусорку
+    if lat is None or (speed < 0.1 and not udp): 
         if progress: progress.increment(False)
         return None
     server['real_lat'] = lat
@@ -632,7 +624,7 @@ def full_check(server, progress=None):
     server['udp'] = udp
     name = get_country_name(server['info']['cc'])
     mode = "Reality" if server.get('is_reality') else ("WARP" if server.get('is_warp') else "TCP")
-    if server['info']['cc'] in PRIORITY_COUNTRIES and udp and speed == 1.0:
+    if server['info']['cc'] in PRIORITY_COUNTRIES and udp:
         mode = "UDP-GAME"
         
     logger.info(f"   🎯 {server['ip']} ({name}) - {speed:.1f}Mbps, {lat:.0f}ms [{mode}]")
@@ -696,13 +688,13 @@ def select_final_9(verified_global, verified_whitelist):
     last_update = get_last_update_time()
     next_update = get_next_update_time()
     
-    valid_global = [s for s in verified_global if s['speed'] > 0.1]
-    
     # 1. GAME POOL
-    priority_servers = [s for s in valid_global if s['info']['cc'] in PRIORITY_COUNTRIES]
+    # Только те, где прошел UDP тест
+    priority_servers = [s for s in verified_global 
+                        if s['info']['cc'] in PRIORITY_COUNTRIES and s.get('udp')]
     priority_servers = sorted(priority_servers, key=lambda x: x['real_lat'])
     
-    fallback_servers = sorted([s for s in valid_global if s.get('is_reality') and s['info']['cc'] not in ['SG', 'JP', 'KR', 'HK']], key=lambda x: x['real_lat'])
+    fallback_servers = sorted([s for s in verified_global if s.get('udp') and s['info']['cc'] not in ['SG', 'JP', 'KR', 'HK']], key=lambda x: x['real_lat'])
 
     def fill_game_slot(time_label):
         s = None
@@ -722,7 +714,8 @@ def select_final_9(verified_global, verified_whitelist):
     fill_game_slot(last_update)
     fill_game_slot(next_update)
 
-    # 2. UNIVERSAL
+    # 2. UNIVERSAL (Любой быстрый Reality, можно без UDP)
+    valid_global = [s for s in verified_global if s['speed'] > MIN_SPEED_UNIVERSAL]
     univ_pool = sorted([s for s in valid_global if s.get('is_reality') and s['ip'] not in used_ips], key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, -x['speed']))
     for _ in range(3):
         if univ_pool:
@@ -748,7 +741,7 @@ def select_final_9(verified_global, verified_whitelist):
             final.append(s)
 
     # 4. WHITELIST
-    wl_pool = sorted([s for s in verified_whitelist if s['speed'] > 0.1], key=lambda x: -x['speed'])
+    wl_pool = sorted([s for s in verified_whitelist if s['speed'] > 0.5], key=lambda x: -x['speed'])
     for _ in range(2):
         if wl_pool:
             s = wl_pool.pop(0)
@@ -758,10 +751,22 @@ def select_final_9(verified_global, verified_whitelist):
             s['role'] = 'WHITELIST'
             final.append(s)
 
-    # --- РЕЗЕРВ ---
+    # --- РЕЗЕРВ (Для Watchdog) ---
     reserve = []
-    reserve.extend(sorted([s for s in valid_global if s['ip'] not in used_ips], key=lambda x: -x['speed']))
-    reserve.extend(sorted([s for s in wl_pool if s['ip'] not in used_ips], key=lambda x: -x['speed']))
+    # Важно: сохраняем роль для Watchdog прямо здесь
+    for s in verified_global + verified_whitelist:
+        if s['ip'] in used_ips: continue
+        
+        role = "UNIVERSAL"
+        if s.get('source') == 'whitelist': role = "WHITELIST"
+        elif s.get('is_warp_named') or s.get('is_warp'): role = "WARP"
+        elif s.get('udp') and s['info']['cc'] in PRIORITY_COUNTRIES: role = "GAME"
+        
+        s['role'] = role
+        reserve.append(s)
+        
+    # Сортируем резерв по качеству
+    reserve = sorted(reserve, key=lambda x: -x['speed'])
     reserve = reserve[:RESERVE_POOL_SIZE]
     
     return final, reserve
@@ -795,7 +800,9 @@ def save_results(final, reserve, stats):
             "speed": s['speed'],
             "ping": s['real_lat'],
             "type": "Reality" if s.get('is_reality') else "Warp/Other",
-            "role": s.get('role', 'UNKNOWN')
+            # 🔥 ВАЖНО: Watchdog читает роль отсюда
+            "role": s.get('role', 'UNKNOWN'),
+            "original": s['original'] # Нужно для восстановления ссылки
         })
     try:
         with open(JSON_FILE, 'w', encoding='utf-8') as f:
@@ -805,11 +812,6 @@ def save_results(final, reserve, stats):
 
     pool = {"updated": get_timestamp(), "servers": []}
     for s in reserve:
-        role = "UNIVERSAL"
-        if s.get('source') == 'whitelist': role = "WHITELIST"
-        elif s.get('is_warp_named') or s.get('is_warp'): role = "WARP"
-        elif s.get('is_reality') and s['info']['cc'] in PRIORITY_COUNTRIES and s['real_lat'] < 200: role = "GAME"
-            
         pool["servers"].append({
             "ip": s['ip'],
             "port": s['port'],
@@ -817,7 +819,7 @@ def save_results(final, reserve, stats):
             "link": s['original'],
             "speed": s['speed'],
             "ping": s['real_lat'],
-            "role": role
+            "role": s.get('role', 'UNIVERSAL')
         })
     try:
         with open(RESERVE_POOL_FILE, 'w', encoding='utf-8') as f:
@@ -831,7 +833,7 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V3.7 - FINAL STABLE (ALL SOURCES + UDP)")
+    logger.info("🚀 FL1P VPN V3.8 - FINAL STABLE (ALL SOURCES + UDP)")
     logger.info(f"   🔥 Priority Countries: {', '.join(PRIORITY_COUNTRIES)}")
     print("═" * 70)
     
@@ -867,7 +869,6 @@ def main():
             if r: alive_wl.append(r)
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
-    # Сначала проверяем приоритетные страны, чтобы набрать игровые сервера
     alive_global.sort(key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, x['latency']))
     
     candidates = alive_global[:MAX_DEEP_CHECK_GLOBAL]
