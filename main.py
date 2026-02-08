@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V4.2 - FIXED BALANCED EDITION
+#  FL1P VPN SCANNER V4.3 - FIXED SAVE & BALANCED
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -774,12 +774,67 @@ def select_final_9(verified_global, verified_whitelist):
     return final, reserve
 
 # ═══════════════════════════════════════════════════════════════
+# 💾 СОХРАНЕНИЕ
+# ═══════════════════════════════════════════════════════════════
+def save_results(final, reserve, stats):
+    links = []
+    for s in final:
+        base = s['original'].split('#')[0]
+        links.append(f"{base}#{quote(s['final_name'])}")
+    
+    try:
+        with open(OUTPUT_FILE, 'w') as f:
+            f.write(base64.b64encode("\n".join(links).encode()).decode())
+        logger.info(f"💾 Подписка: {OUTPUT_FILE} ({len(links)} серверов)")
+    except Exception as e:
+        logger.error(f"❌ Ошибка сохранения подписки: {e}")
+        
+    json_data = {
+        "updated_msk": get_timestamp(),
+        "stats": stats,
+        "servers": []
+    }
+    for s in final:
+        json_data["servers"].append({
+            "name": s['final_name'],
+            "ip": s['ip'],
+            "cc": s['info']['cc'],
+            "speed": s['speed'],
+            "ping": s['real_lat'],
+            "type": "Reality" if s.get('is_reality') else "Warp/Other",
+            "role": s.get('role', 'UNKNOWN'),
+            "original": s['original']
+        })
+    try:
+        with open(JSON_FILE, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"❌ Ошибка JSON: {e}")
+
+    pool = {"updated": get_timestamp(), "servers": []}
+    for s in reserve:
+        pool["servers"].append({
+            "ip": s['ip'],
+            "port": s['port'],
+            "cc": s['info']['cc'],
+            "link": s['original'],
+            "speed": s['speed'],
+            "ping": s['real_lat'],
+            "role": s.get('role', 'UNIVERSAL')
+        })
+    try:
+        with open(RESERVE_POOL_FILE, 'w', encoding='utf-8') as f:
+            json.dump(pool, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"❌ Ошибка Pool: {e}")
+
+# ═══════════════════════════════════════════════════════════════
 # 🚀 MAIN
 # ═══════════════════════════════════════════════════════════════
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V4.2 - FIXED BALANCED EDITION")
+    logger.info("🚀 FL1P VPN V4.3 - FIXED SAVE & BALANCED")
     logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Split Quota: Reality 300 / Other 150")
     print("═" * 70)
     
