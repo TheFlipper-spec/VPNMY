@@ -37,6 +37,21 @@ def get_flag(cc):
     if not cc or len(cc) != 2 or cc == 'XX': return "❓"
     return "".join([chr(127397 + ord(c)) for c in cc.upper()])
 
+# ═══════════════════════════════════════════════════════════════
+# 🌍 СТРАНЫ И ПРИОРИТЕТЫ (Синхронизировано с main.py)
+# ═══════════════════════════════════════════════════════════════
+# Близкие к РФ (Идеально для игр и Универсальных)
+PRIORITY_COUNTRIES = ['FI', 'EE', 'LV', 'SE', 'LT'] 
+
+# Хорошая Европа (Вторая очередь)
+TIER_2_COUNTRIES = ['NO', 'PL', 'DE', 'NL', 'DK', 'CZ', 'AT']      
+
+TIER_3_COUNTRIES = ['BE', 'CH', 'GB', 'FR', 'IT', 'ES']
+
+# Словарь стран (для нейминга)
+# RUS_NAMES MOVED UP
+
+
 # 🔥 1. АВТО-ОПРЕДЕЛЕНИЕ РОЛИ ПО ИКОНКЕ (ЕСЛИ В ФАЙЛЕ UNKNOWN)
 def identify_role(server):
     # Если роль уже есть и она нормальная - возвращаем её
@@ -59,6 +74,9 @@ def gen_check_config(server, local_port):
         link = server.get('original', '')
         if not link.startswith('vless://'): return None
         
+        # Удаляем фрагмент, чтобы не мешал парсингу
+        link = link.split('#')[0]
+        
         # Парсинг ссылки
         uuid = link.split('@')[0].replace('vless://', '')
         address_part = link.split('@')[1].split('?')[0]
@@ -70,7 +88,7 @@ def gen_check_config(server, local_port):
             
         params = {}
         if '?' in link:
-            query = link.split('?')[1].split('#')[0]
+            query = link.split('?')[1]
             params = {k: v[0] for k, v in parse_qs(query).items()}
 
         stream_settings = {
@@ -133,7 +151,8 @@ def check_server_alive(server):
         ip = server.get('ip')
         # Если порта нет в JSON, пытаемся вытащить из ссылки
         if 'original' in server and 'vless://' in server['original']:
-             parts = server['original'].split('@')[1].split('?')[0].split(':')
+             clean_link = server['original'].split('#')[0]
+             parts = clean_link.split('@')[1].split('?')[0].split(':')
              ip = parts[0]
              port = int(parts[1])
         else:
@@ -181,7 +200,7 @@ def check_server_alive(server):
     return False
 
 # ♻️ 4. ПОИСК ЗАМЕНЫ В РЕЗЕРВЕ
-def find_replacement(role, exclude_ips):
+def find_replacement(role, exclude_ips, preferred_cc=None):
     if not os.path.exists(RESERVE_FILE):
         return None, None
     
@@ -193,17 +212,17 @@ def find_replacement(role, exclude_ips):
     
     candidates = []
     
-    # 1. Ищем точное совпадение роли
+    # 1. Ищем всех кандидатов подходящей роли
     for s in pool.get('servers', []):
         if s['ip'] in exclude_ips: continue
         
-        # Определяем роль кандидата
         cand_role = s.get('role', 'UNIVERSAL')
         if cand_role == 'UNKNOWN': cand_role = 'UNIVERSAL'
         
+        # Основной поиск по роли
         if cand_role == role:
             candidates.append(s)
-            
+
     # 2. Фолбэк: Если для GAME нет серверов, берем быстрые UNIVERSAL
     if not candidates and role == 'GAME':
         for s in pool.get('servers', []):
@@ -221,14 +240,65 @@ def find_replacement(role, exclude_ips):
     if not candidates:
         return None, pool
 
-    # Берем первый (они уже отсортированы по скорости в main.py)
-    best = candidates[0]
+    # 4. СОРТИРОВКА И ВЫБОР (SMART SELECTION)
+    # Сортируем всех кандидатов по качеству:
+    # 1. Tier (Приоритетные страны РФ > Европа 1 > Европа 2 > Остальные)
+    # 2. Скорость (Больше - лучше)
+    # 3. Пинг (Меньше - лучше, но это пинг до Германии!)
+    
+    def get_tier(cc):
+        if cc in PRIORITY_COUNTRIES: return 0  # 🥇 Элита (FI, SE, EE...)
+        if cc in TIER_2_COUNTRIES: return 1    # 🥈 Отличная Европа (DE, NL...)
+        if cc in TIER_3_COUNTRIES: return 2    # 🥉 Обычная Европа
+        return 3                               # 💩 Остальной мир (US и т.д.)
+
+    def quality_key(s):
+        cc = s.get('cc', 'XX')
+        tier = get_tier(cc)
+        sp = s.get('speed', 0)
+        pi = s.get('ping', 9999)
+        
+        # Сортируем кортежи. Python сравнивает элементы по порядку.
+        # Tier: ASC (0 лучше 1)
+        # Speed: DESC (умножаем на -1)
+        # Ping: ASC (меньше лучше)
+        return (tier, -sp, pi)
+
+    candidates.sort(key=quality_key)
+
+    best = None
+    
+    # 🌟 ЛОГИКА "СОХРАНЕНИЯ ГРАЖДАНСТВА" (Но умнее)
+    # Если у нас был сервер в приоритетной стране (например, Финляндия),
+    # мы ОЧЕНЬ хотим сохранить его или заменить на такой же приоритетный.
+    # Если был сервер в Германии, мы попытаемся оставить Германию, но если есть Финляндия, которая ЛУЧШЕ...
+    # Нет, пользователь хочет: "если была Германия - ищи Германию".
+    
+    if preferred_cc:
+        same_cc_candidates = [s for s in candidates if s.get('cc') == preferred_cc]
+        if same_cc_candidates:
+            # Внутри одной страны выбираем самого быстрого
+            best = same_cc_candidates[0]
+            log(f"   ✨ Found preferred country match: {preferred_cc} (Speed: {best.get('speed')}, Ping: {best.get('ping')})", "INFO")
+
+    # Если не нашли по стране (или страна не важна), берем ЛУЧШЕГО по ТИРАМ
+    if not best:
+        best = candidates[0]
+        cc = best.get('cc')
+        tier = get_tier(cc)
+        log(f"   💎 Selected best available (Tier {tier}): {cc} (Speed: {best.get('speed')})", "INFO")
     
     # Удаляем его из пула
-    pool['servers'].remove(best)
-    pool['count'] = len(pool['servers'])
+    if best in pool['servers']:
+        pool['servers'].remove(best)
+        pool['count'] = len(pool['servers'])
     
     return best, pool
+
+def remove_fragment(link):
+    """Удаляет #fragment из ссылки"""
+    if not link: return ""
+    return link.split('#')[0]
 
 # 🚀 MAIN
 def main():
@@ -272,7 +342,11 @@ def main():
         else:
             # 3. Замена
             log(f"   ⚠️ Replacing {name}...", "WARNING")
-            replacement, new_pool = find_replacement(role, used_ips)
+            
+            # Пытаемся найти замену той же страны
+            preferred_cc = s.get('cc')
+            
+            replacement, new_pool = find_replacement(role, used_ips, preferred_cc)
             
             if replacement:
                 flag = get_flag(replacement.get('cc', 'XX'))
@@ -289,6 +363,9 @@ def main():
                 else:
                     new_name = f"⚡ {flag} {cc_name}"
 
+                # Очищаем ссылку от старого имени
+                clean_original = remove_fragment(replacement['link'])
+
                 # Создаем объект сервера
                 new_s = {
                     "name": new_name,
@@ -298,7 +375,7 @@ def main():
                     "ping": replacement.get('ping'),
                     "type": "Recovered",
                     "role": role,
-                    "original": replacement['link']
+                    "original": clean_original
                 }
                 
                 new_servers.append(new_s)
@@ -329,7 +406,9 @@ def main():
             # Обновляем файл подписки
             links = []
             for s in new_servers:
-                link = f"{s['original']}#{quote(s['name'])}"
+                # ВАЖНО: Удаляем старый фрагмент перед добавлением нового имени
+                clean_link = remove_fragment(s['original'])
+                link = f"{clean_link}#{quote(s['name'])}"
                 links.append(link)
                 
             with open(OUTPUT_FILE, 'w') as f:
