@@ -180,7 +180,7 @@ TIMEZONE_OFFSET = 3
 CACHE_TTL_HOURS = 4
 MAX_FAILURES = 2
 RESERVE_POOL_SIZE = 150
-UPDATE_INTERVAL_MINUTES = 20
+UPDATE_INTERVAL_MINUTES = 60
 
 MAX_SNI_LENGTH = 255 # Разрешены все SNI короче этого значения
 
@@ -356,6 +356,7 @@ def parse_config(config_str, source_type):
             is_warp_proto = transport in ['ws', 'grpc', 'httpupgrade']
             
             sni = params.get('sni', [''])[0]
+            if is_reality and sni.lower() == 'fuck.rkn': return None
             
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
@@ -569,6 +570,10 @@ def initial_check(server, progress=None):
         if progress: progress.increment(False)
         return None
     server['info'] = {'cc': cc}
+    sni = server['params'].get('sni', [''])[0].lower()
+    if sni == 'fuck.rkn':
+        if progress: progress.increment(False)
+        return None
     if server['source'] == 'whitelist':
         if cc not in WHITELIST_COUNTRIES:
             if progress: progress.increment(False)
