@@ -525,17 +525,25 @@ def deep_check(server):
                 udp_lat = check_udp_dns(port)
                 if udp_lat:
                     udp = True
+                    lat = udp_lat # Используем UDP пинг как основную задержку
             
-            # 🔥 ГЕНИАЛЬНОЕ РЕШЕНИЕ:
-            # Даже если UDP работает, мы ВСЕ РАВНО измеряем скорость TCP.
-            # Больше никаких "speed = 1.0"
-            lat_check = check_endpoints(port)
-            if lat_check:
-                lat = lat_check
-                speed = measure_speed(port) # Реальный замер скорости
-                update_history(server['ip'], server['port'], True, server.get('is_reality', False))
+            # Если это Game сервер и UDP прошел - сразу меряем скорость
+            # Если нет - делаем стандартный Xray (HTTP) чек
+            if udp:
+                speed = measure_speed(port)
+                if speed > 0:
+                    update_history(server['ip'], server['port'], True, server.get('is_reality', False))
+                else:
+                    # Если скорость не замерилась, считаем сервер мертвым (или UDP был ложным)
+                    update_history(server['ip'], server['port'], False)
             else:
-                update_history(server['ip'], server['port'], False)
+                lat_check = check_endpoints(port)
+                if lat_check:
+                    lat = lat_check
+                    speed = measure_speed(port)
+                    update_history(server['ip'], server['port'], True, server.get('is_reality', False))
+                else:
+                    update_history(server['ip'], server['port'], False)
 
     except:
         update_history(server['ip'], server['port'], False)
@@ -657,15 +665,15 @@ def select_final_9(verified_global, verified_whitelist):
     
     # -------------------------------------------------------------
     # 1. GAME SERVERS (2 шт)
-    # Требование: UDP = True, Приоритетная страна
+    # Требование: UDP = True, Приоритетная страна, ONLY REALITY
     # -------------------------------------------------------------
     game_candidates = [s for s in verified_global 
-                        if s['info']['cc'] in PRIORITY_COUNTRIES and s.get('udp') and s['speed'] > MIN_SPEED_GAME]
+                        if s['info']['cc'] in PRIORITY_COUNTRIES and s.get('udp') and s.get('is_reality') and s['speed'] > MIN_SPEED_GAME]
     
     # Если мало в приоритетных, ищем во второй очереди (Германия, Нидерланды и тд)
     if len(game_candidates) < 2:
         tier2_games = [s for s in verified_global 
-                        if s['info']['cc'] in TIER_2_COUNTRIES and s.get('udp') and s['speed'] > MIN_SPEED_GAME]
+                        if s['info']['cc'] in TIER_2_COUNTRIES and s.get('udp') and s.get('is_reality') and s['speed'] > MIN_SPEED_GAME]
         game_candidates.extend(tier2_games)
     
     # Сортируем: сначала Priority страны, потом минимальный пинг
@@ -750,13 +758,15 @@ def select_final_9(verified_global, verified_whitelist):
     for s in verified_global + verified_whitelist:
         if s['ip'] in used_ips: continue
         
-        role = "UNIVERSAL"
+        role = None
         if s.get('source') == 'whitelist': role = "WHITELIST"
         elif s.get('is_warp_named') or s.get('is_warp'): role = "WARP"
-        elif s.get('udp') and s['info']['cc'] in PRIORITY_COUNTRIES: role = "GAME"
+        elif s.get('udp') and s['info']['cc'] in PRIORITY_COUNTRIES and s.get('is_reality'): role = "GAME"
+        elif s.get('is_reality'): role = "UNIVERSAL"
         
-        s['role'] = role
-        reserve.append(s)
+        if role:
+            s['role'] = role
+            reserve.append(s)
         
     reserve = sorted(reserve, key=lambda x: -x['speed'])[:RESERVE_POOL_SIZE]
     
