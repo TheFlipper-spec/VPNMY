@@ -180,11 +180,12 @@
         .card-main { display: flex; align-items: center; gap: 16px; }
 
         .flag { 
-            width: 28px; height: 21px; 
+            width: 32px; height: 24px; 
             border-radius: 4px;
             object-fit: cover;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
             display: block;
+            background: #222; /* Fallback placeholder */
         }
 
         .info h3 {
@@ -619,7 +620,10 @@
             
             // If it's the default world emoji, don't use img class styles that enforce size
             const isEmoji = flag.includes('🌍');
-            const flagContent = isEmoji ? `<div style="font-size:28px">🌍</div>` : `<img src="https://flagcdn.com/w40/${cc.toLowerCase()}.png" class="flag" alt="${cc}">`;
+            // Use w80 for better quality, rendered at 32px
+            const flagContent = isEmoji ? 
+                `<div style="font-size:28px; line-height:1">🌍</div>` : 
+                `<img src="https://flagcdn.com/w80/${cc.toLowerCase()}.png" class="flag" alt="${cc}">`;
 
             el.innerHTML = `
                 <div class="card-main">
