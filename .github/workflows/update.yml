@@ -76,7 +76,8 @@ jobs:
           
           # 5. СТРАТЕГИЯ ОТ КОНФЛИКТОВ (Rebase)
           # Скачиваем изменения (от Watchdog) и накладываем свои сверху
-          git pull --rebase origin main
+          # Используем стратегию 'theirs' (наши изменения имеют приоритет над старыми данными с сервера)
+          git pull --rebase --strategy-option=theirs origin main
           
           # 6. Отправляем
           git push origin main
