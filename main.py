@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V4.1 - ROBUST LOGIC EDITION
+#  FL1P VPN SCANNER V4.2 - FIXED BALANCED EDITION
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -66,7 +66,6 @@ class ProgressCounter:
 # ═══════════════════════════════════════════════════════════════
 # 🌍 СТРАНЫ И СПИСКИ
 # ═══════════════════════════════════════════════════════════════
-# Списки оставлены только для маппинга имен, логика отбора теперь динамическая
 WHITELIST_COUNTRIES = ['RU']
 BLACKLIST_COUNTRIES = ['CN', 'IR', 'KP', 'US', 'XX'] 
 
@@ -159,7 +158,7 @@ TIMEOUT_SPEED = 6.0
 TIMEOUT_FETCH = 25.0        
 
 MAX_DEEP_CHECK_GLOBAL = 450 
-MAX_DEEP_CHECK_WHITELIST = 120
+MAX_DEEP_CHECK_WHITELIST = 150 # Оптимизация: не проверяем 400+ полумертвых
 
 # Пороги
 MIN_SPEED_GAME = 0.5        
@@ -439,8 +438,16 @@ def measure_speed(port):
             total = 0
             for chunk in r.iter_content(32768):
                 total += len(chunk)
+                # 🔥 FIX: Жесткий контроль времени, чтобы не висеть на 0.1 Mbps
+                if time.time() - start > TIMEOUT_SPEED:
+                    break
                 if total > 1.5 * 1024 * 1024: break
-            return round((total * 8) / (max(0.1, time.time() - start) * 1_000_000), 2)
+            
+            # Если скачали 0 байт - скорость 0
+            if total == 0: return 0.0
+            
+            duration = max(0.1, time.time() - start)
+            return round((total * 8) / (duration * 1_000_000), 2)
     except: return 0.0
 
 def check_endpoints(port):
@@ -628,7 +635,7 @@ def collect_all():
     global_cfgs = []
     whitelist_cfgs = []
     raw_count = 0
-    logger.info("📥 Сбор конфигураций (Robust Mode)...")
+    logger.info("📥 Сбор конфигураций (Balanced Mode)...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_FETCH) as ex:
         futures = {}
@@ -681,11 +688,9 @@ def select_final_9(verified_global, verified_whitelist):
 
     # -------------------------------------------------------------
     # 1. GAME SERVERS (Цель: 2 шт)
-    # Приоритет: UDP, Низкий пинг. Если нет UDP, берем просто низкий пинг.
     # -------------------------------------------------------------
     game_needed = 2
     
-    # Попытка 1: Идеальные (UDP + Reality + Low Ping)
     game_best = [s for s in verified_global 
                  if s['info']['cc'] != 'RU' and s.get('udp') and s.get('is_reality')]
     game_best.sort(key=lambda x: x['real_lat']) # Сортировка по пингу (asc)
@@ -697,7 +702,6 @@ def select_final_9(verified_global, verified_whitelist):
         lambda s, f, c: f"🎮 {f} {get_country_name(c)} | 📅 {last_update if len(final)==0 else next_update}"
     )
     
-    # Fallback: Если не нашли 2 с UDP, добиваем просто хорошими Reality с низким пингом
     if added_game < game_needed:
         game_fallback = [s for s in verified_global 
                          if s['info']['cc'] != 'RU' and s.get('is_reality') and s['ip'] not in used_ips]
@@ -712,7 +716,6 @@ def select_final_9(verified_global, verified_whitelist):
 
     # -------------------------------------------------------------
     # 2. UNIVERSAL SERVERS (Цель: 3 шт)
-    # Приоритет: Скорость. Только Reality.
     # -------------------------------------------------------------
     univ_candidates = [s for s in verified_global 
                        if s['ip'] not in used_ips and s.get('is_reality') and s['info']['cc'] != 'RU']
@@ -732,7 +735,6 @@ def select_final_9(verified_global, verified_whitelist):
     warp_candidates = [s for s in verified_global 
                        if s['ip'] not in used_ips and (s.get('is_warp') or s.get('is_warp_named') or s.get('is_reality')) 
                        and s['info']['cc'] != 'RU']
-    # Приоритет: Наличие слова WARP, потом скорость
     warp_candidates.sort(key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
     
     add_to_final(
@@ -772,68 +774,13 @@ def select_final_9(verified_global, verified_whitelist):
     return final, reserve
 
 # ═══════════════════════════════════════════════════════════════
-# 💾 СОХРАНЕНИЕ
-# ═══════════════════════════════════════════════════════════════
-def save_results(final, reserve, stats):
-    links = []
-    for s in final:
-        base = s['original'].split('#')[0]
-        links.append(f"{base}#{quote(s['final_name'])}")
-    
-    try:
-        with open(OUTPUT_FILE, 'w') as f:
-            f.write(base64.b64encode("\n".join(links).encode()).decode())
-        logger.info(f"💾 Подписка: {OUTPUT_FILE} ({len(links)} серверов)")
-    except Exception as e:
-        logger.error(f"❌ Ошибка сохранения подписки: {e}")
-        
-    json_data = {
-        "updated_msk": get_timestamp(),
-        "stats": stats,
-        "servers": []
-    }
-    for s in final:
-        json_data["servers"].append({
-            "name": s['final_name'],
-            "ip": s['ip'],
-            "cc": s['info']['cc'],
-            "speed": s['speed'],
-            "ping": s['real_lat'],
-            "type": "Reality" if s.get('is_reality') else "Warp/Other",
-            "role": s.get('role', 'UNKNOWN'),
-            "original": s['original']
-        })
-    try:
-        with open(JSON_FILE, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        logger.error(f"❌ Ошибка JSON: {e}")
-
-    pool = {"updated": get_timestamp(), "servers": []}
-    for s in reserve:
-        pool["servers"].append({
-            "ip": s['ip'],
-            "port": s['port'],
-            "cc": s['info']['cc'],
-            "link": s['original'],
-            "speed": s['speed'],
-            "ping": s['real_lat'],
-            "role": s.get('role', 'UNIVERSAL')
-        })
-    try:
-        with open(RESERVE_POOL_FILE, 'w', encoding='utf-8') as f:
-            json.dump(pool, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        logger.error(f"❌ Ошибка Pool: {e}")
-
-# ═══════════════════════════════════════════════════════════════
 # 🚀 MAIN
 # ═══════════════════════════════════════════════════════════════
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V4.1 - ROBUST LOGIC EDITION")
-    logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Game: Best Ping | Univ: Best Speed")
+    logger.info("🚀 FL1P VPN V4.2 - FIXED BALANCED EDITION")
+    logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Split Quota: Reality 300 / Other 150")
     print("═" * 70)
     
     load_history()
@@ -869,10 +816,21 @@ def main():
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
     
-    # Сортировка для проверки: сначала низкий пинг, чтобы быстрее найти Game сервера
+    # 🔥 FIX: РАЗДЕЛЕНИЕ КАНДИДАТОВ, ЧТОБЫ WARP НЕ ВЫТЕСНЯЛ REALITY
+    # Сначала сортируем всех по пингу
     alive_global.sort(key=lambda x: x['latency'])
     
-    candidates = alive_global[:MAX_DEEP_CHECK_GLOBAL]
+    # Делим на группы
+    reality_candidates = [s for s in alive_global if s.get('is_reality')]
+    other_candidates = [s for s in alive_global if not s.get('is_reality')]
+    
+    # Принудительно набираем квоты (300 Reality + 150 Others)
+    candidates = []
+    candidates.extend(reality_candidates[:300]) # Гарантируем 300 Reality
+    candidates.extend(other_candidates[:150])   # Гарантируем 150 WARP/Others
+    
+    # 🔥 FIX: ОГРАНИЧЕНИЕ WHITELIST
+    candidates_wl = alive_wl[:MAX_DEEP_CHECK_WHITELIST]
     
     verified_global = []
     prog = ProgressCounter(len(candidates), "Deep")
@@ -881,9 +839,9 @@ def main():
             if r: verified_global.append(r)
             
     verified_wl = []
-    prog = ProgressCounter(len(alive_wl), "Deep WL")
+    prog = ProgressCounter(len(candidates_wl), "Deep WL")
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_DEEP) as ex:
-        for r in [f.result() for f in concurrent.futures.as_completed({ex.submit(full_check, s, prog): s for s in alive_wl})]:
+        for r in [f.result() for f in concurrent.futures.as_completed({ex.submit(full_check, s, prog): s for s in candidates_wl})]:
             if r: verified_wl.append(r)
             
     final_9, reserve = select_final_9(verified_global, verified_wl)
