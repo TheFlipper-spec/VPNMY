@@ -195,7 +195,7 @@ TRUSTED_SNIS = [
     'www.ibm.com', 'ibm.com', 'www.cisco.com', 'cisco.com', 'www.dell.com', 
     'dell.com', 'www.hp.com', 'hp.com', 'www.lenovo.com', 'lenovo.com',
     'www.asus.com', 'asus.com', 'www.whatsapp.com', 'whatsapp.com',
-    'www.twitch.tv', 'twitch.tv', 'www.steam.com', 'steampowered.com',
+    'www.twitch.tv', 'twitch.tv', 'www.steam.com', 'steampowered.com', 'm.vk.com', 'm.vk.ru', 'www.tradingview.com', 'ozon.ru', 'sun6-20.userapi.com', 'nl41.tcpdoor.net'
 ]
 
 # 🔥 ИЗМЕНЕНИЕ 1: Смягченный черный список SNI. 
