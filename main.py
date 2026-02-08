@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V3.8 - RELAXED SNI & SMART GAME CHECK
+#  FL1P VPN SCANNER V3.9 - NO SNI LIMITS
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -162,11 +162,11 @@ TIMEOUT_REAL = 8.0
 TIMEOUT_SPEED = 6.0
 TIMEOUT_FETCH = 25.0        
 
-MAX_DEEP_CHECK_GLOBAL = 450 # Чуть увеличили выборку
+MAX_DEEP_CHECK_GLOBAL = 450 
 MAX_DEEP_CHECK_WHITELIST = 120
 
 MIN_SPEED_GAME = 0.5        
-MIN_SPEED_UNIVERSAL = 1.5   # Смягчили требование по скорости
+MIN_SPEED_UNIVERSAL = 1.5   
 MAX_PING_GAME = 180         
 MAX_PING_UNIVERSAL = 500    
 
@@ -182,29 +182,9 @@ RESERVE_POOL_SIZE = 150
 UPDATE_INTERVAL_MINUTES = 20
 
 # ═══════════════════════════════════════════════════════════════
-# 🛡️ SNI
+# 🛡️ SNI SETTINGS (NO LISTS)
 # ═══════════════════════════════════════════════════════════════
-TRUSTED_SNIS = [
-    'www.google.com', 'google.com', 'www.microsoft.com', 'microsoft.com', 
-    'learn.microsoft.com', 'www.apple.com', 'apple.com', 'www.cloudflare.com', 
-    'cloudflare.com', 'www.mozilla.org', 'mozilla.org', 'www.yahoo.com', 
-    'yahoo.com', 'www.amazon.com', 'amazon.com', 'www.github.com', 'github.com',
-    'www.samsung.com', 'samsung.com', 'www.nvidia.com', 'nvidia.com',
-    'www.amd.com', 'amd.com', 'cdn.jsdelivr.net', 'cdnjs.cloudflare.com',
-    'www.docker.com', 'docker.com', 'www.oracle.com', 'oracle.com',
-    'www.ibm.com', 'ibm.com', 'www.cisco.com', 'cisco.com', 'www.dell.com', 
-    'dell.com', 'www.hp.com', 'hp.com', 'www.lenovo.com', 'lenovo.com',
-    'www.asus.com', 'asus.com', 'www.whatsapp.com', 'whatsapp.com',
-    'www.twitch.tv', 'twitch.tv', 'www.steam.com', 'steampowered.com', 'm.vk.com', 'm.vk.ru', 'www.tradingview.com', 'ozon.ru', 'sun6-20.userapi.com', 'nl41.tcpdoor.net'
-]
-
-# 🔥 ИЗМЕНЕНИЕ 1: Смягченный черный список SNI. 
-# Теперь мы НЕ блокируем популярные сайты, так как они часто используются в Reality.
-# Блокируем только откровенно "паленые" или мусорные домены.
-BLOCKED_SNIS = [
-    'pornhub', 'xvideos', # Только 18+ и откровенный мусор
-    'localhost', 'test', 'example.com' 
-]
+MAX_SNI_LENGTH = 255 # Разрешены все SNI короче этого значения
 
 geo_reader = None
 server_history = {}
@@ -348,23 +328,17 @@ def extract_links(text):
                     for link in found: all_links.add(link)
     return list(all_links)
 
-def check_sni_quality(sni):
-    if not sni: return False, False, 0
-    sni_lower = sni.lower()
-    for blocked in BLOCKED_SNIS:
-        if blocked in sni_lower: return True, False, -100
-    # Отключили жесткую проверку доверенных SNI, чтобы больше серверов попадало
-    return False, False, 0
-
 def get_reality_score(params):
+    # Оценка только по техническим параметрам, без проверки имени SNI
     if params.get('security', [''])[0].lower() != 'reality': return 0
-    score = 30
-    sni = params.get('sni', [''])[0]
-    is_blocked, is_trusted, sni_score = check_sni_quality(sni)
-    if is_blocked: return -100
-    score += sni_score
-    if params.get('fp', [''])[0].lower() in ['chrome', 'firefox', 'safari']: score += 15
+    score = 50 
+    
+    # Бонус за популярные фингерпринты (они реже блокируются)
+    if params.get('fp', [''])[0].lower() in ['chrome', 'firefox', 'safari']: score += 20
+    
+    # Бонус за правильную длину ключа
     if len(params.get('pbk', [''])[0]) == 43: score += 10
+    
     return min(score, 100)
 
 def parse_config(config_str, source_type):
@@ -389,12 +363,14 @@ def parse_config(config_str, source_type):
             is_reality = (security == 'reality')
             is_warp_proto = transport in ['ws', 'grpc', 'httpupgrade']
             
+            sni = params.get('sni', [''])[0]
+            
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                sni = params.get('sni', [''])[0]
                 if len(pbk) != 43 or sni == host: return None
-                # Смягченная проверка SNI
-                if check_sni_quality(sni)[0]: return None 
+                
+                # 🔥 ИСПРАВЛЕНИЕ: Только проверка длины SNI
+                if len(sni) > MAX_SNI_LENGTH: return None
             
             reality_score = get_reality_score(params) if is_reality else 0
             is_warp_named = any(k in remark.lower() for k in ['warp', 'cloudflare', 'cf', 'cloud'])
@@ -409,7 +385,7 @@ def parse_config(config_str, source_type):
                 "is_warp_named": is_warp_named,
                 "source": source_type, "params": params,
                 "reality_score": reality_score,
-                "sni": params.get('sni', [''])[0] if is_reality else ""
+                "sni": sni if is_reality else ""
             }
     except:
         pass
@@ -833,7 +809,7 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V3.8 - FINAL STABLE (ALL SOURCES + UDP)")
+    logger.info("🚀 FL1P VPN V3.9 - NO SNI LIMITS")
     logger.info(f"   🔥 Priority Countries: {', '.join(PRIORITY_COUNTRIES)}")
     print("═" * 70)
     
