@@ -41,16 +41,13 @@
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center;
             overflow-x: hidden;
-            background-image: 
-                linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: moveGrid 20s linear infinite;
+            position: relative;
         }
 
-        @keyframes moveGrid {
-            0% { background-position: 0 0; }
-            100% { background-position: 50px 50px; }
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            z-index: 0; pointer-events: none;
         }
 
         /* Digital Ambient Effects */
@@ -90,47 +87,10 @@
             display: flex; align-items: center; gap: 12px;
             font-family: var(--font-code);
             position: relative;
+            min-width: 160px; /* Prevent layout shift during animation */
         }
         
-        .glitch {
-            position: relative;
-            color: #fff;
-        }
-        .glitch::before, .glitch::after {
-            content: attr(data-text);
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-body);
-        }
-        /* Fix for background grid: use clip-path on transparent bg */
-        .glitch::before, .glitch::after { background: transparent; }
-
-        .glitch::before {
-            left: 2px; text-shadow: -2px 0 #ff00c1;
-            clip-path: inset(44% 0 61% 0);
-            animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
-        }
-        .glitch::after {
-            left: -2px; text-shadow: -2px 0 #00fff9;
-            clip-path: inset(54% 0 21% 0);
-            animation: glitch-anim-2 3s infinite linear alternate-reverse;
-        }
-
-        @keyframes glitch-anim-1 {
-            0% { clip-path: inset(20% 0 80% 0); }
-            20% { clip-path: inset(60% 0 10% 0); }
-            40% { clip-path: inset(40% 0 50% 0); }
-            60% { clip-path: inset(80% 0 5% 0); }
-            80% { clip-path: inset(10% 0 70% 0); }
-            100% { clip-path: inset(30% 0 20% 0); }
-        }
-        @keyframes glitch-anim-2 {
-            0% { clip-path: inset(10% 0 60% 0); }
-            20% { clip-path: inset(30% 0 10% 0); }
-            40% { clip-path: inset(70% 0 20% 0); }
-            60% { clip-path: inset(20% 0 50% 0); }
-            80% { clip-path: inset(60% 0 10% 0); }
-            100% { clip-path: inset(40% 0 30% 0); }
-        }
+        .dud { color: var(--text-muted); opacity: 0.7; }
 
         .status-dot {
             width: 8px; height: 8px; background: var(--success);
@@ -219,7 +179,13 @@
 
         .card-main { display: flex; align-items: center; gap: 16px; }
 
-        .flag { font-size: 28px; }
+        .flag { 
+            width: 28px; height: 21px; 
+            border-radius: 4px;
+            object-fit: cover;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: block;
+        }
 
         .info h3 {
             margin: 0; font-size: 15px; font-weight: 700;
@@ -289,7 +255,12 @@
         .modal-overlay.open .modal { transform: scale(1); }
 
         .modal-header { text-align: center; margin-bottom: 24px; }
-        .m-flag { font-size: 48px; display: block; margin-bottom: 16px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); }
+        .m-flag { 
+            width: 64px; height: auto; 
+            display: block; margin: 0 auto 16px; 
+            border-radius: 8px;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); 
+        }
         .m-title { 
             font-size: 20px; font-weight: 800; margin: 0; 
             background: linear-gradient(to right, #fff, #a5b4fc); 
@@ -339,6 +310,7 @@
 </head>
 <body>
 
+<canvas id="bg-canvas"></canvas>
 <div class="scanline"></div>
 <div class="vignette"></div>
 
@@ -347,7 +319,7 @@
         <div class="brand">
             <div class="logo">
                 <div class="status-dot"></div>
-                <span class="glitch" data-text="FL1PVPN">FL1PVPN</span>
+                <span id="hacker-title"></span>
             </div>
             <div class="subtitle" id="lastUpdate">INITIALIZING SYSTEM...</div>
         </div>
@@ -419,13 +391,151 @@
         'PL': 'Poland', 'BG': 'Bulgaria', 'LV': 'Latvia', 'LT': 'Lithuania'
     };
 
-    function getFlagEmoji(cc) {
+    /* --- TEXT SCRAMBLE EFFECT --- */
+    class TextScramble {
+        constructor(el) {
+            this.el = el;
+            this.chars = '!<>-_\\/[]{}—=+*^?#________';
+            this.update = this.update.bind(this);
+        }
+        setText(newText) {
+            const oldText = this.el.innerText;
+            const length = Math.max(oldText.length, newText.length);
+            const promise = new Promise((resolve) => this.resolve = resolve);
+            this.queue = [];
+            for (let i = 0; i < length; i++) {
+                const from = oldText[i] || '';
+                const to = newText[i] || '';
+                const start = Math.floor(Math.random() * 40);
+                const end = start + Math.floor(Math.random() * 40);
+                this.queue.push({ from, to, start, end });
+            }
+            cancelAnimationFrame(this.frameRequest);
+            this.frame = 0;
+            this.update();
+            return promise;
+        }
+        update() {
+            let output = '';
+            let complete = 0;
+            for (let i = 0, n = this.queue.length; i < n; i++) {
+                let { from, to, start, end, char } = this.queue[i];
+                if (this.frame >= end) {
+                    complete++;
+                    output += to;
+                } else if (this.frame >= start) {
+                    if (!char || Math.random() < 0.28) {
+                        char = this.randomChar();
+                        this.queue[i].char = char;
+                    }
+                    output += `<span class="dud">${char}</span>`;
+                } else {
+                    output += from;
+                }
+            }
+            this.el.innerHTML = output;
+            if (complete === this.queue.length) {
+                this.resolve();
+            } else {
+                this.frameRequest = requestAnimationFrame(this.update);
+                this.frame++;
+            }
+        }
+        randomChar() {
+            return this.chars[Math.floor(Math.random() * this.chars.length)];
+        }
+    }
+
+    /* --- CANVAS BACKGROUND --- */
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    function initCanvas() {
+        resize();
+        window.addEventListener('resize', resize);
+        createParticles();
+        animateCanvas();
+    }
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+        particles = [];
+        const count = Math.min(width * 0.08, 100); // Responsive count
+        for(let i=0; i<count; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2
+            });
+        }
+    }
+
+    function animateCanvas() {
+        ctx.clearRect(0, 0, width, height);
+        
+        // Update and draw particles
+        for(let i=0; i<particles.length; i++) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+
+            // Bounce off edges
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Connect
+            for(let j=i+1; j<particles.length; j++) {
+                let p2 = particles[j];
+                let dx = p.x - p2.x;
+                let dy = p.y - p2.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if(dist < 120) {
+                    ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 - dist/120 * 0.15})`; // fading line
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animateCanvas);
+    }
+
+    /* --- MAIN LOGIC --- */
+
+    function getFlagHtml(cc) {
         if (!cc || cc === 'XX') return '🌍';
-        const codePoints = cc.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
-        return String.fromCodePoint(...codePoints);
+        // Use flagcdn.com for reliable rendering on all devices
+        return `<img src="https://flagcdn.com/w40/${cc.toLowerCase()}.png" class="flag-img" alt="${cc}">`;
     }
 
     async function init() {
+        // Start effects
+        initCanvas();
+        
+        const el = document.getElementById('hacker-title');
+        const fx = new TextScramble(el);
+        // Initial text
+        fx.setText('FL1PVPN');
+        
+        // Optional: Scramble on hover
+        el.onmouseover = () => fx.setText('FL1PVPN');
+
         try {
             const res = await fetch(JSON_URL + "?t=" + Date.now());
             if(!res.ok) throw new Error("Load failed");
@@ -492,7 +602,7 @@
 
         list.forEach((s, i) => {
             const cc = s.cc || 'XX';
-            const flag = getFlagEmoji(cc);
+            const flag = getFlagHtml(cc);
             const countryName = COUNTRIES[cc] || cc;
             const ping = Math.round(s.ping || 0);
             
@@ -507,9 +617,13 @@
             el.className = "card";
             el.style.animationDelay = `${i * 0.05}s`;
             
+            // If it's the default world emoji, don't use img class styles that enforce size
+            const isEmoji = flag.includes('🌍');
+            const flagContent = isEmoji ? `<div style="font-size:28px">🌍</div>` : `<img src="https://flagcdn.com/w40/${cc.toLowerCase()}.png" class="flag" alt="${cc}">`;
+
             el.innerHTML = `
                 <div class="card-main">
-                    <div class="flag">${flag}</div>
+                    ${flagContent}
                     <div class="info">
                         <h3>${countryName}</h3>
                         <div class="badges">${badgesHtml}</div>
@@ -539,7 +653,16 @@
         if(cleanLink.startsWith("ss")) proto = "SHADOWSOCKS";
         if(cleanLink.startsWith("trojan")) proto = "TROJAN";
 
-        document.getElementById('mFlag').innerText = flag;
+        if(flag.includes('img')) {
+             // Extract src from the list item string or just rebuild it
+             // Better to just rebuild the img tag for modal to have different size class if needed
+             // But we used a specific class in modal css .m-flag
+             const ccCode = s.cc ? s.cc.toLowerCase() : 'xx';
+             document.getElementById('mFlag').innerHTML = `<img src="https://flagcdn.com/w80/${ccCode}.png" class="m-flag" alt="${ccCode}">`;
+        } else {
+             document.getElementById('mFlag').innerHTML = flag;
+        }
+
         document.getElementById('mTitle').innerText = countryName;
         document.getElementById('mSub').innerText = s.name;
         
