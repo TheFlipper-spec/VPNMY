@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V3.9 - NO SNI LIMITS
+#  FL1P VPN SCANNER V4.0 - GENIUS LOGIC EDITION
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -66,14 +66,15 @@ class ProgressCounter:
 # ═══════════════════════════════════════════════════════════════
 # 🌍 СТРАНЫ И ПРИОРИТЕТЫ
 # ═══════════════════════════════════════════════════════════════
-PRIORITY_COUNTRIES = ['FI', 'EE', 'LV', 'SE'] 
+# Близкие к РФ (Идеально для игр и Универсальных)
+PRIORITY_COUNTRIES = ['FI', 'EE', 'LV', 'SE', 'LT'] 
 
-TIER_1_COUNTRIES = ['FI', 'EE', 'LV', 'LT', 'SE'] 
-TIER_2_COUNTRIES = ['NO', 'PL', 'DE', 'NL', 'DK']      
-TIER_3_COUNTRIES = ['AT', 'CZ', 'BE', 'CH', 'GB', 'FR']  
-TIER_4_COUNTRIES = ['IT', 'ES', 'PT', 'IE', 'HU', 'RO', 'BG', 'SK', 'GR', 'TR']
+# Хорошая Европа (Вторая очередь)
+TIER_2_COUNTRIES = ['NO', 'PL', 'DE', 'NL', 'DK', 'CZ', 'AT']      
 
-GAME_COUNTRIES = TIER_1_COUNTRIES + TIER_2_COUNTRIES + TIER_3_COUNTRIES + ['RU', 'UA', 'BY', 'KZ']
+TIER_3_COUNTRIES = ['BE', 'CH', 'GB', 'FR', 'IT', 'ES']  
+
+GAME_COUNTRIES = PRIORITY_COUNTRIES + TIER_2_COUNTRIES
 WHITELIST_COUNTRIES = ['RU']
 BLACKLIST_COUNTRIES = ['CN', 'IR', 'KP', 'US', 'BY', 'XX']
 
@@ -166,9 +167,9 @@ MAX_DEEP_CHECK_GLOBAL = 450
 MAX_DEEP_CHECK_WHITELIST = 120
 
 MIN_SPEED_GAME = 0.5        
-MIN_SPEED_UNIVERSAL = 1.5   
-MAX_PING_GAME = 180         
-MAX_PING_UNIVERSAL = 500    
+MIN_SPEED_UNIVERSAL = 1.0   
+MAX_PING_GAME = 150         
+MAX_PING_UNIVERSAL = 300    
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -181,9 +182,6 @@ MAX_FAILURES = 2
 RESERVE_POOL_SIZE = 150
 UPDATE_INTERVAL_MINUTES = 20
 
-# ═══════════════════════════════════════════════════════════════
-# 🛡️ SNI SETTINGS (NO LISTS)
-# ═══════════════════════════════════════════════════════════════
 MAX_SNI_LENGTH = 255 # Разрешены все SNI короче этого значения
 
 geo_reader = None
@@ -329,16 +327,10 @@ def extract_links(text):
     return list(all_links)
 
 def get_reality_score(params):
-    # Оценка только по техническим параметрам, без проверки имени SNI
     if params.get('security', [''])[0].lower() != 'reality': return 0
     score = 50 
-    
-    # Бонус за популярные фингерпринты (они реже блокируются)
     if params.get('fp', [''])[0].lower() in ['chrome', 'firefox', 'safari']: score += 20
-    
-    # Бонус за правильную длину ключа
     if len(params.get('pbk', [''])[0]) == 43: score += 10
-    
     return min(score, 100)
 
 def parse_config(config_str, source_type):
@@ -368,8 +360,6 @@ def parse_config(config_str, source_type):
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
                 if len(pbk) != 43 or sni == host: return None
-                
-                # 🔥 ИСПРАВЛЕНИЕ: Только проверка длины SNI
                 if len(sni) > MAX_SNI_LENGTH: return None
             
             reality_score = get_reality_score(params) if is_reality else 0
@@ -530,24 +520,23 @@ def deep_check(server):
         time.sleep(1.5)
         
         if proc.poll() is None:
-            # 🔥 ИГРОВОЙ СЕРВЕР ОБЯЗАН ИМЕТЬ РАБОЧИЙ UDP
-            if server['info']['cc'] in PRIORITY_COUNTRIES:
+            # 🔥 ОБНОВЛЕННАЯ ЛОГИКА: Сначала чекаем UDP (если страна подходит)
+            if server['info']['cc'] in GAME_COUNTRIES:
                 udp_lat = check_udp_dns(port)
                 if udp_lat:
-                    lat = udp_lat
-                    speed = 1.0 
                     udp = True
-                    update_history(server['ip'], server['port'], True, server.get('is_reality', False))
             
-            # Для остальных - стандартный тест
-            if not lat:
-                lat = check_endpoints(port)
-                if lat:
-                    speed = measure_speed(port)
-                    udp = True 
-                    update_history(server['ip'], server['port'], True, server.get('is_reality', False))
-                else:
-                    update_history(server['ip'], server['port'], False)
+            # 🔥 ГЕНИАЛЬНОЕ РЕШЕНИЕ:
+            # Даже если UDP работает, мы ВСЕ РАВНО измеряем скорость TCP.
+            # Больше никаких "speed = 1.0"
+            lat_check = check_endpoints(port)
+            if lat_check:
+                lat = lat_check
+                speed = measure_speed(port) # Реальный замер скорости
+                update_history(server['ip'], server['port'], True, server.get('is_reality', False))
+            else:
+                update_history(server['ip'], server['port'], False)
+
     except:
         update_history(server['ip'], server['port'], False)
     finally:
@@ -591,17 +580,19 @@ def initial_check(server, progress=None):
 
 def full_check(server, progress=None):
     lat, speed, udp = deep_check(server)
-    # Если скорость ниже плинтуса и это не игровой сервер - в мусорку
-    if lat is None or (speed < 0.1 and not udp): 
+    
+    # Отсев совсем мертвых
+    if lat is None or (speed < 0.1): 
         if progress: progress.increment(False)
         return None
+        
     server['real_lat'] = lat
     server['speed'] = speed
     server['udp'] = udp
+    
     name = get_country_name(server['info']['cc'])
     mode = "Reality" if server.get('is_reality') else ("WARP" if server.get('is_warp') else "TCP")
-    if server['info']['cc'] in PRIORITY_COUNTRIES and udp:
-        mode = "UDP-GAME"
+    if udp: mode += "+UDP"
         
     logger.info(f"   🎯 {server['ip']} ({name}) - {speed:.1f}Mbps, {lat:.0f}ms [{mode}]")
     if progress: progress.increment(True)
@@ -656,7 +647,7 @@ def collect_all():
     return global_cfgs, whitelist_cfgs
 
 # ═══════════════════════════════════════════════════════════════
-# 🏆 ФИНАЛЬНЫЙ ОТБОР
+# 🏆 ФИНАЛЬНЫЙ ОТБОР (GENIUS LOGIC)
 # ═══════════════════════════════════════════════════════════════
 def select_final_9(verified_global, verified_whitelist):
     final = []
@@ -664,72 +655,98 @@ def select_final_9(verified_global, verified_whitelist):
     last_update = get_last_update_time()
     next_update = get_next_update_time()
     
-    # 1. GAME POOL
-    # Только те, где прошел UDP тест
-    priority_servers = [s for s in verified_global 
-                        if s['info']['cc'] in PRIORITY_COUNTRIES and s.get('udp')]
-    priority_servers = sorted(priority_servers, key=lambda x: x['real_lat'])
+    # -------------------------------------------------------------
+    # 1. GAME SERVERS (2 шт)
+    # Требование: UDP = True, Приоритетная страна
+    # -------------------------------------------------------------
+    game_candidates = [s for s in verified_global 
+                        if s['info']['cc'] in PRIORITY_COUNTRIES and s.get('udp') and s['speed'] > MIN_SPEED_GAME]
     
-    fallback_servers = sorted([s for s in verified_global if s.get('udp') and s['info']['cc'] not in ['SG', 'JP', 'KR', 'HK']], key=lambda x: x['real_lat'])
-
-    def fill_game_slot(time_label):
-        s = None
-        cands = [x for x in priority_servers if x['ip'] not in used_ips]
-        if cands: s = cands[0]
-        else:
-            cands = [x for x in fallback_servers if x['ip'] not in used_ips]
-            if cands: s = cands[0]
-        if s:
-            used_ips.add(s['ip'])
-            cc = s['info']['cc']
-            flag = get_flag(cc)
-            s['final_name'] = f"🎮 {flag} {get_country_name(cc)} | 📅 {time_label}"
-            s['role'] = 'GAME'
-            final.append(s)
+    # Если мало в приоритетных, ищем во второй очереди (Германия, Нидерланды и тд)
+    if len(game_candidates) < 2:
+        tier2_games = [s for s in verified_global 
+                        if s['info']['cc'] in TIER_2_COUNTRIES and s.get('udp') and s['speed'] > MIN_SPEED_GAME]
+        game_candidates.extend(tier2_games)
+    
+    # Сортируем: сначала Priority страны, потом минимальный пинг
+    game_candidates.sort(key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, x['real_lat']))
+    
+    def add_server(candidate_list, role, label_func, count):
+        added = 0
+        for s in candidate_list:
+            if added >= count: break
+            if s['ip'] in used_ips: continue
             
-    fill_game_slot(last_update)
-    fill_game_slot(next_update)
-
-    # 2. UNIVERSAL (Любой быстрый Reality, можно без UDP)
-    valid_global = [s for s in verified_global if s['speed'] > MIN_SPEED_UNIVERSAL]
-    univ_pool = sorted([s for s in valid_global if s.get('is_reality') and s['ip'] not in used_ips], key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, -x['speed']))
-    for _ in range(3):
-        if univ_pool:
-            s = univ_pool.pop(0)
             used_ips.add(s['ip'])
             cc = s['info']['cc']
             flag = get_flag(cc)
-            s['final_name'] = f"⚡ {flag} {get_country_name(cc)}"
-            s['role'] = 'UNIVERSAL'
+            s['final_name'] = label_func(s, flag, cc)
+            s['role'] = role
             final.append(s)
+            added += 1
 
-    # 3. WARP
-    warp_pool = [s for s in valid_global if s['ip'] not in used_ips and (s.get('is_warp') or s.get('is_reality'))]
-    warp_pool = sorted(warp_pool, key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
-    for _ in range(2):
-        if warp_pool:
-            s = warp_pool.pop(0)
-            used_ips.add(s['ip'])
-            cc = s['info']['cc']
-            flag = get_flag(cc)
-            s['final_name'] = f"🌀 {flag} {get_country_name(cc)} (WARP)"
-            s['role'] = 'WARP'
-            final.append(s)
+    add_server(
+        game_candidates, 
+        'GAME', 
+        lambda s, f, c: f"🎮 {f} {get_country_name(c)} | 📅 {last_update if len(final)==0 else next_update}", 
+        2
+    )
 
-    # 4. WHITELIST
-    wl_pool = sorted([s for s in verified_whitelist if s['speed'] > 0.5], key=lambda x: -x['speed'])
-    for _ in range(2):
-        if wl_pool:
-            s = wl_pool.pop(0)
-            cc = s['info']['cc']
-            flag = get_flag(cc)
-            s['final_name'] = f"⚪ {flag} {get_country_name(cc)} (РКН)"
-            s['role'] = 'WHITELIST'
-            final.append(s)
+    # -------------------------------------------------------------
+    # 2. UNIVERSAL SERVERS (3 шт)
+    # Требование: Reality, Низкий пинг, Близкая страна
+    # -------------------------------------------------------------
+    univ_candidates = [s for s in verified_global 
+                       if s.get('is_reality') and s['ip'] not in used_ips and s['speed'] > MIN_SPEED_UNIVERSAL]
+    
+    # СОРТИРОВКА ПО БЛИЗОСТИ К РФ:
+    # Ключ 1: Страна (0 = Priority, 1 = Tier2, 2 = Others)
+    # Ключ 2: Пинг (меньше = лучше)
+    def universal_sort_key(x):
+        cc = x['info']['cc']
+        tier = 2
+        if cc in PRIORITY_COUNTRIES: tier = 0
+        elif cc in TIER_2_COUNTRIES: tier = 1
+        return (tier, x['real_lat'])
+
+    univ_candidates.sort(key=universal_sort_key)
+
+    add_server(
+        univ_candidates, 
+        'UNIVERSAL', 
+        lambda s, f, c: f"⚡ {f} {get_country_name(c)}", 
+        3
+    )
+
+    # -------------------------------------------------------------
+    # 3. WARP (2 шт)
+    # -------------------------------------------------------------
+    warp_candidates = [s for s in verified_global 
+                       if (s.get('is_warp') or s.get('is_reality')) and s['ip'] not in used_ips]
+    # Приоритет тем, у кого в названии есть WARP, затем скорость
+    warp_candidates.sort(key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
+    
+    add_server(
+        warp_candidates, 
+        'WARP', 
+        lambda s, f, c: f"🌀 {f} {get_country_name(c)} (WARP)", 
+        2
+    )
+
+    # -------------------------------------------------------------
+    # 4. WHITELIST (2 шт)
+    # -------------------------------------------------------------
+    wl_candidates = sorted([s for s in verified_whitelist if s['speed'] > 0.5], key=lambda x: -x['speed'])
+    
+    add_server(
+        wl_candidates, 
+        'WHITELIST', 
+        lambda s, f, c: f"⚪ {f} {get_country_name(c)} (РКН)", 
+        2
+    )
 
     # --- РЕЗЕРВ (Для Watchdog) ---
     reserve = []
-    # Важно: сохраняем роль для Watchdog прямо здесь
     for s in verified_global + verified_whitelist:
         if s['ip'] in used_ips: continue
         
@@ -741,9 +758,7 @@ def select_final_9(verified_global, verified_whitelist):
         s['role'] = role
         reserve.append(s)
         
-    # Сортируем резерв по качеству
-    reserve = sorted(reserve, key=lambda x: -x['speed'])
-    reserve = reserve[:RESERVE_POOL_SIZE]
+    reserve = sorted(reserve, key=lambda x: -x['speed'])[:RESERVE_POOL_SIZE]
     
     return final, reserve
 
@@ -776,9 +791,8 @@ def save_results(final, reserve, stats):
             "speed": s['speed'],
             "ping": s['real_lat'],
             "type": "Reality" if s.get('is_reality') else "Warp/Other",
-            # 🔥 ВАЖНО: Watchdog читает роль отсюда
             "role": s.get('role', 'UNKNOWN'),
-            "original": s['original'] # Нужно для восстановления ссылки
+            "original": s['original']
         })
     try:
         with open(JSON_FILE, 'w', encoding='utf-8') as f:
@@ -809,8 +823,8 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V3.9 - NO SNI LIMITS")
-    logger.info(f"   🔥 Priority Countries: {', '.join(PRIORITY_COUNTRIES)}")
+    logger.info("🚀 FL1P VPN V4.0 - GENIUS LOGIC EDITION")
+    logger.info(f"   🔥 Priority Countries (Games/Universal): {', '.join(PRIORITY_COUNTRIES)}")
     print("═" * 70)
     
     load_history()
@@ -845,7 +859,8 @@ def main():
             if r: alive_wl.append(r)
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
-    alive_global.sort(key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, x['latency']))
+    # Сортируем так, чтобы приоритетные страны шли раньше (чтобы быстрее найти гейм сервера)
+    alive_global.sort(key=lambda x: (x['info']['cc'] not in GAME_COUNTRIES, x['latency']))
     
     candidates = alive_global[:MAX_DEEP_CHECK_GLOBAL]
     
@@ -866,7 +881,7 @@ def main():
     print("\n" + "═" * 70)
     logger.info("🏆 THE FINAL 9:")
     for i, s in enumerate(final_9):
-        print(f"   {i+1}. {s['final_name']} ({s['speed']} Mbps)")
+        print(f"   {i+1}. {s['final_name']} ({s['speed']} Mbps, {s['real_lat']:.0f}ms)")
     
     stats = {"final": len(final_9), "reserve": len(reserve)}
     save_results(final_9, reserve, stats)
