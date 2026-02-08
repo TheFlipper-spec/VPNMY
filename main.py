@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V4.3 - FIXED SAVE & BALANCED
+#  FL1P VPN SCANNER V4.4 - STRICT GAME LOGIC
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -158,7 +158,7 @@ TIMEOUT_SPEED = 6.0
 TIMEOUT_FETCH = 25.0        
 
 MAX_DEEP_CHECK_GLOBAL = 450 
-MAX_DEEP_CHECK_WHITELIST = 150 # Оптимизация: не проверяем 400+ полумертвых
+MAX_DEEP_CHECK_WHITELIST = 150 # Оптимизация
 
 # Пороги
 MIN_SPEED_GAME = 0.5        
@@ -438,7 +438,7 @@ def measure_speed(port):
             total = 0
             for chunk in r.iter_content(32768):
                 total += len(chunk)
-                # 🔥 FIX: Жесткий контроль времени, чтобы не висеть на 0.1 Mbps
+                # 🔥 FIX: Жесткий контроль времени
                 if time.time() - start > TIMEOUT_SPEED:
                     break
                 if total > 1.5 * 1024 * 1024: break
@@ -468,11 +468,11 @@ def check_endpoints(port):
         except: pass
     return total_lat / success if success >= 2 else None
 
-# 🔥 UDP TEST (ДЛЯ ИГР)
+# 🔥 UDP TEST (ТОЛЬКО ДЛЯ ИГР)
 def check_udp_dns(local_port):
     try:
         socks_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socks_socket.settimeout(3.0)
+        socks_socket.settimeout(1.5) # 🔥 Строгий таймаут для игр
         socks_socket.connect(('127.0.0.1', local_port))
         
         socks_socket.sendall(b'\x05\x01\x00')
@@ -486,7 +486,7 @@ def check_udp_dns(local_port):
         relay_port = struct.unpack('>H', resp[8:10])[0]
         
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_socket.settimeout(2.0)
+        udp_socket.settimeout(1.5)
         
         dns_query = b'\xAA\xAA\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x06google\x03com\x00\x00\x01\x00\x01'
         socks_header = b'\x00\x00\x00\x01' + socket.inet_aton('8.8.8.8') + struct.pack('>H', 53)
@@ -524,22 +524,31 @@ def deep_check(server):
         time.sleep(1.5)
         
         if proc.poll() is None:
-            # 🔥 UDP тест только для потенциально игровых (низкий пинг)
-            if server.get('latency', 9999) <= MAX_PING_GAME and server.get('is_reality', False):
+            # 🔥 UDP логика: Только для Reality с хорошим пингом
+            is_game_candidate = (
+                server.get('is_reality', False) and 
+                server.get('latency', 999) < 150 and
+                server['info']['cc'] != 'RU'
+            )
+
+            udp_ok = False
+            if is_game_candidate:
                 udp_lat = check_udp_dns(port)
                 if udp_lat:
                     udp = True
                     lat = udp_lat
+                    udp_ok = True
             
-            # Если UDP прошел - меряем скорость
-            if udp:
+            # Если UDP ок - меряем скорость
+            # Если UDP не нужен или не прошел - проверяем обычный HTTP
+            if udp_ok:
                 speed = measure_speed(port)
                 if speed > 0:
                     update_history(server['ip'], server['port'], True, server.get('is_reality', False))
                 else:
                     update_history(server['ip'], server['port'], False)
             else:
-                # Стандартный HTTP пинг
+                # Стандартный HTTP пинг (для Universal/WARP/Whitelist)
                 lat_check = check_endpoints(port)
                 if lat_check:
                     lat = lat_check
@@ -661,7 +670,7 @@ def collect_all():
     return global_cfgs, whitelist_cfgs
 
 # ═══════════════════════════════════════════════════════════════
-# 🏆 ФИНАЛЬНЫЙ ОТБОР (ROBUST LOGIC)
+# 🏆 ФИНАЛЬНЫЙ ОТБОР
 # ═══════════════════════════════════════════════════════════════
 def select_final_9(verified_global, verified_whitelist):
     final = []
@@ -669,7 +678,6 @@ def select_final_9(verified_global, verified_whitelist):
     last_update = get_last_update_time()
     next_update = get_next_update_time()
     
-    # Вспомогательная функция добавления
     def add_to_final(candidates, limit, role, name_fmt):
         count = 0
         for s in candidates:
@@ -686,9 +694,7 @@ def select_final_9(verified_global, verified_whitelist):
             count += 1
         return count
 
-    # -------------------------------------------------------------
-    # 1. GAME SERVERS (Цель: 2 шт)
-    # -------------------------------------------------------------
+    # 1. GAME SERVERS (2 шт)
     game_needed = 2
     
     game_best = [s for s in verified_global 
@@ -714,12 +720,9 @@ def select_final_9(verified_global, verified_whitelist):
             lambda s, f, c: f"🎮 {f} {get_country_name(c)} (TCP)"
         )
 
-    # -------------------------------------------------------------
-    # 2. UNIVERSAL SERVERS (Цель: 3 шт)
-    # -------------------------------------------------------------
+    # 2. UNIVERSAL SERVERS (3 шт)
     univ_candidates = [s for s in verified_global 
                        if s['ip'] not in used_ips and s.get('is_reality') and s['info']['cc'] != 'RU']
-    # Сортировка: сначала скорость (desc), потом пинг (asc)
     univ_candidates.sort(key=lambda x: (-x['speed'], x['real_lat']))
     
     add_to_final(
@@ -729,9 +732,7 @@ def select_final_9(verified_global, verified_whitelist):
         lambda s, f, c: f"⚡ {f} {get_country_name(c)}"
     )
 
-    # -------------------------------------------------------------
-    # 3. WARP / OTHER (Цель: 2 шт)
-    # -------------------------------------------------------------
+    # 3. WARP / OTHER (2 шт)
     warp_candidates = [s for s in verified_global 
                        if s['ip'] not in used_ips and (s.get('is_warp') or s.get('is_warp_named') or s.get('is_reality')) 
                        and s['info']['cc'] != 'RU']
@@ -744,9 +745,7 @@ def select_final_9(verified_global, verified_whitelist):
         lambda s, f, c: f"🌀 {f} {get_country_name(c)} (WARP)"
     )
 
-    # -------------------------------------------------------------
-    # 4. WHITELIST (Цель: 2 шт)
-    # -------------------------------------------------------------
+    # 4. WHITELIST (2 шт)
     wl_candidates = sorted([s for s in verified_whitelist if s['speed'] > 0.5], key=lambda x: -x['speed'])
     
     add_to_final(
@@ -834,7 +833,7 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V4.3 - FIXED SAVE & BALANCED")
+    logger.info("🚀 FL1P VPN V4.4 - STRICT GAME LOGIC")
     logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Split Quota: Reality 300 / Other 150")
     print("═" * 70)
     
@@ -871,7 +870,6 @@ def main():
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
     
-    # 🔥 FIX: РАЗДЕЛЕНИЕ КАНДИДАТОВ, ЧТОБЫ WARP НЕ ВЫТЕСНЯЛ REALITY
     # Сначала сортируем всех по пингу
     alive_global.sort(key=lambda x: x['latency'])
     
@@ -884,7 +882,7 @@ def main():
     candidates.extend(reality_candidates[:300]) # Гарантируем 300 Reality
     candidates.extend(other_candidates[:150])   # Гарантируем 150 WARP/Others
     
-    # 🔥 FIX: ОГРАНИЧЕНИЕ WHITELIST
+    # Ограничение Whitelist
     candidates_wl = alive_wl[:MAX_DEEP_CHECK_WHITELIST]
     
     verified_global = []
