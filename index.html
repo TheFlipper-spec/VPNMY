@@ -3,468 +3,562 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FL1PVPN</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>FL1PVPN SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-deep: #050507;
-            --glass-surface: rgba(20, 20, 25, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.06);
-            --glass-highlight: rgba(255, 255, 255, 0.08);
+            --bg-body: #050505;
+            --bg-card: rgba(20, 20, 25, 0.6);
+            --bg-card-hover: rgba(30, 30, 40, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
             
             --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.4);
+            --primary-glow: rgba(99, 102, 241, 0.6);
+            --accent: #00f3ff;
+            --accent-glow: rgba(0, 243, 255, 0.4);
             
             --text-main: #ffffff;
-            --text-sec: #94a3b8;
+            --text-muted: #888888;
             
-            --c-green: #10b981;
-            --c-yellow: #facc15;
-            --c-red: #ef4444;
+            --success: #00ff9d;
+            --warning: #ffcc00;
+            --danger: #ff0055;
+            
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-deep);
+            font-family: var(--font-ui);
+            background-color: var(--bg-body);
             color: var(--text-main);
             margin: 0; padding: 0;
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center;
             overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveGrid 20s linear infinite;
         }
 
-        /* Живой фон */
-        .ambient {
-            position: fixed; inset: 0; z-index: -1;
-            background: 
-                radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 40%);
-            animation: breathe 8s ease-in-out infinite alternate;
+        @keyframes moveGrid {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
         }
 
+        /* Digital Ambient Effects */
+        .scanline {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 51%);
+            background-size: 100% 4px;
+            pointer-events: none; z-index: 10;
+        }
+        
+        .vignette {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, #000 100%);
+            pointer-events: none; z-index: 5; opacity: 0.6;
+        }
+
+        /* Container */
         .container {
-            width: 100%; max-width: 540px;
-            padding: 20px;
-            padding-bottom: 40px;
-            z-index: 1;
+            width: 100%; max-width: 600px;
+            padding: 24px 20px 100px;
+            z-index: 20; position: relative;
         }
 
         /* Header */
         header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 24px; padding: 12px 4px;
+            margin: 20px 0 32px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
         }
-
+        .brand {
+            display: flex; flex-direction: column; gap: 4px;
+        }
         .logo {
-            font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            display: flex; align-items: center; gap: 8px;
+            font-size: 28px; font-weight: 800; letter-spacing: -1px;
+            color: #fff; text-transform: uppercase;
+            display: flex; align-items: center; gap: 12px;
+            font-family: var(--font-code);
+            position: relative;
+        }
+        
+        .glitch {
+            position: relative;
+            color: #fff;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-body);
+        }
+        /* Fix for background grid: use clip-path on transparent bg */
+        .glitch::before, .glitch::after { background: transparent; }
+
+        .glitch::before {
+            left: 2px; text-shadow: -2px 0 #ff00c1;
+            clip-path: inset(44% 0 61% 0);
+            animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px; text-shadow: -2px 0 #00fff9;
+            clip-path: inset(54% 0 21% 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
         }
 
-        .status {
-            font-size: 13px; font-weight: 600;
-            padding: 8px 14px; border-radius: 30px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
-            display: flex; align-items: center; gap: 8px;
-            transition: 0.3s;
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(20% 0 80% 0); }
+            20% { clip-path: inset(60% 0 10% 0); }
+            40% { clip-path: inset(40% 0 50% 0); }
+            60% { clip-path: inset(80% 0 5% 0); }
+            80% { clip-path: inset(10% 0 70% 0); }
+            100% { clip-path: inset(30% 0 20% 0); }
         }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-sec); box-shadow: 0 0 10px currentColor; transition: 0.3s; }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 60% 0); }
+            20% { clip-path: inset(30% 0 10% 0); }
+            40% { clip-path: inset(70% 0 20% 0); }
+            60% { clip-path: inset(20% 0 50% 0); }
+            80% { clip-path: inset(60% 0 10% 0); }
+            100% { clip-path: inset(40% 0 30% 0); }
+        }
 
-        /* Scrollable Filters */
+        .status-dot {
+            width: 8px; height: 8px; background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success), 0 0 20px var(--success);
+            animation: pulse-dot 2s infinite;
+        }
+        .subtitle {
+            font-size: 11px; color: var(--text-muted); 
+            font-family: var(--font-code); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .subtitle::after {
+            content: '_';
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Filters */
         .filters {
-            display: flex; gap: 10px; overflow-x: auto; 
-            padding-bottom: 4px; margin-bottom: 20px;
+            display: flex; gap: 8px; overflow-x: auto;
+            padding: 4px; margin: 0 -4px 24px;
             scrollbar-width: none;
-            -ms-overflow-style: none;
         }
         .filters::-webkit-scrollbar { display: none; }
 
         .chip {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--glass-border);
-            color: var(--text-sec);
-            padding: 10px 18px; border-radius: 14px;
-            font-size: 13px; font-weight: 600; white-space: nowrap;
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 16px; border-radius: 40px;
+            font-size: 12px; font-weight: 600; white-space: nowrap;
+            cursor: pointer; transition: 0.3s;
+            font-family: var(--font-code);
         }
-        
+        .chip:hover { border-color: var(--accent); color: #fff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
         .chip.active {
-            background: var(--primary);
-            color: #fff; border-color: var(--primary);
-            box-shadow: 0 4px 20px var(--primary-glow);
-            transform: translateY(-2px);
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent); border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
         }
-        .chip:active { transform: scale(0.95); }
 
         /* Grid */
-        .grid { display: flex; flex-direction: column; gap: 14px; }
+        .grid { display: flex; flex-direction: column; gap: 12px; }
 
         .card {
-            background: var(--glass-surface);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 22px; padding: 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 18px 24px;
             display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; position: relative; overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            opacity: 0; transform: translateY(20px); /* For animation */
+            cursor: pointer; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative; overflow: hidden;
+            animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
         }
-
-        .card:active { transform: scale(0.98); }
-        .card:hover {
-            border-color: rgba(99, 102, 241, 0.4);
-            background: rgba(30, 32, 50, 0.7);
-            box-shadow: 0 12px 30px -10px rgba(0,0,0,0.6);
-        }
-
-        /* Shine Effect */
+        
+        /* Scan Effect */
         .card::before {
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            transform: skewX(-20deg); transition: 0.5s; pointer-events: none;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transform: skewX(-15deg);
+            transition: 0.5s;
+            pointer-events: none;
         }
-        .card:hover::before { left: 100%; transition: 0.7s; }
+        .card:hover::before {
+            left: 100%;
+            transition: 0.5s;
+        }
+
+        /* Tech Corner Accent */
+        .card::after {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 0; height: 0;
+            border-style: solid; border-width: 0 20px 20px 0;
+            border-color: transparent var(--border-color) transparent transparent;
+            transition: 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px rgba(0, 243, 255, 0.1);
+        }
+        .card:hover::after { border-right-color: var(--accent); }
+        .card:active { transform: scale(0.98); }
 
         .card-main { display: flex; align-items: center; gap: 16px; }
 
-        .flag-wrap {
-            width: 48px; height: 48px; border-radius: 14px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            overflow: hidden; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .flag-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+        .flag { font-size: 28px; }
 
-        .info h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0.2px; color: #fff; }
-        .info p { margin: 4px 0 0; font-size: 12px; color: var(--text-sec); font-weight: 500; }
-        
+        .info h3 {
+            margin: 0; font-size: 15px; font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--font-ui);
+        }
+        .info p { 
+            margin: 4px 0 0; font-size: 11px; color: var(--text-muted); 
+            font-family: var(--font-code); text-transform: uppercase;
+        }
+
+        .badges { display: flex; gap: 6px; }
         .badge {
-            font-size: 10px; font-weight: 800; text-transform: uppercase;
-            padding: 3px 8px; border-radius: 6px; margin-left: 8px;
-            vertical-align: middle; letter-spacing: 0.5px;
+            font-size: 9px; font-weight: 700; text-transform: uppercase;
+            padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
+            font-family: var(--font-code); border: 1px solid transparent;
         }
+        .badge-game { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); }
+        .badge-warp { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); background: rgba(96, 165, 250, 0.1); }
+        .badge-ru { color: #f87171; border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1); }
+        .badge-univ { color: #818cf8; border-color: rgba(129, 140, 248, 0.3); background: rgba(129, 140, 248, 0.1); }
 
-        .ping-wrap { text-align: right; min-width: 60px; }
-        .ping-val { font-size: 16px; font-weight: 800; display: block; }
-        .ping-lbl { font-size: 11px; color: var(--text-sec); display: block; margin-top: 2px;}
-
-        /* Whitelist Alert Text (Neutral) */
-        .wl-note {
-            font-size: 11px; color: var(--c-yellow); margin-top: 6px; 
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(250, 204, 21, 0.1); padding: 4px 8px; 
-            border-radius: 6px; width: fit-content;
+        .stats {
+            text-align: right;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
         }
+        .ping-box {
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 700; font-size: 14px; color: #fff;
+            font-family: var(--font-code);
+        }
+        .signal-bars {
+            display: flex; gap: 2px; align-items: flex-end; height: 10px;
+        }
+        .bar { width: 2px; background: rgba(255,255,255,0.2); }
+        .speed { font-size: 11px; color: var(--text-muted); font-family: var(--font-code); }
 
         /* Modal */
-        .overlay {
+        .modal-overlay {
             position: fixed; inset: 0; z-index: 100;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-            opacity: 0; pointer-events: none; transition: 0.3s ease;
-            display: flex; align-items: flex-end; justify-content: center;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(12px);
+            opacity: 0; pointer-events: none; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
         }
-        .overlay.open { opacity: 1; pointer-events: all; }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
 
-        .sheet {
-            background: #121216; width: 100%; max-width: 540px;
-            border-radius: 32px 32px 0 0; padding: 32px 24px 40px;
-            transform: translateY(100%); transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 -10px 50px rgba(0,0,0,0.7);
+        .modal {
+            background: #0f0f11;
+            width: 90%; max-width: 400px;
+            border-radius: 24px; padding: 32px;
+            border: 1px solid var(--border-color);
+            transform: scale(0.95); transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 0 50px rgba(99, 102, 241, 0.1);
+            position: relative; overflow: hidden;
         }
-        .overlay.open .sheet { transform: translateY(0); }
-
-        .sheet-head { display: flex; align-items: center; gap: 16px; margin-bottom: 30px; }
-        .sheet-title { font-size: 24px; font-weight: 800; margin: 0; }
+        /* Modal decoration line */
+        .modal::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: scanModal 2s linear infinite;
+        }
+        @keyframes scanModal {
+            0% { background-position: -100% 0; }
+            100% { background-position: 200% 0; }
+        }
         
-        .detail-row {
-            display: flex; justify-content: space-between; padding: 18px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 15px;
-        }
-        .d-lbl { color: var(--text-sec); }
-        .d-val { font-weight: 600; color: #fff; }
+        .modal-overlay.open .modal { transform: scale(1); }
 
-        .btn-main {
-            width: 100%; margin-top: 32px; padding: 20px;
-            border: none; border-radius: 20px;
-            background: linear-gradient(135deg, var(--primary), #4f46e5);
-            color: #fff; font-size: 16px; font-weight: 700;
-            cursor: pointer; box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
-            transition: transform 0.2s;
+        .modal-header { text-align: center; margin-bottom: 24px; }
+        .m-flag { font-size: 48px; display: block; margin-bottom: 16px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); }
+        .m-title { 
+            font-size: 20px; font-weight: 800; margin: 0; 
+            background: linear-gradient(to right, #fff, #a5b4fc); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-        .btn-main:active { transform: scale(0.97); }
+        .m-sub { color: var(--accent); font-size: 12px; margin-top: 6px; font-family: var(--font-code); }
 
-        .loader {
-            width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 0.8s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
-            margin: 60px auto;
+        .data-list { 
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px; padding: 20px; margin-bottom: 24px; 
+        }
+        .data-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .data-row:last-child { border: none; }
+        .d-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .d-value { font-weight: 600; font-family: var(--font-code); color: #fff; font-size: 14px; }
+
+        .actions { display: flex; gap: 12px; }
+        .btn {
+            flex: 1; padding: 16px; border-radius: 12px; border: none;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+            font-family: var(--font-ui);
+        }
+        .btn:active { transform: scale(0.96); }
+        
+        .btn-prim { 
+            background: var(--primary); color: #fff; 
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); 
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-prim:hover { 
+            background: #4f46e5; 
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); 
         }
 
-        @keyframes breathe { 0% { opacity: 0.6; } 100% { opacity: 1; } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes popIn { 
-            from { opacity: 0; transform: translateY(20px) scale(0.95); } 
-            to { opacity: 1; transform: translateY(0) scale(1); } 
-        }
+        @keyframes pulse-dot { 0% { opacity: 1; box-shadow: 0 0 10px var(--success); } 50% { opacity: 0.5; box-shadow: 0 0 0px var(--success); } 100% { opacity: 1; box-shadow: 0 0 10px var(--success); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+        @media (max-width: 480px) {
+            .modal { position: fixed; bottom: 0; width: 100%; max-width: 100%; border-radius: 24px 24px 0 0; margin: 0; transform: translateY(100%); }
+            .modal-overlay.open .modal { transform: translateY(0); }
+            .container { padding-bottom: 80px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="ambient"></div>
+<div class="scanline"></div>
+<div class="vignette"></div>
 
 <div class="container">
     <header>
-        <div class="logo">
-            <span>⚡ FL1PVPN</span>
-        </div>
-        <div class="status" id="statusBadge">
-            <div class="dot"></div> <span id="statusText">Загрузка...</span>
+        <div class="brand">
+            <div class="logo">
+                <div class="status-dot"></div>
+                <span class="glitch" data-text="FL1PVPN">FL1PVPN</span>
+            </div>
+            <div class="subtitle" id="lastUpdate">INITIALIZING SYSTEM...</div>
         </div>
     </header>
 
     <div class="filters">
-        <button class="chip active" onclick="setFilter('all', this)">Все</button>
-        <button class="chip" onclick="setFilter('fastest', this)">🏆 Топ Скорость</button>
-        <button class="chip" onclick="setFilter('gaming', this)">🎮 Для Игр</button>
-        <button class="chip" onclick="setFilter('media', this)">🎬 YouTube (4K)</button>
-        <button class="chip" onclick="setFilter('privacy', this)">🌐 Полная Смена</button>
-        <button class="chip" onclick="setFilter('ru', this)">🇷🇺 Whitelist</button>
+        <div class="chip active" onclick="setFilter('all', this)">ALL SYSTEMS</div>
+        <div class="chip" onclick="setFilter('GAME', this)">GAME</div>
+        <div class="chip" onclick="setFilter('WARP', this)">MEDIA</div>
+        <div class="chip" onclick="setFilter('UNIVERSAL', this)">TURBO</div>
+        <div class="chip" onclick="setFilter('WHITELIST', this)">RUSSIA</div>
     </div>
 
     <div id="grid" class="grid">
-        <div class="loader"></div>
+        <!-- Servers will be injected here -->
+        <div style="text-align: center; padding: 60px; color: var(--text-muted); font-family: var(--font-code);">
+            [ CONNECTING TO DATA STREAM ]
+        </div>
     </div>
 </div>
 
-<div class="overlay" id="modal" onclick="closeModal(event)">
-    <div class="sheet">
-        <div class="sheet-head">
-            <div class="flag-wrap" style="width: 56px; height: 56px;">
-                <img id="mFlag" class="flag-img" src="">
-            </div>
-            <div>
-                <h2 class="sheet-title" id="mCountry">Страна</h2>
-                <div style="font-size: 14px; color: var(--text-sec); margin-top:4px" id="mType">Protocol</div>
-            </div>
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="m-flag" id="mFlag">🌍</span>
+            <h2 class="m-title" id="mTitle">Country</h2>
+            <div class="m-sub" id="mSub">SERVER NODE</div>
         </div>
         
-        <div class="detail-row">
-            <span class="d-lbl">IP Адрес</span>
-            <span class="d-val" id="mIP">...</span>
-        </div>
-        <div class="detail-row">
-            <span class="d-lbl">Пинг</span>
-            <span class="d-val" id="mPing">...</span>
-        </div>
-        <div class="detail-row">
-            <span class="d-lbl">Категория</span>
-            <span class="d-val" id="mCat">...</span>
+        <div class="data-list">
+            <div class="data-row">
+                <span class="d-label">IP Address</span>
+                <span class="d-value" id="mIP">0.0.0.0</span>
+            </div>
+            <div class="data-row">
+                <span class="d-label">Latency</span>
+                <span class="d-value" id="mPing">0 ms</span>
+            </div>
+            <div class="data-row">
+                <span class="d-label">Bandwidth</span>
+                <span class="d-value" id="mSpeed">0 Mbps</span>
+            </div>
+            <div class="data-row">
+                <span class="d-label">Protocol</span>
+                <span class="d-value" id="mProto">VLESS</span>
+            </div>
         </div>
 
-        <button class="btn-main" onclick="openBot()">🔒 Подключить в Боте</button>
+        <div class="actions">
+            <button class="btn btn-prim" onclick="openBot()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
+                    <path d="M22 2L11 13"></path>
+                    <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+                </svg>
+                OPEN TERMINAL
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
     const JSON_URL = "stats.json";
-    const BOT_URL = "https://t.me/fl1pvpnbot";
     let allData = [];
 
-    async function init() {
-        if(window.location.protocol === 'file:') {
-            renderError("Запуск из файла", "Браузеры блокируют загрузку данных. Запустите локальный сервер.");
-            return;
-        }
+    const COUNTRIES = {
+        'FI': 'Finland', 'SE': 'Sweden', 'EE': 'Estonia', 'DE': 'Germany',
+        'NL': 'Netherlands', 'GB': 'UK', 'US': 'USA', 'RU': 'Russia',
+        'TR': 'Turkey', 'KZ': 'Kazakhstan', 'UA': 'Ukraine', 'FR': 'France',
+        'PL': 'Poland', 'BG': 'Bulgaria', 'LV': 'Latvia', 'LT': 'Lithuania'
+    };
 
+    function getFlagEmoji(cc) {
+        if (!cc || cc === 'XX') return '🌍';
+        const codePoints = cc.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+        return String.fromCodePoint(...codePoints);
+    }
+
+    async function init() {
         try {
             const res = await fetch(JSON_URL + "?t=" + Date.now());
-            if(!res.ok) throw new Error("Нет соединения");
+            if(!res.ok) throw new Error("Load failed");
             const data = await res.json();
             
-            if(!data.servers || !data.servers.length) throw new Error("Список пуст");
-            
-            allData = data.servers;
-            updateStatus(true);
-            setFilter('all', document.querySelector('.chip'));
+            if(data.updated_msk) {
+                const time = data.updated_msk.split(' ')[1];
+                document.getElementById('lastUpdate').innerText = "SYSTEM UPDATED: " + time;
+            }
+
+            allData = data.servers || [];
+            setFilter('all', document.querySelector('.chip.active'));
 
         } catch (e) {
             console.error(e);
-            renderError("Сервис недоступен", "Идет обновление списка серверов. Попробуйте позже.");
-            updateStatus(false);
+            document.getElementById('grid').innerHTML = `
+                <div style="text-align:center; padding:40px; color:var(--danger); font-family:var(--font-code)">
+                    [ ERROR: CONNECTION LOST ]
+                </div>
+            `;
         }
     }
 
-    function setFilter(mode, el) {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        if(el) el.classList.add('active');
-
-        let result = [];
-
-        switch(mode) {
-            case 'fastest':
-                // Честная сортировка по пингу
-                result = [...allData].sort((a,b) => (parseInt(a.ping)||999) - (parseInt(b.ping)||999));
-                break;
-
-            case 'gaming':
-                // Исключаем WARP, ищем минимальный пинг + приоритет Game Server
-                result = allData.filter(s => s.category !== 'WARP');
-                result.sort((a,b) => {
-                    const scA = (a.category === 'Game Server' ? -50 : 0) + (parseInt(a.ping)||999);
-                    const scB = (b.category === 'Game Server' ? -50 : 0) + (parseInt(b.ping)||999);
-                    return scA - scB;
-                });
-                break;
-
-            case 'media':
-                // Только WARP (идеально для YouTube)
-                result = allData.filter(s => s.category === 'WARP');
-                result.sort((a,b) => (parseInt(a.ping)||999) - (parseInt(b.ping)||999));
-                break;
-
-            case 'privacy':
-                // Reality / Universal - полная смена IP
-                result = allData.filter(s => s.category === 'UNIVERSAL' || s.category === 'Game Server');
-                result.sort((a,b) => (parseInt(a.ping)||999) - (parseInt(b.ping)||999));
-                break;
-
-            case 'ru':
-                // Whitelist
-                result = allData.filter(s => s.category === 'WHITELIST');
-                break;
-
-            default: // all
-                result = [...allData];
-                // Приоритеты: Game -> Universal -> Warp -> White
-                const rank = { 'Game Server':1, 'UNIVERSAL':2, 'WARP':3, 'WHITELIST':4 };
-                result.sort((a,b) => {
-                    const rA = rank[a.category] || 99;
-                    const rB = rank[b.category] || 99;
-                    if(rA !== rB) return rA - rB;
-                    return (parseInt(a.ping)||999) - (parseInt(b.ping)||999);
-                });
+    function setFilter(role, el) {
+        if(el) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
         }
 
-        render(result);
+        let filtered = role === 'all' ? [...allData] : allData.filter(s => s.role === role);
+
+        // Sort: Priority to Low Ping
+        filtered.sort((a,b) => (a.ping || 9999) - (b.ping || 9999));
+
+        render(filtered);
+    }
+
+    function getSignalBars(ping) {
+        let bars = 0;
+        let color = 'var(--text-muted)';
+        if(ping < 100) { bars = 4; color = 'var(--success)'; }
+        else if(ping < 200) { bars = 3; color = 'var(--success)'; }
+        else if(ping < 300) { bars = 2; color = 'var(--warning)'; }
+        else { bars = 1; color = 'var(--danger)'; }
+
+        let html = `<div class="signal-bars">`;
+        for(let i=0; i<4; i++) {
+            let opacity = i < bars ? 1 : 0.2;
+            let h = 3 + (i * 2);
+            html += `<div class="bar" style="height:${h}px; background:${color}; opacity:${opacity}"></div>`;
+        }
+        html += `</div>`;
+        return html;
     }
 
     function render(list) {
-        const container = document.getElementById('grid');
-        container.innerHTML = "";
+        const grid = document.getElementById('grid');
+        grid.innerHTML = "";
 
-        if(!list.length) {
-            container.innerHTML = `<div style="text-align:center; color:var(--text-sec); padding:40px">Серверов не найдено</div>`;
+        if(list.length === 0) {
+            grid.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-family:var(--font-code)">[ NO ACTIVE NODES ]</div>`;
             return;
         }
 
         list.forEach((s, i) => {
-            const p = parseInt(s.ping) || 999;
-            const online = p > 0 && p < 999;
+            const cc = s.cc || 'XX';
+            const flag = getFlagEmoji(cc);
+            const countryName = COUNTRIES[cc] || cc;
+            const ping = Math.round(s.ping || 0);
             
-            // Логика цветов
-            let color = "var(--c-green)";
-            if(p > 100) color = "var(--c-yellow)";
-            if(p > 250) color = "var(--c-red)";
-            if(!online) color = "var(--text-sec)";
-
-            // Бейджи и категории (НЕЙТРАЛЬНЫЕ НАЗВАНИЯ)
-            let catName = "Standard";
-            let badge = "";
-            let note = "";
-
-            if(s.category === 'Game Server') {
-                catName = "Gaming Optimized";
-                badge = `<span class="badge" style="background:rgba(99,102,241,0.2); color:#a5b4fc">GAME</span>`;
-            } else if(s.category === 'WARP') {
-                catName = "Media / YouTube";
-                badge = `<span class="badge" style="background:rgba(250,204,21,0.15); color:#fde047">MEDIA</span>`;
-            } else if(s.category === 'WHITELIST') {
-                catName = "RU Only";
-                badge = `<span class="badge" style="background:rgba(255,255,255,0.1)">RU-NET</span>`;
-                // БЕЗОПАСНАЯ ФОРМУЛИРОВКА
-                note = `<div class="wl-note">⚠️ Используйте, если у вас открываются только сайты РФ</div>`;
-            } else if(s.category === 'UNIVERSAL') {
-                catName = "Global Access";
-            }
-
-            const flag = `https://flagcdn.com/w80/${(s.iso||'xx').toLowerCase()}.png`;
+            // Badge logic
+            let badgesHtml = "";
+            if(s.role === 'GAME') badgesHtml += `<span class="badge badge-game">GAME</span>`;
+            if(s.role === 'WARP') badgesHtml += `<span class="badge badge-warp">MEDIA</span>`;
+            if(s.role === 'WHITELIST') badgesHtml += `<span class="badge badge-ru">RKN</span>`;
+            if(s.role === 'UNIVERSAL') badgesHtml += `<span class="badge badge-univ">TURBO</span>`;
 
             const el = document.createElement('div');
             el.className = "card";
-            el.style.animation = `popIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards ${i * 0.04}s`;
-
+            el.style.animationDelay = `${i * 0.05}s`;
+            
             el.innerHTML = `
                 <div class="card-main">
-                    <div class="flag-wrap">
-                        <img src="${flag}" class="flag-img" onerror="this.style.opacity=0.3">
-                    </div>
+                    <div class="flag">${flag}</div>
                     <div class="info">
-                        <h3>${s.country} ${badge}</h3>
-                        <p>${s.type} • ${catName}</p>
-                        ${note}
+                        <h3>${countryName}</h3>
+                        <div class="badges">${badgesHtml}</div>
                     </div>
                 </div>
-                <div class="ping-wrap">
-                    <span class="ping-val" style="color:${color}">${online ? p : '?'}</span>
-                    <span class="ping-lbl">ms</span>
+                <div class="stats">
+                    <div class="ping-box">
+                        ${ping} ms
+                        ${getSignalBars(ping)}
+                    </div>
+                    <span class="speed">${s.speed} Mb/s</span>
                 </div>
             `;
             
-            el.onclick = () => showModal(s, flag, color, catName);
-            container.appendChild(el);
+            el.onclick = () => openModal(s, flag, countryName);
+            grid.appendChild(el);
         });
     }
 
-    function showModal(s, flag, color, catName) {
-        document.getElementById('mFlag').src = flag;
-        document.getElementById('mCountry').innerText = s.country;
-        document.getElementById('mType').innerText = `${s.protocol} // ${s.type}`;
+    function openModal(s, flag, countryName) {
+        const rawLink = s.original || "";
+        const cleanLink = rawLink.split('#')[0];
+        
+        // Detect Protocol
+        let proto = "VLESS";
+        if(cleanLink.startsWith("vmess")) proto = "VMESS";
+        if(cleanLink.startsWith("ss")) proto = "SHADOWSOCKS";
+        if(cleanLink.startsWith("trojan")) proto = "TROJAN";
+
+        document.getElementById('mFlag').innerText = flag;
+        document.getElementById('mTitle').innerText = countryName;
+        document.getElementById('mSub').innerText = s.name;
+        
         document.getElementById('mIP').innerText = s.ip;
-        document.getElementById('mPing').innerText = s.ping + " ms";
-        document.getElementById('mPing').style.color = color;
-        document.getElementById('mCat').innerText = catName;
+        document.getElementById('mPing').innerText = Math.round(s.ping) + " ms";
+        document.getElementById('mSpeed').innerText = s.speed + " Mbps";
+        document.getElementById('mProto').innerText = proto;
         
         document.getElementById('modal').classList.add('open');
     }
 
     function closeModal(e) {
-        if(e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
-    }
-
-    function openBot() {
-        window.location.href = BOT_URL;
-    }
-
-    function updateStatus(ok) {
-        const txt = document.getElementById('statusText');
-        const dot = document.querySelector('.dot');
-        if(ok) {
-            txt.innerText = "Online";
-            dot.style.background = "var(--c-green)";
-            dot.style.boxShadow = "0 0 10px var(--c-green)";
-        } else {
-            txt.innerText = "Offline";
-            dot.style.background = "var(--c-red)";
-            dot.style.boxShadow = "none";
+        if(e.target.id === 'modal') {
+            document.getElementById('modal').classList.remove('open');
         }
     }
 
-    function renderError(title, msg) {
-        document.getElementById('grid').innerHTML = `
-            <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:20px; padding:30px; text-align:center;">
-                <div style="font-size:32px; margin-bottom:15px">⚠️</div>
-                <div style="font-weight:700; font-size:18px; color:#fff">${title}</div>
-                <div style="font-size:14px; color:#fca5a5; margin-top:8px">${msg}</div>
-            </div>
-        `;
+    function openBot() {
+        window.location.href = "https://t.me/fl1pvpnbot";
     }
 
     init();
