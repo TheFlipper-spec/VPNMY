@@ -24,7 +24,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V4.4 - STRICT GAME LOGIC
+#  FL1P VPN SCANNER V4.5 - TOURNAMENT EDITION 🏆
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -151,14 +151,14 @@ MAX_WORKERS_SCAN = 50
 MAX_WORKERS_DEEP = 6        
 MAX_WORKERS_FETCH = 20
 
-# Увеличили таймаут для стабильности TCP из РФ
+# Таймауты
 TIMEOUT_TCP = 1.0       
 TIMEOUT_REAL = 8.0
 TIMEOUT_SPEED = 6.0
 TIMEOUT_FETCH = 25.0        
 
 MAX_DEEP_CHECK_GLOBAL = 450 
-MAX_DEEP_CHECK_WHITELIST = 150 # Оптимизация
+MAX_DEEP_CHECK_WHITELIST = 150
 
 # Пороги
 MIN_SPEED_GAME = 0.5        
@@ -472,7 +472,7 @@ def check_endpoints(port):
 def check_udp_dns(local_port):
     try:
         socks_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socks_socket.settimeout(1.5) # 🔥 Строгий таймаут для игр
+        socks_socket.settimeout(1.5)
         socks_socket.connect(('127.0.0.1', local_port))
         
         socks_socket.sendall(b'\x05\x01\x00')
@@ -540,7 +540,6 @@ def deep_check(server):
                     udp_ok = True
             
             # Если UDP ок - меряем скорость
-            # Если UDP не нужен или не прошел - проверяем обычный HTTP
             if udp_ok:
                 speed = measure_speed(port)
                 if speed > 0:
@@ -644,7 +643,7 @@ def collect_all():
     global_cfgs = []
     whitelist_cfgs = []
     raw_count = 0
-    logger.info("📥 Сбор конфигураций (Balanced Mode)...")
+    logger.info("📥 Сбор конфигураций (Tournament Mode)...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_FETCH) as ex:
         futures = {}
@@ -670,7 +669,7 @@ def collect_all():
     return global_cfgs, whitelist_cfgs
 
 # ═══════════════════════════════════════════════════════════════
-# 🏆 ФИНАЛЬНЫЙ ОТБОР
+# 🏆 ТУРНИРНЫЙ ОТБОР
 # ═══════════════════════════════════════════════════════════════
 def select_final_9(verified_global, verified_whitelist):
     final = []
@@ -694,24 +693,26 @@ def select_final_9(verified_global, verified_whitelist):
             count += 1
         return count
 
-    # 1. GAME SERVERS (2 шт)
+    # 1. ТУРНИР GAME (UDP + Низкий пинг)
     game_needed = 2
-    
-    game_best = [s for s in verified_global 
+    # Квалификация: Reality + UDP + Пинг < 150
+    game_pool = [s for s in verified_global 
                  if s['info']['cc'] != 'RU' and s.get('udp') and s.get('is_reality')]
-    game_best.sort(key=lambda x: x['real_lat']) # Сортировка по пингу (asc)
+    # Финал: Побеждает тот, у кого ниже пинг
+    game_pool.sort(key=lambda x: x['real_lat'])
     
     added_game = add_to_final(
-        game_best, 
+        game_pool, 
         game_needed, 
         'GAME', 
         lambda s, f, c: f"🎮 {f} {get_country_name(c)} | 📅 {last_update if len(final)==0 else next_update}"
     )
     
+    # Fallback (утешительный финал)
     if added_game < game_needed:
         game_fallback = [s for s in verified_global 
                          if s['info']['cc'] != 'RU' and s.get('is_reality') and s['ip'] not in used_ips]
-        game_fallback.sort(key=lambda x: x['real_lat']) # Сортировка по пингу
+        game_fallback.sort(key=lambda x: x['real_lat']) 
         
         add_to_final(
             game_fallback, 
@@ -720,36 +721,39 @@ def select_final_9(verified_global, verified_whitelist):
             lambda s, f, c: f"🎮 {f} {get_country_name(c)} (TCP)"
         )
 
-    # 2. UNIVERSAL SERVERS (3 шт)
-    univ_candidates = [s for s in verified_global 
-                       if s['ip'] not in used_ips and s.get('is_reality') and s['info']['cc'] != 'RU']
-    univ_candidates.sort(key=lambda x: (-x['speed'], x['real_lat']))
+    # 2. ТУРНИР UNIVERSAL (Reality Only + Качество)
+    # Квалификация: Reality + Пинг < 300ms (защита от нерабочих) + Не РФ
+    univ_pool = [s for s in verified_global 
+                 if s['ip'] not in used_ips and s.get('is_reality') and s['info']['cc'] != 'RU' and s['real_lat'] < 300]
+    
+    # Финал: Побеждает тот, у кого выше скорость
+    univ_pool.sort(key=lambda x: -x['speed'])
     
     add_to_final(
-        univ_candidates, 
+        univ_pool, 
         3, 
         'UNIVERSAL', 
         lambda s, f, c: f"⚡ {f} {get_country_name(c)}"
     )
 
-    # 3. WARP / OTHER (2 шт)
-    warp_candidates = [s for s in verified_global 
+    # 3. ТУРНИР WARP (Скорость)
+    warp_pool = [s for s in verified_global 
                        if s['ip'] not in used_ips and (s.get('is_warp') or s.get('is_warp_named') or s.get('is_reality')) 
                        and s['info']['cc'] != 'RU']
-    warp_candidates.sort(key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
+    warp_pool.sort(key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
     
     add_to_final(
-        warp_candidates, 
+        warp_pool, 
         2, 
         'WARP', 
         lambda s, f, c: f"🌀 {f} {get_country_name(c)} (WARP)"
     )
 
-    # 4. WHITELIST (2 шт)
-    wl_candidates = sorted([s for s in verified_whitelist if s['speed'] > 0.5], key=lambda x: -x['speed'])
+    # 4. ТУРНИР WHITELIST
+    wl_pool = sorted([s for s in verified_whitelist if s['speed'] > 0.5], key=lambda x: -x['speed'])
     
     add_to_final(
-        wl_candidates, 
+        wl_pool, 
         2, 
         'WHITELIST', 
         lambda s, f, c: f"⚪ {f} {get_country_name(c)} (РКН)"
@@ -833,8 +837,8 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V4.4 - STRICT GAME LOGIC")
-    logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Split Quota: Reality 300 / Other 150")
+    logger.info("🚀 FL1P VPN V4.5 - TOURNAMENT EDITION 🏆")
+    logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Split: Reality 300 / Other 150")
     print("═" * 70)
     
     load_history()
@@ -870,19 +874,17 @@ def main():
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
     
-    # Сначала сортируем всех по пингу
+    # Квалификация (разделение по типам)
     alive_global.sort(key=lambda x: x['latency'])
     
-    # Делим на группы
     reality_candidates = [s for s in alive_global if s.get('is_reality')]
     other_candidates = [s for s in alive_global if not s.get('is_reality')]
     
-    # Принудительно набираем квоты (300 Reality + 150 Others)
+    # Формируем турнирную сетку
     candidates = []
-    candidates.extend(reality_candidates[:300]) # Гарантируем 300 Reality
-    candidates.extend(other_candidates[:150])   # Гарантируем 150 WARP/Others
+    candidates.extend(reality_candidates[:300]) # 300 слотов для Reality
+    candidates.extend(other_candidates[:150])   # 150 слотов для остальных
     
-    # Ограничение Whitelist
     candidates_wl = alive_wl[:MAX_DEEP_CHECK_WHITELIST]
     
     verified_global = []
