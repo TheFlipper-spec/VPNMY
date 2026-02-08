@@ -131,6 +131,7 @@ GLOBAL_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
+    "https://gbr.mydan.online/configs",
 ]
 
 WHITELIST_URLS = [
@@ -521,12 +522,12 @@ def deep_check(server):
         time.sleep(1.5)
         
         if proc.poll() is None:
-            # 🔥 ОБНОВЛЕННАЯ ЛОГИКА: Сначала чекаем UDP (если страна подходит)
-            if server['info']['cc'] in GAME_COUNTRIES:
+            # 🔥 VPS в РФ: UDP-пинг запускаем только для потенциальных Game (низкий TCP-пинг)
+            if server.get('latency', 9999) <= MAX_PING_GAME and server.get('is_reality', False):
                 udp_lat = check_udp_dns(port)
                 if udp_lat:
                     udp = True
-                    lat = udp_lat # Используем UDP пинг как основную задержку
+                    lat = udp_lat
             
             # Если это Game сервер и UDP прошел - сразу меряем скорость
             # Если нет - делаем стандартный Xray (HTTP) чек
@@ -670,19 +671,12 @@ def select_final_9(verified_global, verified_whitelist):
     
     # -------------------------------------------------------------
     # 1. GAME SERVERS (2 шт)
-    # Требование: UDP = True, Приоритетная страна, ONLY REALITY
+    # Требование: UDP = True, ONLY REALITY, страна != RU
     # -------------------------------------------------------------
     game_candidates = [s for s in verified_global 
-                        if s['info']['cc'] in PRIORITY_COUNTRIES and s.get('udp') and s.get('is_reality') and s['speed'] > MIN_SPEED_GAME]
-    
-    # Если мало в приоритетных, ищем во второй очереди (Германия, Нидерланды и тд)
-    if len(game_candidates) < 2:
-        tier2_games = [s for s in verified_global 
-                        if s['info']['cc'] in TIER_2_COUNTRIES and s.get('udp') and s.get('is_reality') and s['speed'] > MIN_SPEED_GAME]
-        game_candidates.extend(tier2_games)
-    
-    # Сортируем: сначала Priority страны, потом минимальный пинг
-    game_candidates.sort(key=lambda x: (x['info']['cc'] not in PRIORITY_COUNTRIES, x['real_lat']))
+                        if s['info']['cc'] != 'RU' and s.get('udp') and s.get('is_reality') and s['speed'] > MIN_SPEED_GAME]
+    # Сортируем: минимальный пинг, затем максимальная скорость
+    game_candidates.sort(key=lambda x: (x['real_lat'], -x['speed']))
     
     def add_server(candidate_list, role, label_func, count):
         added = 0
@@ -707,22 +701,12 @@ def select_final_9(verified_global, verified_whitelist):
 
     # -------------------------------------------------------------
     # 2. UNIVERSAL SERVERS (3 шт)
-    # Требование: Reality, Низкий пинг, Близкая страна
+    # Требование: Reality, минимальный пинг и высокая скорость, страна != RU
     # -------------------------------------------------------------
     univ_candidates = [s for s in verified_global 
-                       if s.get('is_reality') and s['ip'] not in used_ips and s['speed'] > MIN_SPEED_UNIVERSAL]
-    
-    # СОРТИРОВКА ПО БЛИЗОСТИ К РФ:
-    # Ключ 1: Страна (0 = Priority, 1 = Tier2, 2 = Others)
-    # Ключ 2: Пинг (меньше = лучше)
-    def universal_sort_key(x):
-        cc = x['info']['cc']
-        tier = 2
-        if cc in PRIORITY_COUNTRIES: tier = 0
-        elif cc in TIER_2_COUNTRIES: tier = 1
-        return (tier, x['real_lat'])
-
-    univ_candidates.sort(key=universal_sort_key)
+                       if s.get('is_reality') and s['ip'] not in used_ips and s['speed'] > MIN_SPEED_UNIVERSAL and s['info']['cc'] != 'RU']
+    # Сортируем по минимальному пингу, затем по скорости
+    univ_candidates.sort(key=lambda x: (x['real_lat'], -x['speed']))
 
     add_server(
         univ_candidates, 
@@ -735,7 +719,7 @@ def select_final_9(verified_global, verified_whitelist):
     # 3. WARP (2 шт)
     # -------------------------------------------------------------
     warp_candidates = [s for s in verified_global 
-                       if (s.get('is_warp') or s.get('is_reality')) and s['ip'] not in used_ips]
+                       if (s.get('is_warp') or s.get('is_reality')) and s['ip'] not in used_ips and s['info']['cc'] != 'RU']
     # Приоритет тем, у кого в названии есть WARP, затем скорость
     warp_candidates.sort(key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
     
@@ -764,10 +748,14 @@ def select_final_9(verified_global, verified_whitelist):
         if s['ip'] in used_ips: continue
         
         role = None
-        if s.get('source') == 'whitelist': role = "WHITELIST"
-        elif s.get('is_warp_named') or s.get('is_warp'): role = "WARP"
-        elif s.get('udp') and s['info']['cc'] in PRIORITY_COUNTRIES and s.get('is_reality'): role = "GAME"
-        elif s.get('is_reality'): role = "UNIVERSAL"
+        if s.get('source') == 'whitelist' and s['info']['cc'] == 'RU': 
+            role = "WHITELIST"
+        elif (s.get('is_warp_named') or s.get('is_warp')) and s['info']['cc'] != 'RU': 
+            role = "WARP"
+        elif s.get('udp') and s.get('is_reality') and s['info']['cc'] != 'RU': 
+            role = "GAME"
+        elif s.get('is_reality') and s['info']['cc'] != 'RU': 
+            role = "UNIVERSAL"
         
         if role:
             s['role'] = role
@@ -874,8 +862,8 @@ def main():
             if r: alive_wl.append(r)
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
-    # Сортируем так, чтобы приоритетные страны шли раньше (чтобы быстрее найти гейм сервера)
-    alive_global.sort(key=lambda x: (x['info']['cc'] not in GAME_COUNTRIES, x['latency']))
+    # VPS в РФ: оцениваем по чистому TCP-пингу, без приоритетов стран
+    alive_global.sort(key=lambda x: x['latency'])
     
     candidates = alive_global[:MAX_DEEP_CHECK_GLOBAL]
     
