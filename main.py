@@ -23,7 +23,7 @@ from urllib.parse import unquote, quote, parse_qs
 from datetime import datetime, timedelta, timezone
 
 # ═══════════════════════════════════════════════════════════════
-#  FL1P VPN SCANNER V4.6 - STABLE EDITION 🏆
+#  FL1P VPN SCANNER V4.7 - LATENCY GUARD EDITION 🛡️
 # ═══════════════════════════════════════════════════════════════
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -140,29 +140,32 @@ TELEGRAM_CHANNELS = [
 ]
 
 # ═══════════════════════════════════════════════════════════════
-# ⚙️ НАСТРОЙКИ
+# ⚙️ НАСТРОЙКИ (ЖЕСТКИЕ ЛИМИТЫ)
 # ═══════════════════════════════════════════════════════════════
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
 MAX_WORKERS_SCAN = 50       
-MAX_WORKERS_DEEP = 6        
+MAX_WORKERS_DEEP = 8        
 MAX_WORKERS_FETCH = 20
 
 # Таймауты
 TIMEOUT_TCP = 1.0       
-TIMEOUT_REAL = 8.0
-TIMEOUT_SPEED = 6.0
+TIMEOUT_SPEED = 5.0 # Сократили время теста скорости, чтобы не ждать висячие
 TIMEOUT_FETCH = 25.0        
 
 MAX_DEEP_CHECK_GLOBAL = 450 
 MAX_DEEP_CHECK_WHITELIST = 150
 
-# Пороги
-MIN_SPEED_GAME = 2.0        # Повысили порог для игр (чтобы отсеять мертвую Японию)
-MIN_SPEED_UNIVERSAL = 3.0   
-MAX_PING_GAME = 150         
+# 🛡️ ЛИМИТЫ КАЧЕСТВА (ГЛАВНОЕ ИЗМЕНЕНИЕ)
+MIN_SPEED_GAME = 2.0        
+MAX_PING_GAME = 110         # Строгий лимит для игр
+
+MIN_SPEED_UNIVERSAL = 2.5   
+MAX_PING_UNIVERSAL = 280    # Если пинг выше - сервер в мусорку
+
+MAX_PING_WHITELIST = 180    # Для РФ серверов, выше 180 - это перегруз
 
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
@@ -438,7 +441,7 @@ def measure_speed(port):
                 total += len(chunk)
                 if time.time() - start > TIMEOUT_SPEED:
                     break
-                if total > 2.5 * 1024 * 1024: break # Чуть больше для точности
+                if total > 2.0 * 1024 * 1024: break 
             
             if total == 0: return 0.0
             
@@ -457,7 +460,7 @@ def check_endpoints(port):
     for url, expected in endpoints:
         try:
             start = time.perf_counter()
-            r = requests.get(url, proxies=proxies, timeout=5, verify=False)
+            r = requests.get(url, proxies=proxies, timeout=4, verify=False)
             if r.status_code == expected or 200 <= r.status_code < 300:
                 success += 1
                 total_lat += (time.perf_counter() - start) * 1000
@@ -484,8 +487,17 @@ def deep_check(server):
             # 1. Проверяем HTTP подключение (Latency)
             lat_check = check_endpoints(port)
             if lat_check:
+                # 🛡️ ПРОВЕРКА LATENCY CAP ПЕРЕД ТЕСТОМ СКОРОСТИ
+                # Если пинг ужасный, нет смысла качать файл
+                limit = MAX_PING_WHITELIST if server['source'] == 'whitelist' else MAX_PING_UNIVERSAL
+                
+                if lat_check > limit:
+                     # Сервер работает, но пинг ужасный - бракуем
+                     update_history(server['ip'], server['port'], False)
+                     return None, 0.0, False
+
                 lat = lat_check
-                # 2. Если есть коннект, меряем скорость
+                # 2. Если пинг в норме, меряем скорость
                 speed = measure_speed(port)
                 update_history(server['ip'], server['port'], True, server.get('is_reality', False))
             else:
@@ -502,7 +514,6 @@ def deep_check(server):
             try: os.remove(path)
             except: pass
             
-    # UDP всегда False, так как мы его выключили
     return lat, speed, False
 
 def initial_check(server, progress=None):
@@ -576,7 +587,7 @@ def collect_all():
     global_cfgs = []
     whitelist_cfgs = []
     raw_count = 0
-    logger.info("📥 Сбор конфигураций (Stable Mode)...")
+    logger.info("📥 Сбор конфигураций (Fixed Latency Mode)...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS_FETCH) as ex:
         futures = {}
@@ -602,7 +613,7 @@ def collect_all():
     return global_cfgs, whitelist_cfgs
 
 # ═══════════════════════════════════════════════════════════════
-# 🏆 ОТБОР (ИСПРАВЛЕННАЯ ЛОГИКА)
+# 🏆 ОТБОР (ЖЕСТКИЕ ПРАВИЛА)
 # ═══════════════════════════════════════════════════════════════
 def select_final_9(verified_global, verified_whitelist):
     final = []
@@ -626,16 +637,15 @@ def select_final_9(verified_global, verified_whitelist):
             count += 1
         return count
 
-    # 1. GAME (Low Ping)
-    # Исправлено: Сортировка по пингу, НО строго фильтруем по скорости (MIN_SPEED_GAME),
-    # чтобы отсеять "мертвую" Японию.
+    # 1. GAME (Low Ping STRICT)
     game_pool = [s for s in verified_global 
                  if s['info']['cc'] != 'RU' 
                  and s.get('is_reality') 
-                 and s['real_lat'] < MAX_PING_GAME
+                 and s['real_lat'] < MAX_PING_GAME  # < 110ms строго
                  and s['speed'] > MIN_SPEED_GAME]
     
-    game_pool.sort(key=lambda x: x['real_lat']) # Приоритет пинга
+    # Сортируем геймеров по пингу (чем меньше, тем лучше)
+    game_pool.sort(key=lambda x: x['real_lat']) 
     
     add_to_final(
         game_pool, 
@@ -644,19 +654,18 @@ def select_final_9(verified_global, verified_whitelist):
         lambda s, f, c: f"🎮 {f} {get_country_name(c)} | 📅 {last_update if len(final)==0 else next_update}"
     )
     
-    # 2. UNIVERSAL (High Speed)
-    # Исправлено: Сюда попадают ЛЮБЫЕ Reality, даже если они не прошли в Game.
-    # Главный критерий - скорость.
+    # 2. UNIVERSAL (Balance)
     univ_pool = [s for s in verified_global 
                  if s['ip'] not in used_ips 
                  and s.get('is_reality') 
                  and s['info']['cc'] != 'RU'
+                 and s['real_lat'] < MAX_PING_UNIVERSAL # < 280ms
                  and s['speed'] > MIN_SPEED_UNIVERSAL]
     
-    univ_pool.sort(key=lambda x: -x['speed']) # Приоритет скорости
+    # Сортируем универсалов по скорости (но мы уже отсеяли тормозов по пингу)
+    univ_pool.sort(key=lambda x: -x['speed']) 
     
-    # Если Game не набрал 2 сервера, отдаем слоты в Universal
-    slots_needed = 5 - len(final) # Пытаемся забить до 5 слотов (2 Game + 3 Univ)
+    slots_needed = 5 - len(final) 
     
     add_to_final(
         univ_pool, 
@@ -665,12 +674,12 @@ def select_final_9(verified_global, verified_whitelist):
         lambda s, f, c: f"⚡ {f} {get_country_name(c)}"
     )
 
-    # 3. WARP / Остальные
+    # 3. WARP
     warp_pool = [s for s in verified_global 
                  if s['ip'] not in used_ips 
-                 and s['info']['cc'] != 'RU']
+                 and s['info']['cc'] != 'RU'
+                 and s['real_lat'] < MAX_PING_UNIVERSAL] # Тоже фильтруем по пингу
     
-    # Сортировка: Сначала Warp/CF, потом скорость
     warp_pool.sort(key=lambda x: (not x.get('is_warp_named', False), -x['speed']))
     
     add_to_final(
@@ -680,8 +689,13 @@ def select_final_9(verified_global, verified_whitelist):
         lambda s, f, c: f"🌀 {f} {get_country_name(c)} (WARP)"
     )
 
-    # 4. WHITELIST
-    wl_pool = sorted([s for s in verified_whitelist if s['speed'] > 0.5], key=lambda x: -x['speed'])
+    # 4. WHITELIST (RF STRICT)
+    # Фильтруем РФ сервера с пингом выше 180 (это явно глючные)
+    wl_pool = [s for s in verified_whitelist 
+               if s['real_lat'] < MAX_PING_WHITELIST 
+               and s['speed'] > 0.5]
+
+    wl_pool.sort(key=lambda x: -x['speed'])
     
     add_to_final(
         wl_pool, 
@@ -694,10 +708,11 @@ def select_final_9(verified_global, verified_whitelist):
     reserve = []
     for s in verified_global + verified_whitelist:
         if s['ip'] in used_ips: continue
-        
+        if s['real_lat'] > 400: continue # В резерв тоже не берем мертвых
+
         role = "UNIVERSAL"
         if s.get('source') == 'whitelist': role = "WHITELIST"
-        elif s['real_lat'] < 150 and s['speed'] > 2.0: role = "GAME"
+        elif s['real_lat'] < 120 and s['speed'] > 2.0: role = "GAME"
         elif s.get('is_warp_named'): role = "WARP"
         
         s['role'] = role
@@ -768,8 +783,8 @@ def save_results(final, reserve, stats):
 def main():
     start = time.time()
     print("═" * 70)
-    logger.info("🚀 FL1P VPN V4.6 - STABLE EDITION 🏆")
-    logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Split: Reality 300 / Other 150")
+    logger.info("🚀 FL1P VPN V4.7 - LATENCY GUARD EDITION 🛡️")
+    logger.info(f"   ⚙️ Timeout: {TIMEOUT_TCP}s | Ping Limits: Global < {MAX_PING_UNIVERSAL}ms | RU < {MAX_PING_WHITELIST}ms")
     print("═" * 70)
     
     load_history()
@@ -805,14 +820,11 @@ def main():
             
     logger.info(f"\n🧪 Глубокая проверка ({len(alive_global)} живых)...")
     
-    # Квалификация (разделение по типам)
     alive_global.sort(key=lambda x: x['latency'])
     
     reality_candidates = [s for s in alive_global if s.get('is_reality')]
     other_candidates = [s for s in alive_global if not s.get('is_reality')]
     
-    # Формируем список кандидатов на проверку
-    # Берем больше Reality, так как они нужны и для Game и для Universal
     candidates = []
     candidates.extend(reality_candidates[:300]) 
     candidates.extend(other_candidates[:150])   
