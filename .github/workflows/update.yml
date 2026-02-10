@@ -52,31 +52,28 @@ jobs:
 
     - name: Run script
       env:
-        # ИСПРАВЛЕНО: Берем секрет с именем TOKEN (как на скриншоте 1)
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       run: python main.py
 
     - name: Commit and push changes
       run: |
-        # ИСПРАВЛЕНИЕ 1: Задаем временную папку HOME, чтобы Git не ругался
+        # Настройка окружения
         export HOME=/tmp
-        
-        # ИСПРАВЛЕНИЕ 2: Разрешаем папку (глобально для текущего запуска)
         git config --global --add safe.directory '*'
-        
-        # ИСПРАВЛЕНИЕ 3: Используем локальные настройки (убрали --global), 
-        # чтобы настройки применились только к этому репозиторию
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         
-        git add FL1PVPN stats.json || true
+        # ВАЖНОЕ ИСПРАВЛЕНИЕ:
+        # Используем "git add .", чтобы добавить ВСЕ измененные файлы,
+        # включая history.json, FL1PVPN и stats.json
+        git add . || true
         
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
           git commit -m "Auto-update VPN configs [skip ci]"
           
-          # ИСПРАВЛЕНИЕ 4 (из прошлого шага): Принудительно берем наши изменения при конфликте
+          # Притягиваем изменения с сервера, отдавая приоритет нашим новым файлам
           git pull --rebase -Xtheirs origin main
           
           git push
