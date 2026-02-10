@@ -10,6 +10,7 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, quote, unquote, urlparse
@@ -63,14 +64,14 @@ TARGET_UNIVERSAL = 3
 TARGET_WARP = 2
 TARGET_WHITELIST = 2
 
-# --- СЕТЕВЫЕ НАСТРОЙКИ ---
-TIMEOUT = 0.7
-REAL_TEST_TIMEOUT = 5.5
-REAL_TEST_ATTEMPTS = 5
-REAL_TEST_MIN_SUCCESS = 4
-MAX_ALLOWED_LOSS = 0.20
-MAX_ALLOWED_JITTER = 160
-MAX_REAL_LATENCY = 650
+# --- СЕТЕВЫЕ НАСТРОЙКИ (ОПТИМИЗИРОВАНО ДЛЯ СКОРОСТИ) ---
+TIMEOUT = 0.5  # Тайм-аут для TCP ping (был 0.7)
+REAL_TEST_TIMEOUT = 4.0  # Тайм-аут для реальной проверки (был 5.5)
+REAL_TEST_ATTEMPTS = 3   # Количество попыток (было 5 - слишком долго)
+REAL_TEST_MIN_SUCCESS = 2 # Минимальный успех (было 4)
+MAX_ALLOWED_LOSS = 0.34   # Допуск потерь (1 из 3 ошибок допустима)
+MAX_ALLOWED_JITTER = 180
+MAX_REAL_LATENCY = 700
 
 REAL_TEST_URLS = [
     "https://www.gstatic.com/generate_204",
@@ -109,7 +110,7 @@ MIN_THEORETICAL_LATENCY = {
 }
 
 geo_reader = None
-
+history_lock = threading.Lock()
 
 def download_mmdb():
     if os.path.exists(MMDB_FILE):
@@ -413,12 +414,22 @@ def generate_xray_config(server, local_port):
         }]
     }
 
+def get_free_port():
+    """Находит свободный порт для локального запуска Xray"""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', 0))
+            return s.getsockname()[1]
+    except Exception:
+        return random.randint(10000, 60000)
 
 def check_real_connection(server):
-    local_port = random.randint(10000, 60000)
+    # Используем динамический поиск порта, чтобы потоки не конфликтовали
+    local_port = get_free_port()
     config = generate_xray_config(server, local_port)
 
-    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp_conf:
+    # Используем NamedTemporaryFile для уникальных конфигов в каждом потоке
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=f'_{local_port}.json') as tmp_conf:
         json.dump(config, tmp_conf)
         config_path = tmp_conf.name
 
@@ -431,7 +442,8 @@ def check_real_connection(server):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        time.sleep(1.2)
+        # Даем немного времени на старт
+        time.sleep(0.8)
 
         if xray_process.poll() is not None:
             return None
@@ -510,7 +522,7 @@ def load_history():
 
 
 def save_history(history):
-    # Храним только недавние записи, чтобы history не рос бесконечно
+    # Храним только недавние записи
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
     pruned = {}
 
@@ -520,7 +532,6 @@ def save_history(history):
             if last_seen >= cutoff:
                 pruned[k] = v
         except Exception:
-            # если формат битый — оставим запись, чтобы не потерять статистику
             pruned[k] = v
 
     with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
@@ -529,28 +540,29 @@ def save_history(history):
 
 def update_server_history(history, server, metrics):
     key = f"{server['ip']}:{server['port']}"
-    item = history.get(key)
     
-    # Если записи нет или она не словарь — создаем новую
-    if not isinstance(item, dict):
-        item = {}
+    with history_lock:
+        item = history.get(key)
+        # Если записи нет или она не словарь — создаем новую
+        if not isinstance(item, dict):
+            item = {}
 
-    # Принудительно задаем дефолтные значения, если ключей не хватает
-    item.setdefault('ok_count', 0)
-    item.setdefault('fail_count', 0)
-    item.setdefault('last_latency', 9999)
-    item.setdefault('last_score', 9999)
-    item.setdefault('last_seen', None)
+        # Принудительно задаем дефолтные значения
+        item.setdefault('ok_count', 0)
+        item.setdefault('fail_count', 0)
+        item.setdefault('last_latency', 9999)
+        item.setdefault('last_score', 9999)
+        item.setdefault('last_seen', None)
 
-    if metrics:
-        item['ok_count'] += 1
-        item['last_latency'] = int(metrics['median'])
-        item['last_score'] = int(metrics['score'])
-    else:
-        item['fail_count'] += 1
+        if metrics:
+            item['ok_count'] += 1
+            item['last_latency'] = int(metrics['median'])
+            item['last_score'] = int(metrics['score'])
+        else:
+            item['fail_count'] += 1
 
-    item['last_seen'] = datetime.now(timezone.utc).isoformat()
-    history[key] = item
+        item['last_seen'] = datetime.now(timezone.utc).isoformat()
+        history[key] = item
 
 
 def get_history_penalty(history, server):
@@ -627,48 +639,57 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
         return []
 
     semifinalists = sorted(filtered, key=lambda x: x['tcp_latency'])[:45]
-    logger.info(f"🏟️ {title} (Проверка Xray: {len(semifinalists)} кандидатов...)")
+    logger.info(f"🏟️ {title} (PARALLEL Xray: {len(semifinalists)} кандидатов...)")
 
     scored = []
-    for server in semifinalists:
-        metrics = check_real_connection(server)
-        if history is not None:
-            update_server_history(history, server, metrics)
+    
+    # ПАРАЛЛЕЛЬНАЯ ПРОВЕРКА (ОСНОВНОЕ УСКОРЕНИЕ)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+        future_to_server = {executor.submit(check_real_connection, s): s for s in semifinalists}
+        
+        for future in concurrent.futures.as_completed(future_to_server):
+            server = future_to_server[future]
+            try:
+                metrics = future.result()
+                
+                if history is not None:
+                    update_server_history(history, server, metrics)
 
-        if metrics is None:
-            continue
+                if metrics is None:
+                    continue
 
-        if metrics['median'] > MAX_REAL_LATENCY:
-            continue
+                if metrics['median'] > MAX_REAL_LATENCY:
+                    continue
 
-        server['latency'] = int(metrics['median'])
-        server['jitter'] = int(metrics['jitter'])
-        server['loss_ratio'] = metrics['loss_ratio']
+                server['latency'] = int(metrics['median'])
+                server['jitter'] = int(metrics['jitter'])
+                server['loss_ratio'] = metrics['loss_ratio']
 
-        tier_penalty = 0
-        if mode != 'gaming':
-            if server['tier_rank'] == 2:
-                tier_penalty = 25
-            elif server['tier_rank'] >= 3:
-                tier_penalty = 60
+                tier_penalty = 0
+                if mode != 'gaming':
+                    if server['tier_rank'] == 2:
+                        tier_penalty = 25
+                    elif server['tier_rank'] >= 3:
+                        tier_penalty = 60
 
-        warp_penalty = 0
-        if mode == 'warp' and server['transport'] not in {'ws', 'grpc'}:
-            warp_penalty = 2000
+                warp_penalty = 0
+                if mode == 'warp' and server['transport'] not in {'ws', 'grpc'}:
+                    warp_penalty = 2000
 
-        history_penalty = get_history_penalty(history, server) if history is not None else 0
+                history_penalty = get_history_penalty(history, server) if history is not None else 0
 
-        final_score = metrics['score'] + tier_penalty + warp_penalty + history_penalty
-        server['final_score'] = final_score
+                final_score = metrics['score'] + tier_penalty + warp_penalty + history_penalty
+                server['final_score'] = final_score
 
-        proto = 'SS' if server.get('is_ss') else ('Reality' if server['is_reality'] else server['transport'].upper())
-        logger.info(
-            f"✅ {server['info']['countryCode']:<4} | {proto:<8} | "
-            f"Median: {int(metrics['median'])}ms | Jitter: {int(metrics['jitter'])}ms | "
-            f"Loss: {int(metrics['loss_ratio'] * 100)}% | TCP: {server['tcp_latency']}ms | "
-            f"Score: {int(final_score)}"
-        )
-        scored.append(server)
+                proto = 'SS' if server.get('is_ss') else ('Reality' if server['is_reality'] else server['transport'].upper())
+                logger.info(
+                    f"✅ {server['info']['countryCode']:<4} | {proto:<8} | "
+                    f"Med: {int(metrics['median'])}ms | Jit: {int(metrics['jitter'])} | "
+                    f"Score: {int(final_score)}"
+                )
+                scored.append(server)
+            except Exception as e:
+                continue
 
     scored.sort(key=lambda x: x['final_score'])
     if not scored:
@@ -760,7 +781,7 @@ def server_name(server):
 
 
 def main():
-    logger.info("--- ЗАПУСК V79 (STABILITY-FIRST REAL PROBING) ---")
+    logger.info("--- ЗАПУСК V80 (PARALLEL TURBO MODE) ---")
 
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -785,7 +806,8 @@ def main():
     logger.info(f"🔍 Найдено {len(servers_to_check)} серверов. Начинаем TCP-сканирование...")
 
     working = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    # Быстрый первичный отсев по TCP
+    with concurrent.futures.ThreadPoolExecutor(max_workers=120) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
@@ -798,6 +820,7 @@ def main():
 
     final_list = []
 
+    # Запускаем турниры с параллельной проверкой
     game_winners = run_tournament(b_univ, TARGET_GAME, 'GAME CUP', 'gaming', history)
     game_ips = []
     for g in game_winners:
