@@ -20,7 +20,6 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- НАСТРОЙКА ЛОГИРОВАНИЯ ---
-# Максимально подробный вывод для отладки
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -67,30 +66,21 @@ JSON_FILE = 'stats.json'
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
+# --- FIX 1: ВЕРНУЛИ PING_BASE_MS ---
+PING_BASE_MS = {
+    'RU': 90, 
+    'FI': 40, 'EE': 45, 'SE': 55, 'DE': 65, 'NL': 70, 
+    'FR': 75, 'GB': 80, 'PL': 60, 'TR': 90, 'KZ': 60, 'UA': 50, 
+    'US': 160, 'BG': 55, 'AT': 60, 'CZ': 60, 'LV': 45, 'LT': 45,
+    'IT': 80, 'ES': 90, 'RO': 65, 'CH': 70, 'NO': 60
+}
+
 # --- ТАБЛИЦА МИНИМАЛЬНЫХ ЗАДЕРЖЕК (Speed of Light Check) ---
-# Если пинг меньше этого значения, сервер физически не может быть в этой стране.
-# Это защита от Anycast (Cloudflare), который направляет трафик в РФ.
 MIN_THEORETICAL_LATENCY = {
-    'FI': 15,  # Финляндия
-    'EE': 20,  # Эстония
-    'SE': 20,  # Швеция
-    'DE': 35,  # Германия
-    'NL': 40,  # Нидерланды
-    'GB': 45,  # Великобритания
-    'FR': 45,  # Франция
-    'PL': 30,  # Польша
-    'UA': 20,  # Украина
-    'TR': 40,  # Турция
-    'IT': 50,  # Италия
-    'ES': 60,  # Испания
-    'US': 95,  # США (Океан)
-    'CA': 100, # Канада
-    'JP': 150, # Япония
-    'KR': 150, # Корея
-    'SG': 120, # Сингапур
-    'GR': 45,  # Греция (не может быть 10мс!)
-    'BG': 40,  # Болгария
-    'RO': 35   # Румыния
+    'FI': 15, 'EE': 20, 'SE': 20, 'DE': 35, 'NL': 40,
+    'GB': 45, 'FR': 45, 'PL': 30, 'UA': 20, 'TR': 40,
+    'IT': 50, 'ES': 60, 'US': 95, 'CA': 100, 'JP': 150,
+    'KR': 150, 'SG': 120, 'GR': 45, 'BG': 40, 'RO': 35
 }
 
 RUS_NAMES = {
@@ -160,7 +150,6 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # --- SHADOWSOCKS PARSER ---
         if config_str.startswith("ss://"):
             try:
                 rest = config_str[5:]
@@ -215,18 +204,11 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # --- VLESS PARSER (ROBUST) ---
         if config_str.startswith("vless://"):
             parsed = urlparse(config_str)
-            
-            if '@' not in parsed.netloc:
-                return None
-            
+            if '@' not in parsed.netloc: return None
             _uuid, host_port = parsed.netloc.split('@', 1)
-            
-            if ':' not in host_port:
-                return None
-                
+            if ':' not in host_port: return None
             if ']' in host_port:
                  host = host_port.rsplit(':', 1)[0]
                  port = host_port.rsplit(':', 1)[1]
@@ -241,14 +223,11 @@ def parse_config_info(config_str, source_type):
             flow_val = params.get('flow', [''])[0].lower()
             
             is_reality = (security == 'reality')
-            
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 30: 
-                    return None
+                if len(pbk) < 30: return None
                 sni = params.get('sni', [''])[0]
-                if sni == host: 
-                    return None
+                if sni == host: return None
             
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -424,7 +403,6 @@ def check_real_connection(server):
             'http': f'socks5://127.0.0.1:{local_port}',
             'https': f'socks5://127.0.0.1:{local_port}'
         }
-        # Используем Google Generate 204 для проверки (быстро и надежно)
         target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
@@ -474,24 +452,14 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
-    # --- ЭВРИСТИКА V75 (ANTI-FAKE / SPEED OF LIGHT) ---
     is_fake = False
-    
-    # 1. Глобальная физика: если не СНГ и пинг < 15 мс -> это РФ
-    if code not in ['RU', 'BY', 'UA', 'KZ', 'XX'] and server['latency'] < 15:
-        is_fake = True
-    
-    # 2. Табличная проверка: сравнение с MIN_THEORETICAL_LATENCY
-    min_ping = MIN_THEORETICAL_LATENCY.get(code, 20) # 20мс дефолт для Европы
-    # Если пинг значительно меньше теоретического (с небольшим допуском 5мс)
-    if server['latency'] < (min_ping - 5):
-        # Пример: Греция (GR) мин 45мс. Если сервер дает 10мс -> это РФ.
-        is_fake = True
+    if code not in ['RU', 'BY', 'UA', 'KZ', 'XX'] and server['latency'] < 15: is_fake = True
+    min_ping = MIN_THEORETICAL_LATENCY.get(code, 20)
+    if server['latency'] < (min_ping - 5): is_fake = True
 
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
     if is_fake and server['category'] != 'WHITELIST': 
-        # logger.debug(f"Fake Latency: {code} {server['latency']}ms (Min: {min_ping}ms)")
         return None
 
     server['tier_rank'] = calculate_tier_rank(code)
@@ -511,27 +479,12 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
-    # --- ФИЛЬТРАЦИЯ V75 (STRICT GAME & UNIVERSAL) ---
     if mode == "gaming":
-        # Строго: Reality + Иностранные (без RU/XX)
-        filtered = [
-            c for c in candidates 
-            if c['is_reality'] 
-            and c['info']['countryCode'] != 'RU'
-            and c['info']['countryCode'] != 'XX' 
-        ]
+        filtered = [c for c in candidates if c['is_reality'] and c['info']['countryCode'] not in ['RU', 'XX']]
         logger.info(f"{title}: Фильтр Reality+Foreign (No RU/XX). Ищем минимальный пинг.")
-            
     elif mode == "universal":
-        # Строго: Reality + Иностранные (без RU/XX)
-        filtered = [
-            c for c in candidates 
-            if c['is_reality']
-            and c['info']['countryCode'] != 'RU' 
-            and c['info']['countryCode'] != 'XX'
-        ]
+        filtered = [c for c in candidates if c['is_reality'] and c['info']['countryCode'] not in ['RU', 'XX']]
         logger.info(f"{title}: Фильтр Reality+Foreign (No RU/XX).")
-        
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == "warp":
@@ -540,45 +493,32 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not filtered: return []
     
     semifinalists = sorted(filtered, key=lambda x: x['latency'])[:20]
-    
     logger.info(f"🏟️ {title} (Проверка {len(semifinalists)} кандидатов...)")
     
     scored_results = []
     for f in semifinalists:
         real_lat = check_real_connection(f)
-        
-        if real_lat is None:
-            continue
-
+        if real_lat is None: continue
         avg, jitter = stress_test_server(f)
-        
-        # Фильтр совсем плохих соединений
-        if avg > 800:
-            continue
+        if avg > 800: continue
             
         tier_penalty = 0
         special_penalty = 0
 
-        if mode == "gaming":
-            tier_penalty = 0 
+        if mode == "gaming": tier_penalty = 0 
         else:
             if f['tier_rank'] == 1: tier_penalty = 0     
             elif f['tier_rank'] == 2: tier_penalty = 30  
             else: tier_penalty = 70                      
             
-        if mode == "universal":
-            pass
-        elif mode == "warp":
-            if f['transport'] in ['ws', 'grpc']: 
-                special_penalty = 0
-            else: 
-                special_penalty = 2000
+        if mode == "warp":
+            if f['transport'] in ['ws', 'grpc']: special_penalty = 0
+            else: special_penalty = 2000
         elif mode == "whitelist":
             if f['is_reality']: special_penalty = 0
             else: special_penalty = 1000
             
         score = avg + (jitter * 3) + tier_penalty + special_penalty
-        
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
         f['final_score'] = score
@@ -592,11 +532,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
-    
-    if not scored_results:
-        logger.warning(f"⚠️ {title}: Не найдено рабочих серверов.")
-        return []
-
+    if not scored_results: logger.warning(f"⚠️ {title}: Не найдено рабочих серверов.")
     return scored_results[:winners_needed]
 
 def process_urls(urls, source_type):
@@ -613,71 +549,71 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-# --- НОВАЯ СИСТЕМА ПОИСКА V75 (SMART DATE + MULTI-QUERY) ---
+# --- FIX 2: УЛУЧШЕННЫЙ ПОИСК (ШИРОКИЙ ОХВАТ) ---
 def fetch_smart_github_links(max_files_per_query=10):
     logger.info(f"🧠 GitHub SMART Search: Инициализация...")
     token = os.environ.get("GITHUB_TOKEN") 
-    headers = {
-        "Accept": "application/vnd.github.v3+json"
-    }
-    if token:
-        headers["Authorization"] = f"token {token}"
-    else:
-        logger.warning("⚠️ GITHUB_TOKEN не найден. Лимиты будут жесткими.")
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if token: headers["Authorization"] = f"token {token}"
+    else: logger.warning("⚠️ GITHUB_TOKEN не найден. Лимиты будут жесткими.")
 
-    # 1. Вычисляем дату "Вчера"
-    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    # 1. Расширяем дату поиска до 3 дней, чтобы точно найти файлы
+    date_filter = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
     
-    # 2. МУЛЬТИ-ЗАПРОСЫ (4 вектора поиска)
+    # 2. Используем более широкие запросы
     queries = [
-        # Вектор 1: Большие дампы (часто обновляются)
-        f'"vless://" size:2000..100000 pushed:>{yesterday}', 
-        # Вектор 2: Файлы подписок
-        f'"vless://" filename:sub pushed:>{yesterday}',
-        # Вектор 3: Reality ключи (узкий поиск)
-        f'"vless://" "reality" pushed:>{yesterday}',
-        # Вектор 4: Base64 скрытые файлы
-        f'"vmess://" extension:txt pushed:>{yesterday}'
+        # Вектор 1: Обычный поиск по слову vless
+        f'vless pushed:>{date_filter} extension:txt', 
+        # Вектор 2: Поиск конфигураций
+        f'config pushed:>{date_filter} extension:json',
+        # Вектор 3: V2Ray подписки
+        f'v2ray subscription pushed:>{date_filter}',
+        # Вектор 4: base64 строки (общий поиск)
+        f'vmess:// pushed:>{date_filter}'
     ]
     
     api_url = "https://api.github.com/search/code"
     raw_links = set()
+    found_any = False
 
     for q in queries:
         logger.info(f"🔎 Query: '{q}'")
-        params = {
-            "q": q,
-            "sort": "indexed",
-            "order": "desc",
-            "per_page": max_files_per_query
-        }
+        params = {"q": q, "sort": "indexed", "order": "desc", "per_page": max_files_per_query}
         try:
             resp = requests.get(api_url, headers=headers, params=params, timeout=10)
             if resp.status_code == 200:
-                data = resp.json()
-                items = data.get("items", [])
+                items = resp.json().get("items", [])
                 logger.info(f"   ---> Найдено: {len(items)}")
-                
+                if len(items) > 0: found_any = True
                 for item in items:
-                    raw_url = item.get("html_url", "") \
-                        .replace("github.com", "raw.githubusercontent.com") \
-                        .replace("/blob/", "/")
-                    
-                    if raw_url:
-                        raw_links.add(raw_url)
+                    raw_url = item.get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+                    if raw_url: raw_links.add(raw_url)
             else:
                 logger.warning(f"   ---> Ошибка API: {resp.status_code}")
-            
-            # Пауза, чтобы GitHub не забанил
             time.sleep(2) 
         except Exception as e:
             logger.error(f"GitHub Error: {e}")
+            
+    # ЗАПАСНОЙ ПЛАН: Если ничего не нашли по свежим датам, ищем просто "свежее" без фильтра даты
+    if not found_any:
+        logger.warning("⚠️ Свежих файлов (3 дня) не найдено. Запускаем глобальный поиск...")
+        fallback_query = "vless:// extension:txt"
+        try:
+             params = {"q": fallback_query, "sort": "indexed", "order": "desc", "per_page": 10}
+             resp = requests.get(api_url, headers=headers, params=params, timeout=10)
+             if resp.status_code == 200:
+                 items = resp.json().get("items", [])
+                 logger.info(f"   ---> Fallback найдено: {len(items)}")
+                 for item in items:
+                     raw_url = item.get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+                     if raw_url: raw_links.add(raw_url)
+        except: pass
 
     logger.info(f"✅ Всего уникальных ссылок с GitHub: {len(raw_links)}")
     return list(raw_links)
 
 def main():
-    logger.info("--- ЗАПУСК V75 (ULTIMATE: ANTI-FAKE + SMART SEARCH) ---")
+    logger.info("--- ЗАПУСК V76 (FIXED: PING_BASE_MS & BROAD SEARCH) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -687,10 +623,7 @@ def main():
     download_mmdb()
     init_geoip()
     
-    # --- ЭТАП 1: SMART SEARCH ---
-    # Запрашиваем 8 файлов на каждый из 4 типов запросов (итого до 32 файлов)
     dynamic_urls = fetch_smart_github_links(max_files_per_query=8)
-    
     combined_general_urls = GENERAL_URLS + dynamic_urls
 
     all_servers = []
@@ -717,19 +650,15 @@ def main():
 
     final_list = []
     
-    # Game Server (Reality + Foreign + Lowest Ping)
     game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     game_ips = []
-    
     if game_winners:
         for g in game_winners:
             g['category'] = 'Game Server'
             game_ips.append(g['ip']) 
         final_list.extend(game_winners)
     
-    # Universal (Reality + Foreign) - исключая игровые
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
-    
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
@@ -745,18 +674,14 @@ def main():
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
     
     result_links = [info_link]
-    
-    json_data = {
-        "updated_at": time_str,
-        "next_update": next_str,
-        "servers": []
-    }
+    json_data = {"updated_at": time_str, "next_update": next_str, "servers": []}
 
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
         flag = "".join([chr(127397 + ord(c)) for c in code.upper()])
         country_full = RUS_NAMES.get(code, code)
         
+        # --- ИСПРАВЛЕНО: PING_BASE_MS теперь определен ---
         base_ping = PING_BASE_MS.get(code, 120)
         
         if code == 'RU':
