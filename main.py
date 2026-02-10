@@ -20,6 +20,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- НАСТРОЙКА ЛОГИРОВАНИЯ ---
+# Максимально подробный вывод для отладки
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -32,7 +33,7 @@ try:
 except AttributeError:
     pass
 
-# --- ИСТОЧНИКИ ---
+# --- ИСТОЧНИКИ (BASE) ---
 GENERAL_URLS = [
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
@@ -61,17 +62,35 @@ TARGET_WHITELIST = 2
 # БАЛАНС СКОРОСТИ И КАЧЕСТВА
 TIMEOUT = 0.8           
 REAL_TEST_TIMEOUT = 8.0 
-OUTPUT_FILE = 'FL1PVPN' # Файл с конфигами
-JSON_FILE = 'stats.json' # Файл для сайта
+OUTPUT_FILE = 'FL1PVPN' 
+JSON_FILE = 'stats.json' 
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
-PING_BASE_MS = {
-    'RU': 90, 
-    'FI': 40, 'EE': 45, 'SE': 55, 'DE': 65, 'NL': 70, 
-    'FR': 75, 'GB': 80, 'PL': 60, 'TR': 90, 'KZ': 60, 'UA': 50, 
-    'US': 160, 'BG': 55, 'AT': 60, 'CZ': 60, 'LV': 45, 'LT': 45,
-    'IT': 80, 'ES': 90, 'RO': 65, 'CH': 70, 'NO': 60
+# --- ТАБЛИЦА МИНИМАЛЬНЫХ ЗАДЕРЖЕК (Speed of Light Check) ---
+# Если пинг меньше этого значения, сервер физически не может быть в этой стране.
+# Это защита от Anycast (Cloudflare), который направляет трафик в РФ.
+MIN_THEORETICAL_LATENCY = {
+    'FI': 15,  # Финляндия
+    'EE': 20,  # Эстония
+    'SE': 20,  # Швеция
+    'DE': 35,  # Германия
+    'NL': 40,  # Нидерланды
+    'GB': 45,  # Великобритания
+    'FR': 45,  # Франция
+    'PL': 30,  # Польша
+    'UA': 20,  # Украина
+    'TR': 40,  # Турция
+    'IT': 50,  # Италия
+    'ES': 60,  # Испания
+    'US': 95,  # США (Океан)
+    'CA': 100, # Канада
+    'JP': 150, # Япония
+    'KR': 150, # Корея
+    'SG': 120, # Сингапур
+    'GR': 45,  # Греция (не может быть 10мс!)
+    'BG': 40,  # Болгария
+    'RO': 35   # Румыния
 }
 
 RUS_NAMES = {
@@ -141,7 +160,7 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # --- SHADOWSOCKS ---
+        # --- SHADOWSOCKS PARSER ---
         if config_str.startswith("ss://"):
             try:
                 rest = config_str[5:]
@@ -196,7 +215,7 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # --- VLESS (НОВЫЙ ПАРСЕР v2) ---
+        # --- VLESS PARSER (ROBUST) ---
         if config_str.startswith("vless://"):
             parsed = urlparse(config_str)
             
@@ -223,7 +242,6 @@ def parse_config_info(config_str, source_type):
             
             is_reality = (security == 'reality')
             
-            # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY ---
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
                 if len(pbk) < 30: 
@@ -231,7 +249,6 @@ def parse_config_info(config_str, source_type):
                 sni = params.get('sni', [''])[0]
                 if sni == host: 
                     return None
-            # ----------------------------------
             
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
@@ -407,6 +424,7 @@ def check_real_connection(server):
             'http': f'socks5://127.0.0.1:{local_port}',
             'https': f'socks5://127.0.0.1:{local_port}'
         }
+        # Используем Google Generate 204 для проверки (быстро и надежно)
         target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
@@ -456,18 +474,24 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
     
+    # --- ЭВРИСТИКА V75 (ANTI-FAKE / SPEED OF LIGHT) ---
     is_fake = False
     
-    # Эвристика:
-    if code in ['US', 'CA', 'BR', 'AR', 'AU'] and server['latency'] < 50:
+    # 1. Глобальная физика: если не СНГ и пинг < 15 мс -> это РФ
+    if code not in ['RU', 'BY', 'UA', 'KZ', 'XX'] and server['latency'] < 15:
         is_fake = True
     
-    if server['latency'] < 2:
+    # 2. Табличная проверка: сравнение с MIN_THEORETICAL_LATENCY
+    min_ping = MIN_THEORETICAL_LATENCY.get(code, 20) # 20мс дефолт для Европы
+    # Если пинг значительно меньше теоретического (с небольшим допуском 5мс)
+    if server['latency'] < (min_ping - 5):
+        # Пример: Греция (GR) мин 45мс. Если сервер дает 10мс -> это РФ.
         is_fake = True
-        
+
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
     if is_fake and server['category'] != 'WHITELIST': 
+        # logger.debug(f"Fake Latency: {code} {server['latency']}ms (Min: {min_ping}ms)")
         return None
 
     server['tier_rank'] = calculate_tier_rank(code)
@@ -487,23 +511,23 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
-    # --- ЛОГИКА ФИЛЬТРАЦИИ V72 (STRICT FOREIGN) ---
+    # --- ФИЛЬТРАЦИЯ V75 (STRICT GAME & UNIVERSAL) ---
     if mode == "gaming":
-        # Гейминг: VLESS Reality + Иностранные (не RU, не XX)
+        # Строго: Reality + Иностранные (без RU/XX)
         filtered = [
             c for c in candidates 
             if c['is_reality'] 
             and c['info']['countryCode'] != 'RU'
-            and c['info']['countryCode'] != 'XX' # Исключаем неопределенные (часто это локальные RU)
+            and c['info']['countryCode'] != 'XX' 
         ]
         logger.info(f"{title}: Фильтр Reality+Foreign (No RU/XX). Ищем минимальный пинг.")
             
     elif mode == "universal":
-        # Универсал: VLESS Reality + Иностранные (не RU, не XX)
+        # Строго: Reality + Иностранные (без RU/XX)
         filtered = [
             c for c in candidates 
             if c['is_reality']
-            and c['info']['countryCode'] != 'RU' # Исправлено: теперь тут не будет RU
+            and c['info']['countryCode'] != 'RU' 
             and c['info']['countryCode'] != 'XX'
         ]
         logger.info(f"{title}: Фильтр Reality+Foreign (No RU/XX).")
@@ -511,7 +535,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == "warp":
-        # WARP тоже только иностранный
         filtered = [c for c in candidates if c['info']['countryCode'] not in ['RU', 'XX']]
 
     if not filtered: return []
@@ -529,7 +552,10 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
         avg, jitter = stress_test_server(f)
         
-        # --- ЛОГИКА ПОДСЧЕТА ОЧКОВ ---
+        # Фильтр совсем плохих соединений
+        if avg > 800:
+            continue
+            
         tier_penalty = 0
         special_penalty = 0
 
@@ -541,7 +567,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             else: tier_penalty = 70                      
             
         if mode == "universal":
-            # Штрафов за страну нет, так как RU уже исключены фильтром
             pass
         elif mode == "warp":
             if f['transport'] in ['ws', 'grpc']: 
@@ -588,8 +613,9 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-def fetch_github_raw_links(query, max_files=10):
-    logger.info(f"🔎 GitHub Search: ищем '{query}'...")
+# --- НОВАЯ СИСТЕМА ПОИСКА V75 (SMART DATE + MULTI-QUERY) ---
+def fetch_smart_github_links(max_files_per_query=10):
+    logger.info(f"🧠 GitHub SMART Search: Инициализация...")
     token = os.environ.get("GITHUB_TOKEN") 
     headers = {
         "Accept": "application/vnd.github.v3+json"
@@ -597,40 +623,61 @@ def fetch_github_raw_links(query, max_files=10):
     if token:
         headers["Authorization"] = f"token {token}"
     else:
-        logger.warning("⚠️ GITHUB_TOKEN не найден. Возможны лимиты API.")
+        logger.warning("⚠️ GITHUB_TOKEN не найден. Лимиты будут жесткими.")
 
+    # 1. Вычисляем дату "Вчера"
+    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    # 2. МУЛЬТИ-ЗАПРОСЫ (4 вектора поиска)
+    queries = [
+        # Вектор 1: Большие дампы (часто обновляются)
+        f'"vless://" size:2000..100000 pushed:>{yesterday}', 
+        # Вектор 2: Файлы подписок
+        f'"vless://" filename:sub pushed:>{yesterday}',
+        # Вектор 3: Reality ключи (узкий поиск)
+        f'"vless://" "reality" pushed:>{yesterday}',
+        # Вектор 4: Base64 скрытые файлы
+        f'"vmess://" extension:txt pushed:>{yesterday}'
+    ]
+    
     api_url = "https://api.github.com/search/code"
-    params = {
-        "q": query,
-        "sort": "indexed",
-        "order": "desc",
-        "per_page": max_files
-    }
+    raw_links = set()
 
-    raw_links = []
-    try:
-        response = requests.get(api_url, headers=headers, params=params, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            items = data.get("items", [])
-            logger.info(f"✅ Найдено файлов через GitHub API: {len(items)}")
-            
-            for item in items:
-                raw_url = item.get("html_url", "") \
-                    .replace("github.com", "raw.githubusercontent.com") \
-                    .replace("/blob/", "/")
+    for q in queries:
+        logger.info(f"🔎 Query: '{q}'")
+        params = {
+            "q": q,
+            "sort": "indexed",
+            "order": "desc",
+            "per_page": max_files_per_query
+        }
+        try:
+            resp = requests.get(api_url, headers=headers, params=params, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                items = data.get("items", [])
+                logger.info(f"   ---> Найдено: {len(items)}")
                 
-                if raw_url:
-                    raw_links.append(raw_url)
-        else:
-            logger.error(f"❌ Ошибка API GitHub: {response.status_code} - {response.text}")
-    except Exception as e:
-        logger.error(f"❌ Ошибка при поиске на GitHub: {e}")
+                for item in items:
+                    raw_url = item.get("html_url", "") \
+                        .replace("github.com", "raw.githubusercontent.com") \
+                        .replace("/blob/", "/")
+                    
+                    if raw_url:
+                        raw_links.add(raw_url)
+            else:
+                logger.warning(f"   ---> Ошибка API: {resp.status_code}")
+            
+            # Пауза, чтобы GitHub не забанил
+            time.sleep(2) 
+        except Exception as e:
+            logger.error(f"GitHub Error: {e}")
 
-    return list(set(raw_links))
+    logger.info(f"✅ Всего уникальных ссылок с GitHub: {len(raw_links)}")
+    return list(raw_links)
 
 def main():
-    logger.info("--- ЗАПУСК V72 (FIXED: NO RU/XX IN GAME/UNIVERSAL) ---")
+    logger.info("--- ЗАПУСК V75 (ULTIMATE: ANTI-FAKE + SMART SEARCH) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -640,9 +687,9 @@ def main():
     download_mmdb()
     init_geoip()
     
-    # --- ЭТАП 1: СБОР ССЫЛОК ---
-    github_query = '"vless://" extension:txt size:1000..50000'
-    dynamic_urls = fetch_github_raw_links(github_query, max_files=15)
+    # --- ЭТАП 1: SMART SEARCH ---
+    # Запрашиваем 8 файлов на каждый из 4 типов запросов (итого до 32 файлов)
+    dynamic_urls = fetch_smart_github_links(max_files_per_query=8)
     
     combined_general_urls = GENERAL_URLS + dynamic_urls
 
@@ -670,7 +717,7 @@ def main():
 
     final_list = []
     
-    # Запуск турнира для игрового сервера
+    # Game Server (Reality + Foreign + Lowest Ping)
     game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     game_ips = []
     
@@ -680,7 +727,7 @@ def main():
             game_ips.append(g['ip']) 
         final_list.extend(game_winners)
     
-    # Исключаем игровые IP из универсальных
+    # Universal (Reality + Foreign) - исключая игровые
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
