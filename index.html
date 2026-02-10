@@ -42,7 +42,6 @@
             z-index: 0; pointer-events: none;
         }
 
-        /* Эффект сканирования монитора */
         .scanline {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 51%);
@@ -69,10 +68,20 @@
             color: #fff; text-transform: uppercase;
             display: flex; align-items: center; gap: 12px;
             font-family: var(--font-code);
-            cursor: default; /* Чтобы было понятно, что можно навести */
+            cursor: default;
         }
         
-        .hacker-text { position: relative; display: inline-block; }
+        /* Стили для отдельных букв */
+        .hacker-word { display: flex; }
+        .hacker-char {
+            transition: color 0.1s;
+            position: relative;
+            cursor: crosshair;
+        }
+        .hacker-char:hover {
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent);
+        }
         
         .status-dot {
             width: 8px; height: 8px; background: var(--success);
@@ -237,9 +246,9 @@
 <div class="container">
     <header>
         <div class="brand">
-            <div class="logo" onmouseover="runHackerEffect()">
+            <div class="logo">
                 <div class="status-dot"></div>
-                <span class="hacker-text" data-value="FL1PVPN">FL1PVPN</span>
+                <div class="hacker-word" id="brandText" data-value="FL1PVPN">FL1PVPN</div>
             </div>
             <div class="subtitle" id="timeInfo">INITIALIZING SYSTEM...</div>
         </div>
@@ -274,115 +283,114 @@
 </div>
 
 <script>
-    // --- 1. HACKER TEXT EFFECT (HOVER & LOAD) ---
+    // --- 1. ADVANCED HACKER EFFECT (LOCAL + GLOBAL) ---
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-    let interval = null;
-
-    function runHackerEffect() {
-        const element = document.querySelector('.hacker-text');
-        const targetText = element.dataset.value;
+    
+    // Функция перемешивания одной конкретной буквы
+    function scrambleLetter(element, finalChar) {
         let iterations = 0;
-
-        clearInterval(interval); // Сброс, чтобы не накладывалось при быстром наведении
-
-        interval = setInterval(() => {
-            element.innerText = targetText.split("")
-                .map((letter, index) => {
-                    if(index < iterations) return targetText[index];
-                    return letters[Math.floor(Math.random() * letters.length)];
-                }).join("");
-
-            if(iterations >= targetText.length) {
+        const maxIterations = 10; // Сколько раз менять букву перед остановкой
+        
+        clearInterval(element.dataset.interval);
+        
+        const interval = setInterval(() => {
+            element.innerText = letters[Math.floor(Math.random() * letters.length)];
+            iterations++;
+            
+            if (iterations >= maxIterations) {
+                element.innerText = finalChar;
                 clearInterval(interval);
-                element.innerText = targetText; 
             }
-            iterations += 1 / 2; // Скорость расшифровки
+        }, 40);
+        
+        element.dataset.interval = interval;
+    }
+
+    // Инициализация текста (Запуск глобального эффекта + подготовка к наведению)
+    function initHackerTitle() {
+        const container = document.getElementById('brandText');
+        const text = container.dataset.value;
+        
+        // ШАГ 1: Глобальная анимация при загрузке (как раньше)
+        let iterations = 0;
+        const loadInterval = setInterval(() => {
+            container.innerText = text.split("").map((letter, index) => {
+                if(index < iterations) return text[index];
+                return letters[Math.floor(Math.random() * letters.length)];
+            }).join("");
+
+            if(iterations >= text.length) {
+                clearInterval(loadInterval);
+                // ШАГ 2: После завершения превращаем текст в отдельные спаны для ховера
+                enableHoverInteraction(container, text);
+            }
+            iterations += 1 / 2;
         }, 35);
     }
-    
-    // Auto-run on load
-    runHackerEffect();
 
-    // --- 2. DIGITAL NETWORK BACKGROUND (DIGITAL NODES) ---
+    // Превращение текста в интерактивные буквы
+    function enableHoverInteraction(container, text) {
+        container.innerHTML = ""; // Очищаем текст
+        text.split("").forEach(char => {
+            const span = document.createElement("span");
+            span.className = "hacker-char";
+            span.innerText = char;
+            
+            // Магия: при наведении перемешиваем ТОЛЬКО эту букву
+            span.onmouseover = () => scrambleLetter(span, char);
+            
+            container.appendChild(span);
+        });
+    }
+
+    // Запускаем
+    initHackerTitle();
+
+    // --- 2. DIGITAL NETWORK BACKGROUND ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
     let particles = [];
-
-    // Настройки Digital Network
-    const config = {
-        count: 0,        // Рассчитывается динамически
-        speed: 0.5,      // Скорость движения нод
-        size: 1.5,       // Размер нод
-        linkDist: 140,   // Дистанция соединения
-        colorNode: '#00f3ff', // Цвет нод (Accent)
-        colorLine: 'rgba(99, 102, 241, 0.2)' // Цвет линий (Primary с прозрачностью)
-    };
+    const config = { count: 0, speed: 0.5, size: 1.5, linkDist: 140, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, 0.2)' };
 
     function resize() {
         width = canvas.width = window.innerWidth;
         height = canvas.height = window.innerHeight;
-        config.count = Math.floor((width * height) / 9000); // Плотность точек
+        config.count = Math.floor((width * height) / 9000);
         createParticles();
     }
-
     function createParticles() {
         particles = [];
         for(let i = 0; i < config.count; i++) {
             particles.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                vx: (Math.random() - 0.5) * config.speed,
-                vy: (Math.random() - 0.5) * config.speed
+                x: Math.random() * width, y: Math.random() * height,
+                vx: (Math.random() - 0.5) * config.speed, vy: (Math.random() - 0.5) * config.speed
             });
         }
     }
-
     function animateNetwork() {
         ctx.clearRect(0, 0, width, height);
-
         for(let i = 0; i < particles.length; i++) {
             let p = particles[i];
-            
-            // Движение
-            p.x += p.vx;
-            p.y += p.vy;
-
-            // Отскок от краев
+            p.x += p.vx; p.y += p.vy;
             if(p.x < 0 || p.x > width) p.vx *= -1;
             if(p.y < 0 || p.y > height) p.vy *= -1;
-
-            // Рисуем ноду
             ctx.fillStyle = config.colorNode;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Рисуем линии (Связи)
+            ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
             for(let j = i + 1; j < particles.length; j++) {
                 let p2 = particles[j];
-                let dx = p.x - p2.x;
-                let dy = p.y - p2.y;
+                let dx = p.x - p2.x; let dy = p.y - p2.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
-
                 if(dist < config.linkDist) {
-                    ctx.beginPath();
-                    // Чем ближе, тем ярче линия
                     let alpha = 1 - (dist / config.linkDist);
-                    ctx.strokeStyle = `rgba(99, 102, 241, ${alpha * 0.5})`; 
-                    ctx.lineWidth = 1;
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.stroke();
+                    ctx.strokeStyle = `rgba(99, 102, 241, ${alpha * 0.5})`;
+                    ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
                 }
             }
         }
         requestAnimationFrame(animateNetwork);
     }
-
-    window.addEventListener('resize', resize);
-    resize();
-    animateNetwork();
+    window.addEventListener('resize', resize); resize(); animateNetwork();
 
     // --- MAIN APP LOGIC ---
     const JSON_URL = "stats.json";
@@ -391,38 +399,48 @@
     async function init() {
         try {
             const res = await fetch(JSON_URL + "?t=" + Date.now());
-            if(!res.ok) throw new Error("Failed to load");
+            if(!res.ok) throw new Error("Failed");
             const data = await res.json();
-            
-            document.getElementById('timeInfo').innerHTML = 
-                `UPDATED: ${data.updated_at} <br> NEXT: ${data.next_update}`;
-            
+            document.getElementById('timeInfo').innerHTML = `UPDATED: ${data.updated_at} <br> NEXT: ${data.next_update}`;
             serversData = data.servers || [];
-            filterData('all', document.querySelector('.chip.active'));
             
+            // Живой пинг (визуальный)
+            setInterval(simulateLivePing, 2000);
+
+            filterData('all', document.querySelector('.chip.active'));
         } catch (e) {
-            document.getElementById('timeInfo').innerText = "SYSTEM OFFLINE";
-            document.getElementById('grid').innerHTML = 
-                `<div style="text-align:center; padding:40px; color:#ff0055; font-family:monospace">[ ERROR: UNABLE TO CONNECT TO MAINFRAME ]</div>`;
+            document.getElementById('grid').innerHTML = `<div style="text-align:center; padding:40px; color:#ff0055;">[ SYSTEM OFFLINE ]</div>`;
         }
     }
 
     function filterData(category, el) {
-        if(el) {
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-        }
+        if(el) { document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
         const list = category === 'all' ? serversData : serversData.filter(s => s.category === category);
         render(list);
+    }
+
+    function simulateLivePing() {
+        const pingElements = document.querySelectorAll('.ping-number');
+        pingElements.forEach(el => {
+            let base = parseInt(el.getAttribute('data-base'));
+            let fluctuation = Math.floor(Math.random() * 14) - 5;
+            let newPing = base + fluctuation;
+            if (newPing < 10) newPing = 10;
+            el.innerText = newPing;
+            const dot = el.nextElementSibling;
+            if(dot && dot.classList.contains('signal-dot')) {
+                if(newPing < 150) dot.style.background = '#00ff9d';
+                else if(newPing < 300) dot.style.background = '#ffcc00';
+                else dot.style.background = '#ff0055';
+            }
+        });
     }
 
     function render(list) {
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
-        if(list.length === 0) {
-            grid.innerHTML = `<div style="text-align:center; color:#555; margin-top:20px; font-family:monospace">// NO NODES FOUND</div>`;
-            return;
-        }
+        if(list.length === 0) { grid.innerHTML = `<div style="text-align:center; color:#555;">// NO NODES</div>`; return; }
+        
         list.forEach((s, i) => {
             const el = document.createElement('div');
             el.className = 'card';
@@ -431,16 +449,14 @@
             const iso = s.iso ? s.iso.toLowerCase() : 'xx';
             const flagUrl = `https://flagcdn.com/w80/${iso}.png`;
             
-            let pingColor = '#00ff9d';
-            if(s.ping > 150) pingColor = '#ffcc00';
-            if(s.ping > 300) pingColor = '#ff0055';
-
             let badgeClass = 'b-univ';
             if(s.category === 'Game Server') badgeClass = 'b-game';
             if(s.category === 'WARP') badgeClass = 'b-warp';
             if(s.category === 'WHITELIST') badgeClass = 'b-white';
 
-            const typeLabel = s.type || s.protocol || 'VLESS';
+            let pingColor = '#00ff9d';
+            if(s.ping > 150) pingColor = '#ffcc00';
+            if(s.ping > 300) pingColor = '#ff0055';
 
             el.innerHTML = `
                 <div class="card-left">
@@ -455,10 +471,10 @@
                 </div>
                 <div class="stats">
                     <div class="ping-val">
-                        ${s.ping} ms 
+                        <span class="ping-number" data-base="${s.ping}">${s.ping}</span> ms 
                         <div class="signal-dot" style="background:${pingColor}"></div>
                     </div>
-                    <span class="type-val">${typeLabel}</span>
+                    <span class="type-val">${s.type || s.protocol}</span>
                 </div>
             `;
             el.onclick = () => openModal(s, flagUrl);
@@ -477,12 +493,8 @@
         document.getElementById('mType').innerText = s.type;
         m.classList.add('open');
     }
-    function closeModal(e) {
-        if(e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
-    }
-    function openBot() {
-        window.location.href = "https://t.me/fl1pvpnbot";
-    }
+    function closeModal(e) { if(e.target.id === 'modal') document.getElementById('modal').classList.remove('open'); }
+    function openBot() { window.location.href = "https://t.me/fl1pvpnbot"; }
 
     init();
 </script>
