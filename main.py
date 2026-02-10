@@ -81,7 +81,8 @@ RUS_NAMES = {
     'KZ': 'Казахстан', 'BY': 'Беларусь', 'EE': 'Эстония', 'LV': 'Латвия', 
     'LT': 'Литва', 'JP': 'Япония', 'SG': 'Сингапур', 'BG': 'Болгария',
     'CZ': 'Чехия', 'RO': 'Румыния', 'IT': 'Италия', 'ES': 'Испания',
-    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ'
+    'AT': 'Австрия', 'NO': 'Норвегия', 'DK': 'Дания', 'AE': 'ОАЭ',
+    'XX': 'Неизвестно'
 }
 
 TIER_1_PLATINUM = ['FI', 'EE', 'SE']
@@ -457,7 +458,7 @@ def check_server_initial(server):
     
     is_fake = False
     
-    # Эвристика: Отсеиваем только явные аномалии, чтобы не выкинуть хорошую Европу
+    # Эвристика:
     if code in ['US', 'CA', 'BR', 'AR', 'AU'] and server['latency'] < 50:
         is_fake = True
     
@@ -486,36 +487,41 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
-    # --- ЛОГИКА ФИЛЬТРАЦИИ ---
+    # --- ЛОГИКА ФИЛЬТРАЦИИ V72 (STRICT FOREIGN) ---
     if mode == "gaming":
-        # Требование: VLESS + Reality + НЕ Россия.
-        # Убрана логика Shadowsocks.
-        # Убрана привязка к "элитным" странам. Теперь все равны перед пингом.
+        # Гейминг: VLESS Reality + Иностранные (не RU, не XX)
         filtered = [
             c for c in candidates 
             if c['is_reality'] 
             and c['info']['countryCode'] != 'RU'
+            and c['info']['countryCode'] != 'XX' # Исключаем неопределенные (часто это локальные RU)
         ]
-        logger.info(f"{title}: Фильтр Reality+NonRU. Игнорируем страны, ищем минимальный пинг.")
+        logger.info(f"{title}: Фильтр Reality+Foreign (No RU/XX). Ищем минимальный пинг.")
             
     elif mode == "universal":
-        filtered = [c for c in candidates if c['is_reality']]
+        # Универсал: VLESS Reality + Иностранные (не RU, не XX)
+        filtered = [
+            c for c in candidates 
+            if c['is_reality']
+            and c['info']['countryCode'] != 'RU' # Исправлено: теперь тут не будет RU
+            and c['info']['countryCode'] != 'XX'
+        ]
+        logger.info(f"{title}: Фильтр Reality+Foreign (No RU/XX).")
         
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == "warp":
-        filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
+        # WARP тоже только иностранный
+        filtered = [c for c in candidates if c['info']['countryCode'] not in ['RU', 'XX']]
 
     if not filtered: return []
     
-    # Берем ТОП-20 по предварительному пингу для реального теста
     semifinalists = sorted(filtered, key=lambda x: x['latency'])[:20]
     
     logger.info(f"🏟️ {title} (Проверка {len(semifinalists)} кандидатов...)")
     
     scored_results = []
     for f in semifinalists:
-        # Реальная проверка через Xray (Google)
         real_lat = check_real_connection(f)
         
         if real_lat is None:
@@ -528,17 +534,15 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         special_penalty = 0
 
         if mode == "gaming":
-            # В игровом режиме отключаем штрафы за страну.
-            # Если Польша быстрее Финляндии - выигрывает Польша.
             tier_penalty = 0 
         else:
-            # В остальных режимах сохраняем небольшой приоритет для проверенных стран
             if f['tier_rank'] == 1: tier_penalty = 0     
             elif f['tier_rank'] == 2: tier_penalty = 30  
             else: tier_penalty = 70                      
             
         if mode == "universal":
-            if f['info']['countryCode'] == 'RU': special_penalty += 2000
+            # Штрафов за страну нет, так как RU уже исключены фильтром
+            pass
         elif mode == "warp":
             if f['transport'] in ['ws', 'grpc']: 
                 special_penalty = 0
@@ -548,7 +552,6 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
             if f['is_reality']: special_penalty = 0
             else: special_penalty = 1000
             
-        # Формула: Пинг + (Джиттер * 3) + Штрафы
         score = avg + (jitter * 3) + tier_penalty + special_penalty
         
         f['latency'] = int(avg)
@@ -627,7 +630,7 @@ def fetch_github_raw_links(query, max_files=10):
     return list(set(raw_links))
 
 def main():
-    logger.info("--- ЗАПУСК V71 (GAME MODE: VLESS REALITY + LOWEST PING) ---")
+    logger.info("--- ЗАПУСК V72 (FIXED: NO RU/XX IN GAME/UNIVERSAL) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -677,6 +680,7 @@ def main():
             game_ips.append(g['ip']) 
         final_list.extend(game_winners)
     
+    # Исключаем игровые IP из универсальных
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
