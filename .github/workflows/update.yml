@@ -58,18 +58,24 @@ jobs:
 
     - name: Commit and push changes
       run: |
-        # Исправление ошибки доступа к папке .git
         git config --global --add safe.directory '*'
-        
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
+        # Добавляем файлы
         git add FL1PVPN stats.json || true
         
+        # Проверяем, есть ли изменения
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
           git commit -m "Auto-update VPN configs [skip ci]"
-          git pull --rebase origin main
+          
+          # ГЛАВНОЕ ИСПРАВЛЕНИЕ:
+          # Пытаемся скачать обновления с сервера.
+          # -Xtheirs означает: при конфликте бери НАШИ (локальные, свежие) изменения,
+          # игнорируя то, что пришло с сервера.
+          git pull --rebase -Xtheirs origin main
+          
           git push
         fi
