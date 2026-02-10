@@ -1,9 +1,5 @@
 import sys
-try:
-    sys.stdout.reconfigure(encoding='utf-8')
-except AttributeError:
-    pass
-
+import logging
 import requests
 import base64
 import socket
@@ -23,9 +19,21 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote, quote, parse_qs, urlparse
 
+# --- НАСТРОЙКА ЛОГИРОВАНИЯ ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass
+
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-     # Лучшие для РФ (Igareck)
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
@@ -53,8 +61,8 @@ TARGET_WHITELIST = 2
 # БАЛАНС СКОРОСТИ И КАЧЕСТВА
 TIMEOUT = 0.8           
 REAL_TEST_TIMEOUT = 8.0 
-OUTPUT_FILE = 'FL1PVPN' # Файл с конфигами (СЕКРЕТНЫЙ, для бота)
-JSON_FILE = 'stats.json' # Файл для сайта (ПУБЛИЧНЫЙ, без ключей)
+OUTPUT_FILE = 'FL1PVPN' # Файл с конфигами
+JSON_FILE = 'stats.json' # Файл для сайта
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
 
@@ -84,18 +92,24 @@ geo_reader = None
 
 def download_mmdb():
     if not os.path.exists(MMDB_FILE):
+        logger.info("Скачивание GeoLite2 базы...")
         try:
             r = requests.get(MMDB_URL, stream=True)
             if r.status_code == 200:
                 with open(MMDB_FILE, 'wb') as f:
                     for chunk in r.iter_content(1024):
                         f.write(chunk)
-        except: pass
+                logger.info("GeoLite2 база успешно скачана.")
+        except Exception as e:
+            logger.error(f"Ошибка скачивания MMDB: {e}")
 
 def init_geoip():
     global geo_reader
-    try: geo_reader = geoip2.database.Reader(MMDB_FILE)
-    except: pass
+    try: 
+        geo_reader = geoip2.database.Reader(MMDB_FILE)
+        logger.info("GeoIP инициализирован.")
+    except Exception as e: 
+        logger.error(f"Ошибка инициализации GeoIP: {e}")
 
 def get_ip_country_local(ip):
     if not geo_reader: return 'XX'
@@ -129,6 +143,8 @@ def parse_config_info(config_str, source_type):
         # --- SHADOWSOCKS ---
         if config_str.startswith("ss://"):
             try:
+                # Оставляем старый парсер SS, так как он специфичен (base64)
+                # Можно улучшить, но пока фокусируемся на VLESS
                 rest = config_str[5:]
                 if "#" in rest:
                     main_part, original_remark = rest.split("#", 1)
@@ -181,46 +197,77 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # --- VLESS ---
-        part = config_str.split("@")[1].split("?")[0]
-        if ":" in part:
-            host, port = part.split(":")
-            query = config_str.split("?")[1].split("#")[0]
+        # --- VLESS (НОВЫЙ ПАРСЕР v2 - через urlparse) ---
+        if config_str.startswith("vless://"):
+            parsed = urlparse(config_str)
+            
+            # Парсинг UUID и хоста/порта
+            if '@' not in parsed.netloc:
+                return None
+            
+            _uuid, host_port = parsed.netloc.split('@', 1)
+            
+            if ':' not in host_port:
+                return None
+                
+            # Обработка IPv6 в скобках [::1]:80
+            if ']' in host_port:
+                 host = host_port.rsplit(':', 1)[0]
+                 port = host_port.rsplit(':', 1)[1]
+            else:
+                 host, port = host_port.split(':', 1)
+
+            query = parsed.query
             params = parse_qs(query)
             
+            # Извлечение параметров (берем первый элемент списка)
             transport = params.get('type', ['tcp'])[0].lower()
             security = params.get('security', ['none'])[0].lower()
             flow_val = params.get('flow', [''])[0].lower()
             
             is_reality = (security == 'reality')
             
-            # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY (ИДЕЯ №3) ---
+            # --- УЛУЧШЕННЫЙ ФИЛЬТР REALITY ---
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 30: # Базовая проверка длины ключа Reality (обычно 43)
+                if len(pbk) < 30: 
                     return None
                 sni = params.get('sni', [''])[0]
-                if sni == host: # SNI не должен совпадать с IP
+                if sni == host: 
                     return None
-            # ---------------------------------------------
+            # ----------------------------------
             
             is_vision = ('vision' in flow_val)
             is_pure = (security == 'none' or security == 'tls') and not is_reality
             
-            _uuid = config_str.split("@")[0].replace("vless://", "")
             original_remark = "Unknown"
-            if "#" in config_str: original_remark = unquote(config_str.split("#")[-1]).strip()
+            if parsed.fragment:
+                original_remark = unquote(parsed.fragment).strip()
 
             return {
-                "ip": host, "port": int(port), "uuid": _uuid, "original": config_str, 
-                "original_remark": original_remark, "latency": 9999, "jitter": 0, 
-                "final_score": 9999, "info": {},
-                "transport": transport, "security": security,
-                "is_reality": is_reality, "is_vision": is_vision, "is_pure": is_pure, "is_hy2": False, "is_ss": False,
-                "source_type": source_type, "tier_rank": 99,
+                "ip": host, 
+                "port": int(port), 
+                "uuid": _uuid, 
+                "original": config_str, 
+                "original_remark": original_remark, 
+                "latency": 9999, 
+                "jitter": 0, 
+                "final_score": 9999, 
+                "info": {},
+                "transport": transport, 
+                "security": security,
+                "is_reality": is_reality, 
+                "is_vision": is_vision, 
+                "is_pure": is_pure, 
+                "is_hy2": False, 
+                "is_ss": False,
+                "source_type": source_type, 
+                "tier_rank": 99,
                 "parsed_params": params
             }
-    except: pass
+    except Exception as e: 
+        # logger.debug(f"Ошибка парсинга конфига: {e}") # Можно раскомментировать для отладки
+        pass
     return None
 
 def tcp_ping(host, port):
@@ -254,7 +301,7 @@ def generate_xray_config(server, local_port):
                 }
             }
             config = {
-                "log": {"loglevel": "error"},
+                "log": {"loglevel": "none"},
                 "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "socks", "settings": {"udp": True}}],
                 "outbounds": [outbound_config]
             }
@@ -280,40 +327,45 @@ def generate_xray_config(server, local_port):
             "security": server['security']
         }
 
+        # Обработка параметров из списка (urllib.parse возвращает списки)
+        def get_p(key, default=''):
+            val = params.get(key, [default])
+            return val[0] if isinstance(val, list) else val
+
         if server['transport'] == 'ws':
-            ws_settings = {"path": params.get('path', ['/'])[0]}
-            host_val = params.get('host', [''])[0]
+            ws_settings = {"path": get_p('path', '/')}
+            host_val = get_p('host', '')
             if host_val:
                 ws_settings["headers"] = {"Host": host_val}
             stream_settings["wsSettings"] = ws_settings
             
         elif server['transport'] == 'grpc':
-            service_name = params.get('serviceName', [''])[0]
+            service_name = get_p('serviceName', '')
             if service_name:
                 stream_settings["grpcSettings"] = {"serviceName": service_name}
 
         if server['security'] == 'tls':
             tls_settings = {
-                "serverName": params.get('sni', [''])[0],
+                "serverName": get_p('sni', ''),
                 "allowInsecure": False
             }
-            fp = params.get('fp', ['chrome'])[0]
+            fp = get_p('fp', 'chrome')
             tls_settings["fingerprint"] = fp
             stream_settings["tlsSettings"] = tls_settings
             
         elif server['security'] == 'reality':
             reality_settings = {
                 "show": False,
-                "fingerprint": params.get('fp', ['chrome'])[0],
-                "serverName": params.get('sni', [''])[0],
-                "publicKey": params.get('pbk', [''])[0],
-                "shortId": params.get('sid', [''])[0],
-                "spiderX": params.get('spx', ['/'])[0]
+                "fingerprint": get_p('fp', 'chrome'),
+                "serverName": get_p('sni', ''),
+                "publicKey": get_p('pbk', ''),
+                "shortId": get_p('sid', ''),
+                "spiderX": get_p('spx', '/')
             }
             stream_settings["realitySettings"] = reality_settings
 
         config = {
-            "log": {"loglevel": "error"},
+            "log": {"loglevel": "none"},
             "inbounds": [{
                 "port": local_port,
                 "listen": "127.0.0.1",
@@ -329,6 +381,7 @@ def generate_xray_config(server, local_port):
         }
         return config
     except Exception as e:
+        logger.error(f"Ошибка генерации конфига Xray: {e}")
         return None
 
 def check_real_connection(server):
@@ -354,16 +407,19 @@ def check_real_connection(server):
         time.sleep(1.5) 
         
         if xray_process.poll() is not None:
-            raise Exception("Xray process died")
+            # Процесс умер
+            return None
 
         proxies = {
             'http': f'socks5://127.0.0.1:{local_port}',
             'https': f'socks5://127.0.0.1:{local_port}'
         }
-        target_url = "http://cp.cloudflare.com/"
+        # ИСПОЛЬЗУЕМ HTTPS ДЛЯ ПРОВЕРКИ
+        target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
-        resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT)
+        # verify=False иногда нужен если у клиента проблемы с CA, но лучше True
+        resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=True)
         end_time = time.perf_counter()
         
         if 200 <= resp.status_code < 300:
@@ -371,7 +427,7 @@ def check_real_connection(server):
         else:
             result_latency = None
 
-    except Exception as e:
+    except Exception:
         result_latency = None
     finally:
         if xray_process:
@@ -410,14 +466,24 @@ def check_server_initial(server):
     server['info'] = {'countryCode': code}
     
     is_fake = False
-    if code in ['RU', 'KZ', 'UA', 'BY'] and server['latency'] < 90: is_fake = True
-    elif code in ['FI', 'EE', 'SE'] and server['latency'] < 90: is_fake = True 
-    elif code in ['DE', 'NL'] and server['latency'] < 25: is_fake = True
-    elif server['latency'] < 3 and code not in ['US', 'CA']: is_fake = True
+    
+    # --- ИСПРАВЛЕННАЯ ЭВРИСТИКА FAKE-LATENCY ---
+    # Блокируем только явные аномалии.
+    # 1. Слишком маленький пинг для удаленных регионов
+    if code in ['US', 'CA', 'BR', 'AR', 'AU'] and server['latency'] < 50:
+        is_fake = True
+    
+    # 2. Абсолютно нереалистичный пинг (локальный кэш или глюк)
+    if server['latency'] < 2:
+        is_fake = True
+        
+    # Примечание: Мы разрешаем FI/EE/SE с низким пингом (20-30мс вполне реально для севера РФ)
     
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
-    if is_fake and server['category'] != 'WHITELIST': return None
+    if is_fake and server['category'] != 'WHITELIST': 
+        # logger.debug(f"Отброшен Fake-Ping: {server['ip']} ({code}) = {server['latency']}ms")
+        return None
 
     server['tier_rank'] = calculate_tier_rank(code)
     return server
@@ -441,9 +507,9 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         tier1_candidates = [c for c in filtered if c['tier_rank'] == 1]
         if tier1_candidates:
             filtered = tier1_candidates
-            print(f"   ℹ️ {title}: Found {len(filtered)} Tier-1 candidates (FI/EE/SE).")
+            logger.info(f"{title}: Найдено {len(filtered)} кандидатов Tier-1 (FI/EE/SE).")
         else:
-            print(f"   ℹ️ {title}: No Tier-1 found. Checking neighbors.")
+            logger.info(f"{title}: Tier-1 не найдены, проверяем остальных.")
             
     elif mode == "universal":
         filtered = [c for c in candidates if c['is_reality']]
@@ -457,14 +523,14 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     
     semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:20]
     
-    print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
+    logger.info(f"🏟️ {title} (Проверка {len(semifinalists)} кандидатов...)")
     
     scored_results = []
     for f in semifinalists:
         real_lat = check_real_connection(f)
         
         if real_lat is None:
-            print(f"   ❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
+            # logger.debug(f"❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
             continue
 
         avg, jitter = stress_test_server(f)
@@ -504,13 +570,13 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         elif f['is_reality']: proto_info = "Reality"
         elif f['transport'] == 'ws': proto_info = "WS"
         
-        print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<8} | Ping: {int(avg)}ms | Score: {int(score)}")
+        logger.info(f"✅ {f['info']['countryCode']:<4} | {proto_info:<8} | Ping: {int(avg)}ms | Score: {int(score)}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
     
     if not scored_results:
-        print("   ⚠️ WARNING: No servers passed Real Test.")
+        logger.warning("⚠️ Не найдено рабочих серверов в Real Test.")
         return []
 
     return scored_results[:winners_needed]
@@ -529,13 +595,8 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-# --- НОВАЯ ФУНКЦИЯ ПОИСКА НА GITHUB (ИДЕЯ №1) ---
 def fetch_github_raw_links(query, max_files=10):
-    """
-    Ищет файлы на GitHub по запросу и возвращает прямые (raw) ссылки на них.
-    Требует GITHUB_TOKEN в переменных окружения для снятия лимитов.
-    """
-    print(f"🔎 GitHub Search: ищем '{query}'...")
+    logger.info(f"🔎 GitHub Search: ищем '{query}'...")
     token = os.environ.get("GITHUB_TOKEN") 
     headers = {
         "Accept": "application/vnd.github.v3+json"
@@ -543,9 +604,8 @@ def fetch_github_raw_links(query, max_files=10):
     if token:
         headers["Authorization"] = f"token {token}"
     else:
-        print("   ⚠️ Warning: GITHUB_TOKEN не найден. Возможны лимиты API.")
+        logger.warning("⚠️ GITHUB_TOKEN не найден. Возможны лимиты API.")
 
-    # Сортируем по индексации, чтобы получать свежее
     api_url = "https://api.github.com/search/code"
     params = {
         "q": query,
@@ -560,10 +620,9 @@ def fetch_github_raw_links(query, max_files=10):
         if response.status_code == 200:
             data = response.json()
             items = data.get("items", [])
-            print(f"   ✅ Найдено файлов через GitHub API: {len(items)}")
+            logger.info(f"✅ Найдено файлов через GitHub API: {len(items)}")
             
             for item in items:
-                # Превращаем ссылку на просмотр (blob) в сырую (raw)
                 raw_url = item.get("html_url", "") \
                     .replace("github.com", "raw.githubusercontent.com") \
                     .replace("/blob/", "/")
@@ -571,44 +630,39 @@ def fetch_github_raw_links(query, max_files=10):
                 if raw_url:
                     raw_links.append(raw_url)
         else:
-            print(f"   ❌ Ошибка API GitHub: {response.status_code} - {response.text}")
+            logger.error(f"❌ Ошибка API GitHub: {response.status_code} - {response.text}")
     except Exception as e:
-        print(f"   ❌ Ошибка при поиске на GitHub: {e}")
+        logger.error(f"❌ Ошибка при поиске на GitHub: {e}")
 
     return list(set(raw_links))
-# ------------------------------------------------
 
 def main():
-    print("--- ЗАПУСК V69 (REALITY + GITHUB SEARCH) ---")
+    logger.info("--- ЗАПУСК V70 (IMPROVED PARSER & LOGGING) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
     else:
-        print(f"❌ Error: Xray binary not found at {XRAY_BIN}")
+        logger.error(f"❌ Error: Xray binary not found at {XRAY_BIN}")
 
     download_mmdb()
     init_geoip()
     
     # --- ЭТАП 1: СБОР ССЫЛОК ---
-    
-    # Ищем динамические ссылки через GitHub API (Идея №1)
-    # Ищем свежие файлы .txt, содержащие "vless://", размером от 1кб до 50кб
     github_query = '"vless://" extension:txt size:1000..50000'
     dynamic_urls = fetch_github_raw_links(github_query, max_files=15)
     
-    # Объединяем статические и найденные ссылки
     combined_general_urls = GENERAL_URLS + dynamic_urls
 
     all_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
-        print(f"🌐 Скачивание источников ({len(combined_general_urls)} combined + {len(WHITELIST_URLS)} whitelist)...")
+        logger.info(f"🌐 Скачивание источников ({len(combined_general_urls)} combined + {len(WHITELIST_URLS)} whitelist)...")
         f1 = executor.submit(process_urls, combined_general_urls, 'general')
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         all_servers = f1.result() + f2.result()
     
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
-    print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan)...")
+    logger.info(f"🔍 Проверка {len(servers_to_check)} серверов (TCP scan)...")
     
     working_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
@@ -648,10 +702,8 @@ def main():
     update_msg = f"📅 Обновлено: {time_str} (МСК) | След. обновление: {next_str}"
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
     
-    # 1. Список для файла подписки (ПОЛНЫЙ ДОСТУП)
     result_links = [info_link]
     
-    # 2. Список для сайта (БЕЗОПАСНЫЙ, БЕЗ КОНФИГОВ)
     json_data = {
         "updated_at": time_str,
         "next_update": next_str,
@@ -693,7 +745,6 @@ def main():
         final_link = f"{base}#{quote(name)}"
         result_links.append(final_link)
         
-        # --- БЕЗОПАСНОСТЬ: В JSON не пишем ссылку и UUID ---
         json_data["servers"].append({
             "name": name,
             "category": s['category'],
@@ -701,24 +752,20 @@ def main():
             "iso": code,
             "flag": flag,
             "ping": calc_ping,
-            "ip": s['ip'],       # IP оставляем для информации в карточке
+            "ip": s['ip'],       
             "port": s['port'],
             "protocol": s['transport'].upper(),
             "type": type_label
-            # "link": final_link,  <-- УДАЛЕНО
-            # "uuid": s['uuid']    <-- УДАЛЕНО
         })
 
-    # Сохраняем полный файл подписки
     with open(OUTPUT_FILE, 'w') as f:
         f.write(base64.b64encode("\n".join(result_links).encode('utf-8')).decode('utf-8'))
         
-    # Сохраняем безопасный JSON для сайта
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-    print(f"DONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
-    print(f"SECURE stats saved to {JSON_FILE} (No configs inside).")
+    logger.info(f"DONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
+    logger.info(f"SECURE stats saved to {JSON_FILE} (No configs inside).")
 
 if __name__ == "__main__":
     main()
