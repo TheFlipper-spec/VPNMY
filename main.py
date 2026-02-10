@@ -143,8 +143,6 @@ def parse_config_info(config_str, source_type):
         # --- SHADOWSOCKS ---
         if config_str.startswith("ss://"):
             try:
-                # Оставляем старый парсер SS, так как он специфичен (base64)
-                # Можно улучшить, но пока фокусируемся на VLESS
                 rest = config_str[5:]
                 if "#" in rest:
                     main_part, original_remark = rest.split("#", 1)
@@ -197,11 +195,10 @@ def parse_config_info(config_str, source_type):
                 }
             except: return None
 
-        # --- VLESS (НОВЫЙ ПАРСЕР v2 - через urlparse) ---
+        # --- VLESS (НОВЫЙ ПАРСЕР v2) ---
         if config_str.startswith("vless://"):
             parsed = urlparse(config_str)
             
-            # Парсинг UUID и хоста/порта
             if '@' not in parsed.netloc:
                 return None
             
@@ -210,7 +207,6 @@ def parse_config_info(config_str, source_type):
             if ':' not in host_port:
                 return None
                 
-            # Обработка IPv6 в скобках [::1]:80
             if ']' in host_port:
                  host = host_port.rsplit(':', 1)[0]
                  port = host_port.rsplit(':', 1)[1]
@@ -220,7 +216,6 @@ def parse_config_info(config_str, source_type):
             query = parsed.query
             params = parse_qs(query)
             
-            # Извлечение параметров (берем первый элемент списка)
             transport = params.get('type', ['tcp'])[0].lower()
             security = params.get('security', ['none'])[0].lower()
             flow_val = params.get('flow', [''])[0].lower()
@@ -266,7 +261,6 @@ def parse_config_info(config_str, source_type):
                 "parsed_params": params
             }
     except Exception as e: 
-        # logger.debug(f"Ошибка парсинга конфига: {e}") # Можно раскомментировать для отладки
         pass
     return None
 
@@ -327,7 +321,6 @@ def generate_xray_config(server, local_port):
             "security": server['security']
         }
 
-        # Обработка параметров из списка (urllib.parse возвращает списки)
         def get_p(key, default=''):
             val = params.get(key, [default])
             return val[0] if isinstance(val, list) else val
@@ -407,18 +400,15 @@ def check_real_connection(server):
         time.sleep(1.5) 
         
         if xray_process.poll() is not None:
-            # Процесс умер
             return None
 
         proxies = {
             'http': f'socks5://127.0.0.1:{local_port}',
             'https': f'socks5://127.0.0.1:{local_port}'
         }
-        # ИСПОЛЬЗУЕМ HTTPS ДЛЯ ПРОВЕРКИ
         target_url = "https://www.google.com/generate_204"
         
         start_time = time.perf_counter()
-        # verify=False иногда нужен если у клиента проблемы с CA, но лучше True
         resp = requests.get(target_url, proxies=proxies, timeout=REAL_TEST_TIMEOUT, verify=True)
         end_time = time.perf_counter()
         
@@ -467,22 +457,16 @@ def check_server_initial(server):
     
     is_fake = False
     
-    # --- ИСПРАВЛЕННАЯ ЭВРИСТИКА FAKE-LATENCY ---
-    # Блокируем только явные аномалии.
-    # 1. Слишком маленький пинг для удаленных регионов
+    # Эвристика: Отсеиваем только явные аномалии, чтобы не выкинуть хорошую Европу
     if code in ['US', 'CA', 'BR', 'AR', 'AU'] and server['latency'] < 50:
         is_fake = True
     
-    # 2. Абсолютно нереалистичный пинг (локальный кэш или глюк)
     if server['latency'] < 2:
         is_fake = True
         
-    # Примечание: Мы разрешаем FI/EE/SE с низким пингом (20-30мс вполне реально для севера РФ)
-    
     if server['category'] == 'WHITELIST' and code == 'RU': is_fake = False
 
     if is_fake and server['category'] != 'WHITELIST': 
-        # logger.debug(f"Отброшен Fake-Ping: {server['ip']} ({code}) = {server['latency']}ms")
         return None
 
     server['tier_rank'] = calculate_tier_rank(code)
@@ -502,14 +486,17 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
+    # --- ЛОГИКА ФИЛЬТРАЦИИ ---
     if mode == "gaming":
-        filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
-        tier1_candidates = [c for c in filtered if c['tier_rank'] == 1]
-        if tier1_candidates:
-            filtered = tier1_candidates
-            logger.info(f"{title}: Найдено {len(filtered)} кандидатов Tier-1 (FI/EE/SE).")
-        else:
-            logger.info(f"{title}: Tier-1 не найдены, проверяем остальных.")
+        # Требование: VLESS + Reality + НЕ Россия.
+        # Убрана логика Shadowsocks.
+        # Убрана привязка к "элитным" странам. Теперь все равны перед пингом.
+        filtered = [
+            c for c in candidates 
+            if c['is_reality'] 
+            and c['info']['countryCode'] != 'RU'
+        ]
+        logger.info(f"{title}: Фильтр Reality+NonRU. Игнорируем страны, ищем минимальный пинг.")
             
     elif mode == "universal":
         filtered = [c for c in candidates if c['is_reality']]
@@ -521,45 +508,48 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
 
     if not filtered: return []
     
-    semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:20]
+    # Берем ТОП-20 по предварительному пингу для реального теста
+    semifinalists = sorted(filtered, key=lambda x: x['latency'])[:20]
     
     logger.info(f"🏟️ {title} (Проверка {len(semifinalists)} кандидатов...)")
     
     scored_results = []
     for f in semifinalists:
+        # Реальная проверка через Xray (Google)
         real_lat = check_real_connection(f)
         
         if real_lat is None:
-            # logger.debug(f"❌ {f['info']['countryCode']} {f['ip']} -> DEAD via Xray")
             continue
 
         avg, jitter = stress_test_server(f)
         
+        # --- ЛОГИКА ПОДСЧЕТА ОЧКОВ ---
         tier_penalty = 0
-        if f['tier_rank'] == 1: tier_penalty = 0     
-        elif f['tier_rank'] == 2: tier_penalty = 30  
-        else: tier_penalty = 70                      
-            
         special_penalty = 0
-        
+
         if mode == "gaming":
-            if f.get('is_ss', False): 
-                special_penalty = -20 
+            # В игровом режиме отключаем штрафы за страну.
+            # Если Польша быстрее Финляндии - выигрывает Польша.
+            tier_penalty = 0 
+        else:
+            # В остальных режимах сохраняем небольшой приоритет для проверенных стран
+            if f['tier_rank'] == 1: tier_penalty = 0     
+            elif f['tier_rank'] == 2: tier_penalty = 30  
+            else: tier_penalty = 70                      
             
-        elif mode == "universal":
+        if mode == "universal":
             if f['info']['countryCode'] == 'RU': special_penalty += 2000
         elif mode == "warp":
             if f['transport'] in ['ws', 'grpc']: 
                 special_penalty = 0
-                if f['info']['countryCode'] == 'FI': special_penalty -= 150
-                elif f['info']['countryCode'] in ['EE', 'SE']: special_penalty -= 130
             else: 
                 special_penalty = 2000
         elif mode == "whitelist":
             if f['is_reality']: special_penalty = 0
             else: special_penalty = 1000
             
-        score = avg + (jitter * 5) + tier_penalty + special_penalty
+        # Формула: Пинг + (Джиттер * 3) + Штрафы
+        score = avg + (jitter * 3) + tier_penalty + special_penalty
         
         f['latency'] = int(avg)
         f['jitter'] = int(jitter)
@@ -576,7 +566,7 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     scored_results.sort(key=lambda x: x['final_score'])
     
     if not scored_results:
-        logger.warning("⚠️ Не найдено рабочих серверов в Real Test.")
+        logger.warning(f"⚠️ {title}: Не найдено рабочих серверов.")
         return []
 
     return scored_results[:winners_needed]
@@ -637,7 +627,7 @@ def fetch_github_raw_links(query, max_files=10):
     return list(set(raw_links))
 
 def main():
-    logger.info("--- ЗАПУСК V70 (IMPROVED PARSER & LOGGING) ---")
+    logger.info("--- ЗАПУСК V71 (GAME MODE: VLESS REALITY + LOWEST PING) ---")
     
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -677,6 +667,7 @@ def main():
 
     final_list = []
     
+    # Запуск турнира для игрового сервера
     game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
     game_ips = []
     
@@ -733,7 +724,7 @@ def main():
 
         name = ""
         if s['category'] == 'Game Server': 
-            name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
+            name = f"🎮 Game Reality | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'WHITELIST': 
             name = f"⚪ {flag} RU (WhiteList) | {calc_ping}ms"
         elif s['category'] == 'WARP': 
