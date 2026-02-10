@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #050505;
+            --bg-body: #020205; /* Чуть темнее для контраста с фоном */
             --bg-card: rgba(20, 20, 25, 0.6);
             --bg-card-hover: rgba(30, 30, 40, 0.8);
             --border-color: rgba(255, 255, 255, 0.1);
@@ -41,10 +41,13 @@
             position: relative;
         }
 
+        /* --- ВЕРНУЛ ФОН --- */
         #bg-canvas {
             position: fixed; top: 0; left: 0; 
             width: 100%; height: 100%; 
             z-index: 0; pointer-events: none;
+            /* Добавил легкий блюр для глубины */
+            filter: blur(1px);
         }
 
         .scanline {
@@ -68,11 +71,17 @@
             padding-bottom: 20px;
         }
         .brand { display: flex; flex-direction: column; gap: 4px; }
+        
         .logo {
             font-size: 28px; font-weight: 800; letter-spacing: -1px;
             color: #fff; text-transform: uppercase;
             display: flex; align-items: center; gap: 12px;
             font-family: var(--font-code);
+        }
+        
+        /* --- ВЕРНУЛ ЭФФЕКТ ТЕКСТА --- */
+        .hacker-text {
+            position: relative;
         }
         
         .status-dot {
@@ -247,9 +256,9 @@
         <div class="brand">
             <div class="logo">
                 <div class="status-dot"></div>
-                <span>FL1PVPN</span>
+                <span class="hacker-text" data-value="FL1PVPN">FL1PVPN</span>
             </div>
-            <div class="subtitle" id="timeInfo">LOADING DATA...</div>
+            <div class="subtitle" id="timeInfo">INITIALIZING SYSTEM...</div>
         </div>
     </header>
 
@@ -271,61 +280,116 @@
             <h2 class="m-title" id="mCountry">Country</h2>
             <div class="m-sub" id="mName">SERVER NODE</div>
         </div>
-        
         <div class="data-list">
-            <div class="data-row">
-                <span class="d-label">IP Address</span>
-                <span class="d-value" id="mIP">---</span>
-            </div>
-            <div class="data-row">
-                <span class="d-label">Ping</span>
-                <span class="d-value" id="mPing">---</span>
-            </div>
-            <div class="data-row">
-                <span class="d-label">Protocol</span>
-                <span class="d-value" id="mProto">---</span>
-            </div>
-            <div class="data-row">
-                <span class="d-label">Type</span>
-                <span class="d-value" id="mType">---</span>
-            </div>
+            <div class="data-row"><span class="d-label">IP Address</span><span class="d-value" id="mIP">---</span></div>
+            <div class="data-row"><span class="d-label">Ping</span><span class="d-value" id="mPing">---</span></div>
+            <div class="data-row"><span class="d-label">Protocol</span><span class="d-value" id="mProto">---</span></div>
+            <div class="data-row"><span class="d-label">Type</span><span class="d-value" id="mType">---</span></div>
         </div>
-
         <button class="btn" onclick="openBot()">GET CONFIG KEY</button>
     </div>
 </div>
 
 <script>
-    const JSON_URL = "stats.json";
-    let serversData = [];
+    // --- 1. HACKER TEXT EFFECT ---
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    function runHackerEffect() {
+        const element = document.querySelector('.hacker-text');
+        const targetText = element.dataset.value;
+        let iterations = 0;
 
-    // Canvas Background
+        const interval = setInterval(() => {
+            element.innerText = targetText.split("")
+                .map((letter, index) => {
+                    if(index < iterations) return targetText[index];
+                    return letters[Math.floor(Math.random() * letters.length)];
+                }).join("");
+
+            if(iterations >= targetText.length) {
+                clearInterval(interval);
+                element.innerText = targetText; // Убеждаемся, что в конце чистый текст
+            }
+            iterations += 1 / 2; // Скорость расшифровки
+        }, 35);
+    }
+    // Запускаем эффект сразу при загрузке
+    runHackerEffect();
+
+
+    // --- 2. DYNAMIC BACKGROUND (Starfield) ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
     
-    function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
+    // Настройки звезд
+    let stars = [];
+    const numStars = 150; // Количество частиц
+    const speed = 2;      // Скорость полета
+    const focalLength = 400; // "Глубина" сцены
 
-    function animate() {
-        ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
-        for(let i=0; i<30; i++) {
-            ctx.fillRect(Math.random()*width, Math.random()*height, 2, 2);
-        }
-        requestAnimationFrame(animate);
+    function resize() { 
+        width = canvas.width = window.innerWidth; 
+        height = canvas.height = window.innerHeight;
+        initStars(); // Пересоздаем звезды при ресайзе
     }
-    animate();
+    window.addEventListener('resize', resize);
 
-    // Main App Logic
+    function initStars() {
+        stars = [];
+        for(let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * width - width / 2,
+                y: Math.random() * height - height / 2,
+                z: Math.random() * focalLength,
+                color: Math.random() > 0.8 ? '#6366f1' : '#00f3ff' // Основные цвета темы
+            });
+        }
+    }
+
+    function animateBg() {
+        // Заливаем фон полупрозрачным черным для эффекта "следов"
+        ctx.fillStyle = "rgba(2, 2, 5, 0.2)";
+        ctx.fillRect(0, 0, width, height);
+
+        stars.forEach(s => {
+            // Двигаем звезду к зрителю
+            s.z -= speed;
+            // Если пролетела мимо экрана, спавним заново далеко
+            if (s.z <= 0) {
+                s.x = Math.random() * width - width / 2;
+                s.y = Math.random() * height - height / 2;
+                s.z = focalLength;
+            }
+
+            // Проекция 3D координат на 2D экран
+            const scale = focalLength / s.z;
+            const x2d = s.x * scale + width / 2;
+            const y2d = s.y * scale + height / 2;
+            const size = scale * 1.5; // Чем ближе, тем больше
+
+            // Рисуем звезду
+            ctx.fillStyle = s.color;
+            ctx.beginPath();
+            // Используем квадраты для лучшей производительности
+            ctx.fillRect(x2d, y2d, size, size); 
+        });
+        requestAnimationFrame(animateBg);
+    }
+    
+    resize(); // Первая инициализация
+    animateBg(); // Запуск анимации
+
+
+    // --- MAIN APP LOGIC (Data Loading) ---
+    const JSON_URL = "stats.json";
+    let serversData = [];
+
     async function init() {
         try {
             const res = await fetch(JSON_URL + "?t=" + Date.now());
             if(!res.ok) throw new Error("Failed to load");
             const data = await res.json();
             
-            // Set Header Info
             document.getElementById('timeInfo').innerHTML = 
                 `UPDATED: ${data.updated_at} <br> NEXT: ${data.next_update}`;
             
@@ -333,8 +397,9 @@
             filterData('all', document.querySelector('.chip.active'));
             
         } catch (e) {
+            document.getElementById('timeInfo').innerText = "SYSTEM OFFLINE";
             document.getElementById('grid').innerHTML = 
-                `<div style="text-align:center; padding:40px; color:#ff0055; font-family:monospace">[ OFFLINE / NO DATA ]</div>`;
+                `<div style="text-align:center; padding:40px; color:#ff0055; font-family:monospace">[ ERROR: UNABLE TO CONNECT TO MAINFRAME ]</div>`;
         }
     }
 
@@ -343,44 +408,34 @@
             document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
         }
-
-        const list = category === 'all' 
-            ? serversData 
-            : serversData.filter(s => s.category === category);
-        
+        const list = category === 'all' ? serversData : serversData.filter(s => s.category === category);
         render(list);
     }
 
     function render(list) {
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
-        
         if(list.length === 0) {
-            grid.innerHTML = `<div style="text-align:center; color:#555; margin-top:20px; font-family:monospace">// NO SERVERS FOUND</div>`;
+            grid.innerHTML = `<div style="text-align:center; color:#555; margin-top:20px; font-family:monospace">// NO NODES FOUND</div>`;
             return;
         }
-
         list.forEach((s, i) => {
             const el = document.createElement('div');
             el.className = 'card';
             el.style.animationDelay = (i * 0.05) + 's';
             
-            // Flag Logic
             const iso = s.iso ? s.iso.toLowerCase() : 'xx';
             const flagUrl = `https://flagcdn.com/w80/${iso}.png`;
             
-            // Color Logic
             let pingColor = '#00ff9d';
             if(s.ping > 150) pingColor = '#ffcc00';
             if(s.ping > 300) pingColor = '#ff0055';
 
-            // Badge Logic
             let badgeClass = 'b-univ';
             if(s.category === 'Game Server') badgeClass = 'b-game';
             if(s.category === 'WARP') badgeClass = 'b-warp';
             if(s.category === 'WHITELIST') badgeClass = 'b-white';
 
-            // Type Logic (Replacement for Speed)
             const typeLabel = s.type || s.protocol || 'VLESS';
 
             el.innerHTML = `
@@ -402,7 +457,6 @@
                     <span class="type-val">${typeLabel}</span>
                 </div>
             `;
-            
             el.onclick = () => openModal(s, flagUrl);
             grid.appendChild(el);
         });
@@ -413,25 +467,20 @@
         document.getElementById('mFlag').src = flagUrl;
         document.getElementById('mCountry').innerText = s.country;
         document.getElementById('mName').innerText = s.name;
-        
         document.getElementById('mIP').innerText = s.ip;
         document.getElementById('mPing').innerText = s.ping + " ms";
         document.getElementById('mProto').innerText = s.protocol;
-        document.getElementById('mType').innerText = s.type; // Showing Type/Reality instead of fake speed
-        
+        document.getElementById('mType').innerText = s.type;
         m.classList.add('open');
     }
-
     function closeModal(e) {
         if(e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
     }
-
     function openBot() {
         window.location.href = "https://t.me/fl1pvpnbot";
     }
 
     init();
 </script>
-
 </body>
 </html>
