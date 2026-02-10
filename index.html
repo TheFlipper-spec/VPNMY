@@ -7,23 +7,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #020205; /* Чуть темнее для контраста с фоном */
+            --bg-body: #020205;
             --bg-card: rgba(20, 20, 25, 0.6);
-            --bg-card-hover: rgba(30, 30, 40, 0.8);
             --border-color: rgba(255, 255, 255, 0.1);
-            
             --primary: #6366f1;
             --accent: #00f3ff;
-            
             --text-main: #ffffff;
             --text-muted: #888888;
-            
             --success: #00ff9d;
             --warning: #ffcc00;
             --danger: #ff0055;
-            
             --radius-lg: 16px;
-            
             --font-ui: 'Inter', sans-serif;
             --font-code: 'JetBrains Mono', monospace;
         }
@@ -41,15 +35,14 @@
             position: relative;
         }
 
-        /* --- ВЕРНУЛ ФОН --- */
+        /* --- DIGITAL BACKGROUND --- */
         #bg-canvas {
             position: fixed; top: 0; left: 0; 
             width: 100%; height: 100%; 
             z-index: 0; pointer-events: none;
-            /* Добавил легкий блюр для глубины */
-            filter: blur(1px);
         }
 
+        /* Эффект сканирования монитора */
         .scanline {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 51%);
@@ -63,7 +56,6 @@
             z-index: 20; position: relative;
         }
 
-        /* Header */
         header {
             display: flex; justify-content: space-between; align-items: center;
             margin: 20px 0 32px;
@@ -77,12 +69,10 @@
             color: #fff; text-transform: uppercase;
             display: flex; align-items: center; gap: 12px;
             font-family: var(--font-code);
+            cursor: default; /* Чтобы было понятно, что можно навести */
         }
         
-        /* --- ВЕРНУЛ ЭФФЕКТ ТЕКСТА --- */
-        .hacker-text {
-            position: relative;
-        }
+        .hacker-text { position: relative; display: inline-block; }
         
         .status-dot {
             width: 8px; height: 8px; background: var(--success);
@@ -97,7 +87,6 @@
             line-height: 1.4;
         }
 
-        /* Filters */
         .filters {
             display: flex; gap: 8px; overflow-x: auto;
             padding: 4px; margin: 0 -4px 24px;
@@ -121,7 +110,6 @@
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
         }
 
-        /* Grid */
         .grid { display: flex; flex-direction: column; gap: 12px; }
 
         .card {
@@ -165,7 +153,7 @@
             padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
             font-family: var(--font-code); border: 1px solid transparent;
         }
-        /* Badge Colors */
+        
         .b-game { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); }
         .b-warp { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); background: rgba(96, 165, 250, 0.1); }
         .b-white { color: #f87171; border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1); }
@@ -183,11 +171,8 @@
         }
         .type-val { font-size: 10px; color: var(--text-muted); font-family: var(--font-code); text-transform: uppercase; }
 
-        .signal-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-        }
+        .signal-dot { width: 6px; height: 6px; border-radius: 50%; }
 
-        /* Modal */
         .modal-overlay {
             position: fixed; inset: 0; z-index: 100;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(12px);
@@ -212,9 +197,7 @@
             display: block; margin: 0 auto 12px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        .m-title { 
-            font-size: 18px; font-weight: 700; margin: 0; color: #fff;
-        }
+        .m-title { font-size: 18px; font-weight: 700; margin: 0; color: #fff; }
         .m-sub { color: var(--accent); font-size: 12px; margin-top: 4px; font-family: var(--font-code); }
 
         .data-list { 
@@ -254,7 +237,7 @@
 <div class="container">
     <header>
         <div class="brand">
-            <div class="logo">
+            <div class="logo" onmouseover="runHackerEffect()">
                 <div class="status-dot"></div>
                 <span class="hacker-text" data-value="FL1PVPN">FL1PVPN</span>
             </div>
@@ -291,14 +274,18 @@
 </div>
 
 <script>
-    // --- 1. HACKER TEXT EFFECT ---
+    // --- 1. HACKER TEXT EFFECT (HOVER & LOAD) ---
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let interval = null;
+
     function runHackerEffect() {
         const element = document.querySelector('.hacker-text');
         const targetText = element.dataset.value;
         let iterations = 0;
 
-        const interval = setInterval(() => {
+        clearInterval(interval); // Сброс, чтобы не накладывалось при быстром наведении
+
+        interval = setInterval(() => {
             element.innerText = targetText.split("")
                 .map((letter, index) => {
                     if(index < iterations) return targetText[index];
@@ -307,80 +294,97 @@
 
             if(iterations >= targetText.length) {
                 clearInterval(interval);
-                element.innerText = targetText; // Убеждаемся, что в конце чистый текст
+                element.innerText = targetText; 
             }
             iterations += 1 / 2; // Скорость расшифровки
         }, 35);
     }
-    // Запускаем эффект сразу при загрузке
+    
+    // Auto-run on load
     runHackerEffect();
 
-
-    // --- 2. DYNAMIC BACKGROUND (Starfield) ---
+    // --- 2. DIGITAL NETWORK BACKGROUND (DIGITAL NODES) ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
-    
-    // Настройки звезд
-    let stars = [];
-    const numStars = 150; // Количество частиц
-    const speed = 2;      // Скорость полета
-    const focalLength = 400; // "Глубина" сцены
+    let particles = [];
 
-    function resize() { 
-        width = canvas.width = window.innerWidth; 
+    // Настройки Digital Network
+    const config = {
+        count: 0,        // Рассчитывается динамически
+        speed: 0.5,      // Скорость движения нод
+        size: 1.5,       // Размер нод
+        linkDist: 140,   // Дистанция соединения
+        colorNode: '#00f3ff', // Цвет нод (Accent)
+        colorLine: 'rgba(99, 102, 241, 0.2)' // Цвет линий (Primary с прозрачностью)
+    };
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
         height = canvas.height = window.innerHeight;
-        initStars(); // Пересоздаем звезды при ресайзе
+        config.count = Math.floor((width * height) / 9000); // Плотность точек
+        createParticles();
     }
-    window.addEventListener('resize', resize);
 
-    function initStars() {
-        stars = [];
-        for(let i = 0; i < numStars; i++) {
-            stars.push({
-                x: Math.random() * width - width / 2,
-                y: Math.random() * height - height / 2,
-                z: Math.random() * focalLength,
-                color: Math.random() > 0.8 ? '#6366f1' : '#00f3ff' // Основные цвета темы
+    function createParticles() {
+        particles = [];
+        for(let i = 0; i < config.count; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * config.speed,
+                vy: (Math.random() - 0.5) * config.speed
             });
         }
     }
 
-    function animateBg() {
-        // Заливаем фон полупрозрачным черным для эффекта "следов"
-        ctx.fillStyle = "rgba(2, 2, 5, 0.2)";
-        ctx.fillRect(0, 0, width, height);
+    function animateNetwork() {
+        ctx.clearRect(0, 0, width, height);
 
-        stars.forEach(s => {
-            // Двигаем звезду к зрителю
-            s.z -= speed;
-            // Если пролетела мимо экрана, спавним заново далеко
-            if (s.z <= 0) {
-                s.x = Math.random() * width - width / 2;
-                s.y = Math.random() * height - height / 2;
-                s.z = focalLength;
-            }
+        for(let i = 0; i < particles.length; i++) {
+            let p = particles[i];
+            
+            // Движение
+            p.x += p.vx;
+            p.y += p.vy;
 
-            // Проекция 3D координат на 2D экран
-            const scale = focalLength / s.z;
-            const x2d = s.x * scale + width / 2;
-            const y2d = s.y * scale + height / 2;
-            const size = scale * 1.5; // Чем ближе, тем больше
+            // Отскок от краев
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
 
-            // Рисуем звезду
-            ctx.fillStyle = s.color;
+            // Рисуем ноду
+            ctx.fillStyle = config.colorNode;
             ctx.beginPath();
-            // Используем квадраты для лучшей производительности
-            ctx.fillRect(x2d, y2d, size, size); 
-        });
-        requestAnimationFrame(animateBg);
+            ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Рисуем линии (Связи)
+            for(let j = i + 1; j < particles.length; j++) {
+                let p2 = particles[j];
+                let dx = p.x - p2.x;
+                let dy = p.y - p2.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+
+                if(dist < config.linkDist) {
+                    ctx.beginPath();
+                    // Чем ближе, тем ярче линия
+                    let alpha = 1 - (dist / config.linkDist);
+                    ctx.strokeStyle = `rgba(99, 102, 241, ${alpha * 0.5})`; 
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animateNetwork);
     }
-    
-    resize(); // Первая инициализация
-    animateBg(); // Запуск анимации
 
+    window.addEventListener('resize', resize);
+    resize();
+    animateNetwork();
 
-    // --- MAIN APP LOGIC (Data Loading) ---
+    // --- MAIN APP LOGIC ---
     const JSON_URL = "stats.json";
     let serversData = [];
 
