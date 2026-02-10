@@ -13,9 +13,7 @@
             --border-color: rgba(255, 255, 255, 0.1);
             
             --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.6);
             --accent: #00f3ff;
-            --accent-glow: rgba(0, 243, 255, 0.4);
             
             --text-main: #ffffff;
             --text-muted: #888888;
@@ -25,7 +23,6 @@
             --danger: #ff0055;
             
             --radius-lg: 16px;
-            --radius-md: 12px;
             
             --font-ui: 'Inter', sans-serif;
             --font-code: 'JetBrains Mono', monospace;
@@ -50,7 +47,6 @@
             z-index: 0; pointer-events: none;
         }
 
-        /* Digital Ambient Effects */
         .scanline {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 51%);
@@ -58,13 +54,6 @@
             pointer-events: none; z-index: 10;
         }
         
-        .vignette {
-            position: fixed; inset: 0;
-            background: radial-gradient(circle at center, transparent 0%, #000 100%);
-            pointer-events: none; z-index: 5; opacity: 0.6;
-        }
-
-        /* Container */
         .container {
             width: 100%; max-width: 600px;
             padding: 24px 20px 100px;
@@ -78,35 +67,26 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 20px;
         }
-        .brand {
-            display: flex; flex-direction: column; gap: 4px;
-        }
+        .brand { display: flex; flex-direction: column; gap: 4px; }
         .logo {
             font-size: 28px; font-weight: 800; letter-spacing: -1px;
             color: #fff; text-transform: uppercase;
             display: flex; align-items: center; gap: 12px;
             font-family: var(--font-code);
-            position: relative;
-            min-width: 160px; /* Prevent layout shift during animation */
         }
         
-        .dud { color: var(--text-muted); opacity: 0.7; }
-
         .status-dot {
             width: 8px; height: 8px; background: var(--success);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--success), 0 0 20px var(--success);
+            box-shadow: 0 0 10px var(--success);
             animation: pulse-dot 2s infinite;
         }
+        
         .subtitle {
-            font-size: 11px; color: var(--text-muted); 
+            font-size: 10px; color: var(--text-muted); 
             font-family: var(--font-code); text-transform: uppercase; letter-spacing: 1px;
+            line-height: 1.4;
         }
-        .subtitle::after {
-            content: '_';
-            animation: blink 1s step-end infinite;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
 
         /* Filters */
         .filters {
@@ -125,7 +105,7 @@
             cursor: pointer; transition: 0.3s;
             font-family: var(--font-code);
         }
-        .chip:hover { border-color: var(--accent); color: #fff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
+        .chip:hover { border-color: var(--accent); color: #fff; }
         .chip.active {
             background: rgba(99, 102, 241, 0.15);
             color: var(--accent); border-color: var(--accent);
@@ -140,89 +120,63 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
-            padding: 18px 24px;
+            padding: 16px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            cursor: pointer; transition: 0.3s;
             position: relative; overflow: hidden;
-            animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: slideUp 0.4s ease-out forwards;
             opacity: 0;
         }
         
-        /* Scan Effect */
-        .card::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-            transform: skewX(-15deg);
-            transition: 0.5s;
-            pointer-events: none;
-        }
-        .card:hover::before {
-            left: 100%;
-            transition: 0.5s;
-        }
-
-        /* Tech Corner Accent */
-        .card::after {
-            content: ''; position: absolute; top: 0; right: 0;
-            width: 0; height: 0;
-            border-style: solid; border-width: 0 20px 20px 0;
-            border-color: transparent var(--border-color) transparent transparent;
-            transition: 0.3s;
-        }
         .card:hover {
             transform: translateY(-2px);
             border-color: var(--accent);
             box-shadow: 0 4px 20px rgba(0, 243, 255, 0.1);
         }
-        .card:hover::after { border-right-color: var(--accent); }
-        .card:active { transform: scale(0.98); }
 
-        .card-main { display: flex; align-items: center; gap: 16px; }
+        .card-left { display: flex; align-items: center; gap: 16px; }
 
-        .flag { 
-            width: 32px; height: 24px; 
+        .flag-icon { 
+            width: 38px; height: 28px; 
             border-radius: 4px;
             object-fit: cover;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            display: block;
-            background: #222; /* Fallback placeholder */
+            background: #111;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
         .info h3 {
             margin: 0; font-size: 15px; font-weight: 700;
-            display: flex; align-items: center; gap: 10px;
-            font-family: var(--font-ui);
+            color: #fff; font-family: var(--font-ui);
+            margin-bottom: 4px;
         }
-        .info p { 
-            margin: 4px 0 0; font-size: 11px; color: var(--text-muted); 
-            font-family: var(--font-code); text-transform: uppercase;
-        }
-
-        .badges { display: flex; gap: 6px; }
+        
+        .badges { display: flex; gap: 6px; flex-wrap: wrap; }
         .badge {
             font-size: 9px; font-weight: 700; text-transform: uppercase;
             padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
             font-family: var(--font-code); border: 1px solid transparent;
         }
-        .badge-game { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); }
-        .badge-warp { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); background: rgba(96, 165, 250, 0.1); }
-        .badge-ru { color: #f87171; border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1); }
-        .badge-univ { color: #818cf8; border-color: rgba(129, 140, 248, 0.3); background: rgba(129, 140, 248, 0.1); }
+        /* Badge Colors */
+        .b-game { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); }
+        .b-warp { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); background: rgba(96, 165, 250, 0.1); }
+        .b-white { color: #f87171; border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1); }
+        .b-univ { color: #818cf8; border-color: rgba(129, 140, 248, 0.3); background: rgba(129, 140, 248, 0.1); }
+        .b-proto { color: #aaa; border-color: rgba(255, 255, 255, 0.1); }
 
         .stats {
             text-align: right;
             display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
         }
-        .ping-box {
-            display: flex; align-items: center; gap: 8px;
+        .ping-val {
             font-weight: 700; font-size: 14px; color: #fff;
             font-family: var(--font-code);
+            display: flex; align-items: center; gap: 6px;
         }
-        .signal-bars {
-            display: flex; gap: 2px; align-items: flex-end; height: 10px;
+        .type-val { font-size: 10px; color: var(--text-muted); font-family: var(--font-code); text-transform: uppercase; }
+
+        .signal-dot {
+            width: 6px; height: 6px; border-radius: 50%;
         }
-        .bar { width: 2px; background: rgba(255,255,255,0.2); }
-        .speed { font-size: 11px; color: var(--text-muted); font-family: var(--font-code); }
 
         /* Modal */
         .modal-overlay {
@@ -236,76 +190,50 @@
         .modal {
             background: #0f0f11;
             width: 90%; max-width: 400px;
-            border-radius: 24px; padding: 32px;
+            border-radius: 24px; padding: 24px;
             border: 1px solid var(--border-color);
-            transform: scale(0.95); transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            box-shadow: 0 0 50px rgba(99, 102, 241, 0.1);
-            position: relative; overflow: hidden;
+            transform: scale(0.95); transition: 0.3s;
+            box-shadow: 0 0 50px rgba(99, 102, 241, 0.15);
         }
-        /* Modal decoration line */
-        .modal::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            animation: scanModal 2s linear infinite;
-        }
-        @keyframes scanModal {
-            0% { background-position: -100% 0; }
-            100% { background-position: 200% 0; }
-        }
-        
         .modal-overlay.open .modal { transform: scale(1); }
 
-        .modal-header { text-align: center; margin-bottom: 24px; }
+        .modal-header { text-align: center; margin-bottom: 20px; }
         .m-flag { 
-            width: 64px; height: auto; 
-            display: block; margin: 0 auto 16px; 
-            border-radius: 8px;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.2)); 
+            width: 60px; height: auto; border-radius: 6px;
+            display: block; margin: 0 auto 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         .m-title { 
-            font-size: 20px; font-weight: 800; margin: 0; 
-            background: linear-gradient(to right, #fff, #a5b4fc); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-transform: uppercase; letter-spacing: 1px;
+            font-size: 18px; font-weight: 700; margin: 0; color: #fff;
         }
-        .m-sub { color: var(--accent); font-size: 12px; margin-top: 6px; font-family: var(--font-code); }
+        .m-sub { color: var(--accent); font-size: 12px; margin-top: 4px; font-family: var(--font-code); }
 
         .data-list { 
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 16px; padding: 20px; margin-bottom: 24px; 
+            background: rgba(255,255,255,0.03); border-radius: 12px; 
+            padding: 16px; margin-bottom: 24px; 
         }
-        .data-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .data-row { 
+            display: flex; justify-content: space-between; 
+            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
         .data-row:last-child { border: none; }
-        .d-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .d-value { font-weight: 600; font-family: var(--font-code); color: #fff; font-size: 14px; }
+        .d-label { color: var(--text-muted); font-size: 12px; }
+        .d-value { font-weight: 600; font-family: var(--font-code); color: #fff; font-size: 13px; }
 
-        .actions { display: flex; gap: 12px; }
         .btn {
-            flex: 1; padding: 16px; border-radius: 12px; border: none;
+            width: 100%; padding: 14px; border-radius: 12px; border: none;
             font-size: 14px; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
-            font-family: var(--font-ui);
-        }
-        .btn:active { transform: scale(0.96); }
-        
-        .btn-prim { 
             background: var(--primary); color: #fff; 
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); 
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); 
+            font-family: var(--font-ui); text-transform: uppercase;
         }
-        .btn-prim:hover { 
-            background: #4f46e5; 
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); 
-        }
-
-        @keyframes pulse-dot { 0% { opacity: 1; box-shadow: 0 0 10px var(--success); } 50% { opacity: 0.5; box-shadow: 0 0 0px var(--success); } 100% { opacity: 1; box-shadow: 0 0 10px var(--success); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes pulse-dot { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 480px) {
-            .modal { position: fixed; bottom: 0; width: 100%; max-width: 100%; border-radius: 24px 24px 0 0; margin: 0; transform: translateY(100%); }
-            .modal-overlay.open .modal { transform: translateY(0); }
-            .container { padding-bottom: 80px; }
+            .container { padding-top: 10px; }
+            .modal { position: absolute; bottom: 0; width: 100%; border-radius: 24px 24px 0 0; margin: 0; max-width: 100%; }
         }
     </style>
 </head>
@@ -313,375 +241,189 @@
 
 <canvas id="bg-canvas"></canvas>
 <div class="scanline"></div>
-<div class="vignette"></div>
 
 <div class="container">
     <header>
         <div class="brand">
             <div class="logo">
                 <div class="status-dot"></div>
-                <span id="hacker-title"></span>
+                <span>FL1PVPN</span>
             </div>
-            <div class="subtitle" id="lastUpdate">INITIALIZING SYSTEM...</div>
+            <div class="subtitle" id="timeInfo">LOADING DATA...</div>
         </div>
     </header>
 
     <div class="filters">
-        <div class="chip active" onclick="setFilter('all', this)">ALL SYSTEMS</div>
-        <div class="chip" onclick="setFilter('GAME', this)">GAME</div>
-        <div class="chip" onclick="setFilter('WARP', this)">MEDIA</div>
-        <div class="chip" onclick="setFilter('UNIVERSAL', this)">TURBO</div>
-        <div class="chip" onclick="setFilter('WHITELIST', this)">RUSSIA</div>
+        <div class="chip active" onclick="filterData('all', this)">ALL</div>
+        <div class="chip" onclick="filterData('Game Server', this)">GAME</div>
+        <div class="chip" onclick="filterData('WARP', this)">WARP</div>
+        <div class="chip" onclick="filterData('UNIVERSAL', this)">TURBO</div>
+        <div class="chip" onclick="filterData('WHITELIST', this)">RUSSIA</div>
     </div>
 
-    <div id="grid" class="grid">
-        <!-- Servers will be injected here -->
-        <div style="text-align: center; padding: 60px; color: var(--text-muted); font-family: var(--font-code);">
-            [ CONNECTING TO DATA STREAM ]
-        </div>
-    </div>
+    <div id="grid" class="grid"></div>
 </div>
 
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
     <div class="modal">
         <div class="modal-header">
-            <span class="m-flag" id="mFlag">🌍</span>
-            <h2 class="m-title" id="mTitle">Country</h2>
-            <div class="m-sub" id="mSub">SERVER NODE</div>
+            <img id="mFlag" src="" class="m-flag" alt="">
+            <h2 class="m-title" id="mCountry">Country</h2>
+            <div class="m-sub" id="mName">SERVER NODE</div>
         </div>
         
         <div class="data-list">
             <div class="data-row">
                 <span class="d-label">IP Address</span>
-                <span class="d-value" id="mIP">0.0.0.0</span>
+                <span class="d-value" id="mIP">---</span>
             </div>
             <div class="data-row">
-                <span class="d-label">Latency</span>
-                <span class="d-value" id="mPing">0 ms</span>
-            </div>
-            <div class="data-row">
-                <span class="d-label">Bandwidth</span>
-                <span class="d-value" id="mSpeed">0 Mbps</span>
+                <span class="d-label">Ping</span>
+                <span class="d-value" id="mPing">---</span>
             </div>
             <div class="data-row">
                 <span class="d-label">Protocol</span>
-                <span class="d-value" id="mProto">VLESS</span>
+                <span class="d-value" id="mProto">---</span>
+            </div>
+            <div class="data-row">
+                <span class="d-label">Type</span>
+                <span class="d-value" id="mType">---</span>
             </div>
         </div>
 
-        <div class="actions">
-            <button class="btn btn-prim" onclick="openBot()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px">
-                    <path d="M22 2L11 13"></path>
-                    <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
-                </svg>
-                OPEN TERMINAL
-            </button>
-        </div>
+        <button class="btn" onclick="openBot()">GET CONFIG KEY</button>
     </div>
 </div>
 
 <script>
     const JSON_URL = "stats.json";
-    let allData = [];
+    let serversData = [];
 
-    const COUNTRIES = {
-        'FI': 'Finland', 'SE': 'Sweden', 'EE': 'Estonia', 'DE': 'Germany',
-        'NL': 'Netherlands', 'GB': 'UK', 'US': 'USA', 'RU': 'Russia',
-        'TR': 'Turkey', 'KZ': 'Kazakhstan', 'UA': 'Ukraine', 'FR': 'France',
-        'PL': 'Poland', 'BG': 'Bulgaria', 'LV': 'Latvia', 'LT': 'Lithuania'
-    };
-
-    /* --- TEXT SCRAMBLE EFFECT --- */
-    class TextScramble {
-        constructor(el) {
-            this.el = el;
-            this.chars = '!<>-_\\/[]{}—=+*^?#________';
-            this.update = this.update.bind(this);
-        }
-        setText(newText) {
-            const oldText = this.el.innerText;
-            const length = Math.max(oldText.length, newText.length);
-            const promise = new Promise((resolve) => this.resolve = resolve);
-            this.queue = [];
-            for (let i = 0; i < length; i++) {
-                const from = oldText[i] || '';
-                const to = newText[i] || '';
-                const start = Math.floor(Math.random() * 40);
-                const end = start + Math.floor(Math.random() * 40);
-                this.queue.push({ from, to, start, end });
-            }
-            cancelAnimationFrame(this.frameRequest);
-            this.frame = 0;
-            this.update();
-            return promise;
-        }
-        update() {
-            let output = '';
-            let complete = 0;
-            for (let i = 0, n = this.queue.length; i < n; i++) {
-                let { from, to, start, end, char } = this.queue[i];
-                if (this.frame >= end) {
-                    complete++;
-                    output += to;
-                } else if (this.frame >= start) {
-                    if (!char || Math.random() < 0.28) {
-                        char = this.randomChar();
-                        this.queue[i].char = char;
-                    }
-                    output += `<span class="dud">${char}</span>`;
-                } else {
-                    output += from;
-                }
-            }
-            this.el.innerHTML = output;
-            if (complete === this.queue.length) {
-                this.resolve();
-            } else {
-                this.frameRequest = requestAnimationFrame(this.update);
-                this.frame++;
-            }
-        }
-        randomChar() {
-            return this.chars[Math.floor(Math.random() * this.chars.length)];
-        }
-    }
-
-    /* --- CANVAS BACKGROUND --- */
+    // Canvas Background
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
-    let particles = [];
+    
+    function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    resize();
 
-    function initCanvas() {
-        resize();
-        window.addEventListener('resize', resize);
-        createParticles();
-        animateCanvas();
-    }
-
-    function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-    }
-
-    function createParticles() {
-        particles = [];
-        const count = Math.min(width * 0.08, 100); // Responsive count
-        for(let i=0; i<count; i++) {
-            particles.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
-                size: Math.random() * 2
-            });
-        }
-    }
-
-    function animateCanvas() {
+    function animate() {
         ctx.clearRect(0, 0, width, height);
-        
-        // Update and draw particles
-        for(let i=0; i<particles.length; i++) {
-            let p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-
-            // Bounce off edges
-            if(p.x < 0 || p.x > width) p.vx *= -1;
-            if(p.y < 0 || p.y > height) p.vy *= -1;
-
-            ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Connect
-            for(let j=i+1; j<particles.length; j++) {
-                let p2 = particles[j];
-                let dx = p.x - p2.x;
-                let dy = p.y - p2.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if(dist < 120) {
-                    ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 - dist/120 * 0.15})`; // fading line
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.stroke();
-                }
-            }
+        ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+        for(let i=0; i<30; i++) {
+            ctx.fillRect(Math.random()*width, Math.random()*height, 2, 2);
         }
-        requestAnimationFrame(animateCanvas);
+        requestAnimationFrame(animate);
     }
+    animate();
 
-    /* --- MAIN LOGIC --- */
-
-    function getFlagHtml(cc) {
-        if (!cc || cc === 'XX') return '🌍';
-        // Use flagcdn.com for reliable rendering on all devices
-        return `<img src="https://flagcdn.com/w40/${cc.toLowerCase()}.png" class="flag-img" alt="${cc}">`;
-    }
-
+    // Main App Logic
     async function init() {
-        // Start effects
-        initCanvas();
-        
-        const el = document.getElementById('hacker-title');
-        const fx = new TextScramble(el);
-        // Initial text
-        fx.setText('FL1PVPN');
-        
-        // Optional: Scramble on hover
-        el.onmouseover = () => fx.setText('FL1PVPN');
-
         try {
             const res = await fetch(JSON_URL + "?t=" + Date.now());
-            if(!res.ok) throw new Error("Load failed");
+            if(!res.ok) throw new Error("Failed to load");
             const data = await res.json();
             
-            if(data.updated_msk) {
-                const time = data.updated_msk.split(' ')[1];
-                document.getElementById('lastUpdate').innerText = "SYSTEM UPDATED: " + time;
-            }
-
-            allData = data.servers || [];
-            setFilter('all', document.querySelector('.chip.active'));
-
+            // Set Header Info
+            document.getElementById('timeInfo').innerHTML = 
+                `UPDATED: ${data.updated_at} <br> NEXT: ${data.next_update}`;
+            
+            serversData = data.servers || [];
+            filterData('all', document.querySelector('.chip.active'));
+            
         } catch (e) {
-            console.error(e);
-            document.getElementById('grid').innerHTML = `
-                <div style="text-align:center; padding:40px; color:var(--danger); font-family:var(--font-code)">
-                    [ ERROR: CONNECTION LOST ]
-                </div>
-            `;
+            document.getElementById('grid').innerHTML = 
+                `<div style="text-align:center; padding:40px; color:#ff0055; font-family:monospace">[ OFFLINE / NO DATA ]</div>`;
         }
     }
 
-    function setFilter(role, el) {
+    function filterData(category, el) {
         if(el) {
             document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
         }
 
-        let filtered = role === 'all' ? [...allData] : allData.filter(s => s.role === role);
-
-        // Sort: Priority to Low Ping
-        filtered.sort((a,b) => (a.ping || 9999) - (b.ping || 9999));
-
-        render(filtered);
-    }
-
-    function getSignalBars(ping) {
-        let bars = 0;
-        let color = 'var(--text-muted)';
-        if(ping < 100) { bars = 4; color = 'var(--success)'; }
-        else if(ping < 200) { bars = 3; color = 'var(--success)'; }
-        else if(ping < 300) { bars = 2; color = 'var(--warning)'; }
-        else { bars = 1; color = 'var(--danger)'; }
-
-        let html = `<div class="signal-bars">`;
-        for(let i=0; i<4; i++) {
-            let opacity = i < bars ? 1 : 0.2;
-            let h = 3 + (i * 2);
-            html += `<div class="bar" style="height:${h}px; background:${color}; opacity:${opacity}"></div>`;
-        }
-        html += `</div>`;
-        return html;
+        const list = category === 'all' 
+            ? serversData 
+            : serversData.filter(s => s.category === category);
+        
+        render(list);
     }
 
     function render(list) {
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
-
+        
         if(list.length === 0) {
-            grid.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-family:var(--font-code)">[ NO ACTIVE NODES ]</div>`;
+            grid.innerHTML = `<div style="text-align:center; color:#555; margin-top:20px; font-family:monospace">// NO SERVERS FOUND</div>`;
             return;
         }
 
         list.forEach((s, i) => {
-            const cc = s.cc || 'XX';
-            const flag = getFlagHtml(cc);
-            const countryName = COUNTRIES[cc] || cc;
-            const ping = Math.round(s.ping || 0);
-            
-            // Badge logic
-            let badgesHtml = "";
-            if(s.role === 'GAME') badgesHtml += `<span class="badge badge-game">GAME</span>`;
-            if(s.role === 'WARP') badgesHtml += `<span class="badge badge-warp">MEDIA</span>`;
-            if(s.role === 'WHITELIST') badgesHtml += `<span class="badge badge-ru">RKN</span>`;
-            if(s.role === 'UNIVERSAL') badgesHtml += `<span class="badge badge-univ">TURBO</span>`;
-
             const el = document.createElement('div');
-            el.className = "card";
-            el.style.animationDelay = `${i * 0.05}s`;
+            el.className = 'card';
+            el.style.animationDelay = (i * 0.05) + 's';
             
-            // If it's the default world emoji, don't use img class styles that enforce size
-            const isEmoji = flag.includes('🌍');
-            // Use w80 for better quality, rendered at 32px
-            const flagContent = isEmoji ? 
-                `<div style="font-size:28px; line-height:1">🌍</div>` : 
-                `<img src="https://flagcdn.com/w80/${cc.toLowerCase()}.png" class="flag" alt="${cc}">`;
+            // Flag Logic
+            const iso = s.iso ? s.iso.toLowerCase() : 'xx';
+            const flagUrl = `https://flagcdn.com/w80/${iso}.png`;
+            
+            // Color Logic
+            let pingColor = '#00ff9d';
+            if(s.ping > 150) pingColor = '#ffcc00';
+            if(s.ping > 300) pingColor = '#ff0055';
+
+            // Badge Logic
+            let badgeClass = 'b-univ';
+            if(s.category === 'Game Server') badgeClass = 'b-game';
+            if(s.category === 'WARP') badgeClass = 'b-warp';
+            if(s.category === 'WHITELIST') badgeClass = 'b-white';
+
+            // Type Logic (Replacement for Speed)
+            const typeLabel = s.type || s.protocol || 'VLESS';
 
             el.innerHTML = `
-                <div class="card-main">
-                    ${flagContent}
+                <div class="card-left">
+                    <img src="${flagUrl}" class="flag-icon" onerror="this.src='https://flagcdn.com/w80/xx.png'">
                     <div class="info">
-                        <h3>${countryName}</h3>
-                        <div class="badges">${badgesHtml}</div>
+                        <h3>${s.country}</h3>
+                        <div class="badges">
+                            <span class="badge ${badgeClass}">${s.category}</span>
+                            <span class="badge b-proto">${s.protocol}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="stats">
-                    <div class="ping-box">
-                        ${ping} ms
-                        ${getSignalBars(ping)}
+                    <div class="ping-val">
+                        ${s.ping} ms 
+                        <div class="signal-dot" style="background:${pingColor}"></div>
                     </div>
-                    <span class="speed">${s.speed} Mb/s</span>
+                    <span class="type-val">${typeLabel}</span>
                 </div>
             `;
             
-            el.onclick = () => openModal(s, flag, countryName);
+            el.onclick = () => openModal(s, flagUrl);
             grid.appendChild(el);
         });
     }
 
-    function openModal(s, flag, countryName) {
-        const rawLink = s.original || "";
-        const cleanLink = rawLink.split('#')[0];
-        
-        // Detect Protocol
-        let proto = "VLESS";
-        if(cleanLink.startsWith("vmess")) proto = "VMESS";
-        if(cleanLink.startsWith("ss")) proto = "SHADOWSOCKS";
-        if(cleanLink.startsWith("trojan")) proto = "TROJAN";
-
-        if(flag.includes('img')) {
-             // Extract src from the list item string or just rebuild it
-             // Better to just rebuild the img tag for modal to have different size class if needed
-             // But we used a specific class in modal css .m-flag
-             const ccCode = s.cc ? s.cc.toLowerCase() : 'xx';
-             document.getElementById('mFlag').innerHTML = `<img src="https://flagcdn.com/w80/${ccCode}.png" class="m-flag" alt="${ccCode}">`;
-        } else {
-             document.getElementById('mFlag').innerHTML = flag;
-        }
-
-        document.getElementById('mTitle').innerText = countryName;
-        document.getElementById('mSub').innerText = s.name;
+    function openModal(s, flagUrl) {
+        const m = document.getElementById('modal');
+        document.getElementById('mFlag').src = flagUrl;
+        document.getElementById('mCountry').innerText = s.country;
+        document.getElementById('mName').innerText = s.name;
         
         document.getElementById('mIP').innerText = s.ip;
-        document.getElementById('mPing').innerText = Math.round(s.ping) + " ms";
-        document.getElementById('mSpeed').innerText = s.speed + " Mbps";
-        document.getElementById('mProto').innerText = proto;
+        document.getElementById('mPing').innerText = s.ping + " ms";
+        document.getElementById('mProto').innerText = s.protocol;
+        document.getElementById('mType').innerText = s.type; // Showing Type/Reality instead of fake speed
         
-        document.getElementById('modal').classList.add('open');
+        m.classList.add('open');
     }
 
     function closeModal(e) {
-        if(e.target.id === 'modal') {
-            document.getElementById('modal').classList.remove('open');
-        }
+        if(e.target.id === 'modal') document.getElementById('modal').classList.remove('open');
     }
 
     function openBot() {
