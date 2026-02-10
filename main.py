@@ -529,13 +529,18 @@ def save_history(history):
 
 def update_server_history(history, server, metrics):
     key = f"{server['ip']}:{server['port']}"
-    item = history.get(key, {
-        'ok_count': 0,
-        'fail_count': 0,
-        'last_latency': 9999,
-        'last_score': 9999,
-        'last_seen': None,
-    })
+    item = history.get(key)
+    
+    # Если записи нет или она не словарь — создаем новую
+    if not isinstance(item, dict):
+        item = {}
+
+    # Принудительно задаем дефолтные значения, если ключей не хватает
+    item.setdefault('ok_count', 0)
+    item.setdefault('fail_count', 0)
+    item.setdefault('last_latency', 9999)
+    item.setdefault('last_score', 9999)
+    item.setdefault('last_seen', None)
 
     if metrics:
         item['ok_count'] += 1
