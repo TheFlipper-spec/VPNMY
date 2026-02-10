@@ -33,17 +33,14 @@ except Exception:
 
 # --- ИСТОЧНИКИ ---
 GENERAL_URLS = [
-    "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/vless",
-    "https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/reality",
-    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Sub/Configs/vless.txt",
-    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
-    "https://gbr.mydan.online/configs",
-    "https://raw.githubusercontent.com/roaster09/V2ray_Config/main/Vless_Config_Base64.txt"
+    "https://gbr.mydan.online/configs"
 ]
 
 WHITELIST_URLS = [
