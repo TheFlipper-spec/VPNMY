@@ -95,18 +95,16 @@ RUS_NAMES = {
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
     # Мощные агрегаторы (всегда много свежего)
-    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/vless.txt",
-    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/vless.txt",
-    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/V2RayAggregatorMix.txt",
-    "https://raw.githubusercontent.com/ndsrain/Vless-reality/main/Vless-reality",
-    
-    # Твои старые (оставляем, если рабочие)
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/reality.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/trojan.txt",
+    "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt",
     "https://raw.githubusercontent.com/mttsh/v2ray/main/vless.txt",
-    
-    # Дополнительные источники Reality
-    "https://raw.githubusercontent.com/rostergamer/v2ray/main/vless",
-    "https://raw.githubusercontent.com/IranianCypherpunks/sub/main/config",
+    # Специальные для РФ
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
+    "https://gbr.mydan.online/configs"
 ]
 
 WHITELIST_URLS = [
