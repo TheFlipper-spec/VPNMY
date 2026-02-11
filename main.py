@@ -18,7 +18,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 import geoip2.database
 import requests
 
-# --- ЛОГИ ---
+# --- ЛОГИРОВАНИЕ ---
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -26,13 +26,36 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Пытаемся установить кодировку
 try:
     sys.stdout.reconfigure(encoding='utf-8')
 except Exception:
     pass
 
+# --- ПРОВЕРКА ОКРУЖЕНИЯ ---
+def check_environment():
+    logger.info("🛠️ ПРОВЕРКА ОКРУЖЕНИЯ...")
+    # 1. Проверка PySocks
+    try:
+        import socks
+        logger.info("✅ PySocks (socks) найден.")
+    except ImportError:
+        logger.warning("⚠️ PySocks НЕ НАЙДЕН! Установите: pip install pysocks requests[socks]")
+        logger.warning("Без этого проверки через прокси работать НЕ БУДУТ.")
+    
+    # 2. Проверка Xray бинарника
+    if not os.path.exists(XRAY_BIN):
+        logger.error(f"❌ Бинарник Xray не найден по пути: {XRAY_BIN}")
+    else:
+        try:
+            os.chmod(XRAY_BIN, 0o755)
+            ver = subprocess.check_output([XRAY_BIN, '-version'], timeout=3).decode()
+            ver_line = ver.split('\n')[0]
+            logger.info(f"✅ Xray binary OK: {ver_line}")
+        except Exception as e:
+            logger.error(f"❌ Ошибка запуска Xray: {e}")
+
 # --- ИСТОЧНИКИ ---
-# Ссылки, где преимущественно встречаются VLESS конфигурации
 GENERAL_URLS = [
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
@@ -43,7 +66,8 @@ GENERAL_URLS = [
     "https://gbr.mydan.online/configs",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt",
     "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list_raw.txt",
-    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity"
+    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity",
+    "https://raw.githubusercontent.com/Barabama/Free-V2ray-Configs/master/Splitted-By-Protocol/vless.txt"
 ]
 
 WHITELIST_URLS = [
@@ -59,20 +83,20 @@ OUTPUT_FILE = "FL1PVPN"
 JSON_FILE = "stats.json"
 HISTORY_FILE = "history.json"
 
-# --- ЦЕЛИ ПО КАТЕГОРИЯМ ---
+# --- ЦЕЛИ (Снизил порог, главное найти хоть что-то) ---
 TARGET_GAME = 2
 TARGET_UNIVERSAL = 5 
 TARGET_WARP = 3
 TARGET_WHITELIST = 3
 
 # --- СЕТЕВЫЕ НАСТРОЙКИ ---
-TIMEOUT = 0.6          # Тайм-аут для TCP ping
-REAL_TEST_TIMEOUT = 5.0 
+TIMEOUT = 0.6          
+REAL_TEST_TIMEOUT = 8.0 # Увеличил тайм-аут для надежности
 REAL_TEST_ATTEMPTS = 2  
 REAL_TEST_MIN_SUCCESS = 1 
 MAX_ALLOWED_LOSS = 0.51   
-MAX_ALLOWED_JITTER = 250  
-MAX_REAL_LATENCY = 900    
+MAX_ALLOWED_JITTER = 400  # Разрешаем больший джиттер
+MAX_REAL_LATENCY = 1200   # Разрешаем высокий пинг, лишь бы работало
 
 REAL_TEST_URLS = [
     "https://www.gstatic.com/generate_204",
@@ -81,7 +105,7 @@ REAL_TEST_URLS = [
 ]
 
 HTTP_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 }
 
 # --- ОБНОВЛЕНИЕ ---
@@ -99,16 +123,15 @@ RUS_NAMES = {
     'XX': 'Неизвестно', 'GR': 'Греция', 'CH': 'Швейцария'
 }
 
-# Приоритеты стран (Tier)
 TIER_1_PLATINUM = {'FI', 'EE', 'SE', 'LV', 'LT'} 
 TIER_2_GOLD = {'PL', 'DE', 'NL', 'UA', 'KZ', 'RU', 'BY'} 
 TIER_3_SILVER = {'GB', 'FR', 'IT', 'CZ', 'BG', 'AT', 'CH', 'NO', 'DK', 'RO'}
 
 MIN_THEORETICAL_LATENCY = {
-    'FI': 10, 'EE': 15, 'SE': 15, 'DE': 30, 'NL': 35, 'GB': 40,
-    'FR': 40, 'PL': 25, 'UA': 15, 'TR': 35, 'IT': 45, 'ES': 55,
-    'US': 90, 'CA': 95, 'JP': 140, 'KR': 140, 'SG': 110, 'GR': 40,
-    'BG': 35, 'RO': 30, 'CH': 35, 'NO': 30
+    'FI': 5, 'EE': 10, 'SE': 10, 'DE': 20, 'NL': 25, 'GB': 30,
+    'FR': 30, 'PL': 20, 'UA': 10, 'TR': 30, 'IT': 40, 'ES': 50,
+    'US': 80, 'CA': 90, 'JP': 130, 'KR': 130, 'SG': 100, 'GR': 35,
+    'BG': 30, 'RO': 25, 'CH': 30, 'NO': 25
 }
 
 geo_reader = None
@@ -167,21 +190,17 @@ def safe_base64_decode(s):
 
 
 def extract_links(text):
-    # Ищем ТОЛЬКО vless://
     regex = r"(vless://[^ \n]+)"
     links = re.findall(regex, text or '')
-
     if len(links) < 5:
         decoded = safe_base64_decode(text)
         if decoded:
             links.extend(re.findall(regex, decoded))
-
     return list(set(links))
 
 
 def parse_config_info(config_str, source_type):
     try:
-        # Обрабатываем ТОЛЬКО VLESS
         if config_str.startswith('vless://'):
             parsed = urlparse(config_str)
             if '@' not in parsed.netloc:
@@ -203,11 +222,8 @@ def parse_config_info(config_str, source_type):
             flow_val = (params.get('flow', [''])[0] or '').lower()
             is_reality = security == 'reality'
 
-            if is_reality:
-                pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 5:
-                    return None
-
+            # Убрал строгую проверку PBK, чтобы не отсеивать странные но рабочие конфиги
+            
             original_remark = unquote(parsed.fragment).strip() if parsed.fragment else 'Unknown'
 
             return {
@@ -232,7 +248,6 @@ def parse_config_info(config_str, source_type):
             }
     except Exception:
         return None
-
     return None
 
 
@@ -269,7 +284,6 @@ def generate_xray_config(server, local_port):
         val = params.get(key, [default])
         return val[0] if isinstance(val, list) else val
 
-    # Логика для VLESS
     user = {'id': server['uuid'], 'encryption': 'none'}
     flow = get_p('flow', '')
     if flow:
@@ -294,7 +308,7 @@ def generate_xray_config(server, local_port):
     if server['security'] == 'tls':
         stream['tlsSettings'] = {
             'serverName': get_p('sni', ''),
-            'allowInsecure': False,
+            'allowInsecure': True, # РАЗРЕШАЕМ Insecure, чтобы увеличить шанс коннекта
             'fingerprint': get_p('fp', 'chrome')
         }
     elif server['security'] == 'reality':
@@ -347,6 +361,9 @@ def check_real_connection(server):
 
     xray_process = None
     latencies = []
+    
+    # Для отладки первых неудач
+    error_reason = "Unknown"
 
     try:
         xray_process = subprocess.Popen(
@@ -354,10 +371,10 @@ def check_real_connection(server):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        time.sleep(0.7) 
+        time.sleep(0.8) 
 
         if xray_process.poll() is not None:
-            return None
+            return None # Xray упал при старте
 
         proxies = {
             'http': f'socks5://127.0.0.1:{local_port}',
@@ -372,16 +389,22 @@ def check_real_connection(server):
                     target_url,
                     proxies=proxies,
                     timeout=REAL_TEST_TIMEOUT,
-                    verify=True,
+                    verify=True, # Оставляем проверку для Google, чтобы убедиться что это не перехват
                     headers=HTTP_HEADERS
                 )
                 end = time.perf_counter()
                 if 200 <= resp.status_code < 300:
                     latencies.append((end - start) * 1000)
-            except Exception:
+            except requests.exceptions.ProxyError:
+                error_reason = "ProxyError (Check PySocks)"
+            except requests.exceptions.ConnectTimeout:
+                error_reason = "Timeout"
+            except Exception as e:
+                error_reason = str(e)
                 continue
 
-    except Exception:
+    except Exception as e:
+        error_reason = f"Process Error: {e}"
         return None
     finally:
         if xray_process:
@@ -396,6 +419,8 @@ def check_real_connection(server):
 
     success_count = len(latencies)
     if success_count < REAL_TEST_MIN_SUCCESS:
+        # Можно раскомментировать для жесткой отладки
+        # logger.debug(f"FAIL {server['ip']}: {error_reason}") 
         return None
 
     loss_ratio = (REAL_TEST_ATTEMPTS - success_count) / REAL_TEST_ATTEMPTS
@@ -408,7 +433,7 @@ def check_real_connection(server):
     if jitter > MAX_ALLOWED_JITTER:
         return None
 
-    score = median_latency + (jitter * 1.5) + (loss_ratio * 300)
+    score = median_latency + (jitter * 1.0) + (loss_ratio * 100)
 
     return {
         'median': median_latency,
@@ -477,21 +502,19 @@ def get_history_penalty(history, server):
     item = history.get(key)
     if not item:
         return 0
-
     ok_count = item.get('ok_count', 0)
     fail_count = item.get('fail_count', 0)
     total = ok_count + fail_count
     if total < 3:
         return 0
-
     fail_ratio = fail_count / total
-    return int(fail_ratio * 200) 
+    return int(fail_ratio * 100) # Снизил штраф
 
 
 def check_server_initial(server):
     rem = (server.get('original_remark') or '').lower()
-
     is_warp = 'warp' in rem or 'cloudflare' in rem or server['transport'] in {'ws', 'grpc'}
+    
     if server['source_type'] == 'whitelist':
         server['category'] = 'WHITELIST'
     elif is_warp:
@@ -508,17 +531,15 @@ def check_server_initial(server):
     server['info'] = {'countryCode': code}
 
     is_fake = False
-    
     if code not in {'RU', 'BY', 'UA', 'KZ', 'XX'} and server['tcp_latency'] < 5:
         is_fake = True
-
     min_ping = MIN_THEORETICAL_LATENCY.get(code, 20)
     if server['tcp_latency'] < (min_ping - 10):
         is_fake = True
-
     if server['category'] == 'WHITELIST' and code == 'RU':
         is_fake = False
 
+    # Разрешаем "подозрительные" сервера для Universal, если совсем туго, но пока оставим фильтр
     if is_fake and server['category'] != 'WHITELIST':
         return None
 
@@ -532,36 +553,50 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
         return []
 
     filtered = []
-    # 1. Фильтрация
-    if mode in {'gaming', 'universal'}:
-        # Только Reality для этих категорий
+    
+    if mode == 'gaming':
+        # Строго Reality, строго зарубеж
         filtered = [
             c for c in candidates
             if c['is_reality'] and c['info']['countryCode'] not in {'RU', 'XX'}
         ]
-        logger.info(f"{title}: Фильтр Reality+Foreign (Вход: {len(candidates)} -> {len(filtered)})")
+    elif mode == 'universal':
+        # Разрешаем Reality ИЛИ TLS, ИЛИ pure TCP. Главное - не RU.
+        filtered = [
+            c for c in candidates
+            if (c['is_reality'] or c['security'] == 'tls' or c['transport']=='tcp') 
+            and c['info']['countryCode'] not in {'RU', 'XX'}
+        ]
     elif mode == 'whitelist':
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == 'warp':
         filtered = [c for c in candidates if c['info']['countryCode'] not in {'RU', 'XX'}]
     
     if not filtered:
-        logger.warning(f"⚠️ {title}: Нет кандидатов после фильтрации.")
+        logger.warning(f"⚠️ {title}: Нет кандидатов после фильтрации типов.")
         return []
 
-    # 2. УМНАЯ СОРТИРОВКА (Tier 1 -> Tier 2 -> Ping)
+    # 2. ГЕНИАЛЬНОЕ ПЕРЕМЕШИВАНИЕ (SMART SHUFFLE)
+    # Сначала сортируем по Тирам и Пингу
     filtered.sort(key=lambda x: (x.get('tier_rank', 99), x.get('tcp_latency', 9999)))
+    
+    # Берем ТОП-800 кандидатов (это куча серверов, где наверняка есть Cloudflare заглушки)
+    # И ПЕРЕМЕШИВАЕМ ИХ. Это дает шанс не застрять на первых 200 мертвых IP.
+    top_candidates = filtered[:800]
+    random.shuffle(top_candidates)
+    
+    # Остальные добавляем в конец (маловероятно что до них дойдет, но пусть будут)
+    final_queue = top_candidates + filtered[800:]
 
     winners = []
-    
     BATCH_SIZE = 25    
-    MAX_CHECKS = 200   
+    MAX_CHECKS = 250 # Чуть увеличим лимит проверок
     checked_count = 0
     
-    logger.info(f"🏟️ {title}: Старт умного поиска. Цель: {winners_needed} побед. Кандидатов: {len(filtered)}")
+    logger.info(f"🏟️ {title}: Цель: {winners_needed}. В пуле: {len(final_queue)} (Top-800 Shuffled).")
 
-    while len(winners) < winners_needed and checked_count < len(filtered) and checked_count < MAX_CHECKS:
-        batch = filtered[checked_count : checked_count + BATCH_SIZE]
+    while len(winners) < winners_needed and checked_count < len(final_queue) and checked_count < MAX_CHECKS:
+        batch = final_queue[checked_count : checked_count + BATCH_SIZE]
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
             future_to_server = {executor.submit(check_real_connection, s): s for s in batch}
@@ -591,21 +626,15 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
                         elif server['tier_rank'] >= 3:
                             tier_penalty = 30
 
-                    warp_penalty = 0
-                    if mode == 'warp' and server['transport'] not in {'ws', 'grpc'}:
-                        warp_penalty = 2000
-
                     history_penalty = get_history_penalty(history, server) if history is not None else 0
-
-                    final_score = metrics['score'] + tier_penalty + warp_penalty + history_penalty
+                    final_score = metrics['score'] + tier_penalty + history_penalty
                     server['final_score'] = final_score
 
                     proto = 'Reality' if server['is_reality'] else server['transport'].upper()
                     
                     logger.info(
                         f"✅ {server['info']['countryCode']:<4} | {proto:<8} | "
-                        f"Med: {int(metrics['median'])}ms | Jit: {int(metrics['jitter'])} | "
-                        f"Score: {int(final_score)}"
+                        f"Med: {int(metrics['median'])}ms | Score: {int(final_score)}"
                     )
                     winners.append(server)
 
@@ -617,7 +646,7 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
     winners.sort(key=lambda x: x['final_score'])
     
     if not winners:
-        logger.warning(f"⚠️ {title}: Не найдено рабочих серверов после проверки {checked_count} кандидатов.")
+        logger.warning(f"⚠️ {title}: FAIL после проверки {checked_count} серверов.")
         return []
 
     return winners[:winners_needed]
@@ -644,28 +673,24 @@ def process_urls(urls, source_type):
         content = request_text(final_url, timeout=15)
         if not content:
             continue
-
         for link in extract_links(content):
             parsed = parse_config_info(link, source_type)
             if parsed:
                 links.append(parsed)
-
     return links
 
 
 def fetch_smart_github_links(max_files_per_query=10):
     logger.info("🧠 GitHub Backup Search...")
     token = os.environ.get('GITHUB_TOKEN')
-    headers = {
-        'Accept': 'application/vnd.github.v3+json',
-        **HTTP_HEADERS
-    }
+    headers = {'Accept': 'application/vnd.github.v3+json', **HTTP_HEADERS}
     if token:
         headers['Authorization'] = f'token {token}'
 
     queries = [
         'vless:// reality extension:txt',
-        'vless:// subscription'
+        'vless:// subscription',
+        'vless:// configurations'
     ]
 
     raw_links = set()
@@ -684,7 +709,6 @@ def fetch_smart_github_links(max_files_per_query=10):
             time.sleep(1.0)
         except Exception:
             continue
-
     return list(raw_links)
 
 
@@ -704,13 +728,9 @@ def server_name(server):
 
 
 def main():
-    logger.info("--- ЗАПУСК V82 (NO SS/VMESS MODE) ---")
-
-    if os.path.exists(XRAY_BIN):
-        os.chmod(XRAY_BIN, 0o755)
-    else:
-        logger.error(f"❌ Error: Xray binary not found at {XRAY_BIN}")
-
+    logger.info("--- ЗАПУСК V83: GENIUS SHUFFLE & DIAGNOSTIC ---")
+    
+    check_environment()
     download_mmdb()
     init_geoip()
     history = load_history()
@@ -719,7 +739,7 @@ def main():
     combined_general_urls = GENERAL_URLS + backup_urls
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=40) as executor:
-        logger.info(f"🌐 Скачивание источников ({len(combined_general_urls)} combined + {len(WHITELIST_URLS)} whitelist)...")
+        logger.info(f"🌐 Скачивание источников ({len(combined_general_urls)} combined)...")
         f1 = executor.submit(process_urls, combined_general_urls, 'general')
         f2 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         all_servers = f1.result() + f2.result()
@@ -729,8 +749,7 @@ def main():
     logger.info(f"🔍 Найдено {len(servers_to_check)} уникальных конфигов. TCP-фильтрация...")
 
     working = []
-    # Первичный отсев по TCP
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=120) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
@@ -741,7 +760,7 @@ def main():
     b_univ = [s for s in working if s['category'] == 'UNIVERSAL']
     b_warp = [s for s in working if s['category'] == 'WARP']
 
-    logger.info(f"📊 После TCP фильтра: Univ={len(b_univ)}, Warp={len(b_warp)}, White={len(b_white)}")
+    logger.info(f"📊 После TCP (Alive): Univ={len(b_univ)}, Warp={len(b_warp)}, White={len(b_white)}")
 
     final_list = []
 
@@ -752,7 +771,7 @@ def main():
         g['category'] = 'Game Server'
     final_list.extend(game_winners)
 
-    # 2. UNIVERSAL CUP (Исключаем тех, кто уже в Game)
+    # 2. UNIVERSAL CUP
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, 'UNIVERSAL CUP', 'universal', history))
 
@@ -762,7 +781,6 @@ def main():
     # 4. WHITELIST CUP
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, 'WHITELIST CUP', 'whitelist', history))
 
-    # Сохранение
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -791,13 +809,12 @@ def main():
         code = s['info'].get('countryCode', 'XX')
         flag = ''.join(chr(127397 + ord(c)) for c in code.upper()) if len(code) == 2 else '🏳️'
         country = RUS_NAMES.get(code, code)
-
+        
         type_label = 'VLESS'
-        if s['is_reality']:
-            type_label = 'Reality'
-        elif s['is_pure']:
-            type_label = 'TCP'
-
+        if s['is_reality']: type_label = 'Reality'
+        elif s['security'] == 'tls': type_label = 'TLS'
+        elif s['transport'] == 'ws': type_label = 'WS'
+        
         json_data['servers'].append({
             'name': name,
             'category': s['category'],
@@ -820,8 +837,7 @@ def main():
         json.dump(json_data, f, ensure_ascii=False, indent=2)
 
     save_history(history)
-
-    logger.info(f"DONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
+    logger.info(f"DONE. {len(result_links)} links saved.")
 
 if __name__ == '__main__':
     main()
