@@ -3,18 +3,24 @@ name: Update VPN Subscription
 on:
   schedule:
     - cron: '*/10 * * * *' # Запуск каждые 10 минут
-  workflow_dispatch:       # Ручной запуск кнопкой
+  workflow_dispatch:       # Ручной запуск
 
 jobs:
   build:
     runs-on: self-hosted
+    
+    # 🔥 ВАЖНО: Принудительно задаем домашнюю директорию для root
+    env:
+      HOME: /root
+
     permissions:
       contents: write
 
     steps:
-      # 1. ЛЕЧИМ ОШИБКУ GIT (Добавлено это действие)
-      - name: Fix Git Safe Directory
-        run: git config --global --add safe.directory '*'
+      # 1. Исправляем ошибку "unsafe repository" и "$HOME not set"
+      - name: Fix Git Config
+        run: |
+          git config --global --add safe.directory '*'
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,11 +54,11 @@ jobs:
 
       - name: Commit and Push changes
         run: |
-          # Используем global настройки, так как local может снова вызвать ошибку прав
+          # Используем глобальные настройки Git
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           
-          # 1. Добавляем файлы
+          # 1. Добавляем файлы результата
           git add FL1PVPN stats.json history.json reserve_pool.json
           
           # 2. Добавляем логи
