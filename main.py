@@ -94,16 +94,19 @@ RUS_NAMES = {
 # 🔥 ИСТОЧНИКИ
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
+    # Мощные агрегаторы (всегда много свежего)
+    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/vless.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Splitted-By-Protocol/vless.txt",
+    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/V2RayAggregatorMix.txt",
+    "https://raw.githubusercontent.com/ndsrain/Vless-reality/main/Vless-reality",
+    
+    # Твои старые (оставляем, если рабочие)
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/reality.txt",
-    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/trojan.txt",
-    "https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/v2ray.txt",
     "https://raw.githubusercontent.com/mttsh/v2ray/main/vless.txt",
-    # Специальные для РФ
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
-    "https://gbr.mydan.online/configs"
+    
+    # Дополнительные источники Reality
+    "https://raw.githubusercontent.com/rostergamer/v2ray/main/vless",
+    "https://raw.githubusercontent.com/IranianCypherpunks/sub/main/config",
 ]
 
 WHITELIST_URLS = [
@@ -127,14 +130,14 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-MAX_WORKERS_SCAN = 50       
-MAX_WORKERS_DEEP = 6        
-MAX_WORKERS_FETCH = 20
+MAX_WORKERS_SCAN = 100       
+MAX_WORKERS_DEEP = 35        
+MAX_WORKERS_FETCH = 50
 
-TIMEOUT_TCP = 1.0
+TIMEOUT_TCP = 0.8
 TIMEOUT_REAL = 8.0
-TIMEOUT_SPEED = 6.0
-TIMEOUT_FETCH = 25.0        
+TIMEOUT_SPEED = 10.0
+TIMEOUT_FETCH = 15.0        
 
 MAX_DEEP_CHECK_GLOBAL = 450 
 MAX_DEEP_CHECK_WHITELIST = 120
@@ -491,7 +494,7 @@ def deep_check(server):
             path = f.name
         
         proc = subprocess.Popen([XRAY_BIN, "-config", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.5)
+        time.sleep(0.7)
         
         if proc.poll() is None:
             # 🔥 VPS в РФ: UDP-пинг запускаем только для потенциальных Game (низкий TCP-пинг)
