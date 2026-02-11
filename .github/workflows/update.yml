@@ -9,13 +9,17 @@ jobs:
   build:
     runs-on: self-hosted
     permissions:
-      contents: write # Разрешаем запись в репозиторий
+      contents: write
 
     steps:
+      # 1. ЛЕЧИМ ОШИБКУ GIT (Добавлено это действие)
+      - name: Fix Git Safe Directory
+        run: git config --global --add safe.directory '*'
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Скачиваем всю историю для корректного rebase
+          fetch-depth: 0 
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
@@ -26,9 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Библиотеки для работы main.py
           pip install requests geoip2
-          
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run VPN Scanner (Main Script)
@@ -46,32 +48,29 @@ jobs:
 
       - name: Commit and Push changes
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
+          # Используем global настройки, так как local может снова вызвать ошибку прав
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
           
-          # 1. Добавляем файлы результата
+          # 1. Добавляем файлы
           git add FL1PVPN stats.json history.json reserve_pool.json
           
           # 2. Добавляем логи
           git add logs/*.log 2>/dev/null || true
           
-          # 3. Проверяем, есть ли изменения
+          # 3. Проверяем изменения
           if git diff --staged --quiet; then
             echo "No changes to commit"
             exit 0
           fi
           
-          # 4. Создаем коммит
-          # Пытаемся получить кол-во серверов для красивого сообщения
+          # 4. Коммит
           COUNT=$(python3 -c "import json; print(len(json.load(open('stats.json'))['servers']))" 2>/dev/null || echo "?")
           git commit -m "🚀 Update $COUNT Servers | $(date -u +'%Y-%m-%d %H:%M UTC')"
           
-          # 5. СТРАТЕГИЯ ОТ КОНФЛИКТОВ
-          # Прячем мусор, чтобы git pull не ругался
+          # 5. СТРАТЕГИЯ
           git stash
-          
-          # Скачиваем новые изменения с сервера, если они были, и накладываем свои
           git pull --rebase --strategy-option=theirs origin main
           
-          # 6. Отправляем
+          # 6. Push
           git push origin main
