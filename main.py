@@ -32,11 +32,11 @@ except Exception:
     pass
 
 # --- ИСТОЧНИКИ ---
+# Ссылки, где преимущественно встречаются VLESS конфигурации
 GENERAL_URLS = [
     "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/configs/vless.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_SS+All_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
@@ -60,7 +60,6 @@ JSON_FILE = "stats.json"
 HISTORY_FILE = "history.json"
 
 # --- ЦЕЛИ ПО КАТЕГОРИЯМ ---
-# Увеличим цели, чтобы скрипт старался найти больше
 TARGET_GAME = 2
 TARGET_UNIVERSAL = 5 
 TARGET_WARP = 3
@@ -68,12 +67,12 @@ TARGET_WHITELIST = 3
 
 # --- СЕТЕВЫЕ НАСТРОЙКИ ---
 TIMEOUT = 0.6          # Тайм-аут для TCP ping
-REAL_TEST_TIMEOUT = 5.0 # Чуть увеличим для надежности
-REAL_TEST_ATTEMPTS = 2  # 2 попытки достаточно для проверки "жив/мертв"
-REAL_TEST_MIN_SUCCESS = 1 # Достаточно 1 успешного ответа
-MAX_ALLOWED_LOSS = 0.51   # Если 1 из 2 прошла - считаем ок
-MAX_ALLOWED_JITTER = 250  # Чуть мягче к джиттеру
-MAX_REAL_LATENCY = 900    # Чуть мягче к латенси, главное чтоб работал
+REAL_TEST_TIMEOUT = 5.0 
+REAL_TEST_ATTEMPTS = 2  
+REAL_TEST_MIN_SUCCESS = 1 
+MAX_ALLOWED_LOSS = 0.51   
+MAX_ALLOWED_JITTER = 250  
+MAX_REAL_LATENCY = 900    
 
 REAL_TEST_URLS = [
     "https://www.gstatic.com/generate_204",
@@ -101,10 +100,9 @@ RUS_NAMES = {
 }
 
 # Приоритеты стран (Tier)
-TIER_1_PLATINUM = {'FI', 'EE', 'SE', 'LV', 'LT'} # Супер быстрые для СНГ
-TIER_2_GOLD = {'PL', 'DE', 'NL', 'UA', 'KZ', 'RU', 'BY'} # Хорошие, Польша тут
+TIER_1_PLATINUM = {'FI', 'EE', 'SE', 'LV', 'LT'} 
+TIER_2_GOLD = {'PL', 'DE', 'NL', 'UA', 'KZ', 'RU', 'BY'} 
 TIER_3_SILVER = {'GB', 'FR', 'IT', 'CZ', 'BG', 'AT', 'CH', 'NO', 'DK', 'RO'}
-# Остальные (Tier 4) и US/CA (Tier 5 - высокий пинг) считаются автоматически
 
 MIN_THEORETICAL_LATENCY = {
     'FI': 10, 'EE': 15, 'SE': 15, 'DE': 30, 'NL': 35, 'GB': 40,
@@ -169,7 +167,8 @@ def safe_base64_decode(s):
 
 
 def extract_links(text):
-    regex = r"(vless://[^ \n]+|ss://[^ \n]+|vmess://[^ \n]+)"
+    # Ищем ТОЛЬКО vless://
+    regex = r"(vless://[^ \n]+)"
     links = re.findall(regex, text or '')
 
     if len(links) < 5:
@@ -182,70 +181,7 @@ def extract_links(text):
 
 def parse_config_info(config_str, source_type):
     try:
-        # SS
-        if config_str.startswith('ss://'):
-            rest = config_str[5:]
-            if '#' in rest:
-                main_part, original_remark = rest.split('#', 1)
-                original_remark = unquote(original_remark).strip()
-            else:
-                main_part = rest
-                original_remark = 'Unknown'
-
-            method = ''
-            password = ''
-
-            if '@' in main_part:
-                user_info, host_port = main_part.split('@', 1)
-                decoded_user = safe_base64_decode(user_info)
-                if ':' in decoded_user:
-                    method, password = decoded_user.split(':', 1)
-                elif ':' in user_info:
-                    method, password = user_info.split(':', 1)
-                else:
-                    return None
-            else:
-                decoded = safe_base64_decode(main_part)
-                if '@' not in decoded:
-                    return None
-                auth, host_port = decoded.split('@', 1)
-                if ':' not in auth:
-                    return None
-                method, password = auth.split(':', 1)
-
-            if ':' not in host_port:
-                return None
-
-            if ']' in host_port:
-                host = host_port.rsplit(':', 1)[0]
-                port = host_port.rsplit(':', 1)[1]
-            else:
-                host, port = host_port.split(':', 1)
-
-            return {
-                'ip': host,
-                'port': int(port),
-                'uuid': password,
-                'original': config_str,
-                'original_remark': original_remark,
-                'latency': 9999,
-                'jitter': 0,
-                'loss_ratio': 1.0,
-                'final_score': 9999,
-                'info': {},
-                'transport': 'tcp',
-                'security': 'ss',
-                'is_reality': False,
-                'is_vision': False,
-                'is_pure': False,
-                'is_hy2': False,
-                'is_ss': True,
-                'source_type': source_type,
-                'tier_rank': 99,
-                'parsed_params': {'method': method}
-            }
-
-        # VLESS
+        # Обрабатываем ТОЛЬКО VLESS
         if config_str.startswith('vless://'):
             parsed = urlparse(config_str)
             if '@' not in parsed.netloc:
@@ -267,10 +203,9 @@ def parse_config_info(config_str, source_type):
             flow_val = (params.get('flow', [''])[0] or '').lower()
             is_reality = security == 'reality'
 
-            # Ослабляем проверку PBK для Reality, иногда она не обязательна в некоторых клиентах, но лучше оставить
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 5: # Чуть уменьшим требование
+                if len(pbk) < 5:
                     return None
 
             original_remark = unquote(parsed.fragment).strip() if parsed.fragment else 'Unknown'
@@ -291,8 +226,6 @@ def parse_config_info(config_str, source_type):
                 'is_reality': is_reality,
                 'is_vision': 'vision' in flow_val,
                 'is_pure': (security in {'none', 'tls'} and not is_reality),
-                'is_hy2': False,
-                'is_ss': False,
                 'source_type': source_type,
                 'tier_rank': 99,
                 'parsed_params': params
@@ -336,30 +269,7 @@ def generate_xray_config(server, local_port):
         val = params.get(key, [default])
         return val[0] if isinstance(val, list) else val
 
-    if server.get('is_ss', False):
-        return {
-            'log': {'loglevel': 'none'},
-            'inbounds': [{
-                'port': local_port,
-                'listen': '127.0.0.1',
-                'protocol': 'socks',
-                'settings': {'udp': True}
-            }],
-            'outbounds': [{
-                'tag': 'proxy',
-                'protocol': 'shadowsocks',
-                'settings': {
-                    'servers': [{
-                        'address': server['ip'],
-                        'port': int(server['port']),
-                        'method': params.get('method', ''),
-                        'password': server['uuid'],
-                        'uot': True
-                    }]
-                }
-            }]
-        }
-
+    # Логика для VLESS
     user = {'id': server['uuid'], 'encryption': 'none'}
     flow = get_p('flow', '')
     if flow:
@@ -444,7 +354,7 @@ def check_real_connection(server):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        time.sleep(0.7) # Немного уменьшил ожидание запуска
+        time.sleep(0.7) 
 
         if xray_process.poll() is not None:
             return None
@@ -498,7 +408,6 @@ def check_real_connection(server):
     if jitter > MAX_ALLOWED_JITTER:
         return None
 
-    # Мягкий скоринг, поощряем стабильность
     score = median_latency + (jitter * 1.5) + (loss_ratio * 300)
 
     return {
@@ -576,7 +485,7 @@ def get_history_penalty(history, server):
         return 0
 
     fail_ratio = fail_count / total
-    return int(fail_ratio * 200) # Чуть уменьшил штраф
+    return int(fail_ratio * 200) 
 
 
 def check_server_initial(server):
@@ -599,12 +508,11 @@ def check_server_initial(server):
     server['info'] = {'countryCode': code}
 
     is_fake = False
-    # Ослабленная эвристика, чтобы не банить нормальные сервера
+    
     if code not in {'RU', 'BY', 'UA', 'KZ', 'XX'} and server['tcp_latency'] < 5:
         is_fake = True
 
     min_ping = MIN_THEORETICAL_LATENCY.get(code, 20)
-    # Даем допуск 10мс
     if server['tcp_latency'] < (min_ping - 10):
         is_fake = True
 
@@ -626,7 +534,7 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
     filtered = []
     # 1. Фильтрация
     if mode in {'gaming', 'universal'}:
-        # Для гейминга и универсала берем только Reality и исключаем RU/XX
+        # Только Reality для этих категорий
         filtered = [
             c for c in candidates
             if c['is_reality'] and c['info']['countryCode'] not in {'RU', 'XX'}
@@ -642,23 +550,18 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
         return []
 
     # 2. УМНАЯ СОРТИРОВКА (Tier 1 -> Tier 2 -> Ping)
-    # Сначала сортируем по рангу страны (1 - лучше), потом по пингу
     filtered.sort(key=lambda x: (x.get('tier_rank', 99), x.get('tcp_latency', 9999)))
 
     winners = []
     
-    # Настройки батчей
-    BATCH_SIZE = 25    # Сколько проверять за раз
-    MAX_CHECKS = 200   # Максимум проверок всего, чтобы не зависнуть навечно
+    BATCH_SIZE = 25    
+    MAX_CHECKS = 200   
     checked_count = 0
     
     logger.info(f"🏟️ {title}: Старт умного поиска. Цель: {winners_needed} побед. Кандидатов: {len(filtered)}")
 
-    # 3. Цикл по батчам (идем по списку вниз, если топы не работают)
     while len(winners) < winners_needed and checked_count < len(filtered) and checked_count < MAX_CHECKS:
         batch = filtered[checked_count : checked_count + BATCH_SIZE]
-        
-        # logger.info(f"   Batch {checked_count}-{checked_count+len(batch)} processing...")
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
             future_to_server = {executor.submit(check_real_connection, s): s for s in batch}
@@ -683,7 +586,6 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
 
                     tier_penalty = 0
                     if mode != 'gaming':
-                        # Небольшой штраф за тир, но если сервер рабочий - берем
                         if server['tier_rank'] == 2:
                             tier_penalty = 10
                         elif server['tier_rank'] >= 3:
@@ -698,9 +600,8 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
                     final_score = metrics['score'] + tier_penalty + warp_penalty + history_penalty
                     server['final_score'] = final_score
 
-                    proto = 'SS' if server.get('is_ss') else ('Reality' if server['is_reality'] else server['transport'].upper())
+                    proto = 'Reality' if server['is_reality'] else server['transport'].upper()
                     
-                    # Логируем только победителей
                     logger.info(
                         f"✅ {server['info']['countryCode']:<4} | {proto:<8} | "
                         f"Med: {int(metrics['median'])}ms | Jit: {int(metrics['jitter'])} | "
@@ -713,7 +614,6 @@ def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed',
         
         checked_count += len(batch)
 
-    # Сортируем победителей по качеству
     winners.sort(key=lambda x: x['final_score'])
     
     if not winners:
@@ -741,7 +641,7 @@ def process_urls(urls, source_type):
     for url in urls:
         separator = '&' if '?' in url else '?'
         final_url = f"{url}{separator}t={ts}"
-        content = request_text(final_url, timeout=15) # Чуть больше тайм-аут
+        content = request_text(final_url, timeout=15)
         if not content:
             continue
 
@@ -765,7 +665,6 @@ def fetch_smart_github_links(max_files_per_query=10):
 
     queries = [
         'vless:// reality extension:txt',
-        'vmess:// extension:txt',
         'vless:// subscription'
     ]
 
@@ -805,7 +704,7 @@ def server_name(server):
 
 
 def main():
-    logger.info("--- ЗАПУСК V81 (SMART TIER FALLBACK) ---")
+    logger.info("--- ЗАПУСК V82 (NO SS/VMESS MODE) ---")
 
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -894,11 +793,7 @@ def main():
         country = RUS_NAMES.get(code, code)
 
         type_label = 'VLESS'
-        if s['is_hy2']:
-            type_label = 'Hy2'
-        elif s.get('is_ss', False):
-            type_label = 'SS'
-        elif s['is_reality']:
+        if s['is_reality']:
             type_label = 'Reality'
         elif s['is_pure']:
             type_label = 'TCP'
