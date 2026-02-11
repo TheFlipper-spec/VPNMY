@@ -94,7 +94,6 @@ RUS_NAMES = {
 # 🔥 ИСТОЧНИКИ
 # ═══════════════════════════════════════════════════════════════
 GLOBAL_URLS = [
-    # Мощные агрегаторы (всегда много свежего)
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/reality.txt",
     "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/Splitted-By-Protocol/trojan.txt",
@@ -104,7 +103,14 @@ GLOBAL_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_SS+All_RUS.txt",
-    "https://gbr.mydan.online/configs"
+    "https://gbr.mydan.online/configs",
+    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/filtered/subs/vless.txt",
+    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
+    "https://raw.githubusercontent.com/V2RayRoot/V2RayConfig/refs/heads/main/Config/vless.txt",
+    "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/refs/heads/main/Countries/Finland.txt",
+    "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/refs/heads/main/Countries/Estonia.txt",
+    "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/refs/heads/main/Countries/Latvia.txt",
+    "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/refs/heads/main/Countries/Sweden.txt"
 ]
 
 WHITELIST_URLS = [
@@ -128,14 +134,14 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-MAX_WORKERS_SCAN = 100       
-MAX_WORKERS_DEEP = 35        
-MAX_WORKERS_FETCH = 50
+MAX_WORKERS_SCAN = 50       
+MAX_WORKERS_DEEP = 6        
+MAX_WORKERS_FETCH = 20
 
-TIMEOUT_TCP = 0.8
+TIMEOUT_TCP = 1.0
 TIMEOUT_REAL = 8.0
-TIMEOUT_SPEED = 10.0
-TIMEOUT_FETCH = 15.0        
+TIMEOUT_SPEED = 6.0
+TIMEOUT_FETCH = 25.0        
 
 MAX_DEEP_CHECK_GLOBAL = 450 
 MAX_DEEP_CHECK_WHITELIST = 120
@@ -492,7 +498,7 @@ def deep_check(server):
             path = f.name
         
         proc = subprocess.Popen([XRAY_BIN, "-config", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(0.7)
+        time.sleep(1.5)
         
         if proc.poll() is None:
             # 🔥 VPS в РФ: UDP-пинг запускаем только для потенциальных Game (низкий TCP-пинг)
