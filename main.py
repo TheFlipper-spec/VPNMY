@@ -41,13 +41,15 @@ GENERAL_URLS = [
     "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/main/configs/vless.txt",
     "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt",
     "https://gbr.mydan.online/configs",
-"https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt"
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt",
+    "https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/list_raw.txt",
+    "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/Eternity"
 ]
 
 WHITELIST_URLS = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
-"https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt"
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
@@ -58,19 +60,20 @@ JSON_FILE = "stats.json"
 HISTORY_FILE = "history.json"
 
 # --- ЦЕЛИ ПО КАТЕГОРИЯМ ---
-TARGET_GAME = 1
-TARGET_UNIVERSAL = 3
-TARGET_WARP = 2
-TARGET_WHITELIST = 2
+# Увеличим цели, чтобы скрипт старался найти больше
+TARGET_GAME = 2
+TARGET_UNIVERSAL = 5 
+TARGET_WARP = 3
+TARGET_WHITELIST = 3
 
-# --- СЕТЕВЫЕ НАСТРОЙКИ (ОПТИМИЗИРОВАНО ДЛЯ СКОРОСТИ) ---
-TIMEOUT = 0.5  # Тайм-аут для TCP ping (был 0.7)
-REAL_TEST_TIMEOUT = 4.0  # Тайм-аут для реальной проверки (был 5.5)
-REAL_TEST_ATTEMPTS = 3   # Количество попыток (было 5 - слишком долго)
-REAL_TEST_MIN_SUCCESS = 2 # Минимальный успех (было 4)
-MAX_ALLOWED_LOSS = 0.34   # Допуск потерь (1 из 3 ошибок допустима)
-MAX_ALLOWED_JITTER = 180
-MAX_REAL_LATENCY = 700
+# --- СЕТЕВЫЕ НАСТРОЙКИ ---
+TIMEOUT = 0.6          # Тайм-аут для TCP ping
+REAL_TEST_TIMEOUT = 5.0 # Чуть увеличим для надежности
+REAL_TEST_ATTEMPTS = 2  # 2 попытки достаточно для проверки "жив/мертв"
+REAL_TEST_MIN_SUCCESS = 1 # Достаточно 1 успешного ответа
+MAX_ALLOWED_LOSS = 0.51   # Если 1 из 2 прошла - считаем ок
+MAX_ALLOWED_JITTER = 250  # Чуть мягче к джиттеру
+MAX_REAL_LATENCY = 900    # Чуть мягче к латенси, главное чтоб работал
 
 REAL_TEST_URLS = [
     "https://www.gstatic.com/generate_204",
@@ -79,7 +82,7 @@ REAL_TEST_URLS = [
 ]
 
 HTTP_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
 
 # --- ОБНОВЛЕНИЕ ---
@@ -97,15 +100,17 @@ RUS_NAMES = {
     'XX': 'Неизвестно', 'GR': 'Греция', 'CH': 'Швейцария'
 }
 
-TIER_1_PLATINUM = {'FI', 'EE', 'SE', 'LV', 'LT', 'PL'}
-TIER_2_GOLD = {'DE', 'NL', 'FR', 'KZ', 'RU', 'UA'}
-TIER_3_SILVER = {'GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT', 'CH'}
+# Приоритеты стран (Tier)
+TIER_1_PLATINUM = {'FI', 'EE', 'SE', 'LV', 'LT'} # Супер быстрые для СНГ
+TIER_2_GOLD = {'PL', 'DE', 'NL', 'UA', 'KZ', 'RU', 'BY'} # Хорошие, Польша тут
+TIER_3_SILVER = {'GB', 'FR', 'IT', 'CZ', 'BG', 'AT', 'CH', 'NO', 'DK', 'RO'}
+# Остальные (Tier 4) и US/CA (Tier 5 - высокий пинг) считаются автоматически
 
 MIN_THEORETICAL_LATENCY = {
-    'FI': 15, 'EE': 20, 'SE': 20, 'DE': 35, 'NL': 40, 'GB': 45,
-    'FR': 45, 'PL': 30, 'UA': 20, 'TR': 40, 'IT': 50, 'ES': 60,
-    'US': 95, 'CA': 100, 'JP': 150, 'KR': 150, 'SG': 120, 'GR': 45,
-    'BG': 40, 'RO': 35, 'CH': 40, 'NO': 35
+    'FI': 10, 'EE': 15, 'SE': 15, 'DE': 30, 'NL': 35, 'GB': 40,
+    'FR': 40, 'PL': 25, 'UA': 15, 'TR': 35, 'IT': 45, 'ES': 55,
+    'US': 90, 'CA': 95, 'JP': 140, 'KR': 140, 'SG': 110, 'GR': 40,
+    'BG': 35, 'RO': 30, 'CH': 35, 'NO': 30
 }
 
 geo_reader = None
@@ -262,9 +267,10 @@ def parse_config_info(config_str, source_type):
             flow_val = (params.get('flow', [''])[0] or '').lower()
             is_reality = security == 'reality'
 
+            # Ослабляем проверку PBK для Reality, иногда она не обязательна в некоторых клиентах, но лучше оставить
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
-                if len(pbk) < 10:
+                if len(pbk) < 5: # Чуть уменьшим требование
                     return None
 
             original_remark = unquote(parsed.fragment).strip() if parsed.fragment else 'Unknown'
@@ -414,7 +420,6 @@ def generate_xray_config(server, local_port):
     }
 
 def get_free_port():
-    """Находит свободный порт для локального запуска Xray"""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('', 0))
@@ -423,11 +428,9 @@ def get_free_port():
         return random.randint(10000, 60000)
 
 def check_real_connection(server):
-    # Используем динамический поиск порта, чтобы потоки не конфликтовали
     local_port = get_free_port()
     config = generate_xray_config(server, local_port)
 
-    # Используем NamedTemporaryFile для уникальных конфигов в каждом потоке
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=f'_{local_port}.json') as tmp_conf:
         json.dump(config, tmp_conf)
         config_path = tmp_conf.name
@@ -441,8 +444,7 @@ def check_real_connection(server):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        # Даем немного времени на старт
-        time.sleep(0.8)
+        time.sleep(0.7) # Немного уменьшил ожидание запуска
 
         if xray_process.poll() is not None:
             return None
@@ -492,10 +494,12 @@ def check_real_connection(server):
 
     median_latency = statistics.median(latencies)
     jitter = statistics.pstdev(latencies) if success_count > 1 else 0
+    
     if jitter > MAX_ALLOWED_JITTER:
         return None
 
-    score = median_latency + (jitter * 1.8) + (loss_ratio * 400)
+    # Мягкий скоринг, поощряем стабильность
+    score = median_latency + (jitter * 1.5) + (loss_ratio * 300)
 
     return {
         'median': median_latency,
@@ -521,10 +525,8 @@ def load_history():
 
 
 def save_history(history):
-    # Храним только недавние записи
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
     pruned = {}
-
     for k, v in history.items():
         try:
             last_seen = datetime.fromisoformat(v.get('last_seen', ''))
@@ -539,14 +541,11 @@ def save_history(history):
 
 def update_server_history(history, server, metrics):
     key = f"{server['ip']}:{server['port']}"
-    
     with history_lock:
         item = history.get(key)
-        # Если записи нет или она не словарь — создаем новую
         if not isinstance(item, dict):
             item = {}
 
-        # Принудительно задаем дефолтные значения
         item.setdefault('ok_count', 0)
         item.setdefault('fail_count', 0)
         item.setdefault('last_latency', 9999)
@@ -577,7 +576,7 @@ def get_history_penalty(history, server):
         return 0
 
     fail_ratio = fail_count / total
-    return int(fail_ratio * 280)
+    return int(fail_ratio * 200) # Чуть уменьшил штраф
 
 
 def check_server_initial(server):
@@ -599,13 +598,14 @@ def check_server_initial(server):
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
 
-    # Фейковая гео-эвристика
     is_fake = False
-    if code not in {'RU', 'BY', 'UA', 'KZ', 'XX'} and server['tcp_latency'] < 15:
+    # Ослабленная эвристика, чтобы не банить нормальные сервера
+    if code not in {'RU', 'BY', 'UA', 'KZ', 'XX'} and server['tcp_latency'] < 5:
         is_fake = True
 
     min_ping = MIN_THEORETICAL_LATENCY.get(code, 20)
-    if server['tcp_latency'] < (min_ping - 5):
+    # Даем допуск 10мс
+    if server['tcp_latency'] < (min_ping - 10):
         is_fake = True
 
     if server['category'] == 'WHITELIST' and code == 'RU':
@@ -620,82 +620,107 @@ def check_server_initial(server):
 
 def run_tournament(candidates, winners_needed, title='TOURNAMENT', mode='mixed', history=None):
     if not candidates:
+        logger.warning(f"⚠️ {title}: Входящий список пуст.")
         return []
 
-    filtered = candidates
+    filtered = []
+    # 1. Фильтрация
     if mode in {'gaming', 'universal'}:
+        # Для гейминга и универсала берем только Reality и исключаем RU/XX
         filtered = [
             c for c in candidates
             if c['is_reality'] and c['info']['countryCode'] not in {'RU', 'XX'}
         ]
-        logger.info(f"{title}: Фильтр Reality+Foreign (No RU/XX).")
+        logger.info(f"{title}: Фильтр Reality+Foreign (Вход: {len(candidates)} -> {len(filtered)})")
     elif mode == 'whitelist':
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == 'warp':
         filtered = [c for c in candidates if c['info']['countryCode'] not in {'RU', 'XX'}]
-
-    if not filtered:
-        return []
-
-    semifinalists = sorted(filtered, key=lambda x: x['tcp_latency'])[:45]
-    logger.info(f"🏟️ {title} (PARALLEL Xray: {len(semifinalists)} кандидатов...)")
-
-    scored = []
     
-    # ПАРАЛЛЕЛЬНАЯ ПРОВЕРКА (ОСНОВНОЕ УСКОРЕНИЕ)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
-        future_to_server = {executor.submit(check_real_connection, s): s for s in semifinalists}
-        
-        for future in concurrent.futures.as_completed(future_to_server):
-            server = future_to_server[future]
-            try:
-                metrics = future.result()
-                
-                if history is not None:
-                    update_server_history(history, server, metrics)
-
-                if metrics is None:
-                    continue
-
-                if metrics['median'] > MAX_REAL_LATENCY:
-                    continue
-
-                server['latency'] = int(metrics['median'])
-                server['jitter'] = int(metrics['jitter'])
-                server['loss_ratio'] = metrics['loss_ratio']
-
-                tier_penalty = 0
-                if mode != 'gaming':
-                    if server['tier_rank'] == 2:
-                        tier_penalty = 25
-                    elif server['tier_rank'] >= 3:
-                        tier_penalty = 60
-
-                warp_penalty = 0
-                if mode == 'warp' and server['transport'] not in {'ws', 'grpc'}:
-                    warp_penalty = 2000
-
-                history_penalty = get_history_penalty(history, server) if history is not None else 0
-
-                final_score = metrics['score'] + tier_penalty + warp_penalty + history_penalty
-                server['final_score'] = final_score
-
-                proto = 'SS' if server.get('is_ss') else ('Reality' if server['is_reality'] else server['transport'].upper())
-                logger.info(
-                    f"✅ {server['info']['countryCode']:<4} | {proto:<8} | "
-                    f"Med: {int(metrics['median'])}ms | Jit: {int(metrics['jitter'])} | "
-                    f"Score: {int(final_score)}"
-                )
-                scored.append(server)
-            except Exception as e:
-                continue
-
-    scored.sort(key=lambda x: x['final_score'])
-    if not scored:
-        logger.warning(f"⚠️ {title}: Не найдено рабочих серверов.")
+    if not filtered:
+        logger.warning(f"⚠️ {title}: Нет кандидатов после фильтрации.")
         return []
 
-    return scored[:winners_needed]
+    # 2. УМНАЯ СОРТИРОВКА (Tier 1 -> Tier 2 -> Ping)
+    # Сначала сортируем по рангу страны (1 - лучше), потом по пингу
+    filtered.sort(key=lambda x: (x.get('tier_rank', 99), x.get('tcp_latency', 9999)))
+
+    winners = []
+    
+    # Настройки батчей
+    BATCH_SIZE = 25    # Сколько проверять за раз
+    MAX_CHECKS = 200   # Максимум проверок всего, чтобы не зависнуть навечно
+    checked_count = 0
+    
+    logger.info(f"🏟️ {title}: Старт умного поиска. Цель: {winners_needed} побед. Кандидатов: {len(filtered)}")
+
+    # 3. Цикл по батчам (идем по списку вниз, если топы не работают)
+    while len(winners) < winners_needed and checked_count < len(filtered) and checked_count < MAX_CHECKS:
+        batch = filtered[checked_count : checked_count + BATCH_SIZE]
+        
+        # logger.info(f"   Batch {checked_count}-{checked_count+len(batch)} processing...")
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
+            future_to_server = {executor.submit(check_real_connection, s): s for s in batch}
+            
+            for future in concurrent.futures.as_completed(future_to_server):
+                server = future_to_server[future]
+                try:
+                    metrics = future.result()
+                    
+                    if history is not None:
+                        update_server_history(history, server, metrics)
+
+                    if metrics is None:
+                        continue
+
+                    if metrics['median'] > MAX_REAL_LATENCY:
+                        continue
+
+                    server['latency'] = int(metrics['median'])
+                    server['jitter'] = int(metrics['jitter'])
+                    server['loss_ratio'] = metrics['loss_ratio']
+
+                    tier_penalty = 0
+                    if mode != 'gaming':
+                        # Небольшой штраф за тир, но если сервер рабочий - берем
+                        if server['tier_rank'] == 2:
+                            tier_penalty = 10
+                        elif server['tier_rank'] >= 3:
+                            tier_penalty = 30
+
+                    warp_penalty = 0
+                    if mode == 'warp' and server['transport'] not in {'ws', 'grpc'}:
+                        warp_penalty = 2000
+
+                    history_penalty = get_history_penalty(history, server) if history is not None else 0
+
+                    final_score = metrics['score'] + tier_penalty + warp_penalty + history_penalty
+                    server['final_score'] = final_score
+
+                    proto = 'SS' if server.get('is_ss') else ('Reality' if server['is_reality'] else server['transport'].upper())
+                    
+                    # Логируем только победителей
+                    logger.info(
+                        f"✅ {server['info']['countryCode']:<4} | {proto:<8} | "
+                        f"Med: {int(metrics['median'])}ms | Jit: {int(metrics['jitter'])} | "
+                        f"Score: {int(final_score)}"
+                    )
+                    winners.append(server)
+
+                except Exception:
+                    continue
+        
+        checked_count += len(batch)
+
+    # Сортируем победителей по качеству
+    winners.sort(key=lambda x: x['final_score'])
+    
+    if not winners:
+        logger.warning(f"⚠️ {title}: Не найдено рабочих серверов после проверки {checked_count} кандидатов.")
+        return []
+
+    return winners[:winners_needed]
 
 
 def request_text(url, timeout=10):
@@ -716,7 +741,7 @@ def process_urls(urls, source_type):
     for url in urls:
         separator = '&' if '?' in url else '?'
         final_url = f"{url}{separator}t={ts}"
-        content = request_text(final_url, timeout=10)
+        content = request_text(final_url, timeout=15) # Чуть больше тайм-аут
         if not content:
             continue
 
@@ -780,7 +805,7 @@ def server_name(server):
 
 
 def main():
-    logger.info("--- ЗАПУСК V80 (PARALLEL TURBO MODE) ---")
+    logger.info("--- ЗАПУСК V81 (SMART TIER FALLBACK) ---")
 
     if os.path.exists(XRAY_BIN):
         os.chmod(XRAY_BIN, 0o755)
@@ -802,11 +827,11 @@ def main():
 
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
-    logger.info(f"🔍 Найдено {len(servers_to_check)} серверов. Начинаем TCP-сканирование...")
+    logger.info(f"🔍 Найдено {len(servers_to_check)} уникальных конфигов. TCP-фильтрация...")
 
     working = []
-    # Быстрый первичный отсев по TCP
-    with concurrent.futures.ThreadPoolExecutor(max_workers=120) as executor:
+    # Первичный отсев по TCP
+    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
         futures = [executor.submit(check_server_initial, s) for s in servers_to_check]
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
@@ -817,21 +842,28 @@ def main():
     b_univ = [s for s in working if s['category'] == 'UNIVERSAL']
     b_warp = [s for s in working if s['category'] == 'WARP']
 
+    logger.info(f"📊 После TCP фильтра: Univ={len(b_univ)}, Warp={len(b_warp)}, White={len(b_white)}")
+
     final_list = []
 
-    # Запускаем турниры с параллельной проверкой
+    # 1. GAME CUP
     game_winners = run_tournament(b_univ, TARGET_GAME, 'GAME CUP', 'gaming', history)
-    game_ips = []
+    game_ips = {g['ip'] for g in game_winners}
     for g in game_winners:
         g['category'] = 'Game Server'
-        game_ips.append(g['ip'])
     final_list.extend(game_winners)
 
+    # 2. UNIVERSAL CUP (Исключаем тех, кто уже в Game)
     b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, 'UNIVERSAL CUP', 'universal', history))
+
+    # 3. WARP CUP
     final_list.extend(run_tournament(b_warp, TARGET_WARP, 'WARP CUP', 'warp', history))
+
+    # 4. WHITELIST CUP
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, 'WHITELIST CUP', 'whitelist', history))
 
+    # Сохранение
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -895,8 +927,6 @@ def main():
     save_history(history)
 
     logger.info(f"DONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
-    logger.info(f"SECURE stats saved to {JSON_FILE} (No configs inside).")
-
 
 if __name__ == '__main__':
     main()
