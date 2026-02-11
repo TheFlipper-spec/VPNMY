@@ -52,10 +52,14 @@ geo_reader = None
 
 def install_xray_core():
     """
-    Автоматически скачивает и распаковывает Xray, если его нет.
-    Решает проблему 'unzip: command not found'.
+    Автоматически скачивает и распаковывает Xray, используя встроенные средства Python.
+    Работает без системной утилиты unzip.
     """
     if os.path.exists(XRAY_BIN):
+        # Проверяем, исполняемый ли файл
+        st = os.stat(XRAY_BIN)
+        if not (st.st_mode & stat.S_IEXEC):
+            os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
         return
 
     print("📥 Xray core не найден. Скачивание (v1.8.4)...")
@@ -64,10 +68,15 @@ def install_xray_core():
     try:
         r = requests.get(url, stream=True, timeout=30)
         if r.status_code == 200:
+            # Используем io.BytesIO и zipfile для распаковки в памяти
             with zipfile.ZipFile(io.BytesIO(r.content)) as z:
-                # Извлекаем только сам исполняемый файл
-                with z.open('xray') as zf, open(XRAY_BIN, 'wb') as f:
-                    f.write(zf.read())
+                # Извлекаем только файл xray
+                if 'xray' in z.namelist():
+                    with z.open('xray') as zf, open(XRAY_BIN, 'wb') as f:
+                        f.write(zf.read())
+                else:
+                    print("❌ В архиве нет файла xray!")
+                    return
             
             # Даем права на выполнение (chmod +x)
             st = os.stat(XRAY_BIN)
@@ -245,11 +254,11 @@ def check_real_ping(server):
 
     if latency:
         server['real_delay'] = latency
-        # Проверяем страну ТОЛЬКО здесь, чтобы не тратить время на парсинг вначале
+        # Проверяем страну ТОЛЬКО здесь
         code = get_country_code(server['ip'])
         server['country'] = code
         
-        # ВАЖНО: Фильтр "XX" прямо здесь
+        # ВАЖНО: Фильтр "XX" (неопознанная страна)
         if code == 'XX':
             return None
             
@@ -259,7 +268,7 @@ def check_real_ping(server):
 def main():
     print("🚀 START: Smart VLESS Selector (Fix: No Unzip needed)")
     
-    # 0. Установка зависимостей
+    # 0. Установка зависимостей (Xray)
     install_xray_core()
     download_mmdb()
     init_geoip()
@@ -268,7 +277,7 @@ def main():
         print(f"❌ ОШИБКА: Не удалось найти или установить {XRAY_BIN}")
         return
 
-    # 1. Сбор
+    # 1. Сбор ссылок
     all_configs = []
     print("🌐 Загрузка источников...")
     for url in SOURCES:
@@ -285,7 +294,7 @@ def main():
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
     print(f"🔍 Уникальных конфигов: {len(unique_configs)}")
 
-    # 2. Проверка
+    # 2. Проверка (Real Ping)
     valid_servers = []
     print(f"⚡ Тестирование (Workers: {MAX_WORKERS})...")
     
@@ -297,23 +306,22 @@ def main():
                 valid_servers.append(res)
                 print(f"   ✅ {res['country']} | Ping: {res['real_delay']}ms")
 
-    # 3. Логика отбора
-    # Убираем XX (на всякий случай, хотя фильтр выше уже есть)
-    clean_servers = [s for s in valid_servers if s['country'] != 'XX']
+    # 3. Логика отбора (9 + 1)
+    # Сначала фильтруем валидные (уже без XX, так как check_real_ping отсеял их)
     
-    ru_servers = [s for s in clean_servers if s['country'] == 'RU']
-    world_servers = [s for s in clean_servers if s['country'] != 'RU']
+    ru_servers = [s for s in valid_servers if s['country'] == 'RU']
+    world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
+    # Сортировка по скорости
     ru_servers.sort(key=lambda x: x['real_delay'])
     world_servers.sort(key=lambda x: x['real_delay'])
 
     final_selection = []
     
-    # Считаем слоты
-    # Мы хотим всего 10. Оставляем 1 место гарантированно под RU, 9 под мир.
+    # Сколько нужно серверов МИРА? (Всего 10 - 1 под РФ)
     needed_world = TOTAL_SERVERS_WANTED - 1
     
-    # Берем ТОП мира
+    # Берем ТОП мира (9 шт)
     top_world = world_servers[:needed_world]
     final_selection.extend(top_world)
     
@@ -323,7 +331,7 @@ def main():
         final_selection.append(best_ru)
         print(f"🏆 Добавлен RU (в конец): {best_ru['ip']}")
     else:
-        # Если RU нет, добиваем миром до 10 (если есть)
+        # Если RU нет вообще, добиваем иностранными до 10 (если есть)
         remaining_slots = TOTAL_SERVERS_WANTED - len(final_selection)
         if remaining_slots > 0:
             extra_world = world_servers[needed_world : needed_world + remaining_slots]
