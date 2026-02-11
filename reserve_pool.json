@@ -1,931 +1,76 @@
 {
-  "updated": "2026-02-11 20:54:26 MSK",
+  "updated": "2026-02-11 21:04:34 MSK",
   "servers": [
     {
-      "ip": "195.209.67.124",
-      "port": 80,
-      "cc": "RU",
-      "link": "vless://e08f1ad7-0c60-446d-baec-08b3b69bb3d0@195.209.67.124:80?encryption=none&host=nl-90w-c.southnetworks.cloud&path=%2FgetWorkerUpdates&sni=nl-90w-c.southnetworks.cloud&type=ws#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D",
-      "speed": 6.02,
-      "ping": 2153.876050333338,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
+      "ip": "158.160.105.121",
       "port": 443,
       "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru&path=&host=#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.91,
-      "ping": 1125.1474499999858,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=8f222b3475800821&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.74,
-      "ping": 1629.2474409999995,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 51102,
-      "cc": "RU",
-      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.221.132:51102?encryption=none&flow=xtls-rprx-vision&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.56,
-      "ping": 1325.163855000009,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.48,
-      "ping": 1840.9748130000025,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:8443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.47,
-      "ping": 933.3530333333329,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.44,
-      "ping": 1212.4973413333275,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.37,
-      "ping": 935.1490429999861,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.34,
-      "ping": 1007.8978900000001,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@89.169.162.214:8443?security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.34,
-      "ping": 938.6359813333343,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.34,
-      "ping": 949.4962819999841,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.3,
-      "ping": 938.780913666657,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.29,
-      "ping": 957.3382793333376,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.28,
-      "ping": 976.3279683333318,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.27,
-      "ping": 957.9776366666598,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.23,
-      "ping": 967.2557330000064,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.23,
-      "ping": 1431.538911666659,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@146.185.240.23:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 5.23,
-      "ping": 972.5855580000106,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.221.132:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=firefox&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=8f222b3475800821&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.105.121:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=887c0d72e771a934&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
       "speed": 5.21,
-      "ping": 3225.1198990000016,
+      "ping": 1290.398768999997,
       "role": "WHITELIST"
     },
     {
-      "ip": "89.169.162.214",
+      "ip": "95.163.210.173",
       "port": 443,
       "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=65ce6cee3941af69&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
       "speed": 5.16,
-      "ping": 954.9923766666666,
+      "ping": 2291.625266666661,
       "role": "WHITELIST"
     },
     {
-      "ip": "89.169.162.214",
+      "ip": "158.160.105.121",
       "port": 443,
       "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@89.169.162.214:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.105.121:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=887c0d72e771a934&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 5.15,
+      "ping": 1457.1266546666757,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.105.121",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.105.121:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
       "speed": 5.13,
-      "ping": 947.8096629999964,
+      "ping": 1158.9086899999945,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.136.245",
-      "port": 443,
+      "ip": "158.160.105.121",
+      "port": 51102,
       "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.12,
-      "ping": 1308.5446306666693,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@84.252.136.245:8443?security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.105.121:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
       "speed": 5.11,
-      "ping": 987.2885300000007,
+      "ping": 980.3007223333394,
       "role": "WHITELIST"
     },
     {
-      "ip": "89.169.162.214",
-      "port": 8443,
+      "ip": "158.160.105.121",
+      "port": 51102,
       "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.105.121:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
       "speed": 5.11,
-      "ping": 935.6698859999993,
+      "ping": 1011.3153179999964,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.136.245",
-      "port": 443,
+      "ip": "158.160.105.121",
+      "port": 51102,
       "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.11,
-      "ping": 1015.8739026666884,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.11,
-      "ping": 1591.7476803333368,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.105.121:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
       "speed": 5.1,
-      "ping": 974.9751403333279,
+      "ping": 990.0871850000025,
       "role": "WHITELIST"
     },
     {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@89.169.162.214:8443?security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.09,
-      "ping": 1093.7310196666679,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
+      "ip": "158.160.105.121",
       "port": 51102,
       "cc": "RU",
-      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:51102?security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.08,
-      "ping": 969.5072663333425,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.105.121:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
       "speed": 5.06,
-      "ping": 1503.9169579999907,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.06,
-      "ping": 931.1828203333334,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.04,
-      "ping": 1206.06185633333,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@84.252.136.245:8443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=yandex.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 5.02,
-      "ping": 1003.012429333296,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.93,
-      "ping": 986.9214196666622,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@146.185.240.23:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 4.93,
-      "ping": 1241.4312779999932,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 4.91,
-      "ping": 1785.861203999995,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@146.185.240.23:8443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 4.83,
-      "ping": 987.5092986666517,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.76,
-      "ping": 1346.7995996666673,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 4.74,
-      "ping": 1030.310935666667,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=a76ea384b29a4f79&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.66,
-      "ping": 737.7328869999928,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.59,
-      "ping": 822.969023999993,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:8443?security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.54,
-      "ping": 892.9846869999855,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "81.200.151.14",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=a76ea384b29a4f79&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 4.52,
-      "ping": 1595.155745999989,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "195.209.67.245",
-      "port": 80,
-      "cc": "RU",
-      "link": "vless://094e66a9-8d92-41fe-85ad-8e7bf9b5fcaa@195.209.67.245:80?encryption=none&host=nl-78w-c.southnetworks.cloud&path=%2FgetWorkerUpdates&type=ws#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D",
-      "speed": 4.5,
-      "ping": 2082.4325813333267,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.41,
-      "ping": 984.4672490000003,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 51102,
-      "cc": "RU",
-      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.38,
-      "ping": 1112.074701333351,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru&path=&host=#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.27,
-      "ping": 2294.0085373333354,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=8f222b3475800821&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 4.17,
-      "ping": 881.6856193333061,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@146.185.240.23:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 4.02,
-      "ping": 1017.1279856666615,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@146.185.240.23:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.97,
-      "ping": 1028.5547536666588,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@79.137.175.59:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.97,
-      "ping": 1057.6313889999938,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=887c0d72e771a934&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.93,
-      "ping": 1432.4222739999943,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.68,
-      "ping": 1014.8410300000137,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.64,
-      "ping": 1087.0511659999995,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@146.185.240.23:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.64,
-      "ping": 1016.7545596666704,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@84.252.136.245:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.62,
-      "ping": 991.6039680000022,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.136.245",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.57,
-      "ping": 982.7619436666927,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 51102,
-      "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:51102?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=1929ef620e9b34f5&sni=yandex.ru&path=&host=#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.53,
-      "ping": 1569.4507249999958,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "81.200.151.14",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 3.49,
-      "ping": 5725.535515499985,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 51102,
-      "cc": "RU",
-      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.38,
-      "ping": 1230.826643000005,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=cd57a927f6b72d81&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 3.32,
-      "ping": 1727.3509579999882,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@79.137.175.59:8443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.26,
-      "ping": 1121.3269469999905,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.11,
-      "ping": 977.0130343333391,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.07,
-      "ping": 1398.3814246666716,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@79.137.175.59:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.04,
-      "ping": 1062.4249426666713,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "91.219.226.196",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0c62469a-009f-4050-bbc6-2be5d74e64f7@91.219.226.196:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=x6cB3avjxjxzhNESk8iJTTCzOPKXnB0AbnjKSqKkang&sid=c0ffee1234abcd56&sni=max.ru#%F0%9F%87%AA%F0%9F%87%AA%20Estonia%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.04,
-      "ping": 1088.7095079999938,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@146.185.240.23:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 3.01,
-      "ping": 982.8795296666707,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4b523a98e1bbd15b&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.94,
-      "ping": 3701.753884666667,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "87.239.107.214",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
-      "speed": 2.86,
-      "ping": 1101.6382096666462,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@79.137.175.59:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 2.71,
-      "ping": 1486.5490556666716,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=f85b0cdd7d20c84c&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.69,
-      "ping": 3351.5623953333366,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@79.137.175.59:8443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 2.67,
-      "ping": 1387.2922836666723,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "158.160.221.132",
-      "port": 51102,
-      "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:51102?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=1929ef620e9b34f5&sni=yandex.ru&path=&host=#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.51,
-      "ping": 1375.220832333336,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=33554379411b3219&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.47,
-      "ping": 2828.0734246666743,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "95.163.211.13",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.211.13:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=f85b0cdd7d20c84c&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
-      "speed": 2.47,
-      "ping": 2816.3655895000093,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 2.43,
-      "ping": 1035.970318000011,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=17f0f0e38f01af5a&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.42,
-      "ping": 2672.566930000007,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.37,
-      "ping": 2930.6566256666524,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=cd57a927f6b72d81&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.29,
-      "ping": 3678.3050073333357,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://457c367f-ac78-4641-9846-dd880332f7cf@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=17802e8ff84f12df&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.29,
-      "ping": 2396.245550000003,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.2,
-      "ping": 1086.8852806666637,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=6354585c37827955&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.19,
-      "ping": 3560.572829666669,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.09,
-      "ping": 4049.069268333336,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "195.209.67.124",
-      "port": 80,
-      "cc": "RU",
-      "link": "vless://e08f1ad7-0c60-446d-baec-08b3b69bb3d0@195.209.67.124:80?encryption=none&host=nl-90w-c.southnetworks.cloud&path=%2FgetWorkerUpdates&type=ws#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D",
-      "speed": 2.04,
-      "ping": 2501.408647999999,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=65ce6cee3941af69&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 2.04,
-      "ping": 3669.905557,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=a76ea384b29a4f79&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.95,
-      "ping": 3519.8712640000026,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "89.169.162.214",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.9,
-      "ping": 978.4509046666681,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.89,
-      "ping": 3008.2580199999993,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@146.185.240.23:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.88,
-      "ping": 1719.5686109999995,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "87.239.110.251",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@87.239.110.251:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.85,
-      "ping": 2718.250519333329,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=87cc0414902bee2d&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.84,
-      "ping": 3694.267573999999,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=f85b0cdd7d20c84c&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.84,
-      "ping": 3221.5537410000084,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=87cc0414902bee2d&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.83,
-      "ping": 3529.054254000002,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=e55fd8f9c9a9a0ca&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.78,
-      "ping": 5252.52808866667,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.73,
-      "ping": 4812.153080333342,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.83.255",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.71,
-      "ping": 3977.6870090000025,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.68,
-      "ping": 4357.61002066667,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.65.209",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=e55fd8f9c9a9a0ca&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.66,
-      "ping": 5187.222342500007,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.56",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@79.137.175.56:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=m.vk.ru&path=&host=#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.66,
-      "ping": 5783.561555999995,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "81.200.151.14",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=33554379411b3219&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 1.64,
-      "ping": 5285.792462000018,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.65.209",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.59,
-      "ping": 4986.416857999991,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.59,
-      "ping": 2745.8716406666595,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "195.209.67.245",
-      "port": 80,
-      "cc": "RU",
-      "link": "vless://e08f1ad7-0c60-446d-baec-08b3b69bb3d0@195.209.67.245:80?encryption=none&host=nl-90w-c.southnetworks.cloud&path=%2FgetWorkerUpdates&type=ws#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D",
-      "speed": 1.55,
-      "ping": 1570.352553999996,
+      "ping": 1099.4831180000044,
       "role": "WHITELIST"
     },
     {
@@ -933,242 +78,377 @@
       "port": 443,
       "cc": "RU",
       "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=e55fd8f9c9a9a0ca&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 1.54,
-      "ping": 5713.635848999999,
+      "speed": 4.95,
+      "ping": 3288.920578333337,
       "role": "WHITELIST"
     },
     {
-      "ip": "51.250.65.209",
-      "port": 443,
+      "ip": "89.169.162.214",
+      "port": 8443,
       "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=f85b0cdd7d20c84c&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.49,
-      "ping": 5033.884269000006,
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.86,
+      "ping": 1091.4492153333506,
       "role": "WHITELIST"
     },
     {
-      "ip": "51.250.83.255",
+      "ip": "87.239.107.214",
       "port": 443,
       "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=17f0f0e38f01af5a&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.49,
-      "ping": 5825.183621999998,
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.84,
+      "ping": 1377.4677363333346,
       "role": "WHITELIST"
     },
     {
-      "ip": "51.250.65.209",
+      "ip": "195.209.67.245",
+      "port": 80,
+      "cc": "RU",
+      "link": "vless://094e66a9-8d92-41fe-85ad-8e7bf9b5fcaa@195.209.67.245:80?encryption=none&host=nl-78w-c.southnetworks.cloud&path=%2FgetWorkerUpdates&type=ws#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D",
+      "speed": 4.72,
+      "ping": 2260.4541946666645,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.7,
+      "ping": 1272.919827666674,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.7,
+      "ping": 1590.4827926666721,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
       "port": 443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=2476f063981ffd92&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.48,
-      "ping": 5527.061492333331,
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.66,
+      "ping": 1127.1253680000088,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=cd57a927f6b72d81&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.66,
+      "ping": 1812.7877429999871,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@84.252.136.245:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.66,
+      "ping": 1133.096271666678,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.65,
+      "ping": 1115.990791666666,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.65,
+      "ping": 1288.8413649999961,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@89.169.162.214:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.64,
+      "ping": 1115.8476566666689,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.63,
+      "ping": 1104.9768436666625,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.63,
+      "ping": 1128.211667999987,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@84.252.136.245:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.62,
+      "ping": 1128.2439836666829,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.6,
+      "ping": 1158.4619506666675,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@84.252.136.245:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.6,
+      "ping": 1131.0502306666638,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.58,
+      "ping": 1113.0597759999907,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.58,
+      "ping": 1113.2185130000018,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.58,
+      "ping": 1106.973897666677,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.58,
+      "ping": 1119.2564693333225,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.57,
+      "ping": 1291.269203666663,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.56,
+      "ping": 1284.2814299999975,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.56,
+      "ping": 1109.4284059999875,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.54,
+      "ping": 1121.8058133333338,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@84.252.136.245:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.53,
+      "ping": 1350.3445879999988,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@84.252.136.245:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.53,
+      "ping": 1123.6357553333298,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.53,
+      "ping": 1405.4264360000086,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.51,
+      "ping": 1124.0297386666687,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@84.252.136.245:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.5,
+      "ping": 1114.0396033333293,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.107.214",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@87.239.107.214:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.48,
+      "ping": 1044.8534593333345,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.44,
+      "ping": 1103.664908666668,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "84.252.136.245",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@84.252.136.245:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.43,
+      "ping": 1122.2070683333338,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.107.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.39,
+      "ping": 1030.8324503333258,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:51102?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=1929ef620e9b34f5&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.34,
+      "ping": 2623.508104000005,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "146.185.240.23",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@146.185.240.23:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.34,
+      "ping": 1440.821597666665,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.107.214",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.32,
+      "ping": 1347.1207246666665,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.107.214",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.3,
+      "ping": 1053.201643333338,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.107.214",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.24,
+      "ping": 1050.001458666666,
       "role": "WHITELIST"
     },
     {
       "ip": "79.137.175.56",
-      "port": 443,
+      "port": 8443,
       "cc": "RU",
-      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@79.137.175.56:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.47,
-      "ping": 6006.045351499992,
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@79.137.175.56:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.18,
+      "ping": 1332.7744693333443,
       "role": "WHITELIST"
     },
     {
-      "ip": "51.250.83.255",
-      "port": 443,
+      "ip": "89.169.162.214",
+      "port": 8443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=17802e8ff84f12df&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.41,
-      "ping": 5446.2495626666705,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "81.200.151.14",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=c8597fb67d55d9c4&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 1.4,
-      "ping": 3774.371940500004,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.83.255",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.37,
-      "ping": 5504.376037999994,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "109.120.188.14",
-      "port": 1488,
-      "cc": "RU",
-      "link": "vless://b42f7955-3741-406f-b95a-ed7b051ae5aa@109.120.188.14:1488?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc&security=reality&sni=ads.x5.ru&type=tcp#%F0%9F%87%AC%F0%9F%87%A7%20United%20Kingdom%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.34,
-      "ping": 4272.82042249999,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "5.188.140.115",
-      "port": 1488,
-      "cc": "RU",
-      "link": "vless://b42f7955-3741-406f-b95a-ed7b051ae5aa@5.188.140.115:1488?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=qq&pbk=SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc&sid=6ba85179e30d4fc2&sni=ads.x5.ru#%F0%9F%87%AA%F0%9F%87%AA%20Estonia%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.34,
-      "ping": 3748.8525594999937,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "91.219.226.196",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0c62469a-009f-4050-bbc6-2be5d74e64f7@91.219.226.196:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=&pbk=x6cB3avjxjxzhNESk8iJTTCzOPKXnB0AbnjKSqKkang&sid=c0ffee1234abcd56&sni=max.ru&path=&host=&spx=",
-      "speed": 1.3,
-      "ping": 590.7119639999934,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "81.200.151.79",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.79:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 1.3,
-      "ping": 4204.460716,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.0.147",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=f85b0cdd7d20c84c&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.25,
-      "ping": 3470.0091956666624,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.83.255",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://457c367f-ac78-4641-9846-dd880332f7cf@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.23,
-      "ping": 5179.922035499999,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "95.163.211.13",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.211.13:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.18,
-      "ping": 1840.0004894999922,
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 4.1,
+      "ping": 1092.8285653333346,
       "role": "WHITELIST"
     },
     {
       "ip": "79.137.175.59",
       "port": 443,
       "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@79.137.175.59:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.18,
-      "ping": 2089.0033663333247,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.65.209",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 1.15,
-      "ping": 5747.436655999998,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@146.185.240.23:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.12,
-      "ping": 2600.583292666665,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.04,
-      "ping": 1946.4523743333284,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "146.185.240.23",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 1.0,
-      "ping": 1001.0983539999928,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "51.250.83.255",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=2476f063981ffd92&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.99,
-      "ping": 4946.975009499994,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "79.137.175.59",
-      "port": 8443,
-      "cc": "RU",
-      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 0.95,
-      "ping": 1281.0318166666548,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "81.200.151.79",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@81.200.151.79:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=3f200574d011010f&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 0.89,
-      "ping": 4279.263747999991,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "81.200.151.79",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.79:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
-      "speed": 0.86,
-      "ping": 5917.931462333333,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "109.120.180.52",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://0c62469a-009f-4050-bbc6-2be5d74e64f7@109.120.180.52:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=&pbk=x6cB3avjxjxzhNESk8iJTTCzOPKXnB0AbnjKSqKkang&sid=f1e2d3c4b5a69788&sni=taxi.yandex.ru&path=&host=&spx=",
-      "speed": 0.8,
-      "ping": 1589.2554903333291,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "87.239.110.251",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@87.239.110.251:443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 0.8,
-      "ping": 1801.8792956666612,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=17802e8ff84f12df&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.79,
-      "ping": 1196.1723320000033,
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 4.1,
+      "ping": 1181.6478203333343,
       "role": "WHITELIST"
     },
     {
@@ -1176,80 +456,755 @@
       "port": 443,
       "cc": "RU",
       "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 0.77,
-      "ping": 1381.179283666673,
+      "speed": 4.03,
+      "ping": 2432.186807333333,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
+      "ip": "146.185.240.23",
       "port": 443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=2476f063981ffd92&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.77,
-      "ping": 879.2814890000074,
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@146.185.240.23:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.96,
+      "ping": 1201.3235529999993,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
+      "ip": "158.160.221.132",
       "port": 443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4a3ad88ff867a295&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.76,
-      "ping": 765.8585289999849,
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=887c0d72e771a934&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 3.95,
+      "ping": 2677.4293936666522,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
+      "ip": "146.185.240.23",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@146.185.240.23:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.93,
+      "ping": 1525.764203999998,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@89.169.162.214:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=yandex.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 3.85,
+      "ping": 1514.5475959999903,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "89.169.162.214",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@89.169.162.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=yandex.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20YA",
+      "speed": 3.84,
+      "ping": 1109.2655640000166,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
       "port": 443,
       "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.73,
-      "ping": 1049.8832149999942,
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.73,
+      "ping": 3285.3259976666704,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "81.200.151.14",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
+      "speed": 3.67,
+      "ping": 4484.658478333339,
       "role": "WHITELIST"
     },
     {
       "ip": "79.137.175.59",
       "port": 8443,
       "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@79.137.175.59:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 0.73,
-      "ping": 1056.6155423333328,
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@79.137.175.59:8443?type=tcp&security=reality&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru&path=&host=#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.64,
+      "ping": 1378.6098910000012,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
-      "port": 443,
+      "ip": "146.185.240.23",
+      "port": 8443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.7,
-      "ping": 4182.545713333336,
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.63,
+      "ping": 1991.6825099999944,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
+      "ip": "95.163.211.13",
       "port": 443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=cd57a927f6b72d81&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.68,
-      "ping": 1054.043605000004,
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.211.13:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=3f200574d011010f&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.61,
+      "ping": 3532.2949114999888,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
+      "ip": "95.163.210.173",
       "port": 443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=a76ea384b29a4f79&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.66,
-      "ping": 1134.8217149999869,
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=6354585c37827955&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.34,
+      "ping": 3359.333572500006,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.107.214",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.33,
+      "ping": 1022.1317276666658,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=6354585c37827955&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.27,
+      "ping": 2318.190638333334,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.221.132:443?security=reality&encryption=none&flow=xtls-rprx-vision&fp=firefox&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=8f222b3475800821&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 3.22,
+      "ping": 2893.934346666678,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:51102?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=1929ef620e9b34f5&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 3.16,
+      "ping": 2090.1329856666707,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "146.185.240.23",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.13,
+      "ping": 1130.6868986666718,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "146.185.240.23",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 3.06,
+      "ping": 2536.1447283333405,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "146.185.240.23",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@146.185.240.23:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.92,
+      "ping": 1161.6910680000199,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.56",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@79.137.175.56:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.87,
+      "ping": 1053.8677653333414,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "109.120.188.14",
+      "port": 1488,
+      "cc": "RU",
+      "link": "vless://b42f7955-3741-406f-b95a-ed7b051ae5aa@109.120.188.14:1488?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=qq&pbk=SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc&sni=ads.x5.ru#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.85,
+      "ping": 5062.8281394999985,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:51102?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.75,
+      "ping": 2304.146407999989,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "5.188.141.138",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://b42f7955-3741-406f-b95a-ed7b051ae5aa@5.188.141.138:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&pbk=SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc&sid=&sni=ads.x5.ru#%F0%9F%87%AA%F0%9F%87%AA%20Estonia%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.74,
+      "ping": 3648.18396150001,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=8f222b3475800821&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.7,
+      "ping": 2016.8722559999994,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.66,
+      "ping": 1721.4983350000068,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4b523a98e1bbd15b&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.62,
+      "ping": 2919.1163830000096,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.58,
+      "ping": 2031.8623933333317,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.59",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.56,
+      "ping": 1725.251000666669,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.211.13",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@95.163.211.13:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=33554379411b3219&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.55,
+      "ping": 3659.7287129999927,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.65.209",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=95ec618532fa065e&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.39,
+      "ping": 2976.747172333338,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.33,
+      "ping": 2592.425528666666,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.33,
+      "ping": 3216.707255000003,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.107.214",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@87.239.107.214:51102?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=1929ef620e9b34f5&sni=m.vk.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.33,
+      "ping": 1034.532736666667,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "81.200.151.14",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=3f200574d011010f&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
+      "speed": 2.3,
+      "ping": 3367.137860000014,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4b523a98e1bbd15b&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.25,
+      "ping": 3651.2609555,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=8f222b3475800821&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.25,
+      "ping": 2421.546788333321,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.24,
+      "ping": 2183.9087746666714,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.22,
+      "ping": 1972.5968526666693,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=887c0d72e771a934&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.21,
+      "ping": 2270.6256583333347,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@158.160.221.132:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=yandex.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.16,
+      "ping": 3067.683492000005,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.14,
+      "ping": 3856.757440333354,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.09,
+      "ping": 1920.360196000009,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@158.160.221.132:51102?encryption=none&flow=xtls-rprx-vision&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.09,
+      "ping": 1929.252335000001,
       "role": "WHITELIST"
     },
     {
       "ip": "79.137.175.59",
       "port": 8443,
       "cc": "RU",
-      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@79.137.175.59:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 0.65,
-      "ping": 1312.6255379999918,
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 2.07,
+      "ping": 2240.2286626666714,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=95ec618532fa065e&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.06,
+      "ping": 4043.2557439999923,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.65.209",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=2476f063981ffd92&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.05,
+      "ping": 4436.571627333332,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.65.209",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://457c367f-ac78-4641-9846-dd880332f7cf@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=7426b0c03ef009dc&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.05,
+      "ping": 2615.777025,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "81.200.151.14",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=3f200574d011010f&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
+      "speed": 2.05,
+      "ping": 4518.493958999997,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.03,
+      "ping": 4481.401907999995,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.65.209",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4b523a98e1bbd15b&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 2.01,
+      "ping": 3273.163761500008,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.65.209",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.99,
+      "ping": 4454.196126,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=17802e8ff84f12df&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.98,
+      "ping": 4698.340281999998,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "217.16.16.52",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://895f94cb-5567-4731-bc2c-2f89a54bafe4@217.16.16.52:443?encryption=none&fp=chrome&pbk=RmgID0rc49xSv22XO1dt0QuosmM8G3j7uFvkjmTT9GQ&security=reality&sid=56758738&sni=www.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.97,
+      "ping": 3790.238279666662,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.96,
+      "ping": 4842.035829000007,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=c8597fb67d55d9c4&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.94,
+      "ping": 4776.532310333337,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://457c367f-ac78-4641-9846-dd880332f7cf@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=33554379411b3219&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.93,
+      "ping": 3495.608187500011,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.77,
+      "ping": 2075.7135835000045,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=65ce6cee3941af69&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.76,
+      "ping": 4128.435822333335,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=e55fd8f9c9a9a0ca&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.75,
+      "ping": 2848.4413544999966,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "81.200.151.79",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@81.200.151.79:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=e55fd8f9c9a9a0ca&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
+      "speed": 1.75,
+      "ping": 4644.425758000011,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.211.13",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.211.13:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.71,
+      "ping": 3103.0087619999877,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=33554379411b3219&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.7,
+      "ping": 4292.8789833333385,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=17f0f0e38f01af5a&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.67,
+      "ping": 4018.863705000001,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "195.209.67.245",
+      "port": 80,
+      "cc": "RU",
+      "link": "vless://e08f1ad7-0c60-446d-baec-08b3b69bb3d0@195.209.67.245:80?encryption=none&host=nl-90w-c.southnetworks.cloud&path=%2FgetWorkerUpdates&type=ws#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D",
+      "speed": 1.59,
+      "ping": 3488.9142670000033,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.56",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://56e1592c-cae7-4ff1-b9d9-07ee111968b5@79.137.175.56:51102?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=1929ef620e9b34f5&sni=m.vk.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.58,
+      "ping": 1048.6335154999865,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "81.200.151.14",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=cd57a927f6b72d81&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
+      "speed": 1.58,
+      "ping": 2558.2079659999977,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=33554379411b3219&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.49,
+      "ping": 4280.4439809999985,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.59",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@79.137.175.59:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.45,
+      "ping": 1173.199632666666,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=a76ea384b29a4f79&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.45,
+      "ping": 1687.6994169999762,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.43,
+      "ping": 2365.1678379999908,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4a3ad88ff867a295&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.4,
+      "ping": 4404.159985666666,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.0.147",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=c8597fb67d55d9c4&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.4,
+      "ping": 5423.73858933333,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.110.251",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@87.239.110.251:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.33,
+      "ping": 1843.7040433333514,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "95.163.210.173",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@95.163.210.173:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=a76ea384b29a4f79&sni=max.ru&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D%20VK",
+      "speed": 1.32,
+      "ping": 1073.3185060000021,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.0.147",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4b523a98e1bbd15b&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.26,
+      "ping": 5429.751535499989,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.65.209",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.65.209:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.2,
+      "ping": 4230.592441333333,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.0.147",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=6354585c37827955&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.2,
+      "ping": 5542.438749499994,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "81.200.151.14",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@81.200.151.14:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=a76ea384b29a4f79&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
+      "speed": 1.19,
+      "ping": 3834.2252785,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.83.255",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.83.255:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=6354585c37827955&sni=ads.x5.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.03,
+      "ping": 4075.5390116666636,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "158.160.221.132",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@158.160.221.132:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=1929ef620e9b34f5&sni=yandex.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20YA",
+      "speed": 1.0,
+      "ping": 2422.236456666658,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.56",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@79.137.175.56:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.98,
+      "ping": 1386.884716666671,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "5.188.141.138",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://7bc30425-1c2f-4823-b629-90f599a4cbfe@5.188.141.138:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=ads.x5.ru&fp=qq&pbk=SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc&type=tcp&headerType=none#%F0%9F%87%AA%F0%9F%87%AA%20Estonia%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.95,
+      "ping": 4023.1660993333376,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "81.200.151.79",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@81.200.151.79:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=048fe5c8be4bb687&sni=m.vk.com&type=tcp#%F0%9F%87%B7%F0%9F%87%BA%20Russia%20%5B%2ACIDR%5D",
+      "speed": 0.95,
+      "ping": 4537.640732000007,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "146.185.240.23",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://338c2e3a-31ad-46fe-874e-c122b8cea339@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.83,
+      "ping": 1754.3896706666828,
       "role": "WHITELIST"
     },
     {
@@ -1257,17 +1212,17 @@
       "port": 8443,
       "cc": "RU",
       "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
-      "speed": 0.64,
-      "ping": 1743.667308999993,
+      "speed": 0.74,
+      "ping": 1220.715980999993,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
+      "ip": "79.137.175.59",
       "port": 443,
       "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=f85b0cdd7d20c84c&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.63,
-      "ping": 965.1770250000027,
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.72,
+      "ping": 1513.5695226666667,
       "role": "WHITELIST"
     },
     {
@@ -1275,80 +1230,125 @@
       "port": 8443,
       "cc": "RU",
       "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@79.137.175.59:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.7,
+      "ping": 1238.983946999999,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "51.250.0.147",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@51.250.0.147:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=43df3983229a1c73&sni=api-maps.yandex.ru&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "speed": 0.63,
+      "ping": 3141.5508243333365,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.59",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.62,
+      "ping": 1230.7991149999964,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.56",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://6d39596c-b569-4a61-86c3-28cfb83a4c95@79.137.175.56:51102?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&sid=887c0d72e771a934&sni=m.vk.ru#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
       "speed": 0.61,
-      "ping": 1304.6225956666717,
+      "ping": 1280.0151479999993,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
-      "port": 443,
+      "ip": "146.185.240.23",
+      "port": 8443,
       "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=c8597fb67d55d9c4&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.6,
-      "ping": 1342.4079953333319,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "195.209.67.245",
-      "port": 80,
-      "cc": "RU",
-      "link": "vless://e08f1ad7-0c60-446d-baec-08b3b69bb3d0@195.209.67.245:80?encryption=none&host=nl-90w-c.southnetworks.cloud&path=%2FgetWorkerUpdates&sni=nl-90w-c.southnetworks.cloud&type=ws#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D",
-      "speed": 0.59,
-      "ping": 2500.948119666674,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=4b523a98e1bbd15b&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@146.185.240.23:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
       "speed": 0.57,
-      "ping": 724.7058570000036,
+      "ping": 2014.5247066666723,
       "role": "WHITELIST"
     },
     {
-      "ip": "84.252.130.60",
-      "port": 443,
+      "ip": "87.239.107.214",
+      "port": 8443,
       "cc": "RU",
-      "link": "vless://8741e284-6199-4a8e-ace7-c9625b68ea64@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=3f200574d011010f&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.57,
-      "ping": 702.1897539999884,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=95ec618532fa065e&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.56,
-      "ping": 1087.5879299999979,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=6354585c37827955&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.56,
-      "ping": 1171.2449953333341,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
-      "speed": 0.55,
-      "ping": 1381.5769713333357,
-      "role": "WHITELIST"
-    },
-    {
-      "ip": "84.252.130.60",
-      "port": 443,
-      "cc": "RU",
-      "link": "vless://d9dc0172-2bb6-4ada-8d5a-f182297be5b9@84.252.130.60:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=FkmYFobwxLMLEktYXywmjthuEYCZggITsxwPNasTKUg&security=reality&sid=d17bd238f23fba92&sni=sun6-21.userapi.com&type=tcp#%F0%9F%87%B3%F0%9F%87%B1%20The%20Netherlands%20%5B%2ACIDR%5D%20YA",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@87.239.107.214:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
       "speed": 0.54,
-      "ping": 1732.1776729999954,
+      "ping": 1136.2578950000095,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "146.185.240.23",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@146.185.240.23:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.47,
+      "ping": 2339.560081333322,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.110.251",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://1a5b443d-42f3-4e8e-b980-2ebf9e74a45d@87.239.110.251:8443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=c6ef72e4635d15a5&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.46,
+      "ping": 1833.5536720000127,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.110.251",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@87.239.110.251:8443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=205748bc0f24a747&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.46,
+      "ping": 2842.0345443333304,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.59",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://0a9fe7e0-e02d-42ca-bebd-ecb4292f180c@79.137.175.59:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&security=reality&sid=e57932a42872a362&sni=m.vk.ru&type=tcp#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.45,
+      "ping": 1896.5016053333272,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.59",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@79.137.175.59:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=205748bc0f24a747&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.39,
+      "ping": 1529.400333666672,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.56",
+      "port": 51102,
+      "cc": "RU",
+      "link": "vless://3eb7e419-c34a-48a9-9988-05aa7e8d6a27@79.137.175.56:51102?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.37,
+      "ping": 1588.382431999984,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "79.137.175.56",
+      "port": 443,
+      "cc": "RU",
+      "link": "vless://e8accc46-c511-42fb-919b-9283799a88a1@79.137.175.56:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=Qddpg8luihgzgx4g4uMJklXzlrMCd8L1igJSWrRUvSc&security=reality&sid=8f222b3475800821&sni=m.vk.ru&type=tcp#%F0%9F%87%B5%F0%9F%87%B1%20Poland%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.37,
+      "ping": 1702.0581146666889,
+      "role": "WHITELIST"
+    },
+    {
+      "ip": "87.239.110.251",
+      "port": 8443,
+      "cc": "RU",
+      "link": "vless://7cd318d9-4bf8-4a7a-8680-af84282953e6@87.239.110.251:8443?security=reality&encryption=none&flow=xtls-rprx-vision&fp=random&pbk=zii4nGNapnFKL6SN8GzWNqFlElBvUCUFUThEP0kFH04&sid=e57932a42872a362&sni=m.vk.ru#%F0%9F%87%B9%F0%9F%87%B7%20Turkey%20%5B%2ACIDR%5D%20VK",
+      "speed": 0.36,
+      "ping": 1858.0932250000046,
       "role": "WHITELIST"
     }
   ]
