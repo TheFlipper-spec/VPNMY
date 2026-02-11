@@ -43,22 +43,20 @@ MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 
-# --- НАСТРОЙКИ ---
-MAX_WORKERS = 20        # Чуть подняли, так как кэш ускорит процесс
+TARGET_GAME = 1       
+TARGET_UNIVERSAL = 3  
+TARGET_WARP = 2       
+TARGET_WHITELIST = 2  
+
+# БАЛАНС СКОРОСТИ И КАЧЕСТВА
+MAX_WORKERS = 15  # Ограничение потоков для стабильности Xray
 TIMEOUT = 0.8           
 REAL_TEST_TIMEOUT = 5.0 
 SPEED_TEST_TIMEOUT = 4.0 
-
 OUTPUT_FILE = 'FL1PVPN' 
 JSON_FILE = 'stats.json'
-HISTORY_FILE = 'history.json' # Файл кэша
-
 TIMEZONE_OFFSET = 3 
 UPDATE_INTERVAL_HOURS = 1
-
-# Настройки кэширования
-CACHE_TTL_HOURS = 4      # Сколько помнить, что сервер мертв
-MAX_FAILURES = 2         # Сколько раз сервер должен упасть, чтобы попасть в игнор
 
 PING_BASE_MS = {
     'RU': 90, 
@@ -83,61 +81,6 @@ TIER_2_GOLD = ['DE', 'NL', 'FR', 'PL', 'KZ', 'RU']
 TIER_3_SILVER = ['GB', 'IT', 'ES', 'TR', 'CZ', 'BG', 'AT']
 
 geo_reader = None
-server_history = {} # Глобальный словарь для истории
-
-def load_history():
-    global server_history
-    if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, 'r') as f:
-                server_history = json.load(f)
-            print(f"📂 Загружена история: {len(server_history)} записей.")
-        except:
-            server_history = {}
-
-def save_history():
-    # Чистим старые записи (старше 24 часов), чтобы файл не распух
-    current_ts = time.time()
-    clean_history = {}
-    for key, val in server_history.items():
-        if current_ts - val['ts'] < (24 * 3600): # Храним сутки
-            clean_history[key] = val
-            
-    try:
-        with open(HISTORY_FILE, 'w') as f:
-            json.dump(clean_history, f)
-        print("💾 История сохранена.")
-    except: pass
-
-def update_history(ip, port, is_alive):
-    key = f"{ip}:{port}"
-    current = server_history.get(key, {'fails': 0, 'ts': 0})
-    
-    if is_alive:
-        # Если жив - сбрасываем счетчик ошибок
-        current['fails'] = 0
-    else:
-        current['fails'] += 1
-    
-    current['ts'] = time.time()
-    server_history[key] = current
-
-def should_check_server(ip, port):
-    """Возвращает False, если сервер в бане (кэш)."""
-    key = f"{ip}:{port}"
-    if key not in server_history:
-        return True
-    
-    rec = server_history[key]
-    # Если сервер падал много раз и прошло мало времени -> пропускаем
-    if rec['fails'] >= MAX_FAILURES:
-        age_hours = (time.time() - rec['ts']) / 3600
-        if age_hours < CACHE_TTL_HOURS:
-            return False # В БАНЕ
-    
-    return True
-
-# --- GEO & UTILS ---
 
 def download_mmdb():
     if not os.path.exists(MMDB_FILE):
@@ -254,6 +197,7 @@ def parse_config_info(config_str, source_type):
             
             if is_reality:
                 pbk = params.get('pbk', [''])[0]
+                # Ключ Reality ВСЕГДА 43 символа
                 if len(pbk) != 43: 
                     return None
                 sni = params.get('sni', [''])[0]
@@ -389,21 +333,28 @@ def generate_xray_config(server, local_port):
         return None
 
 def measure_speed(local_port):
-    url = "https://speed.cloudflare.com/__down?bytes=1500000"
+    """
+    Качает 1.5 МБ с CDN Cloudflare через локальный SOCKS-порт.
+    Возвращает скорость в Mbps.
+    """
+    url = "https://speed.cloudflare.com/__down?bytes=1500000" # ~1.5 MB
     proxies = {
         "http": f"socks5h://127.0.0.1:{local_port}",
         "https": f"socks5h://127.0.0.1:{local_port}"
     }
+    
     start_time = time.time()
     try:
         with requests.get(url, proxies=proxies, timeout=SPEED_TEST_TIMEOUT, stream=True) as r:
             r.raise_for_status()
             total_bytes = 0
             for chunk in r.iter_content(chunk_size=8192):
-                if chunk: total_bytes += len(chunk)
+                if chunk:
+                    total_bytes += len(chunk)
             
             duration = time.time() - start_time
             if duration <= 0: duration = 0.1
+            
             speed_mbps = (total_bytes * 8) / (duration * 1_000_000)
             return round(speed_mbps, 2)
     except:
@@ -412,7 +363,9 @@ def measure_speed(local_port):
 def check_real_connection(server):
     local_port = random.randint(10000, 60000)
     config_data = generate_xray_config(server, local_port)
-    if not config_data: return None, 0.0
+    
+    if not config_data:
+        return None, 0.0
 
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp_conf:
         json.dump(config_data, tmp_conf)
@@ -429,9 +382,14 @@ def check_real_connection(server):
             stderr=subprocess.PIPE     
         )
         time.sleep(1.5) 
-        if xray_process.poll() is not None: raise Exception("Xray process died")
+        
+        if xray_process.poll() is not None:
+            raise Exception("Xray process died")
 
-        proxies = { 'http': f'socks5://127.0.0.1:{local_port}', 'https': f'socks5://127.0.0.1:{local_port}' }
+        proxies = {
+            'http': f'socks5://127.0.0.1:{local_port}',
+            'https': f'socks5://127.0.0.1:{local_port}'
+        }
         target_url = "http://cp.cloudflare.com/"
         
         start_time = time.perf_counter()
@@ -442,22 +400,21 @@ def check_real_connection(server):
             result_latency = (end_time - start_time) * 1000
             if result_latency < 800:
                  result_speed = measure_speed(local_port)
-            # Обновляем историю: УСПЕХ
-            update_history(server['ip'], server['port'], True)
         else:
             result_latency = None
-            update_history(server['ip'], server['port'], False)
 
     except Exception as e:
         result_latency = None
-        # Обновляем историю: ПРОВАЛ
-        update_history(server['ip'], server['port'], False)
     finally:
         if xray_process:
             xray_process.terminate()
-            try: xray_process.wait(timeout=1)
-            except: xray_process.kill()
-        if os.path.exists(config_path): os.remove(config_path)
+            try:
+                xray_process.wait(timeout=1)
+            except subprocess.TimeoutExpired:
+                xray_process.kill()
+        
+        if os.path.exists(config_path):
+            os.remove(config_path)
 
     return result_latency, result_speed
 
@@ -469,11 +426,6 @@ def calculate_tier_rank(country_code):
     return 4
 
 def check_server_initial(server):
-    # --- CHECK HISTORY FIRST (CLAUDE FEATURE) ---
-    if not should_check_server(server['ip'], server['port']):
-        return None # Skip cached dead server
-    # --------------------------------------------
-
     is_warp = False
     rem = server['original_remark'].lower()
     if 'warp' in rem or 'cloudflare' in rem: is_warp = True
@@ -484,10 +436,7 @@ def check_server_initial(server):
     else: server['category'] = 'UNIVERSAL'
 
     p = tcp_ping(server['ip'], server['port'])
-    if p is None: 
-        update_history(server['ip'], server['port'], False)
-        return None
-        
+    if p is None: return None
     server['latency'] = int(p)
     code = get_ip_country_local(server['ip'])
     server['info'] = {'countryCode': code}
@@ -519,25 +468,26 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
     if not candidates: return []
     filtered = candidates
     
-    # Режимы турниров
     if mode == "gaming":
         filtered = [c for c in candidates if c.get('is_ss', False) or c['is_reality']]
         tier1_candidates = [c for c in filtered if c['tier_rank'] == 1]
-        if tier1_candidates: filtered = tier1_candidates
+        if tier1_candidates:
+            filtered = tier1_candidates
+            print(f"   ℹ️ {title}: Found {len(filtered)} Tier-1 candidates (FI/EE/SE).")
+        else:
+            print(f"   ℹ️ {title}: No Tier-1 found. Checking neighbors.")
+            
     elif mode == "universal":
         filtered = [c for c in candidates if c['is_reality']]
+        
     elif mode == "whitelist":
         filtered = [c for c in candidates if c['info']['countryCode'] == 'RU']
     elif mode == "warp":
         filtered = [c for c in candidates if c['info']['countryCode'] != 'RU']
-    elif mode == "github_only": # Новый режим для GitHub Fresh Cup
-        filtered = candidates # Входной список уже состоит только из github
 
     if not filtered: return []
     
-    # Берем топ-25 (или топ-10 для github cup, чтобы не затягивать)
-    limit = 10 if mode == "github_only" else 20
-    semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:limit]
+    semifinalists = sorted(filtered, key=lambda x: (x['tier_rank'], x['latency']))[:20]
     
     print(f"\n🏟️ {title} (Checking {len(semifinalists)} candidates...)")
     
@@ -557,11 +507,24 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         else: tier_penalty = 70                      
             
         special_penalty = 0
-        if mode == "gaming" and f.get('is_ss', False): special_penalty = -20 
-        elif mode == "universal" and f['info']['countryCode'] == 'RU': special_penalty += 2000
-        elif mode == "whitelist" and not f['is_reality']: special_penalty = 1000
         
+        if mode == "gaming":
+            if f.get('is_ss', False): special_penalty = -20 
+        elif mode == "universal":
+            if f['info']['countryCode'] == 'RU': special_penalty += 2000
+        elif mode == "warp":
+            if f['transport'] in ['ws', 'grpc']: 
+                special_penalty = 0
+                if f['info']['countryCode'] == 'FI': special_penalty -= 150
+                elif f['info']['countryCode'] in ['EE', 'SE']: special_penalty -= 130
+            else: 
+                special_penalty = 2000
+        elif mode == "whitelist":
+            if f['is_reality']: special_penalty = 0
+            else: special_penalty = 1000
+            
         speed_bonus = min(real_speed * 2, 100) 
+        
         score = avg + (jitter * 5) + tier_penalty + special_penalty - speed_bonus
         
         f['latency'] = int(avg)
@@ -576,10 +539,16 @@ def run_tournament(candidates, winners_needed, title="TOURNAMENT", mode="mixed")
         
         source_label = f.get('source_type', 'UNK').upper()
         speed_str = f"{real_speed:.1f} Mbps" if real_speed > 0 else "---"
+        
         print(f"   ✅ {f['info']['countryCode']:<4} | {proto_info:<7} | Ping: {int(avg)}ms | Speed: {speed_str:<9} | Score: {int(score)} | Src: {source_label}")
         scored_results.append(f)
         
     scored_results.sort(key=lambda x: x['final_score'])
+    
+    if not scored_results:
+        print("   ⚠️ WARNING: No servers passed Real Test.")
+        return []
+
     return scored_results[:winners_needed]
 
 def process_urls(urls, source_type):
@@ -596,19 +565,30 @@ def process_urls(urls, source_type):
         except: pass
     return links
 
-def fetch_fresh_github_links(max_repos=12):
+# --- УМНЫЙ ПОИСК V2 ---
+def fetch_fresh_github_links(max_repos=10):
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
-        print("   ⚠️ Warning: GITHUB_TOKEN не найден.")
+        print("   ⚠️ Warning: GITHUB_TOKEN не найден. Поиск будет ограничен.")
         return []
 
-    headers = {"Accept": "application/vnd.github.v3+json", "Authorization": f"token {token}"}
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {token}"
+    }
+
     date_filter = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d')
     query = f"vless pushed:>{date_filter} stars:<=10"
     
     print(f"🔎 Smart Repo Search: '{query}'...")
+
     repo_api_url = "https://api.github.com/search/repositories"
-    repo_params = {"q": query, "sort": "updated", "order": "desc", "per_page": max_repos}
+    repo_params = {
+        "q": query,
+        "sort": "updated",
+        "order": "desc",
+        "per_page": max_repos
+    }
 
     found_files = []
     try:
@@ -621,48 +601,60 @@ def fetch_fresh_github_links(max_repos=12):
             for repo in repos:
                 full_name = repo.get("full_name")
                 print(f"      -> Сканируем репо: {full_name}")
-                code_params = {"q": f'"vless://" repo:{full_name} size:1000..50000', "per_page": 3}
+                
+                code_params = {
+                    "q": f'"vless://" repo:{full_name} size:1000..50000',
+                    "per_page": 3 
+                }
                 try:
                     code_resp = requests.get(code_api_url, headers=headers, params=code_params, timeout=5)
                     if code_resp.status_code == 200:
                         files = code_resp.json().get("items", [])
                         for f in files:
-                            raw_url = f.get("html_url", "").replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
-                            if raw_url: found_files.append(raw_url)
+                            raw_url = f.get("html_url", "") \
+                                .replace("github.com", "raw.githubusercontent.com") \
+                                .replace("/blob/", "/")
+                            if raw_url:
+                                found_files.append(raw_url)
                     time.sleep(1) 
                 except: pass
-    except Exception as e: print(f"   ❌ Ошибка Smart Search: {e}")
+        else:
+            print(f"   ❌ Ошибка поиска репозиториев: {repo_resp.status_code}")
+    except Exception as e:
+        print(f"   ❌ Ошибка Smart Search: {e}")
+
     return list(set(found_files))
+# ------------------------------------------------
 
 def main():
-    print("--- ЗАПУСК V74 (CACHE/HISTORY + GITHUB CUP) ---")
-    load_history()
+    print("--- ЗАПУСК V73 (CLEAN NAMES + SPEED SORT) ---")
     
-    if os.path.exists(XRAY_BIN): os.chmod(XRAY_BIN, 0o755)
+    if os.path.exists(XRAY_BIN):
+        os.chmod(XRAY_BIN, 0o755)
+    else:
+        print(f"❌ Error: Xray binary not found at {XRAY_BIN}")
+
     download_mmdb()
     init_geoip()
     
-    smart_urls = fetch_fresh_github_links(max_repos=12)
+    smart_urls = fetch_fresh_github_links(max_repos=10)
     
     all_servers = []
-    github_candidates_raw = [] # Собираем отдельно для GitHub Cup
-    
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        print(f"🌐 Скачивание источников...")
+        print(f"🌐 Скачивание источников (threads={MAX_WORKERS}): {len(GENERAL_URLS)} static + {len(smart_urls)} smart_github + {len(WHITELIST_URLS)} whitelist...")
+        
         f1 = executor.submit(process_urls, GENERAL_URLS, 'static')
         f3 = executor.submit(process_urls, WHITELIST_URLS, 'whitelist')
         static_results = f1.result() + f3.result()
         
         f2 = executor.submit(process_urls, smart_urls, 'github')
         github_results = f2.result()
-        github_candidates_raw = github_results # Запоминаем чисто гитхабовские
         
         all_servers = static_results + github_results
     
     unique_map = {s['original']: s for s in all_servers}
     servers_to_check = list(unique_map.values())
-    
-    print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan with CACHE)...")
+    print(f"🔍 Checking {len(servers_to_check)} servers (TCP scan)...")
     
     working_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
@@ -671,44 +663,27 @@ def main():
             res = f.result()
             if res: working_servers.append(res)
 
-    # Разделяем на группы
     b_white = [s for s in working_servers if s['category'] == 'WHITELIST']
     b_univ = [s for s in working_servers if s['category'] == 'UNIVERSAL']
     b_warp = [s for s in working_servers if s['category'] == 'WARP']
-    
-    # Выделяем работающие GitHub сервера для отдельного кубка
-    # Мы ищем пересечение working_servers и github_candidates_raw по original конфигу
-    github_originals = set(g['original'] for g in github_candidates_raw)
-    b_github_fresh = [s for s in working_servers if s['original'] in github_originals and s['category'] != 'WHITELIST']
 
     final_list = []
-    used_ips = []
     
-    # 🏆 1. GITHUB FRESH CUP (Гарантированные 3 места для новинок)
-    # Запускаем первым, чтобы они точно попали
-    if b_github_fresh:
-        github_winners = run_tournament(b_github_fresh, 3, "GITHUB FRESH CUP", "github_only")
-        for g in github_winners:
-            g['category'] = 'Fresh GitHub' # Помечаем их красиво
-            used_ips.append(g['ip'])
-        final_list.extend(github_winners)
+    game_winners = run_tournament(b_univ, TARGET_GAME, "GAME CUP", "gaming")
+    game_ips = []
     
-    # 🏆 2. Остальные кубки (исключая уже победивших в GitHub Cup)
-    b_univ_filtered = [s for s in b_univ if s['ip'] not in used_ips]
-    game_winners = run_tournament(b_univ_filtered, TARGET_GAME, "GAME CUP", "gaming")
+    if game_winners:
+        for g in game_winners:
+            g['category'] = 'Game Server'
+            game_ips.append(g['ip']) 
+        final_list.extend(game_winners)
     
-    for g in game_winners:
-        g['category'] = 'Game Server'
-        used_ips.append(g['ip'])
-    final_list.extend(game_winners)
+    b_univ_filtered = [s for s in b_univ if s['ip'] not in game_ips]
     
-    b_univ_filtered_2 = [s for s in b_univ_filtered if s['ip'] not in used_ips]
-    final_list.extend(run_tournament(b_univ_filtered_2, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
-    
+    final_list.extend(run_tournament(b_univ_filtered, TARGET_UNIVERSAL, "UNIVERSAL CUP", "universal"))
     final_list.extend(run_tournament(b_warp, TARGET_WARP, "WARP CUP", "warp"))
     final_list.extend(run_tournament(b_white, TARGET_WHITELIST, "WHITELIST CUP", "whitelist"))
 
-    # Сохраняем результат
     utc_now = datetime.now(timezone.utc)
     msk_now = utc_now + timedelta(hours=TIMEZONE_OFFSET)
     next_update = msk_now + timedelta(hours=UPDATE_INTERVAL_HOURS)
@@ -720,7 +695,12 @@ def main():
     info_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&type=tcp&security=none#{quote(update_msg)}"
     
     result_links = [info_link]
-    json_data = {"updated_at": time_str, "next_update": next_str, "servers": []}
+    
+    json_data = {
+        "updated_at": time_str,
+        "next_update": next_str,
+        "servers": []
+    }
 
     for s in final_list:
         code = s['info'].get('countryCode', 'XX')
@@ -728,16 +708,18 @@ def main():
         country_full = RUS_NAMES.get(code, code)
         
         base_ping = PING_BASE_MS.get(code, 120)
-        if code == 'RU': calc_ping = base_ping + random.randint(0, 5)
-        else: calc_ping = base_ping + s['jitter']
+        
+        if code == 'RU':
+             calc_ping = base_ping + random.randint(0, 5)
+        else:
+             calc_ping = base_ping + s['jitter']
+        
         if s['is_hy2']: calc_ping = int(calc_ping * 0.9)
         if calc_ping < 10: calc_ping = 15
 
+        # --- ЧИСТЫЕ ИМЕНА (БЕЗ СКОРОСТИ) ---
         name = ""
-        # Красивые имена для категорий
-        if s['category'] == 'Fresh GitHub':
-             name = f"🔥 Fresh GitHub | {flag} {country_full} | {calc_ping}ms"
-        elif s['category'] == 'Game Server': 
+        if s['category'] == 'Game Server': 
             name = f"🎮 Game Server | {flag} {country_full} | {calc_ping}ms"
         elif s['category'] == 'WHITELIST': 
             name = f"⚪ {flag} RU (WhiteList) | {calc_ping}ms"
@@ -751,9 +733,16 @@ def main():
         result_links.append(final_link)
         
         json_data["servers"].append({
-            "name": name, "category": s['category'], "country": country_full, "iso": code,
-            "flag": flag, "ping": calc_ping, "speed": s['speed_mbps'], "ip": s['ip'],
-            "port": s['port'], "protocol": s['transport'].upper(), 
+            "name": name,
+            "category": s['category'],
+            "country": country_full,
+            "iso": code,
+            "flag": flag,
+            "ping": calc_ping,
+            "speed": s['speed_mbps'], # Скорость сохраняем в поле для сайта
+            "ip": s['ip'],
+            "port": s['port'],
+            "protocol": s['transport'].upper(),
             "type": s.get('is_reality') and "Reality" or "VLESS"
         })
 
@@ -763,11 +752,8 @@ def main():
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-    save_history() # Сохраняем кэш в файл
-    
-    print(f"DONE. {len(result_links)} links saved.")
-    print(f"Stats saved to {JSON_FILE}.")
-    print(f"Cache saved to {HISTORY_FILE}.")
+    print(f"DONE. {len(result_links)} links saved to {OUTPUT_FILE}.")
+    print(f"SECURE stats saved to {JSON_FILE} (No configs inside).")
 
 if __name__ == "__main__":
     main()
