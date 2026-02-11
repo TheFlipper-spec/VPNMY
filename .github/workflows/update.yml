@@ -2,8 +2,8 @@ name: Update VPN Subscription
 
 on:
   schedule:
-    - cron: '0 * * * *' # Запуск каждый час (в 00 минут)
-  workflow_dispatch:      # Ручной запуск кнопкой
+    - cron: '*/10 * * * *' # Запуск каждые 10 минут
+  workflow_dispatch:       # Ручной запуск кнопкой
 
 jobs:
   build:
@@ -26,15 +26,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # Библиотеки для работы main.py
+          pip install requests geoip2
+          
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-      - name: Download Xray Core
-        run: |
-          # Используем стабильную версию 1.8.4
-          wget -q https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip
-          unzip -o -q Xray-linux-64.zip xray geoip.dat geosite.dat
-          chmod +x xray
-          rm Xray-linux-64.zip
 
       - name: Run VPN Scanner (Main Script)
         run: python main.py
@@ -54,29 +49,28 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # 1. Добавляем важные файлы (включая reserve_pool.json!)
+          # 1. Добавляем файлы результата
           git add FL1PVPN stats.json history.json reserve_pool.json
           
           # 2. Добавляем логи
           git add logs/*.log 2>/dev/null || true
           
-          # 3. Проверяем статус
+          # 3. Проверяем, есть ли изменения
           if git diff --staged --quiet; then
             echo "No changes to commit"
             exit 0
           fi
           
           # 4. Создаем коммит
+          # Пытаемся получить кол-во серверов для красивого сообщения
           COUNT=$(python3 -c "import json; print(len(json.load(open('stats.json'))['servers']))" 2>/dev/null || echo "?")
           git commit -m "🚀 Update $COUNT Servers | $(date -u +'%Y-%m-%d %H:%M UTC')"
           
-          # 🔥 ВАЖНОЕ ИСПРАВЛЕНИЕ: Прячем любые незакоммиченные файлы (мусор),
-          # которые могли появиться в последнюю секунду, чтобы rebase прошел успешно.
+          # 5. СТРАТЕГИЯ ОТ КОНФЛИКТОВ
+          # Прячем мусор, чтобы git pull не ругался
           git stash
           
-          # 5. СТРАТЕГИЯ ОТ КОНФЛИКТОВ (Rebase)
-          # Скачиваем изменения (от Watchdog) и накладываем свои сверху
-          # Используем стратегию 'theirs' (наши изменения имеют приоритет над старыми данными с сервера)
+          # Скачиваем новые изменения с сервера, если они были, и накладываем свои
           git pull --rebase --strategy-option=theirs origin main
           
           # 6. Отправляем
