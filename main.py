@@ -24,13 +24,10 @@ from urllib.parse import unquote, quote, parse_qs, urlparse
 
 # --- НАСТРОЙКИ ---
 SOURCES = [
- 
-"https://raw.githubusercontent.com/Mosifree/-FREE2CONFIG/refs/heads/main/Reality",
-
-"https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
- "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
+    "https://raw.githubusercontent.com/Mosifree/-FREE2CONFIG/refs/heads/main/Reality",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt"
-      
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
@@ -120,26 +117,52 @@ def safe_base64_decode(s):
             return ""
 
 def extract_vless_links(text):
-    regex = r"(vless://[^ \n]+)"
+    # Улучшенная регулярка: игнорирует регистр (?i), не захватывает \r, \n, пробелы и кавычки
+    regex = r"(?i)(vless://[^\s\"']+)"
+    
+    # 1. Ищем ссылки в сыром тексте
     links = re.findall(regex, text)
-    if not links:
-        decoded = safe_base64_decode(text)
-        if decoded:
-            links.extend(re.findall(regex, decoded))
+    
+    # 2. ВСЕГДА пробуем раскодировать весь текст из Base64
+    decoded = safe_base64_decode(text)
+    if decoded:
+        links.extend(re.findall(regex, decoded))
+        
+    # 3. Иногда Base64 закодирован построчно, проверяем и этот вариант
+    for line in text.splitlines():
+        dec_line = safe_base64_decode(line)
+        if dec_line:
+            links.extend(re.findall(regex, dec_line))
+            
     return list(set(links))
 
 def parse_vless(config_str):
     try:
-        if not config_str.startswith("vless://"): return None
+        # Проверка на протокол (игнорируем регистр)
+        if not config_str.lower().startswith("vless://"): return None
+        
+        # Чистим строку от возможных скрытых пробелов/переносов
+        config_str = config_str.strip()
+        
+        # Отрезаем "vless://" (ровно 8 символов), чтобы достать UUID
+        uuid_val = config_str.split("@")[0][8:]
         
         part = config_str.split("@")[1].split("?")[0]
-        if ":" not in part: return None
         
-        host, port = part.split(":")
-        query_part = config_str.split("?")[1].split("#")[0]
+        # БЕЗОПАСНЫЙ ПАРСИНГ ХОСТА (с поддержкой IPv6)
+        if "]" in part:
+            host_part, port = part.rsplit(":", 1)
+            host = host_part.replace("[", "").replace("]", "")
+        else:
+            host, port = part.rsplit(":", 1) # rsplit безопаснее для адресов
+            
+        # Защита на случай, если параметров вообще нет
+        if "?" in config_str:
+            query_part = config_str.split("?")[1].split("#")[0]
+        else:
+            query_part = ""
+            
         params = parse_qs(query_part)
-        
-        uuid_val = config_str.split("@")[0].replace("vless://", "")
         
         conf = {
             "ip": host,
@@ -235,7 +258,6 @@ def check_real_ping(server):
         start = time.perf_counter()
         
         # 🔥 СТРОГАЯ ПРОВЕРКА (Cloudflare 204)
-        # Если сервер жив, но показывает капчу или ошибку - он не пройдет.
         resp = requests.get("http://cp.cloudflare.com/", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         
         if resp.status_code == 204:
@@ -304,7 +326,6 @@ def main():
                 print(f"   ✅ {res['country']} | Ping: {res['real_delay']}ms")
 
     # 3. Логика отбора
-    # Сначала сортируем все валидные
     ru_servers = [s for s in valid_servers if s['country'] == 'RU']
     world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
@@ -313,23 +334,15 @@ def main():
 
     final_selection = []
     
-    # Пытаемся взять 1 лучший RU сервер
     best_ru = ru_servers[0] if ru_servers else None
-
-    # Сколько слотов остается под мир? (10 - 1 = 9, или 10 если RU нет)
     needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
     
-    # Берем лучшие мировые, НО НЕ БОЛЬШЕ чем есть в наличии
-    # Срез [:needed_world] сам возьмет меньше, если список короче. Ошибки не будет.
     final_selection.extend(world_servers[:needed_world])
     
-    # Добавляем RU в конец списка
     if best_ru:
         final_selection.append(best_ru)
         print(f"🏆 Добавлен RU: {best_ru['ip']}")
 
-    # Итоговое количество может быть меньше 10, если живых серверов мало.
-    # Это ОК, так как мы не "допихиваем" мертвые.
     print(f"📊 Итого в подписке: {len(final_selection)} серверов")
 
     # 4. Сохранение
