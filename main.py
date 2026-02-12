@@ -36,10 +36,10 @@ OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
 # Настройки проверки
-MAX_WORKERS = 20        
+MAX_WORKERS = 25        # Чуть больше потоков для ускорения
 TCP_TIMEOUT = 1.0       
-REAL_TEST_TIMEOUT = 3.0 
-TOTAL_SERVERS_WANTED = 10 # Хотим 10 серверов всего
+REAL_TEST_TIMEOUT = 3.0 # Таймаут реального запроса
+TOTAL_SERVERS_WANTED = 5 # ЖЕЛЕЗОБЕТОННО 5 серверов
 
 COUNTRY_FLAGS = {
     'RU': '🇷🇺', 'US': '🇺🇸', 'DE': '🇩🇪', 'NL': '🇳🇱', 'FI': '🇫🇮', 'UK': '🇬🇧',
@@ -51,12 +51,7 @@ COUNTRY_FLAGS = {
 geo_reader = None
 
 def install_xray_core():
-    """
-    Автоматически скачивает и распаковывает Xray, используя встроенные средства Python.
-    Работает без системной утилиты unzip.
-    """
     if os.path.exists(XRAY_BIN):
-        # Проверяем, исполняемый ли файл
         st = os.stat(XRAY_BIN)
         if not (st.st_mode & stat.S_IEXEC):
             os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
@@ -68,17 +63,13 @@ def install_xray_core():
     try:
         r = requests.get(url, stream=True, timeout=30)
         if r.status_code == 200:
-            # Используем io.BytesIO и zipfile для распаковки в памяти
             with zipfile.ZipFile(io.BytesIO(r.content)) as z:
-                # Извлекаем только файл xray
                 if 'xray' in z.namelist():
                     with z.open('xray') as zf, open(XRAY_BIN, 'wb') as f:
                         f.write(zf.read())
                 else:
                     print("❌ В архиве нет файла xray!")
                     return
-            
-            # Даем права на выполнение (chmod +x)
             st = os.stat(XRAY_BIN)
             os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
             print("✅ Xray установлен успешно.")
@@ -167,7 +158,6 @@ def parse_vless(config_str):
         }
         
         if conf['security'] == 'reality' and not conf['pbk']: return None
-        
         return conf
     except:
         return None
@@ -213,6 +203,7 @@ def generate_xray_config(server, local_port):
     }
 
 def check_real_ping(server):
+    # 1. Быстрый TCP чек, чтобы не тратить время на мертвые IP
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TCP_TIMEOUT)
@@ -221,6 +212,7 @@ def check_real_ping(server):
     except:
         return None
 
+    # 2. Реальный тест через Xray
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
     
@@ -237,10 +229,18 @@ def check_real_ping(server):
 
         proxies = {"http": f"http://127.0.0.1:{local_port}"}
         start = time.perf_counter()
-        requests.get("http://cp.cloudflare.com/", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
-        end = time.perf_counter()
         
-        latency = int((end - start) * 1000)
+        # 🔥 ЖЕЛЕЗОБЕТОННАЯ ПРОВЕРКА 🔥
+        # cp.cloudflare.com возвращает 204 No Content. 
+        # Если вернет что-то другое (200 OK с формой логина, 403 и т.д.) - значит прокси кривой.
+        resp = requests.get("http://cp.cloudflare.com/", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
+        
+        if resp.status_code == 204:
+            end = time.perf_counter()
+            latency = int((end - start) * 1000)
+        else:
+            # Если код не 204, считаем сервер "нерабочим" (например, перехват трафика)
+            latency = None
         
     except:
         latency = None
@@ -254,11 +254,10 @@ def check_real_ping(server):
 
     if latency:
         server['real_delay'] = latency
-        # Проверяем страну ТОЛЬКО здесь
         code = get_country_code(server['ip'])
         server['country'] = code
         
-        # ВАЖНО: Фильтр "XX" (неопознанная страна)
+        # Отбрасываем серверы без страны
         if code == 'XX':
             return None
             
@@ -266,15 +265,14 @@ def check_real_ping(server):
     return None
 
 def main():
-    print("🚀 START: Smart VLESS Selector (Fix: No Unzip needed)")
+    print("🚀 START: Smart VLESS Selector (Strict Mode: 5 Servers)")
     
-    # 0. Установка зависимостей (Xray)
     install_xray_core()
     download_mmdb()
     init_geoip()
     
     if not os.path.exists(XRAY_BIN):
-        print(f"❌ ОШИБКА: Не удалось найти или установить {XRAY_BIN}")
+        print(f"❌ ОШИБКА: Не удалось найти {XRAY_BIN}")
         return
 
     # 1. Сбор ссылок
@@ -306,37 +304,34 @@ def main():
                 valid_servers.append(res)
                 print(f"   ✅ {res['country']} | Ping: {res['real_delay']}ms")
 
-    # 3. Логика отбора (9 + 1)
-    # Сначала фильтруем валидные (уже без XX, так как check_real_ping отсеял их)
-    
+    # 3. Логика отбора (4 Мир + 1 RU) = 5
     ru_servers = [s for s in valid_servers if s['country'] == 'RU']
     world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
-    # Сортировка по скорости
     ru_servers.sort(key=lambda x: x['real_delay'])
     world_servers.sort(key=lambda x: x['real_delay'])
 
     final_selection = []
     
-    # Сколько нужно серверов МИРА? (Всего 10 - 1 под РФ)
-    needed_world = TOTAL_SERVERS_WANTED - 1
-    
-    # Берем ТОП мира (9 шт)
-    top_world = world_servers[:needed_world]
-    final_selection.extend(top_world)
-    
-    # Берем ТОП RU (1 шт) и ставим В КОНЕЦ
+    # Пытаемся взять 1 лучший RU сервер
     if ru_servers:
         best_ru = ru_servers[0]
-        final_selection.append(best_ru)
-        print(f"🏆 Добавлен RU (в конец): {best_ru['ip']}")
+        # RU пойдет последним в списке для красоты, или первым? Добавим в конец.
     else:
-        # Если RU нет вообще, добиваем иностранными до 10 (если есть)
-        remaining_slots = TOTAL_SERVERS_WANTED - len(final_selection)
-        if remaining_slots > 0:
-            extra_world = world_servers[needed_world : needed_world + remaining_slots]
-            final_selection.extend(extra_world)
+        best_ru = None
 
+    # Сколько слотов под мир?
+    needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
+    
+    # Берем лучшие мировые
+    final_selection.extend(world_servers[:needed_world])
+    
+    # Добавляем RU, если есть
+    if best_ru:
+        final_selection.append(best_ru)
+        print(f"🏆 Добавлен RU: {best_ru['ip']}")
+
+    # Если вдруг не набралось 5, просто оставляем сколько есть (лучше меньше, но качественные)
     print(f"📊 Итого в подписке: {len(final_selection)} серверов")
 
     # 4. Сохранение
