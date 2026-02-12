@@ -36,10 +36,10 @@ OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
 # Настройки проверки
-MAX_WORKERS = 25        # Чуть больше потоков для ускорения
-TCP_TIMEOUT = 1.0       
-REAL_TEST_TIMEOUT = 3.0 # Таймаут реального запроса
-TOTAL_SERVERS_WANTED = 5 # ЖЕЛЕЗОБЕТОННО 5 серверов
+MAX_WORKERS = 25        # Количество потоков
+TCP_TIMEOUT = 1.0       # Быстрый отсев
+REAL_TEST_TIMEOUT = 5.0 # Даем чуть больше времени на честный тест, чтобы не отбрасывать медленные, но рабочие
+TOTAL_SERVERS_WANTED = 10 # Цель: 10 серверов (но только если они рабочие!)
 
 COUNTRY_FLAGS = {
     'RU': '🇷🇺', 'US': '🇺🇸', 'DE': '🇩🇪', 'NL': '🇳🇱', 'FI': '🇫🇮', 'UK': '🇬🇧',
@@ -203,7 +203,7 @@ def generate_xray_config(server, local_port):
     }
 
 def check_real_ping(server):
-    # 1. Быстрый TCP чек, чтобы не тратить время на мертвые IP
+    # 1. TCP Check
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TCP_TIMEOUT)
@@ -212,7 +212,7 @@ def check_real_ping(server):
     except:
         return None
 
-    # 2. Реальный тест через Xray
+    # 2. Xray Real Test
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
     
@@ -230,17 +230,15 @@ def check_real_ping(server):
         proxies = {"http": f"http://127.0.0.1:{local_port}"}
         start = time.perf_counter()
         
-        # 🔥 ЖЕЛЕЗОБЕТОННАЯ ПРОВЕРКА 🔥
-        # cp.cloudflare.com возвращает 204 No Content. 
-        # Если вернет что-то другое (200 OK с формой логина, 403 и т.д.) - значит прокси кривой.
+        # 🔥 СТРОГАЯ ПРОВЕРКА (Cloudflare 204)
+        # Если сервер жив, но показывает капчу или ошибку - он не пройдет.
         resp = requests.get("http://cp.cloudflare.com/", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         
         if resp.status_code == 204:
             end = time.perf_counter()
             latency = int((end - start) * 1000)
         else:
-            # Если код не 204, считаем сервер "нерабочим" (например, перехват трафика)
-            latency = None
+            latency = None # Не прошел проверку "чистоты"
         
     except:
         latency = None
@@ -257,15 +255,12 @@ def check_real_ping(server):
         code = get_country_code(server['ip'])
         server['country'] = code
         
-        # Отбрасываем серверы без страны
-        if code == 'XX':
-            return None
-            
+        if code == 'XX': return None # Без страны не берем
         return server
     return None
 
 def main():
-    print("🚀 START: Smart VLESS Selector (Strict Mode: 5 Servers)")
+    print(f"🚀 START: Smart VLESS Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
     
     install_xray_core()
     download_mmdb()
@@ -292,7 +287,7 @@ def main():
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
     print(f"🔍 Уникальных конфигов: {len(unique_configs)}")
 
-    # 2. Проверка (Real Ping)
+    # 2. Проверка
     valid_servers = []
     print(f"⚡ Тестирование (Workers: {MAX_WORKERS})...")
     
@@ -304,7 +299,8 @@ def main():
                 valid_servers.append(res)
                 print(f"   ✅ {res['country']} | Ping: {res['real_delay']}ms")
 
-    # 3. Логика отбора (4 Мир + 1 RU) = 5
+    # 3. Логика отбора
+    # Сначала сортируем все валидные
     ru_servers = [s for s in valid_servers if s['country'] == 'RU']
     world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
@@ -314,24 +310,22 @@ def main():
     final_selection = []
     
     # Пытаемся взять 1 лучший RU сервер
-    if ru_servers:
-        best_ru = ru_servers[0]
-        # RU пойдет последним в списке для красоты, или первым? Добавим в конец.
-    else:
-        best_ru = None
+    best_ru = ru_servers[0] if ru_servers else None
 
-    # Сколько слотов под мир?
+    # Сколько слотов остается под мир? (10 - 1 = 9, или 10 если RU нет)
     needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
     
-    # Берем лучшие мировые
+    # Берем лучшие мировые, НО НЕ БОЛЬШЕ чем есть в наличии
+    # Срез [:needed_world] сам возьмет меньше, если список короче. Ошибки не будет.
     final_selection.extend(world_servers[:needed_world])
     
-    # Добавляем RU, если есть
+    # Добавляем RU в конец списка
     if best_ru:
         final_selection.append(best_ru)
         print(f"🏆 Добавлен RU: {best_ru['ip']}")
 
-    # Если вдруг не набралось 5, просто оставляем сколько есть (лучше меньше, но качественные)
+    # Итоговое количество может быть меньше 10, если живых серверов мало.
+    # Это ОК, так как мы не "допихиваем" мертвые.
     print(f"📊 Итого в подписке: {len(final_selection)} серверов")
 
     # 4. Сохранение
