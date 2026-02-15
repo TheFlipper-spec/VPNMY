@@ -50,7 +50,7 @@ JSON_FILE = 'stats.json'
 MAX_WORKERS = 25        
 TCP_TIMEOUT = 1.0       
 REAL_TEST_TIMEOUT = 5.0 
-SPEED_TEST_TIMEOUT = 4.0 
+SPEED_TEST_TIMEOUT = 6.0 
 TOTAL_SERVERS_WANTED = 10 
 
 COUNTRIES_RU = {
@@ -183,7 +183,7 @@ def parse_vless(config_str):
             "original": config_str,
             "country": "XX",
             "real_delay": 9999,
-            "speed_mbps": 0.0
+            "speed_mbps": 0.0 # Скорость по умолчанию
         }
         
         if conf['security'] == 'reality' and not conf['pbk']: return None
@@ -232,6 +232,7 @@ def generate_xray_config(server, local_port):
     }
 
 def check_real_ping(server):
+    """ЭТАП 1: Только быстрый пинг (без замера скорости)"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TCP_TIMEOUT)
@@ -249,7 +250,6 @@ def check_real_ping(server):
 
     proc = None
     latency = None
-    speed_mbps = 0.0
 
     try:
         proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -263,16 +263,6 @@ def check_real_ping(server):
         if resp.status_code == 204:
             end = time.perf_counter()
             latency = int((end - start) * 1000)
-            
-            try:
-                dl_start = time.perf_counter()
-                dl_resp = requests.get("https://speed.cloudflare.com/__down?bytes=500000", proxies=proxies, timeout=SPEED_TEST_TIMEOUT)
-                if dl_resp.status_code == 200:
-                    dl_end = time.perf_counter()
-                    duration = dl_end - dl_start
-                    speed_mbps = round((0.5 * 8) / duration, 2)
-            except Exception:
-                pass
         else:
             latency = None
             
@@ -288,13 +278,71 @@ def check_real_ping(server):
 
     if latency:
         server['real_delay'] = latency
-        server['speed_mbps'] = speed_mbps
         code = get_country_code(server['ip'])
         server['country'] = code
-        
         if code == 'XX': return None
         return server
     return None
+
+def measure_speed(server):
+    """ЭТАП 2: Тяжелый замер скорости ТОЛЬКО для избранных серверов"""
+    local_port = random.randint(15000, 45000)
+    config = generate_xray_config(server, local_port)
+    
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
+        json.dump(config, tmp)
+        config_path = tmp.name
+
+    proc = None
+    speed_mbps = 0.0
+
+    try:
+        proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(0.7) 
+
+        proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
+        
+        dl_start = time.perf_counter()
+        downloaded_bytes = 0
+        
+        dl_resp = requests.get(
+            "https://speed.cloudflare.com/__down?bytes=2500000", 
+            proxies=proxies, 
+            timeout=(2.0, SPEED_TEST_TIMEOUT), 
+            stream=True
+        )
+        
+        if dl_resp.status_code == 200:
+            for chunk in dl_resp.iter_content(chunk_size=8192):
+                if chunk:
+                    downloaded_bytes += len(chunk)
+                
+                # Защита от бесконечного зависания
+                if time.perf_counter() - dl_start > SPEED_TEST_TIMEOUT:
+                    break
+                    
+            dl_end = time.perf_counter()
+            duration = dl_end - dl_start
+            
+            if duration > 0:
+                speed_mbps = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
+            
+            # Строгое правило: если сервер захлебнулся на старте (менее 500КБ), ставим 0
+            if downloaded_bytes < 500000:
+                speed_mbps = 0.0
+                
+    except Exception:
+        pass
+    finally:
+        if proc:
+            proc.terminate()
+            try: proc.wait(timeout=0.5)
+            except: proc.kill()
+        if os.path.exists(config_path):
+            os.remove(config_path)
+
+    server['speed_mbps'] = speed_mbps
+    return server
 
 def get_speed_badge(speed_mbps):
     """Возвращает значок скорости в зависимости от Mbps."""
@@ -332,8 +380,9 @@ def main():
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
     logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
 
+    # ЭТАП 1: Массовый легкий пинг
     valid_servers = []
-    logger.info(f"⚡ Тестирование серверов (Workers: {MAX_WORKERS})...")
+    logger.info(f"⚡ ЭТАП 1: Быстрый замер Пинга (Workers: {MAX_WORKERS})...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = [executor.submit(check_real_ping, s) for s in unique_configs]
@@ -341,13 +390,12 @@ def main():
             res = f.result()
             if res:
                 valid_servers.append(res)
-                badge = get_speed_badge(res['speed_mbps'])
-                logger.info(f"   ✅ {res['country']} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps {badge.strip()}")
+                logger.info(f"   [PING OK] {res['country']} | {res['real_delay']}ms")
 
     ru_servers = [s for s in valid_servers if s['country'] == 'RU']
     world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
-    # ИЗМЕНЕНИЕ: Теперь ВСЕ серверы сортируются ИСКЛЮЧИТЕЛЬНО по пингу
+    # Сортируем строго по пингу
     ru_servers.sort(key=lambda x: x['real_delay'])
     world_servers.sort(key=lambda x: x['real_delay'])
 
@@ -357,13 +405,26 @@ def main():
     needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
     
     final_selection.extend(world_servers[:needed_world])
-    
     if best_ru:
         final_selection.append(best_ru)
-        logger.info(f"🏆 Добавлен RU сервер: {best_ru['ip']}")
+
+    # ЭТАП 2: Тяжелый замер скорости только для Топ-10 серверов
+    logger.info(f"🏎️ ЭТАП 2: Глубокий замер скорости для ТОП-{len(final_selection)} серверов...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=TOTAL_SERVERS_WANTED) as executor:
+        futures = [executor.submit(measure_speed, s) for s in final_selection]
+        concurrent.futures.wait(futures)
+
+    # Вывод результатов тестирования ТОП-10
+    for s in final_selection:
+        badge = get_speed_badge(s['speed_mbps'])
+        logger.info(f"   🏆 {s['country']} | Пинг: {s['real_delay']}ms | Скорость: {s['speed_mbps']} Mbps {badge.strip()}")
+
+    if best_ru:
+        logger.info(f"🇷🇺 Добавлен RU сервер: {best_ru['ip']}")
 
     logger.info(f"📊 Итого в подписке сохранено: {len(final_selection)} серверов")
 
+    # Генерация файлов
     result_links = []
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
@@ -375,7 +436,6 @@ def main():
         country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
         speed_badge = get_speed_badge(s['speed_mbps'])
         
-        # Красивое и чистое имя
         name = f"{speed_badge}{country_display} | {s['real_delay']}ms"
         
         orig = s['original']
