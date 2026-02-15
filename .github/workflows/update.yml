@@ -9,6 +9,10 @@ jobs:
   build:
     runs-on: self-hosted
     
+    # ВОЗВРАЩЕНО: Явное указание HOME для корректной работы git --global
+    env:
+      HOME: /root
+
     permissions:
       contents: write
 
