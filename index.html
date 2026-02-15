@@ -148,7 +148,7 @@
             font-family: var(--font-code);
             display: flex; align-items: center; gap: 6px;
         }
-        .type-val { font-size: 10px; color: var(--text-muted); font-family: var(--font-code); text-transform: uppercase; }
+        .type-val { font-size: 10px; color: var(--accent); font-family: var(--font-code); text-transform: uppercase; font-weight: 600; }
 
         .signal-dot { width: 6px; height: 6px; border-radius: 50%; transition: background-color 0.3s; }
 
@@ -203,6 +203,9 @@
         .data-row:first-child { padding-top: 0; }
         .d-label { color: var(--text-muted); font-size: 12px; }
         .d-value { font-weight: 600; font-family: var(--font-code); color: #fff; font-size: 13px; text-align: right; word-break: break-all; margin-left: 10px;}
+        
+        /* Спецэффект для скрытого IP */
+        .obfuscated-ip { color: var(--warning); text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); letter-spacing: 1px; }
 
         .btn {
             width: 100%; padding: 14px; border-radius: 12px; border: none;
@@ -256,10 +259,10 @@
             <div class="m-sub" id="mName">СЕРВЕРНЫЙ УЗЕЛ</div>
         </div>
         <div class="data-list">
-            <div class="data-row"><span class="d-label">IP Адрес</span><span class="d-value" id="mIP">---</span></div>
+            <div class="data-row"><span class="d-label">IP Адрес</span><span class="d-value obfuscated-ip" id="mIP">---</span></div>
             <div class="data-row"><span class="d-label">Пинг</span><span class="d-value" id="mPing">---</span></div>
-            <div class="data-row"><span class="d-label">Протокол</span><span class="d-value" id="mProto">---</span></div>
-            <div class="data-row"><span class="d-label">Тип</span><span class="d-value" id="mType">---</span></div>
+            <div class="data-row"><span class="d-label">Скорость</span><span class="d-value" id="mSpeed">---</span></div>
+            <div class="data-row"><span class="d-label">Шифрование</span><span class="d-value" id="mProto">---</span></div>
         </div>
         <button class="btn" onclick="openBot()">ПОЛУЧИТЬ КОНФИГ</button>
     </div>
@@ -270,23 +273,33 @@
     const escapeHTML = (str) => {
         if (str === null || str === undefined) return '';
         return String(str).replace(/[&<>'"]/g, 
-            tag => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
-            }[tag]));
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
     };
 
-    // --- ПЕРЕВОДЧИК СТРАН В ПОЛНЫЕ РУССКИЕ НАЗВАНИЯ ---
+    // --- ХАКЕРСКОЕ СКРЫТИЕ IP АДРЕСА ---
+    function obfuscateIP(ip) {
+        if (!ip) return '***.***.***.***';
+        const parts = ip.split('.');
+        if (parts.length === 4) {
+            // Скрываем последние два блока (например, 45.144.***.***)
+            return `${parts[0]}.${parts[1]}.***.***`;
+        }
+        // Запасной вариант для IPv6
+        if (ip.includes(':')) {
+            const v6 = ip.split(':');
+            return v6.slice(0, 3).join(':') + ':***:***';
+        }
+        return '***.***.***.***';
+    }
+
+    // --- ПЕРЕВОДЧИК СТРАН ---
     const countryNames = {
         "DE": "Германия", "GERMANY": "Германия",
         "FI": "Финляндия", "FINLAND": "Финляндия",
         "RU": "Россия", "RUSSIA": "Россия",
         "US": "США", "UNITED STATES": "США", "USA": "США",
         "NL": "Нидерланды", "NETHERLANDS": "Нидерланды",
-        "GB": "Великобритания", "UK": "Великобритания", "UNITED KINGDOM": "Великобритания",
+        "GB": "Великобритания", "UK": "Великобритания", 
         "FR": "Франция", "FRANCE": "Франция",
         "PL": "Польша", "POLAND": "Польша",
         "UA": "Украина", "UKRAINE": "Украина",
@@ -300,15 +313,7 @@
         "ES": "Испания", "SPAIN": "Испания",
         "IT": "Италия", "ITALY": "Италия",
         "AT": "Австрия", "AUSTRIA": "Австрия",
-        "CZ": "Чехия", "CZECHIA": "Чехия", "CZECH REPUBLIC": "Чехия",
-        "HK": "Гонконг", "HONG KONG": "Гонконг",
-        "BG": "Болгария", "BULGARIA": "Болгария",
-        "RO": "Румыния", "ROMANIA": "Румыния",
-        "KZ": "Казахстан", "KAZAKHSTAN": "Казахстан",
-        "LV": "Латвия", "LATVIA": "Латвия",
-        "LT": "Литва", "LITHUANIA": "Литва",
-        "EE": "Эстония", "ESTONIA": "Эстония",
-        "AE": "ОАЭ", "UNITED ARAB EMIRATES": "ОАЭ"
+        "CZ": "Чехия", "CZECHIA": "Чехия"
     };
 
     function getRussianCountryName(countryStr) {
@@ -319,7 +324,6 @@
 
     // --- АНИМАЦИИ: ЛОГОТИП И ФОН ---
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-    
     function scrambleLetter(element, finalChar) {
         if (element.dataset.isAnimating === "true") return;
         element.dataset.isAnimating = "true";
@@ -404,7 +408,7 @@
     }
     window.addEventListener('resize', resize); resize(); animateNetwork();
 
-    // --- ОСНОВНАЯ ЛОГИКА РАБОТЫ С ДАННЫМИ ---
+    // --- ОСНОВНАЯ ЛОГИКА ---
     const JSON_URL = "stats.json";
 
     async function init() {
@@ -413,25 +417,16 @@
             if(!res.ok) throw new Error("HTTP error " + res.status);
             const data = await res.json();
             
-            const timeInfo = document.getElementById('timeInfo');
-            
-            // Защита: поддержка как прямого массива [{}, {}], так и объекта {"servers": [{}]}
-            const serversData = Array.isArray(data) ? data : (data.servers || data.Servers || []);
-            
-            if (!Array.isArray(data) && data.updated_at) {
-                timeInfo.innerHTML = `ОБНОВЛЕНО: ${escapeHTML(data.updated_at)} <br> СЛЕДУЮЩЕЕ: ${escapeHTML(data.next_update || '---')}`;
-            } else {
-                timeInfo.innerHTML = `СИСТЕМА В СЕТИ <br> АКТИВНЫЕ УЗЛЫ: ${serversData.length}`;
-            }
+            const serversData = Array.isArray(data) ? data : (data.servers || []);
+            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ <br> АКТИВНЫЕ УЗЛЫ: ${serversData.length}`;
             
             setInterval(simulateLivePing, 2000);
             render(serversData);
         } catch (e) {
-            console.error("Data fetch failed:", e);
             document.getElementById('grid').innerHTML = `
                 <div class="system-error">
                     <span>[ ОШИБКА СИСТЕМЫ ]</span><br><br>
-                    <small style="color:var(--text-muted)">Не удалось получить список серверов (stats.json)</small>
+                    <small style="color:var(--text-muted)">Не удалось загрузить узлы</small>
                 </div>`;
         }
     }
@@ -457,33 +452,26 @@
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
         
-        if(!list || list.length === 0) { 
-            grid.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-family:var(--font-code);">// НЕТ ДОСТУПНЫХ УЗЛОВ</div>`; 
-            return; 
-        }
+        if(!list || list.length === 0) return;
         
         list.forEach((s, i) => {
             const el = document.createElement('div');
             el.className = 'card';
             el.style.animationDelay = (i * 0.05) + 's';
             
-            // Умный поиск ключей в JSON, так как они могли быть с большой буквы или иметь синонимы
-            const s_country = s.country || s.Country || '';
-            const s_iso = s.iso || s.ISO || (s_country ? s_country.substring(0, 2) : 'xx');
-            const s_name = s.name || s.Name || s.remark || s.Remark || s_country || 'СЕРВЕР';
-            const s_ip = s.ip || s.IP || s.address || s.Address || 'Скрыт';
-            const s_ping = s.ping || s.Ping || 0;
-            const s_protocol = s.protocol || s.Protocol || 'Неизвестен';
-            const s_type = s.type || s.Type || s_protocol;
+            const s_country = s.country || '';
+            const s_name = s.name || s_country || 'СЕРВЕР';
+            const s_ip = s.ip || 'Скрыт';
+            const s_ping = s.ping || 0;
+            const s_speed = s.speed_mbps || 0; // Использование нового поля
 
-            const ruCountry = getRussianCountryName(s_country || s_iso);
-            const isoCode = String(s_iso).toLowerCase().substring(0, 2);
+            const ruCountry = getRussianCountryName(s_country);
+            const isoCode = String(s_country).toLowerCase().substring(0, 2);
             const flagUrl = isoCode && isoCode !== 'xx' ? `https://flagcdn.com/w80/${isoCode}.png` : 'https://flagcdn.com/w80/xx.png';
             
             let pingColor = '#00ff9d';
-            const numPing = parseInt(s_ping) || 0;
-            if(numPing > 150) pingColor = '#ffcc00';
-            if(numPing > 300) pingColor = '#ff0055';
+            if(s_ping > 150) pingColor = '#ffcc00';
+            if(s_ping > 300) pingColor = '#ff0055';
 
             el.innerHTML = `
                 <div class="card-left">
@@ -495,18 +483,22 @@
                 </div>
                 <div class="stats">
                     <div class="ping-val ping-container">
-                        <span class="ping-number" data-base="${numPing}">${numPing > 0 ? numPing : '---'}</span> ms 
+                        <span class="ping-number" data-base="${s_ping}">${s_ping > 0 ? s_ping : '---'}</span> ms 
                         <div class="signal-dot" style="background:${pingColor}"></div>
                     </div>
-                    <span class="type-val">${escapeHTML(s_type)}</span>
+                    <span class="type-val">${s_speed > 0 ? s_speed + ' Мбит/с' : 'SECURE'}</span>
                 </div>
             `;
             
-            // Передача четко структурированных данных в модальное окно
+            // В модальное окно прокидываем уже подготовленные данные
             el.onclick = () => openModal({ 
-                country: ruCountry, name: s_name, ip: s_ip, 
-                ping: numPing, proto: s_protocol, type: s_type 
+                country: ruCountry, 
+                name: s_name, 
+                ip: s_ip, 
+                ping: s_ping, 
+                speed: s_speed
             }, flagUrl);
+            
             grid.appendChild(el);
         });
     }
@@ -516,10 +508,15 @@
         document.getElementById('mFlag').src = flagUrl;
         document.getElementById('mCountry').textContent = data.country;
         document.getElementById('mName').textContent = data.name;
-        document.getElementById('mIP').textContent = data.ip;
+        
+        // Применяем хакерскую маску к IP-адресу
+        document.getElementById('mIP').textContent = obfuscateIP(data.ip);
+        
         document.getElementById('mPing').textContent = (data.ping > 0 ? data.ping : '---') + " ms";
-        document.getElementById('mProto').textContent = data.proto;
-        document.getElementById('mType').textContent = data.type;
+        document.getElementById('mSpeed').textContent = (data.speed > 0 ? data.speed + " Мбит/с" : "---");
+        
+        // Дефолтное мощное шифрование для технологичного вида
+        document.getElementById('mProto').textContent = "AES-256"; 
         
         m.classList.add('open');
     }
