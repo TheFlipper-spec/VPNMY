@@ -2,31 +2,25 @@ name: Update VPN Subscription
 
 on:
   schedule:
-    # ИЗМЕНЕНИЕ 1: Используем "кривые" минуты.
-    # GitHub часто откладывает запуски в круглые числа (0, 10, 20...).
-    # Запуск в 4, 14, 24... минуту часто проскакивает очередь быстрее.
     - cron: '4,14,24,34,44,54 * * * *'
-  workflow_dispatch:       # Ручной запуск
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: self-hosted
     
-    env:
-      HOME: /root
-
     permissions:
       contents: write
 
     steps:
-      - name: Fix Git Config
-        run: |
-          git config --global --add safe.directory '*'
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 
+
+      - name: Fix Git Config
+        run: |
+          git config --global --add safe.directory '*'
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
@@ -47,8 +41,10 @@ jobs:
         run: |
           mkdir -p logs
           if [ -f vpn_scanner.log ]; then
+            # Сохраняем историю логов
             cp vpn_scanner.log "logs/last_scan_$(date -u +%Y%m%d_%H%M%S).log"
             cp vpn_scanner.log logs/latest.log
+            # Оставляем только 20 последних логов, удаляем старые
             cd logs && ls -t last_scan_*.log | tail -n +21 | xargs -r rm --
           fi
 
@@ -57,23 +53,16 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           
-          # ИЗМЕНЕНИЕ 2: Убрали лишние файлы (history.json, reserve_pool.json),
-          # так как новый скрипт их не создает, чтобы не вызывать ошибку.
-          git add FL1PVPN stats.json
-          
-          # Логи добавляем только если они есть (2>/dev/null подавляет ошибки)
-          git add logs/*.log 2>/dev/null || true
+          git add FL1PVPN stats.json logs/*.log
           
           if git diff --staged --quiet; then
             echo "No changes to commit"
             exit 0
           fi
           
-          # Получаем количество серверов для коммита
           COUNT=$(python3 -c "import json; print(len(json.load(open('stats.json'))['servers']))" 2>/dev/null || echo "?")
           
           git commit -m "🚀 Update $COUNT Servers | $(date -u +'%Y-%m-%d %H:%M UTC')"
           
-          git stash
-          git pull --rebase --strategy-option=theirs origin main
+          git pull --rebase origin main
           git push origin main
