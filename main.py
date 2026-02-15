@@ -19,17 +19,14 @@ import logging
 from urllib.parse import unquote, quote, parse_qs
 
 # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
-# Настройка логирования одновременно в консоль и в файл
 logger = logging.getLogger("VPN_Scanner")
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
-# Вывод в консоль
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
-# Вывод в файл
 file_handler = logging.FileHandler("vpn_scanner.log", encoding="utf-8")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
@@ -50,15 +47,12 @@ XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-# Настройки проверки
-MAX_WORKERS = 25        # Количество потоков
-TCP_TIMEOUT = 1.0       # Быстрый отсев
-REAL_TEST_TIMEOUT = 5.0 # Время на пинг
-SPEED_TEST_TIMEOUT = 4.0 # Время на тест скорости
-TOTAL_SERVERS_WANTED = 10 # Цель: 10 серверов
-FAST_SPEED_THRESHOLD = 5.0 # Мбит/с для получения значка молнии ⚡
+MAX_WORKERS = 25        
+TCP_TIMEOUT = 1.0       
+REAL_TEST_TIMEOUT = 5.0 
+SPEED_TEST_TIMEOUT = 4.0 
+TOTAL_SERVERS_WANTED = 10 
 
-# Словарь с флагами и русскими названиями
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
     'FI': '🇫🇮 Финляндия', 'UK': '🇬🇧 Великобритания', 'GB': '🇬🇧 Великобритания',
@@ -263,7 +257,6 @@ def check_real_ping(server):
 
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
         
-        # 1. Проверка Пинга (Cloudflare 204)
         start = time.perf_counter()
         resp = requests.get("http://cp.cloudflare.com/", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         
@@ -271,18 +264,14 @@ def check_real_ping(server):
             end = time.perf_counter()
             latency = int((end - start) * 1000)
             
-            # 2. Проверка Скорости (Скачиваем 500KB файл)
             try:
-                # Скачиваем 500 000 байт для теста пропускной способности
                 dl_start = time.perf_counter()
                 dl_resp = requests.get("https://speed.cloudflare.com/__down?bytes=500000", proxies=proxies, timeout=SPEED_TEST_TIMEOUT)
                 if dl_resp.status_code == 200:
                     dl_end = time.perf_counter()
                     duration = dl_end - dl_start
-                    # Формула: (Мегабайты * 8) / Секунды = Мегабиты в секунду (Mbps)
                     speed_mbps = round((0.5 * 8) / duration, 2)
             except Exception:
-                # Если тест скорости не удался, мы всё равно сохраняем сервер, просто без высокой скорости
                 pass
         else:
             latency = None
@@ -306,6 +295,15 @@ def check_real_ping(server):
         if code == 'XX': return None
         return server
     return None
+
+def get_speed_badge(speed_mbps):
+    """Возвращает значок скорости в зависимости от Mbps."""
+    if speed_mbps >= 3.0:
+        return "⚡⚡ "
+    elif speed_mbps >= 1.5:
+        return "⚡ "
+    else:
+        return ""
 
 def main():
     logger.info(f"🚀 START: Smart VLESS Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
@@ -343,15 +341,15 @@ def main():
             res = f.result()
             if res:
                 valid_servers.append(res)
-                lightning = "⚡ " if res['speed_mbps'] >= FAST_SPEED_THRESHOLD else ""
-                logger.info(f"   ✅ {res['country']} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps {lightning}")
+                badge = get_speed_badge(res['speed_mbps'])
+                logger.info(f"   ✅ {res['country']} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps {badge.strip()}")
 
     ru_servers = [s for s in valid_servers if s['country'] == 'RU']
     world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
+    # ИЗМЕНЕНИЕ: Теперь ВСЕ серверы сортируются ИСКЛЮЧИТЕЛЬНО по пингу
     ru_servers.sort(key=lambda x: x['real_delay'])
-    # Сортируем остальные серверы: сначала более быстрые по скачиванию, затем по пингу
-    world_servers.sort(key=lambda x: (-x['speed_mbps'], x['real_delay']))
+    world_servers.sort(key=lambda x: x['real_delay'])
 
     final_selection = []
     
@@ -374,9 +372,10 @@ def main():
     json_stats = {"servers": []}
 
     for s in final_selection:
-        # Логика именования: ⚡ (Флаг) Название страны | 120ms
         country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
-        speed_badge = "⚡ " if s['speed_mbps'] >= FAST_SPEED_THRESHOLD else ""
+        speed_badge = get_speed_badge(s['speed_mbps'])
+        
+        # Красивое и чистое имя
         name = f"{speed_badge}{country_display} | {s['real_delay']}ms"
         
         orig = s['original']
