@@ -94,30 +94,6 @@
             line-height: 1.4;
         }
 
-        .filters {
-            display: flex; gap: 8px; overflow-x: auto;
-            padding: 4px; margin: 0 -4px 24px;
-            scrollbar-width: none;
-        }
-        .filters::-webkit-scrollbar { display: none; }
-
-        .chip {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            padding: 8px 16px; border-radius: 40px;
-            font-size: 12px; font-weight: 600; white-space: nowrap;
-            cursor: pointer; transition: all 0.3s ease;
-            font-family: var(--font-code);
-            user-select: none;
-        }
-        .chip:hover { border-color: var(--accent); color: #fff; }
-        .chip.active {
-            background: rgba(99, 102, 241, 0.15);
-            color: var(--accent); border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
-        }
-
         .grid { display: flex; flex-direction: column; gap: 12px; }
 
         .card {
@@ -150,27 +126,17 @@
             flex-shrink: 0;
         }
 
-        .info { flex: 1; min-width: 0; }
+        .info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
         .info h3 {
             margin: 0; font-size: 15px; font-weight: 700;
             color: #fff; font-family: var(--font-ui);
-            margin-bottom: 4px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         
-        .badges { display: flex; gap: 6px; flex-wrap: wrap; }
-        .badge {
-            font-size: 9px; font-weight: 700; text-transform: uppercase;
-            padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
-            font-family: var(--font-code); border: 1px solid transparent;
-            white-space: nowrap;
+        .server-name {
+            font-size: 11px; color: var(--text-muted); font-family: var(--font-code);
+            margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        
-        .b-game { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); }
-        .b-warp { color: #60a5fa; border-color: rgba(96, 165, 250, 0.3); background: rgba(96, 165, 250, 0.1); }
-        .b-white { color: #f87171; border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.1); }
-        .b-univ { color: #818cf8; border-color: rgba(129, 140, 248, 0.3); background: rgba(129, 140, 248, 0.1); }
-        .b-proto { color: #aaa; border-color: rgba(255, 255, 255, 0.1); }
 
         .stats {
             text-align: right;
@@ -274,41 +240,33 @@
                 <div class="status-dot"></div>
                 <div class="hacker-word" id="brandText" data-value="FL1PVPN">FL1PVPN</div>
             </div>
-            <div class="subtitle" id="timeInfo">INITIALIZING SYSTEM...</div>
+            <div class="subtitle" id="timeInfo">ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ...</div>
         </div>
     </header>
-
-    <div class="filters">
-        <div class="chip active" onclick="filterData('all', this)">ALL</div>
-        <div class="chip" onclick="filterData('Game Server', this)">GAME</div>
-        <div class="chip" onclick="filterData('WARP', this)">WARP</div>
-        <div class="chip" onclick="filterData('UNIVERSAL', this)">TURBO</div>
-        <div class="chip" onclick="filterData('WHITELIST', this)">RUSSIA</div>
-    </div>
 
     <div id="grid" class="grid"></div>
 </div>
 
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
     <div class="modal" onclick="event.stopPropagation()">
-        <button class="modal-close" onclick="forceCloseModal()" aria-label="Close">✕</button>
+        <button class="modal-close" onclick="forceCloseModal()" aria-label="Закрыть">✕</button>
         <div class="modal-header">
-            <img id="mFlag" src="" class="m-flag" alt="">
-            <h2 class="m-title" id="mCountry">Country</h2>
-            <div class="m-sub" id="mName">SERVER NODE</div>
+            <img id="mFlag" src="" class="m-flag" alt="Флаг">
+            <h2 class="m-title" id="mCountry">Страна</h2>
+            <div class="m-sub" id="mName">СЕРВЕРНЫЙ УЗЕЛ</div>
         </div>
         <div class="data-list">
-            <div class="data-row"><span class="d-label">IP Address</span><span class="d-value" id="mIP">---</span></div>
-            <div class="data-row"><span class="d-label">Ping</span><span class="d-value" id="mPing">---</span></div>
-            <div class="data-row"><span class="d-label">Protocol</span><span class="d-value" id="mProto">---</span></div>
-            <div class="data-row"><span class="d-label">Type</span><span class="d-value" id="mType">---</span></div>
+            <div class="data-row"><span class="d-label">IP Адрес</span><span class="d-value" id="mIP">---</span></div>
+            <div class="data-row"><span class="d-label">Пинг</span><span class="d-value" id="mPing">---</span></div>
+            <div class="data-row"><span class="d-label">Протокол</span><span class="d-value" id="mProto">---</span></div>
+            <div class="data-row"><span class="d-label">Тип</span><span class="d-value" id="mType">---</span></div>
         </div>
-        <button class="btn" onclick="openBot()">GET CONFIG KEY</button>
+        <button class="btn" onclick="openBot()">ПОЛУЧИТЬ КОНФИГ</button>
     </div>
 </div>
 
 <script>
-    // --- UTILS: Security XSS Prevention ---
+    // --- UTILS: Защита от XSS ---
     const escapeHTML = (str) => {
         if (str === null || str === undefined) return '';
         return String(str).replace(/[&<>'"]/g, 
@@ -321,20 +279,54 @@
             }[tag]));
     };
 
-    // --- 1. ADVANCED HACKER EFFECT ---
+    // --- ПЕРЕВОДЧИК СТРАН В ПОЛНЫЕ РУССКИЕ НАЗВАНИЯ ---
+    const countryNames = {
+        "DE": "Германия", "GERMANY": "Германия",
+        "FI": "Финляндия", "FINLAND": "Финляндия",
+        "RU": "Россия", "RUSSIA": "Россия",
+        "US": "США", "UNITED STATES": "США", "USA": "США",
+        "NL": "Нидерланды", "NETHERLANDS": "Нидерланды",
+        "GB": "Великобритания", "UK": "Великобритания", "UNITED KINGDOM": "Великобритания",
+        "FR": "Франция", "FRANCE": "Франция",
+        "PL": "Польша", "POLAND": "Польша",
+        "UA": "Украина", "UKRAINE": "Украина",
+        "TR": "Турция", "TURKEY": "Турция",
+        "CH": "Швейцария", "SWITZERLAND": "Швейцария",
+        "SE": "Швеция", "SWEDEN": "Швеция",
+        "SG": "Сингапур", "SINGAPORE": "Сингапур",
+        "JP": "Япония", "JAPAN": "Япония",
+        "CA": "Канада", "CANADA": "Канада",
+        "AU": "Австралия", "AUSTRALIA": "Австралия",
+        "ES": "Испания", "SPAIN": "Испания",
+        "IT": "Италия", "ITALY": "Италия",
+        "AT": "Австрия", "AUSTRIA": "Австрия",
+        "CZ": "Чехия", "CZECHIA": "Чехия", "CZECH REPUBLIC": "Чехия",
+        "HK": "Гонконг", "HONG KONG": "Гонконг",
+        "BG": "Болгария", "BULGARIA": "Болгария",
+        "RO": "Румыния", "ROMANIA": "Румыния",
+        "KZ": "Казахстан", "KAZAKHSTAN": "Казахстан",
+        "LV": "Латвия", "LATVIA": "Латвия",
+        "LT": "Литва", "LITHUANIA": "Литва",
+        "EE": "Эстония", "ESTONIA": "Эстония",
+        "AE": "ОАЭ", "UNITED ARAB EMIRATES": "ОАЭ"
+    };
+
+    function getRussianCountryName(countryStr) {
+        if (!countryStr) return "Неизвестная локация";
+        const upper = String(countryStr).trim().toUpperCase();
+        return countryNames[upper] || countryStr;
+    }
+
+    // --- АНИМАЦИИ: ЛОГОТИП И ФОН ---
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
     
     function scrambleLetter(element, finalChar) {
         if (element.dataset.isAnimating === "true") return;
         element.dataset.isAnimating = "true";
-        
-        let iterations = 0;
-        const maxIterations = 10;
-        
+        let iterations = 0; const maxIterations = 10;
         const interval = setInterval(() => {
             element.innerText = letters[Math.floor(Math.random() * letters.length)];
             iterations++;
-            
             if (iterations >= maxIterations) {
                 element.innerText = finalChar;
                 element.dataset.isAnimating = "false";
@@ -347,57 +339,39 @@
         const container = document.getElementById('brandText');
         const text = container.dataset.value;
         let iterations = 0;
-        
         const loadInterval = setInterval(() => {
             container.innerText = text.split("").map((letter, index) => {
                 if(index < iterations) return text[index];
                 return letters[Math.floor(Math.random() * letters.length)];
             }).join("");
-
             if(iterations >= text.length) {
                 clearInterval(loadInterval);
-                enableHoverInteraction(container, text);
+                container.innerHTML = ""; 
+                text.split("").forEach(char => {
+                    const span = document.createElement("span");
+                    span.className = "hacker-char";
+                    span.innerText = char;
+                    span.onmouseover = () => scrambleLetter(span, char);
+                    container.appendChild(span);
+                });
             }
             iterations += 1 / 2;
         }, 35);
     }
-
-    function enableHoverInteraction(container, text) {
-        container.innerHTML = ""; 
-        text.split("").forEach(char => {
-            const span = document.createElement("span");
-            span.className = "hacker-char";
-            span.innerText = char;
-            span.onmouseover = () => scrambleLetter(span, char);
-            container.appendChild(span);
-        });
-    }
-
     initHackerTitle();
 
-    // --- 2. DIGITAL NETWORK BACKGROUND (HiDPI SUPPORTED) ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
+    let width, height, particles = [];
     const config = { speed: 0.5, size: 1.5, linkDist: 140, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, 0.2)' };
 
     function resize() {
         const dpr = window.devicePixelRatio || 1;
-        width = window.innerWidth;
-        height = window.innerHeight;
-        
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-        
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width * dpr; canvas.height = height * dpr;
+        canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
         ctx.scale(dpr, dpr);
-        
         const targetCount = Math.floor((width * height) / 9000);
-        
-        // Preserve existing particles instead of clearing all on mobile scroll
         if (particles.length < targetCount) {
             for(let i = particles.length; i < targetCount; i++) {
                 particles.push({
@@ -409,21 +383,15 @@
             particles = particles.slice(0, targetCount);
         }
     }
-
     function animateNetwork() {
         ctx.clearRect(0, 0, width, height);
         for(let i = 0; i < particles.length; i++) {
-            let p = particles[i];
-            p.x += p.vx; p.y += p.vy;
+            let p = particles[i]; p.x += p.vx; p.y += p.vy;
             if(p.x < 0 || p.x > width) p.vx *= -1;
             if(p.y < 0 || p.y > height) p.vy *= -1;
-            
-            ctx.fillStyle = config.colorNode;
-            ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
-            
+            ctx.fillStyle = config.colorNode; ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
             for(let j = i + 1; j < particles.length; j++) {
-                let p2 = particles[j];
-                let dx = p.x - p2.x; let dy = p.y - p2.y;
+                let p2 = particles[j]; let dx = p.x - p2.x; let dy = p.y - p2.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 if(dist < config.linkDist) {
                     let alpha = 1 - (dist / config.linkDist);
@@ -434,13 +402,10 @@
         }
         requestAnimationFrame(animateNetwork);
     }
-    window.addEventListener('resize', resize); 
-    resize(); 
-    animateNetwork();
+    window.addEventListener('resize', resize); resize(); animateNetwork();
 
-    // --- MAIN APP LOGIC ---
+    // --- ОСНОВНАЯ ЛОГИКА РАБОТЫ С ДАННЫМИ ---
     const JSON_URL = "stats.json";
-    let serversData = [];
 
     async function init() {
         try {
@@ -449,42 +414,37 @@
             const data = await res.json();
             
             const timeInfo = document.getElementById('timeInfo');
-            timeInfo.innerHTML = `UPDATED: ${escapeHTML(data.updated_at)} <br> NEXT: ${escapeHTML(data.next_update)}`;
             
-            serversData = data.servers || [];
+            // Защита: поддержка как прямого массива [{}, {}], так и объекта {"servers": [{}]}
+            const serversData = Array.isArray(data) ? data : (data.servers || data.Servers || []);
+            
+            if (!Array.isArray(data) && data.updated_at) {
+                timeInfo.innerHTML = `ОБНОВЛЕНО: ${escapeHTML(data.updated_at)} <br> СЛЕДУЮЩЕЕ: ${escapeHTML(data.next_update || '---')}`;
+            } else {
+                timeInfo.innerHTML = `СИСТЕМА В СЕТИ <br> АКТИВНЫЕ УЗЛЫ: ${serversData.length}`;
+            }
+            
             setInterval(simulateLivePing, 2000);
-            filterData('all', document.querySelector('.chip.active'));
+            render(serversData);
         } catch (e) {
             console.error("Data fetch failed:", e);
             document.getElementById('grid').innerHTML = `
                 <div class="system-error">
-                    <span>[ SYSTEM OFFLINE ]</span><br><br>
-                    <small style="color:var(--text-muted)">Unable to load statistics data.</small>
+                    <span>[ ОШИБКА СИСТЕМЫ ]</span><br><br>
+                    <small style="color:var(--text-muted)">Не удалось получить список серверов (stats.json)</small>
                 </div>`;
         }
-    }
-
-    function filterData(category, el) {
-        if(el) { 
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); 
-            el.classList.add('active'); 
-        }
-        const list = category === 'all' ? serversData : serversData.filter(s => s.category === category);
-        render(list);
     }
 
     function simulateLivePing() {
         document.querySelectorAll('.ping-container').forEach(container => {
             const el = container.querySelector('.ping-number');
             const dot = container.querySelector('.signal-dot');
-            
-            if (!el || !dot) return;
+            if (!el || !dot || el.innerText === '---') return;
             
             let base = parseInt(el.getAttribute('data-base')) || 50;
-            let fluctuation = Math.floor(Math.random() * 14) - 5;
-            let newPing = base + fluctuation;
+            let newPing = base + (Math.floor(Math.random() * 14) - 5);
             if (newPing < 10) newPing = 10;
-            
             el.innerText = newPing;
             
             if(newPing < 150) dot.style.background = '#00ff9d';
@@ -497,8 +457,8 @@
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
         
-        if(list.length === 0) { 
-            grid.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-family:var(--font-code);">// NO NODES FOUND</div>`; 
+        if(!list || list.length === 0) { 
+            grid.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-family:var(--font-code);">// НЕТ ДОСТУПНЫХ УЗЛОВ</div>`; 
             return; 
         }
         
@@ -507,80 +467,68 @@
             el.className = 'card';
             el.style.animationDelay = (i * 0.05) + 's';
             
-            const iso = s.iso ? escapeHTML(s.iso.toLowerCase()) : 'xx';
-            const flagUrl = `https://flagcdn.com/w80/${iso}.png`;
-            
-            const safeCategory = escapeHTML(s.category);
-            const safeCountry = escapeHTML(s.country);
-            const safeProtocol = escapeHTML(s.protocol);
-            const safeType = escapeHTML(s.type || s.protocol);
-            const safePing = escapeHTML(s.ping);
-            
-            let badgeClass = 'b-univ';
-            if(safeCategory === 'Game Server') badgeClass = 'b-game';
-            if(safeCategory === 'WARP') badgeClass = 'b-warp';
-            if(safeCategory === 'WHITELIST') badgeClass = 'b-white';
+            // Умный поиск ключей в JSON, так как они могли быть с большой буквы или иметь синонимы
+            const s_country = s.country || s.Country || '';
+            const s_iso = s.iso || s.ISO || (s_country ? s_country.substring(0, 2) : 'xx');
+            const s_name = s.name || s.Name || s.remark || s.Remark || s_country || 'СЕРВЕР';
+            const s_ip = s.ip || s.IP || s.address || s.Address || 'Скрыт';
+            const s_ping = s.ping || s.Ping || 0;
+            const s_protocol = s.protocol || s.Protocol || 'Неизвестен';
+            const s_type = s.type || s.Type || s_protocol;
 
+            const ruCountry = getRussianCountryName(s_country || s_iso);
+            const isoCode = String(s_iso).toLowerCase().substring(0, 2);
+            const flagUrl = isoCode && isoCode !== 'xx' ? `https://flagcdn.com/w80/${isoCode}.png` : 'https://flagcdn.com/w80/xx.png';
+            
             let pingColor = '#00ff9d';
-            const numPing = parseInt(safePing) || 0;
+            const numPing = parseInt(s_ping) || 0;
             if(numPing > 150) pingColor = '#ffcc00';
             if(numPing > 300) pingColor = '#ff0055';
 
             el.innerHTML = `
                 <div class="card-left">
-                    <img src="${flagUrl}" class="flag-icon" alt="${safeCountry} flag" onerror="this.src='https://flagcdn.com/w80/xx.png'">
+                    <img src="${flagUrl}" class="flag-icon" alt="${escapeHTML(ruCountry)}" onerror="this.src='https://flagcdn.com/w80/xx.png'">
                     <div class="info">
-                        <h3>${safeCountry}</h3>
-                        <div class="badges">
-                            <span class="badge ${badgeClass}">${safeCategory}</span>
-                            <span class="badge b-proto">${safeProtocol}</span>
-                        </div>
+                        <h3>${escapeHTML(ruCountry)}</h3>
+                        <div class="server-name">${escapeHTML(s_name)}</div>
                     </div>
                 </div>
                 <div class="stats">
                     <div class="ping-val ping-container">
-                        <span class="ping-number" data-base="${safePing}">${safePing}</span> ms 
+                        <span class="ping-number" data-base="${numPing}">${numPing > 0 ? numPing : '---'}</span> ms 
                         <div class="signal-dot" style="background:${pingColor}"></div>
                     </div>
-                    <span class="type-val">${safeType}</span>
+                    <span class="type-val">${escapeHTML(s_type)}</span>
                 </div>
             `;
             
-            // Pass full original object for modal to avoid reparsing
-            el.onclick = () => openModal(s, flagUrl);
+            // Передача четко структурированных данных в модальное окно
+            el.onclick = () => openModal({ 
+                country: ruCountry, name: s_name, ip: s_ip, 
+                ping: numPing, proto: s_protocol, type: s_type 
+            }, flagUrl);
             grid.appendChild(el);
         });
     }
 
-    function openModal(s, flagUrl) {
+    function openModal(data, flagUrl) {
         const m = document.getElementById('modal');
         document.getElementById('mFlag').src = flagUrl;
-        document.getElementById('mCountry').textContent = s.country || 'Unknown';
-        document.getElementById('mName').textContent = s.name || 'SERVER NODE';
-        document.getElementById('mIP').textContent = s.ip || '---';
-        document.getElementById('mPing').textContent = (s.ping || '---') + " ms";
-        document.getElementById('mProto').textContent = s.protocol || '---';
-        document.getElementById('mType').textContent = s.type || '---';
+        document.getElementById('mCountry').textContent = data.country;
+        document.getElementById('mName').textContent = data.name;
+        document.getElementById('mIP').textContent = data.ip;
+        document.getElementById('mPing').textContent = (data.ping > 0 ? data.ping : '---') + " ms";
+        document.getElementById('mProto').textContent = data.proto;
+        document.getElementById('mType').textContent = data.type;
         
         m.classList.add('open');
     }
     
-    function closeModal(e) { 
-        if(e.target.id === 'modal') forceCloseModal();
-    }
-    
-    function forceCloseModal() {
-        document.getElementById('modal').classList.remove('open');
-    }
+    function closeModal(e) { if(e.target.id === 'modal') forceCloseModal(); }
+    function forceCloseModal() { document.getElementById('modal').classList.remove('open'); }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') forceCloseModal(); });
 
-    // Keyboard support for closing modal
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') forceCloseModal();
-    });
-
-    function openBot() { 
-        window.location.href = "https://t.me/fl1pvpnbot"; 
-    }
+    function openBot() { window.location.href = "https://t.me/fl1pvpnbot"; }
 
     init();
 </script>
