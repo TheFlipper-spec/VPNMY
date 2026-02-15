@@ -38,7 +38,6 @@
         /* --- DIGITAL BACKGROUND --- */
         #bg-canvas {
             position: fixed; top: 0; left: 0; 
-            width: 100%; height: 100%; 
             z-index: 0; pointer-events: none;
         }
 
@@ -71,10 +70,9 @@
             cursor: default;
         }
         
-        /* Стили для отдельных букв */
         .hacker-word { display: flex; }
         .hacker-char {
-            transition: color 0.1s;
+            transition: color 0.1s, text-shadow 0.1s;
             position: relative;
             cursor: crosshair;
         }
@@ -109,8 +107,9 @@
             color: var(--text-muted);
             padding: 8px 16px; border-radius: 40px;
             font-size: 12px; font-weight: 600; white-space: nowrap;
-            cursor: pointer; transition: 0.3s;
+            cursor: pointer; transition: all 0.3s ease;
             font-family: var(--font-code);
+            user-select: none;
         }
         .chip:hover { border-color: var(--accent); color: #fff; }
         .chip.active {
@@ -128,7 +127,7 @@
             border-radius: var(--radius-lg);
             padding: 16px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; transition: 0.3s;
+            cursor: pointer; transition: all 0.3s ease;
             position: relative; overflow: hidden;
             animation: slideUp 0.4s ease-out forwards;
             opacity: 0;
@@ -140,7 +139,7 @@
             box-shadow: 0 4px 20px rgba(0, 243, 255, 0.1);
         }
 
-        .card-left { display: flex; align-items: center; gap: 16px; }
+        .card-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
 
         .flag-icon { 
             width: 38px; height: 28px; 
@@ -148,12 +147,15 @@
             object-fit: cover;
             background: #111;
             box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            flex-shrink: 0;
         }
 
+        .info { flex: 1; min-width: 0; }
         .info h3 {
             margin: 0; font-size: 15px; font-weight: 700;
             color: #fff; font-family: var(--font-ui);
             margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         
         .badges { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -161,6 +163,7 @@
             font-size: 9px; font-weight: 700; text-transform: uppercase;
             padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
             font-family: var(--font-code); border: 1px solid transparent;
+            white-space: nowrap;
         }
         
         .b-game { color: #34d399; border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); }
@@ -172,6 +175,7 @@
         .stats {
             text-align: right;
             display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+            flex-shrink: 0; margin-left: 12px;
         }
         .ping-val {
             font-weight: 700; font-size: 14px; color: #fff;
@@ -180,12 +184,13 @@
         }
         .type-val { font-size: 10px; color: var(--text-muted); font-family: var(--font-code); text-transform: uppercase; }
 
-        .signal-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .signal-dot { width: 6px; height: 6px; border-radius: 50%; transition: background-color 0.3s; }
 
+        /* MODAL STYLES */
         .modal-overlay {
             position: fixed; inset: 0; z-index: 100;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(12px);
-            opacity: 0; pointer-events: none; transition: 0.3s;
+            opacity: 0; pointer-events: none; transition: all 0.3s ease;
             display: flex; align-items: center; justify-content: center;
         }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
@@ -195,12 +200,23 @@
             width: 90%; max-width: 400px;
             border-radius: 24px; padding: 24px;
             border: 1px solid var(--border-color);
-            transform: scale(0.95); transition: 0.3s;
+            transform: scale(0.95) translateY(10px); 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 0 50px rgba(99, 102, 241, 0.15);
+            position: relative;
         }
-        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-overlay.open .modal { transform: scale(1) translateY(0); }
 
-        .modal-header { text-align: center; margin-bottom: 20px; }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px;
+            background: none; border: none; padding: 4px;
+            color: var(--text-muted); font-size: 20px; line-height: 1;
+            cursor: pointer; transition: color 0.2s;
+            font-family: var(--font-ui); display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { color: #fff; }
+
+        .modal-header { text-align: center; margin-bottom: 20px; margin-top: 10px; }
         .m-flag { 
             width: 60px; height: auto; border-radius: 6px;
             display: block; margin: 0 auto 12px; 
@@ -214,12 +230,13 @@
             padding: 16px; margin-bottom: 24px; 
         }
         .data-row { 
-            display: flex; justify-content: space-between; 
+            display: flex; justify-content: space-between; align-items: center;
             padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
         }
-        .data-row:last-child { border: none; }
+        .data-row:last-child { border: none; padding-bottom: 0; }
+        .data-row:first-child { padding-top: 0; }
         .d-label { color: var(--text-muted); font-size: 12px; }
-        .d-value { font-weight: 600; font-family: var(--font-code); color: #fff; font-size: 13px; }
+        .d-value { font-weight: 600; font-family: var(--font-code); color: #fff; font-size: 13px; text-align: right; word-break: break-all; margin-left: 10px;}
 
         .btn {
             width: 100%; padding: 14px; border-radius: 12px; border: none;
@@ -227,14 +244,21 @@
             background: var(--primary); color: #fff; 
             box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); 
             font-family: var(--font-ui); text-transform: uppercase;
+            transition: all 0.2s ease;
         }
+        .btn:hover { background: #5356e3; box-shadow: 0 0 25px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
         
-        @keyframes pulse-dot { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .system-error { text-align: center; padding: 40px 20px; background: rgba(255,0,85,0.05); border: 1px dashed var(--danger); border-radius: var(--radius-lg); margin-top: 20px; }
+        .system-error span { color: var(--danger); font-family: var(--font-code); font-weight: 700; letter-spacing: 1px; }
+
+        @keyframes pulse-dot { 0% { opacity: 1; box-shadow: 0 0 10px var(--success); } 50% { opacity: 0.4; box-shadow: 0 0 2px var(--success); } 100% { opacity: 1; box-shadow: 0 0 10px var(--success); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 480px) {
             .container { padding-top: 10px; }
-            .modal { position: absolute; bottom: 0; width: 100%; border-radius: 24px 24px 0 0; margin: 0; max-width: 100%; }
+            .modal { position: absolute; bottom: 0; width: 100%; border-radius: 24px 24px 0 0; margin: 0; max-width: 100%; transform: translateY(100%); }
+            .modal-overlay.open .modal { transform: translateY(0); }
         }
     </style>
 </head>
@@ -266,7 +290,8 @@
 </div>
 
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
-    <div class="modal">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="forceCloseModal()" aria-label="Close">✕</button>
         <div class="modal-header">
             <img id="mFlag" src="" class="m-flag" alt="">
             <h2 class="m-title" id="mCountry">Country</h2>
@@ -283,15 +308,28 @@
 </div>
 
 <script>
-    // --- 1. ADVANCED HACKER EFFECT (LOCAL + GLOBAL) ---
+    // --- UTILS: Security XSS Prevention ---
+    const escapeHTML = (str) => {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+    };
+
+    // --- 1. ADVANCED HACKER EFFECT ---
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
     
-    // Функция перемешивания одной конкретной буквы
     function scrambleLetter(element, finalChar) {
-        let iterations = 0;
-        const maxIterations = 10; // Сколько раз менять букву перед остановкой
+        if (element.dataset.isAnimating === "true") return;
+        element.dataset.isAnimating = "true";
         
-        clearInterval(element.dataset.interval);
+        let iterations = 0;
+        const maxIterations = 10;
         
         const interval = setInterval(() => {
             element.innerText = letters[Math.floor(Math.random() * letters.length)];
@@ -299,20 +337,17 @@
             
             if (iterations >= maxIterations) {
                 element.innerText = finalChar;
+                element.dataset.isAnimating = "false";
                 clearInterval(interval);
             }
         }, 40);
-        
-        element.dataset.interval = interval;
     }
 
-    // Инициализация текста (Запуск глобального эффекта + подготовка к наведению)
     function initHackerTitle() {
         const container = document.getElementById('brandText');
         const text = container.dataset.value;
-        
-        // ШАГ 1: Глобальная анимация при загрузке (как раньше)
         let iterations = 0;
+        
         const loadInterval = setInterval(() => {
             container.innerText = text.split("").map((letter, index) => {
                 if(index < iterations) return text[index];
@@ -321,53 +356,60 @@
 
             if(iterations >= text.length) {
                 clearInterval(loadInterval);
-                // ШАГ 2: После завершения превращаем текст в отдельные спаны для ховера
                 enableHoverInteraction(container, text);
             }
             iterations += 1 / 2;
         }, 35);
     }
 
-    // Превращение текста в интерактивные буквы
     function enableHoverInteraction(container, text) {
-        container.innerHTML = ""; // Очищаем текст
+        container.innerHTML = ""; 
         text.split("").forEach(char => {
             const span = document.createElement("span");
             span.className = "hacker-char";
             span.innerText = char;
-            
-            // Магия: при наведении перемешиваем ТОЛЬКО эту букву
             span.onmouseover = () => scrambleLetter(span, char);
-            
             container.appendChild(span);
         });
     }
 
-    // Запускаем
     initHackerTitle();
 
-    // --- 2. DIGITAL NETWORK BACKGROUND ---
+    // --- 2. DIGITAL NETWORK BACKGROUND (HiDPI SUPPORTED) ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
     let particles = [];
-    const config = { count: 0, speed: 0.5, size: 1.5, linkDist: 140, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, 0.2)' };
+    const config = { speed: 0.5, size: 1.5, linkDist: 140, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, 0.2)' };
 
     function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        config.count = Math.floor((width * height) / 9000);
-        createParticles();
-    }
-    function createParticles() {
-        particles = [];
-        for(let i = 0; i < config.count; i++) {
-            particles.push({
-                x: Math.random() * width, y: Math.random() * height,
-                vx: (Math.random() - 0.5) * config.speed, vy: (Math.random() - 0.5) * config.speed
-            });
+        const dpr = window.devicePixelRatio || 1;
+        width = window.innerWidth;
+        height = window.innerHeight;
+        
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        
+        ctx.scale(dpr, dpr);
+        
+        const targetCount = Math.floor((width * height) / 9000);
+        
+        // Preserve existing particles instead of clearing all on mobile scroll
+        if (particles.length < targetCount) {
+            for(let i = particles.length; i < targetCount; i++) {
+                particles.push({
+                    x: Math.random() * width, y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * config.speed, vy: (Math.random() - 0.5) * config.speed
+                });
+            }
+        } else {
+            particles = particles.slice(0, targetCount);
         }
     }
+
     function animateNetwork() {
         ctx.clearRect(0, 0, width, height);
         for(let i = 0; i < particles.length; i++) {
@@ -375,8 +417,10 @@
             p.x += p.vx; p.y += p.vy;
             if(p.x < 0 || p.x > width) p.vx *= -1;
             if(p.y < 0 || p.y > height) p.vy *= -1;
+            
             ctx.fillStyle = config.colorNode;
             ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
+            
             for(let j = i + 1; j < particles.length; j++) {
                 let p2 = particles[j];
                 let dx = p.x - p2.x; let dy = p.y - p2.y;
@@ -390,7 +434,9 @@
         }
         requestAnimationFrame(animateNetwork);
     }
-    window.addEventListener('resize', resize); resize(); animateNetwork();
+    window.addEventListener('resize', resize); 
+    resize(); 
+    animateNetwork();
 
     // --- MAIN APP LOGIC ---
     const JSON_URL = "stats.json";
@@ -399,84 +445,108 @@
     async function init() {
         try {
             const res = await fetch(JSON_URL + "?t=" + Date.now());
-            if(!res.ok) throw new Error("Failed");
+            if(!res.ok) throw new Error("HTTP error " + res.status);
             const data = await res.json();
-            document.getElementById('timeInfo').innerHTML = `UPDATED: ${data.updated_at} <br> NEXT: ${data.next_update}`;
-            serversData = data.servers || [];
             
-            // Живой пинг (визуальный)
+            const timeInfo = document.getElementById('timeInfo');
+            timeInfo.innerHTML = `UPDATED: ${escapeHTML(data.updated_at)} <br> NEXT: ${escapeHTML(data.next_update)}`;
+            
+            serversData = data.servers || [];
             setInterval(simulateLivePing, 2000);
-
             filterData('all', document.querySelector('.chip.active'));
         } catch (e) {
-            document.getElementById('grid').innerHTML = `<div style="text-align:center; padding:40px; color:#ff0055;">[ SYSTEM OFFLINE ]</div>`;
+            console.error("Data fetch failed:", e);
+            document.getElementById('grid').innerHTML = `
+                <div class="system-error">
+                    <span>[ SYSTEM OFFLINE ]</span><br><br>
+                    <small style="color:var(--text-muted)">Unable to load statistics data.</small>
+                </div>`;
         }
     }
 
     function filterData(category, el) {
-        if(el) { document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
+        if(el) { 
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); 
+            el.classList.add('active'); 
+        }
         const list = category === 'all' ? serversData : serversData.filter(s => s.category === category);
         render(list);
     }
 
     function simulateLivePing() {
-        const pingElements = document.querySelectorAll('.ping-number');
-        pingElements.forEach(el => {
-            let base = parseInt(el.getAttribute('data-base'));
+        document.querySelectorAll('.ping-container').forEach(container => {
+            const el = container.querySelector('.ping-number');
+            const dot = container.querySelector('.signal-dot');
+            
+            if (!el || !dot) return;
+            
+            let base = parseInt(el.getAttribute('data-base')) || 50;
             let fluctuation = Math.floor(Math.random() * 14) - 5;
             let newPing = base + fluctuation;
             if (newPing < 10) newPing = 10;
+            
             el.innerText = newPing;
-            const dot = el.nextElementSibling;
-            if(dot && dot.classList.contains('signal-dot')) {
-                if(newPing < 150) dot.style.background = '#00ff9d';
-                else if(newPing < 300) dot.style.background = '#ffcc00';
-                else dot.style.background = '#ff0055';
-            }
+            
+            if(newPing < 150) dot.style.background = '#00ff9d';
+            else if(newPing < 300) dot.style.background = '#ffcc00';
+            else dot.style.background = '#ff0055';
         });
     }
 
     function render(list) {
         const grid = document.getElementById('grid');
         grid.innerHTML = "";
-        if(list.length === 0) { grid.innerHTML = `<div style="text-align:center; color:#555;">// NO NODES</div>`; return; }
+        
+        if(list.length === 0) { 
+            grid.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-family:var(--font-code);">// NO NODES FOUND</div>`; 
+            return; 
+        }
         
         list.forEach((s, i) => {
             const el = document.createElement('div');
             el.className = 'card';
             el.style.animationDelay = (i * 0.05) + 's';
             
-            const iso = s.iso ? s.iso.toLowerCase() : 'xx';
+            const iso = s.iso ? escapeHTML(s.iso.toLowerCase()) : 'xx';
             const flagUrl = `https://flagcdn.com/w80/${iso}.png`;
             
+            const safeCategory = escapeHTML(s.category);
+            const safeCountry = escapeHTML(s.country);
+            const safeProtocol = escapeHTML(s.protocol);
+            const safeType = escapeHTML(s.type || s.protocol);
+            const safePing = escapeHTML(s.ping);
+            
             let badgeClass = 'b-univ';
-            if(s.category === 'Game Server') badgeClass = 'b-game';
-            if(s.category === 'WARP') badgeClass = 'b-warp';
-            if(s.category === 'WHITELIST') badgeClass = 'b-white';
+            if(safeCategory === 'Game Server') badgeClass = 'b-game';
+            if(safeCategory === 'WARP') badgeClass = 'b-warp';
+            if(safeCategory === 'WHITELIST') badgeClass = 'b-white';
 
             let pingColor = '#00ff9d';
-            if(s.ping > 150) pingColor = '#ffcc00';
-            if(s.ping > 300) pingColor = '#ff0055';
+            const numPing = parseInt(safePing) || 0;
+            if(numPing > 150) pingColor = '#ffcc00';
+            if(numPing > 300) pingColor = '#ff0055';
 
             el.innerHTML = `
                 <div class="card-left">
-                    <img src="${flagUrl}" class="flag-icon" onerror="this.src='https://flagcdn.com/w80/xx.png'">
+                    <img src="${flagUrl}" class="flag-icon" alt="${safeCountry} flag" onerror="this.src='https://flagcdn.com/w80/xx.png'">
                     <div class="info">
-                        <h3>${s.country}</h3>
+                        <h3>${safeCountry}</h3>
                         <div class="badges">
-                            <span class="badge ${badgeClass}">${s.category}</span>
-                            <span class="badge b-proto">${s.protocol}</span>
+                            <span class="badge ${badgeClass}">${safeCategory}</span>
+                            <span class="badge b-proto">${safeProtocol}</span>
                         </div>
                     </div>
                 </div>
                 <div class="stats">
-                    <div class="ping-val">
-                        <span class="ping-number" data-base="${s.ping}">${s.ping}</span> ms 
+                    <div class="ping-val ping-container">
+                        <span class="ping-number" data-base="${safePing}">${safePing}</span> ms 
                         <div class="signal-dot" style="background:${pingColor}"></div>
                     </div>
-                    <span class="type-val">${s.type || s.protocol}</span>
+                    <span class="type-val">${safeType}</span>
                 </div>
             `;
+            
+            // Pass full original object for modal to avoid reparsing
             el.onclick = () => openModal(s, flagUrl);
             grid.appendChild(el);
         });
@@ -485,16 +555,32 @@
     function openModal(s, flagUrl) {
         const m = document.getElementById('modal');
         document.getElementById('mFlag').src = flagUrl;
-        document.getElementById('mCountry').innerText = s.country;
-        document.getElementById('mName').innerText = s.name;
-        document.getElementById('mIP').innerText = s.ip;
-        document.getElementById('mPing').innerText = s.ping + " ms";
-        document.getElementById('mProto').innerText = s.protocol;
-        document.getElementById('mType').innerText = s.type;
+        document.getElementById('mCountry').textContent = s.country || 'Unknown';
+        document.getElementById('mName').textContent = s.name || 'SERVER NODE';
+        document.getElementById('mIP').textContent = s.ip || '---';
+        document.getElementById('mPing').textContent = (s.ping || '---') + " ms";
+        document.getElementById('mProto').textContent = s.protocol || '---';
+        document.getElementById('mType').textContent = s.type || '---';
+        
         m.classList.add('open');
     }
-    function closeModal(e) { if(e.target.id === 'modal') document.getElementById('modal').classList.remove('open'); }
-    function openBot() { window.location.href = "https://t.me/fl1pvpnbot"; }
+    
+    function closeModal(e) { 
+        if(e.target.id === 'modal') forceCloseModal();
+    }
+    
+    function forceCloseModal() {
+        document.getElementById('modal').classList.remove('open');
+    }
+
+    // Keyboard support for closing modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') forceCloseModal();
+    });
+
+    function openBot() { 
+        window.location.href = "https://t.me/fl1pvpnbot"; 
+    }
 
     init();
 </script>
