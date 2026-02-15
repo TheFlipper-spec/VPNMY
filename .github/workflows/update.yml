@@ -57,6 +57,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           
+          # Добавляем в индекс только нужные файлы
           git add FL1PVPN stats.json logs/*.log
           
           if git diff --staged --quiet; then
@@ -66,7 +67,12 @@ jobs:
           
           COUNT=$(python3 -c "import json; print(len(json.load(open('stats.json'))['servers']))" 2>/dev/null || echo "?")
           
+          # Коммитим нужные файлы
           git commit -m "🚀 Update $COUNT Servers | $(date -u +'%Y-%m-%d %H:%M UTC')"
+          
+          # Прячем все остальные изменения (например, измененные права xray или корневые логи),
+          # чтобы они не блокировали слияние (pull)
+          git stash --include-untracked
           
           git pull --rebase origin main
           git push origin main
