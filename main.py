@@ -34,7 +34,8 @@ logger.addHandler(file_handler)
 # --- НАСТРОЙКИ ---
 SOURCES = [
     # Твои оригинальные источники
-    "https://clck.ru/3RcLDw"
+    "https://clck.ru/3RcLDw",
+    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
