@@ -33,28 +33,28 @@ logger.addHandler(file_handler)
 
 # --- НАСТРОЙКИ ---
 SOURCES = [
+    # Твои источники (Reality + VLESS)
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt",
-
-"https://raw.githubusercontent.com/Mosifree/-FREE2CONFIG/refs/heads/main/Clash_Reality",
-
-"https://clck.ru/3RcLDw",
-
-"https://sub.shadowproxy66.workers.dev/sub/be80a76c-6044-417c-9bff-e587f9380d05#ShadowProxy66(1)" 
-
+    "https://raw.githubusercontent.com/Mosifree/-FREE2CONFIG/refs/heads/main/Clash_Reality",
+    
+    # Крупные мировые базы (много VMess/VLESS + WS + CDN)
+    "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/Eternity",
+    "https://raw.githubusercontent.com/Pawdroid/Free-servers/main/sub"
 ]
+
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-MAX_WORKERS = 25        
-TCP_TIMEOUT = 1.0       
-REAL_TEST_TIMEOUT = 5.0 
-SPEED_TEST_TIMEOUT = 6.0 
-TOTAL_SERVERS_WANTED = 10 
+MAX_WORKERS = 40        # Увеличено для массового пинга
+TCP_TIMEOUT = 1.0       # Быстрый отсев мертвых IP
+REAL_TEST_TIMEOUT = 4.0 # Таймаут для проверки соединения Xray
+SPEED_TEST_TIMEOUT = 5.0 # Время на замер скорости (сек)
+TOTAL_SERVERS_WANTED = 10 # Сколько рабочих серверов нужно на выходе
 
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
@@ -65,7 +65,7 @@ COUNTRIES_RU = {
     'ES': '🇪🇸 Испания', 'CA': '🇨🇦 Канада', 'AU': '🇦🇺 Австралия', 'CH': '🇨🇭 Швейцария',
     'AE': '🇦🇪 ОАЭ', 'IN': '🇮🇳 Индия', 'BR': '🇧🇷 Бразилия', 'ZA': '🇿🇦 ЮАР',
     'LT': '🇱🇹 Литва', 'MD': '🇲🇩 Молдова', 'EE': '🇪🇪 Эстония', 'CY': '🇨🇾 Кипр', 'LV': '🇱🇻 Латвия',
-'GR': '🇬🇷 Греция'
+    'GR': '🇬🇷 Греция'
 }
 
 geo_reader = None
@@ -77,9 +77,8 @@ def install_xray_core():
             os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
         return
 
-    logger.info("📥 Xray core не найден. Скачивание (v1.8.4)...")
+    logger.info("📥 Скачивание Xray core (v1.8.4)...")
     url = "https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip"
-    
     try:
         r = requests.get(url, stream=True, timeout=30)
         if r.status_code == 200:
@@ -87,93 +86,100 @@ def install_xray_core():
                 if 'xray' in z.namelist():
                     with z.open('xray') as zf, open(XRAY_BIN, 'wb') as f:
                         f.write(zf.read())
-                else:
-                    logger.error("❌ В архиве нет файла xray!")
-                    return
             st = os.stat(XRAY_BIN)
             os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
-            logger.info("✅ Xray установлен успешно.")
-        else:
-            logger.error(f"❌ Ошибка скачивания Xray: {r.status_code}")
+            logger.info("✅ Xray установлен.")
     except Exception as e:
-        logger.error(f"❌ Критическая ошибка установки Xray: {e}")
+        logger.error(f"❌ Ошибка установки Xray: {e}")
 
 def download_mmdb():
     if not os.path.exists(MMDB_FILE):
-        logger.info("📥 Скачивание GeoIP базы...")
         try:
             r = requests.get(MMDB_URL, stream=True, timeout=20)
-            if r.status_code == 200:
-                with open(MMDB_FILE, 'wb') as f:
-                    for chunk in r.iter_content(1024):
-                        f.write(chunk)
-        except Exception as e:
-            logger.error(f"Ошибка скачивания MMDB: {e}")
+            with open(MMDB_FILE, 'wb') as f:
+                for chunk in r.iter_content(1024): f.write(chunk)
+        except: pass
 
 def init_geoip():
     global geo_reader
-    try: 
-        geo_reader = geoip2.database.Reader(MMDB_FILE)
-    except: 
-        pass
+    try: geo_reader = geoip2.database.Reader(MMDB_FILE)
+    except: pass
 
 def get_country_code(ip):
     if not geo_reader: return 'XX'
     try: 
         code = geo_reader.country(ip).country.iso_code
         return code if code else 'XX'
-    except: 
-        return 'XX'
+    except: return 'XX'
 
 def safe_base64_decode(s):
     s = s.strip().replace('\n', '').replace('\r', '').replace(' ', '')
-    try:
-        return base64.urlsafe_b64decode(s + '=' * (-len(s) % 4)).decode('utf-8', errors='ignore')
+    try: return base64.urlsafe_b64decode(s + '=' * (-len(s) % 4)).decode('utf-8', errors='ignore')
     except:
-        try:
-            return base64.b64decode(s + '=' * (-len(s) % 4)).decode('utf-8', errors='ignore')
-        except:
-            return ""
+        try: return base64.b64decode(s + '=' * (-len(s) % 4)).decode('utf-8', errors='ignore')
+        except: return ""
 
-def extract_vless_links(text):
-    regex = r"(?i)(vless://[^\s\"']+)"
+def extract_links(text):
+    """Ищет как VLESS, так и VMess ссылки"""
+    regex = r"(?i)((?:vless|vmess)://[^\s\"']+)"
     links = re.findall(regex, text)
     
     decoded = safe_base64_decode(text)
-    if decoded:
-        links.extend(re.findall(regex, decoded))
+    if decoded: links.extend(re.findall(regex, decoded))
         
     for line in text.splitlines():
         dec_line = safe_base64_decode(line)
-        if dec_line:
-            links.extend(re.findall(regex, dec_line))
+        if dec_line: links.extend(re.findall(regex, dec_line))
             
     return list(set(links))
 
+def parse_vmess(config_str):
+    try:
+        b64_str = config_str[8:]
+        json_str = safe_base64_decode(b64_str)
+        if not json_str: return None
+        data = json.loads(json_str)
+
+        tls = data.get('tls', '')
+        net = data.get('net', 'tcp')
+        
+        return {
+            "protocol": "vmess",
+            "ip": data.get('add', ''),
+            "port": int(data.get('port', 443)),
+            "uuid": data.get('id', ''),
+            "type": net,
+            "security": "tls" if tls == 'tls' else "none",
+            "flow": "",
+            "sni": data.get('sni', data.get('host', '')),
+            "pbk": "", "sid": "", "spx": "/",
+            "path": data.get('path', '/'),
+            "host": data.get('host', ''),
+            "fp": data.get('fp', 'chrome'),
+            "serviceName": "",
+            "original": config_str,
+            "country": "XX",
+            "real_delay": 9999,
+            "speed_mbps": 0.0
+        }
+    except: return None
+
 def parse_vless(config_str):
     try:
-        if not config_str.lower().startswith("vless://"): return None
-        config_str = config_str.strip()
         uuid_val = config_str.split("@")[0][8:]
         part = config_str.split("@")[1].split("?")[0]
         
         if "]" in part:
-            host_part, port = part.rsplit(":", 1)
-            host = host_part.replace("[", "").replace("]", "")
-        else:
             host, port = part.rsplit(":", 1)
+            host = host.replace("[", "").replace("]", "")
+        else: host, port = part.rsplit(":", 1)
             
-        if "?" in config_str:
-            query_part = config_str.split("?")[1].split("#")[0]
-        else:
-            query_part = ""
-            
+        query_part = config_str.split("?")[1].split("#")[0] if "?" in config_str else ""
         params = parse_qs(query_part)
         
         conf = {
-            "ip": host,
-            "port": int(port),
-            "uuid": uuid_val,
+            "protocol": "vless",
+            "ip": host, "port": int(port), "uuid": uuid_val,
             "type": params.get('type', ['tcp'])[0],
             "security": params.get('security', ['none'])[0],
             "flow": params.get('flow', [''])[0],
@@ -186,33 +192,39 @@ def parse_vless(config_str):
             "fp": params.get('fp', ['chrome'])[0],
             "serviceName": params.get('serviceName', [''])[0],
             "original": config_str,
-            "country": "XX",
-            "real_delay": 9999,
-            "speed_mbps": 0.0 # Скорость по умолчанию
+            "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
-        
         if conf['security'] == 'reality' and not conf['pbk']: return None
         return conf
-    except:
-        return None
+    except: return None
 
 def generate_xray_config(server, local_port):
+    """Универсальный генератор конфигов для Xray (VLESS + VMess)"""
     outbound = {
-        "protocol": "vless",
-        "settings": {
-            "vnext": [{
-                "address": server['ip'],
-                "port": server['port'],
-                "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]
-            }]
-        },
+        "protocol": server['protocol'],
+        "settings": {},
         "streamSettings": {
             "network": server['type'],
             "security": server['security']
         }
     }
 
-    ws_set = {}
+    if server['protocol'] == 'vless':
+        outbound['settings'] = {
+            "vnext": [{
+                "address": server['ip'], "port": server['port'],
+                "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]
+            }]
+        }
+    else: # vmess
+        outbound['settings'] = {
+            "vnext": [{
+                "address": server['ip'], "port": server['port'],
+                "users": [{"id": server['uuid'], "alterId": 0, "security": "auto"}]
+            }]
+        }
+
+    # Настройки транспорта
     if server['type'] == 'ws':
         ws_set = {"path": server['path']}
         if server['host']: ws_set["headers"] = {"Host": server['host']}
@@ -220,14 +232,13 @@ def generate_xray_config(server, local_port):
     elif server['type'] == 'grpc':
         outbound["streamSettings"]["grpcSettings"] = {"serviceName": server['serviceName']}
 
+    # Настройки защиты
     tls_set = {"serverName": server['sni'], "fingerprint": server['fp']}
     if server['security'] == 'tls':
         outbound["streamSettings"]["tlsSettings"] = tls_set
     elif server['security'] == 'reality':
         reality_set = tls_set.copy()
-        reality_set.update({
-            "show": False, "publicKey": server['pbk'], "shortId": server['sid'], "spiderX": server['spx']
-        })
+        reality_set.update({"show": False, "publicKey": server['pbk'], "shortId": server['sid'], "spiderX": server['spx']})
         outbound["streamSettings"]["realitySettings"] = reality_set
 
     return {
@@ -237,14 +248,13 @@ def generate_xray_config(server, local_port):
     }
 
 def check_real_ping(server):
-    """ЭТАП 1: Только быстрый пинг (без замера скорости)"""
+    """ЭТАП 1: Проверка коннекта и пинг через Xray"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TCP_TIMEOUT)
         sock.connect((server['ip'], server['port']))
         sock.close()
-    except:
-        return None
+    except: return None
 
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
@@ -254,43 +264,27 @@ def check_real_ping(server):
         config_path = tmp.name
 
     proc = None
-    latency = None
-
     try:
         proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(0.7) 
-
+        time.sleep(0.5)
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
         
         start = time.perf_counter()
         resp = requests.get("http://cp.cloudflare.com/", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         
         if resp.status_code == 204:
-            end = time.perf_counter()
-            latency = int((end - start) * 1000)
-        else:
-            latency = None
-            
-    except:
-        latency = None
+            server['real_delay'] = int((time.perf_counter() - start) * 1000)
+            code = get_country_code(server['ip'])
+            server['country'] = code
+            if code != 'XX': return server
+    except: pass
     finally:
-        if proc:
-            proc.terminate()
-            try: proc.wait(timeout=0.5)
-            except: proc.kill()
-        if os.path.exists(config_path):
-            os.remove(config_path)
-
-    if latency:
-        server['real_delay'] = latency
-        code = get_country_code(server['ip'])
-        server['country'] = code
-        if code == 'XX': return None
-        return server
+        if proc: proc.kill()
+        if os.path.exists(config_path): os.remove(config_path)
     return None
 
 def measure_speed(server):
-    """ЭТАП 2: Тяжелый замер скорости ТОЛЬКО для избранных серверов"""
+    """ЭТАП 2: Жесткий замер скорости. 0 Мбит/с = отбраковка"""
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
     
@@ -299,173 +293,126 @@ def measure_speed(server):
         config_path = tmp.name
 
     proc = None
-    speed_mbps = 0.0
+    server['speed_mbps'] = 0.0
 
     try:
         proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(0.7) 
-
+        time.sleep(0.5)
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
         
         dl_start = time.perf_counter()
         downloaded_bytes = 0
         
-        dl_resp = requests.get(
-            "https://speed.cloudflare.com/__down?bytes=2500000", 
-            proxies=proxies, 
-            timeout=(2.0, SPEED_TEST_TIMEOUT), 
-            stream=True
-        )
+        # Скачиваем файл 2.5 МБ для замера
+        dl_resp = requests.get("https://speed.cloudflare.com/__down?bytes=2500000", proxies=proxies, timeout=SPEED_TEST_TIMEOUT, stream=True)
         
         if dl_resp.status_code == 200:
             for chunk in dl_resp.iter_content(chunk_size=8192):
-                if chunk:
-                    downloaded_bytes += len(chunk)
-                
-                # Защита от бесконечного зависания
-                if time.perf_counter() - dl_start > SPEED_TEST_TIMEOUT:
-                    break
+                if chunk: downloaded_bytes += len(chunk)
+                if time.perf_counter() - dl_start > SPEED_TEST_TIMEOUT: break
                     
-            dl_end = time.perf_counter()
-            duration = dl_end - dl_start
-            
+            duration = time.perf_counter() - dl_start
             if duration > 0:
-                speed_mbps = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
-            
-            # Строгое правило: если сервер захлебнулся на старте (менее 500КБ), ставим 0
-            if downloaded_bytes < 500000:
-                speed_mbps = 0.0
-                
-    except Exception:
-        pass
+                speed = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
+                # Если сервер еле дышит (скачал меньше 100 КБ), считаем его мертвым
+                if downloaded_bytes > 100000:
+                    server['speed_mbps'] = speed
+    except: pass
     finally:
-        if proc:
-            proc.terminate()
-            try: proc.wait(timeout=0.5)
-            except: proc.kill()
-        if os.path.exists(config_path):
-            os.remove(config_path)
+        if proc: proc.kill()
+        if os.path.exists(config_path): os.remove(config_path)
 
-    server['speed_mbps'] = speed_mbps
     return server
 
-def get_speed_badge(speed_mbps):
-    """Возвращает значок скорости в зависимости от Mbps."""
-    if speed_mbps >= 3.0:
-        return "⚡⚡ "
-    elif speed_mbps >= 1.5:
-        return "⚡ "
-    else:
-        return ""
+def get_speed_badge(speed):
+    if speed >= 3.0: return "⚡⚡ "
+    elif speed >= 1.0: return "⚡ "
+    return ""
 
 def main():
-    logger.info(f"🚀 START: Smart VLESS Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
-    
+    logger.info("🚀 START: Гибридный сканер VLESS/VMess (Reality + CDN WebSocket)")
     install_xray_core()
     download_mmdb()
     init_geoip()
     
-    if not os.path.exists(XRAY_BIN):
-        logger.error(f"❌ ОШИБКА: Не удалось найти {XRAY_BIN}")
-        return
-
     all_configs = []
-    logger.info("🌐 Загрузка источников...")
     for url in SOURCES:
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
-                links = extract_vless_links(resp.text)
+                links = extract_links(resp.text)
                 for link in links:
-                    parsed = parse_vless(link)
+                    parsed = parse_vless(link) if link.lower().startswith("vless") else parse_vmess(link)
                     if parsed: all_configs.append(parsed)
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
+        except: logger.warning(f"⚠️ Ошибка источника {url[:30]}...")
 
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
-    logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
+    logger.info(f"🔍 Найдено уникальных конфигов: {len(unique_configs)}")
 
-    # ЭТАП 1: Массовый легкий пинг
-    valid_servers = []
-    logger.info(f"⚡ ЭТАП 1: Быстрый замер Пинга (Workers: {MAX_WORKERS})...")
-    
+    # ЭТАП 1: Массовый пинг для отбора кандидатов
+    logger.info(f"📡 ЭТАП 1: Массовый пинг (отсеиваем оффлайн)...")
+    valid_candidates = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [executor.submit(check_real_ping, s) for s in unique_configs]
-        for f in concurrent.futures.as_completed(futures):
-            res = f.result()
-            if res:
-                valid_servers.append(res)
-                logger.info(f"   [PING OK] {res['country']} | {res['real_delay']}ms")
+        for res in executor.map(check_real_ping, unique_configs):
+            if res: valid_candidates.append(res)
 
-    ru_servers = [s for s in valid_servers if s['country'] == 'RU']
-    world_servers = [s for s in valid_servers if s['country'] != 'RU']
-
-    # Сортируем строго по пингу
-    ru_servers.sort(key=lambda x: x['real_delay'])
-    world_servers.sort(key=lambda x: x['real_delay'])
-
-    final_selection = []
+    valid_candidates.sort(key=lambda x: x['real_delay'])
     
-    best_ru = ru_servers[0] if ru_servers else None
-    needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
+    # Берем ТОП-40 самых быстрых по пингу кандидатов для проверки скорости
+    top_candidates = valid_candidates[:40]
+    logger.info(f"🏎️ ЭТАП 2: Замер скорости для ТОП-{len(top_candidates)} кандидатов. Выкидываем сервера со скоростью 0...")
     
-    final_selection.extend(world_servers[:needed_world])
-    if best_ru:
-        final_selection.append(best_ru)
+    working_servers = []
+    # Параллельно замеряем скорость (15 потоков оптимально, чтобы не перегрузить сеть)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        for res in executor.map(measure_speed, top_candidates):
+            # Строгое условие: скорость должна быть больше 0.1 Мбит/с
+            if res['speed_mbps'] > 0.1:
+                working_servers.append(res)
+                badge = get_speed_badge(res['speed_mbps'])
+                logger.info(f"   [OK] {res['country']} | {res['protocol'].upper()} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps {badge}")
 
-    # ЭТАП 2: Тяжелый замер скорости только для Топ-10 серверов
-    logger.info(f"🏎️ ЭТАП 2: Глубокий замер скорости для ТОП-{len(final_selection)} серверов...")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=TOTAL_SERVERS_WANTED) as executor:
-        futures = [executor.submit(measure_speed, s) for s in final_selection]
-        concurrent.futures.wait(futures)
+    # Сортируем выжившие сервера (сначала самые скоростные)
+    working_servers.sort(key=lambda x: x['speed_mbps'], reverse=True)
+    
+    # Отбираем нужное количество (например, 10)
+    final_selection = working_servers[:TOTAL_SERVERS_WANTED]
 
-    # Вывод результатов тестирования ТОП-10
-    for s in final_selection:
-        badge = get_speed_badge(s['speed_mbps'])
-        logger.info(f"   🏆 {s['country']} | Пинг: {s['real_delay']}ms | Скорость: {s['speed_mbps']} Mbps {badge.strip()}")
+    logger.info(f"📊 Итого рабочих серверов (Speed > 0) сохранено: {len(final_selection)}")
+    if len(final_selection) < TOTAL_SERVERS_WANTED:
+        logger.warning(f"⚠️ Удалось найти только {len(final_selection)} живых серверов из запрошенных {TOTAL_SERVERS_WANTED}.")
 
-    if best_ru:
-        logger.info(f"🇷🇺 Добавлен RU сервер: {best_ru['ip']}")
-
-    logger.info(f"📊 Итого в подписке сохранено: {len(final_selection)} серверов")
-
-    # Генерация файлов
+    # Генерация файлов подписки
     result_links = []
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
-    header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
-    result_links.append(header_link)
+    header = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
+    result_links.append(header)
 
     json_stats = {"servers": []}
 
     for s in final_selection:
-        country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
-        speed_badge = get_speed_badge(s['speed_mbps'])
+        flag = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
+        badge = get_speed_badge(s['speed_mbps'])
+        name = f"{badge}{flag} | {s['protocol'].upper()} | {s['real_delay']}ms"
         
-        name = f"{speed_badge}{country_display} | {s['real_delay']}ms"
-        
+        # Заменяем старое имя в ссылке на наше красивое
         orig = s['original']
         base = orig.split('#')[0]
         final_link = f"{base}#{quote(name)}"
         result_links.append(final_link)
 
         json_stats["servers"].append({
-            "name": name,
-            "ip": s['ip'],
-            "ping": s['real_delay'],
-            "speed_mbps": s['speed_mbps'],
-            "country": s['country']
+            "name": name, "ip": s['ip'], "protocol": s['protocol'],
+            "ping": s['real_delay'], "speed_mbps": s['speed_mbps'], "country": s['country']
         })
 
     raw_str = "\n".join(result_links)
     b64_str = base64.b64encode(raw_str.encode('utf-8')).decode('utf-8')
     
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        f.write(b64_str)
-        
-    with open(JSON_FILE, 'w', encoding='utf-8') as f:
-        json.dump(json_stats, f, indent=2, ensure_ascii=False)
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f: f.write(b64_str)
+    with open(JSON_FILE, 'w', encoding='utf-8') as f: json.dump(json_stats, f, indent=2, ensure_ascii=False)
 
-    logger.info(f"💾 Файл успешно сохранен: {OUTPUT_FILE}")
+    logger.info(f"💾 Подписка обновлена: {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
