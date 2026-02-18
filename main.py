@@ -35,16 +35,6 @@ logger.addHandler(file_handler)
 SOURCES = [
     # Твои оригинальные источники
     "https://clck.ru/3RcLDw"
-
-]
-
-# --- БЕЛЫЙ СПИСОК SNI (Разрешенные домены) ---
-ALLOWED_SNI_DOMAINS = [
-    "yandex.ru", "yandex.com", "ya.ru", "zen.yandex.ru", "mail.yandex.ru", "api-maps.yandex.ru"
-    "vk.com", "m.vk.com", "api.vk.com",
-    "gmail.com",
-    "mail.ru", "ok.ru", "gosuslugi.ru", "sberbank.ru", "ozon.ru", "avito.ru",
-    "ads.x5.ru", "www.tradingview.com"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
@@ -153,17 +143,6 @@ def extract_links(text):
             
     return list(set(links))
 
-def is_allowed_sni(sni):
-    """Проверяет, входит ли SNI в белый список неблокируемых доменов."""
-    if not sni:
-        return False # Если мы ищем Reality, SNI обязателен. Если его нет - отбрасываем.
-    
-    sni = sni.lower().strip()
-    for domain in ALLOWED_SNI_DOMAINS:
-        if sni == domain or sni.endswith("." + domain):
-            return True
-    return False
-
 def parse_vmess(config_str):
     try:
         b64_str = config_str[8:]
@@ -174,9 +153,6 @@ def parse_vmess(config_str):
         tls = data.get('tls', '')
         net = data.get('net', 'tcp')
         sni = data.get('sni', data.get('host', ''))
-        
-        if not is_allowed_sni(sni):
-            return None
 
         return {
             "protocol": "vmess",
@@ -221,9 +197,6 @@ def parse_vless(config_str):
         params = parse_qs(query_part)
         sec_val = params.get('security', ['none'])[0]
         sni = params.get('sni', [''])[0]
-        
-        if not is_allowed_sni(sni):
-            return None
 
         conf = {
             "protocol": "vless",
@@ -441,7 +414,7 @@ def get_speed_badge(speed_mbps):
         return ""
 
 def main():
-    logger.info(f"🚀 START: Smart Selector (STRICT: ONLY VLESS+REALITY & WHITE SNI, Target: {TOTAL_SERVERS_WANTED})")
+    logger.info(f"🚀 START: Smart Selector (STRICT: ONLY VLESS+REALITY, ANY SNI, Target: {TOTAL_SERVERS_WANTED})")
     
     install_xray_core()
     download_mmdb()
@@ -452,7 +425,7 @@ def main():
         return
 
     all_configs = []
-    logger.info("🌐 Загрузка источников и жесткая фильтрация...")
+    logger.info("🌐 Загрузка источников (отбор только VLESS+Reality)...")
     for url in SOURCES:
         try:
             resp = requests.get(url, timeout=10)
@@ -469,10 +442,10 @@ def main():
             logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
 
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
-    logger.info(f"🔍 Найдено серверов VLESS+Reality с белыми SNI: {len(unique_configs)}")
+    logger.info(f"🔍 Найдено серверов VLESS+Reality: {len(unique_configs)}")
     
     if len(unique_configs) == 0:
-        logger.error("❌ Ни один сервер не прошел жесткую проверку (Reality + White SNI). Возможно, в базах нет подходящих конфигов.")
+        logger.error("❌ Ни один сервер не прошел проверку (Reality). Возможно, в базах нет подходящих конфигов.")
         return
 
     valid_servers = []
@@ -486,12 +459,11 @@ def main():
                 valid_servers.append(res)
                 subtype = get_server_subtype(res)
                 short_src = get_short_source(res.get('source'))
-                logger.info(f"   [PING OK] {res['country']} | {subtype} | SNI: {res['sni']} | {res['real_delay']}ms | Src: {short_src}")
+                logger.info(f"   [PING OK] {res['country']} | {subtype} | SNI: {res['sni'] or 'N/A'} | {res['real_delay']}ms | Src: {short_src}")
 
     ru_servers = [s for s in valid_servers if s['country'] == 'RU']
     world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
-    # Так как остались ТОЛЬКО Reality-сервера, возвращаем простую сортировку по пингу
     ru_servers.sort(key=lambda x: x['real_delay'])
     world_servers.sort(key=lambda x: x['real_delay'])
 
