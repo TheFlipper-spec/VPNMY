@@ -46,10 +46,11 @@ SOURCES = [
 
 # --- БЕЛЫЙ СПИСОК SNI (Разрешенные домены) ---
 ALLOWED_SNI_DOMAINS = [
-    "yandex.ru", "yandex.com", "ya.ru", "zen.yandex.ru", "mail.yandex.ru",
+    "yandex.ru", "yandex.com", "ya.ru", "zen.yandex.ru", "mail.yandex.ru", "api-maps.yandex.ru"
     "vk.com", "m.vk.com", "api.vk.com",
     "gmail.com", "google.com", "www.google.com", "mail.google.com",
     "mail.ru", "ok.ru", "gosuslugi.ru", "sberbank.ru", "ozon.ru", "avito.ru"
+    "ads.x5.ru", "www.tradingview.com"
 ]
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
