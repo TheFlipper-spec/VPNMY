@@ -33,18 +33,21 @@ logger.addHandler(file_handler)
 
 # --- НАСТРОЙКИ ---
 SOURCES = [
-    # Твои оригинальные источники
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt",
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt",
+    "https://raw.githubusercontent.com/Mosifree/-FREE2CONFIG/refs/heads/main/Clash_Reality",
     "https://clck.ru/3RcLDw",
-    "https://raw.githubusercontent.com/AvenCores/goida-vpn-configs/refs/heads/main/githubmirror/26.txt"
-]
+    "https://sub.shadowproxy66.workers.dev/sub/be80a76c-6044-417c-9bff-e587f9380d05#ShadowProxy66(1)" 
 
+]
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-MAX_WORKERS = 40        
+MAX_WORKERS = 25        
 TCP_TIMEOUT = 1.0       
 REAL_TEST_TIMEOUT = 5.0 
 SPEED_TEST_TIMEOUT = 6.0 
@@ -129,8 +132,8 @@ def safe_base64_decode(s):
         except:
             return ""
 
-def extract_links(text):
-    regex = r"(?i)((?:vless|vmess)://[^\s\"']+)"
+def extract_vless_links(text):
+    regex = r"(?i)(vless://[^\s\"']+)"
     links = re.findall(regex, text)
     
     decoded = safe_base64_decode(text)
@@ -144,42 +147,9 @@ def extract_links(text):
             
     return list(set(links))
 
-def parse_vmess(config_str):
-    try:
-        b64_str = config_str[8:]
-        json_str = safe_base64_decode(b64_str)
-        if not json_str: return None
-        data = json.loads(json_str)
-
-        tls = data.get('tls', '')
-        net = data.get('net', 'tcp')
-        sni = data.get('sni', data.get('host', ''))
-
-        return {
-            "protocol": "vmess",
-            "ip": data.get('add', ''),
-            "port": int(data.get('port', 443)),
-            "uuid": data.get('id', ''),
-            "type": net,
-            "security": "tls" if tls == 'tls' else "none",
-            "flow": "",
-            "sni": sni,
-            "pbk": "", "sid": "", "spx": "/",
-            "path": data.get('path', '/'),
-            "host": data.get('host', ''),
-            "fp": data.get('fp', 'chrome'),
-            "serviceName": "",
-            "original": config_str,
-            "country": "XX",
-            "real_delay": 9999,
-            "speed_mbps": 0.0,
-            "is_reality": False
-        }
-    except:
-        return None
-
 def parse_vless(config_str):
     try:
+        if not config_str.lower().startswith("vless://"): return None
         config_str = config_str.strip()
         uuid_val = config_str.split("@")[0][8:]
         part = config_str.split("@")[1].split("?")[0]
@@ -196,18 +166,15 @@ def parse_vless(config_str):
             query_part = ""
             
         params = parse_qs(query_part)
-        sec_val = params.get('security', ['none'])[0]
-        sni = params.get('sni', [''])[0]
-
+        
         conf = {
-            "protocol": "vless",
             "ip": host,
             "port": int(port),
             "uuid": uuid_val,
             "type": params.get('type', ['tcp'])[0],
-            "security": sec_val,
+            "security": params.get('security', ['none'])[0],
             "flow": params.get('flow', [''])[0],
-            "sni": sni,
+            "sni": params.get('sni', [''])[0],
             "pbk": params.get('pbk', [''])[0],
             "sid": params.get('sid', [''])[0],
             "spx": params.get('spx', ['/'])[0],
@@ -218,8 +185,7 @@ def parse_vless(config_str):
             "original": config_str,
             "country": "XX",
             "real_delay": 9999,
-            "speed_mbps": 0.0,
-            "is_reality": (sec_val == 'reality')
+            "speed_mbps": 0.0 # Скорость по умолчанию
         }
         
         if conf['security'] == 'reality' and not conf['pbk']: return None
@@ -227,51 +193,21 @@ def parse_vless(config_str):
     except:
         return None
 
-def get_server_subtype(server):
-    base = server['protocol'].upper()
-    if server.get('is_reality'):
-        return f"{base}-REALITY"
-    elif server.get('type') == 'ws':
-        return f"{base}-WS"
-    elif server.get('type') == 'grpc':
-        return f"{base}-GRPC"
-    elif server.get('security') == 'tls':
-        return f"{base}-TLS"
-    else:
-        return f"{base}-TCP"
-
-def get_short_source(url):
-    """Превращает длинный URL в аккуратное имя для логов"""
-    if not url: return "Unknown"
-    parts = url.split('/')
-    if len(parts[-1]) > 8:
-        return parts[-1] 
-    return url.replace("https://", "").replace("http://", "").split('/')[0] 
-
 def generate_xray_config(server, local_port):
     outbound = {
-        "protocol": server['protocol'],
-        "settings": {},
+        "protocol": "vless",
+        "settings": {
+            "vnext": [{
+                "address": server['ip'],
+                "port": server['port'],
+                "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]
+            }]
+        },
         "streamSettings": {
             "network": server['type'],
             "security": server['security']
         }
     }
-
-    if server['protocol'] == 'vless':
-        outbound['settings'] = {
-            "vnext": [{
-                "address": server['ip'], "port": server['port'],
-                "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]
-            }]
-        }
-    else: # vmess
-        outbound['settings'] = {
-            "vnext": [{
-                "address": server['ip'], "port": server['port'],
-                "users": [{"id": server['uuid'], "alterId": 0, "security": "auto"}]
-            }]
-        }
 
     ws_set = {}
     if server['type'] == 'ws':
@@ -298,6 +234,7 @@ def generate_xray_config(server, local_port):
     }
 
 def check_real_ping(server):
+    """ЭТАП 1: Только быстрый пинг (без замера скорости)"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TCP_TIMEOUT)
@@ -350,6 +287,7 @@ def check_real_ping(server):
     return None
 
 def measure_speed(server):
+    """ЭТАП 2: Тяжелый замер скорости ТОЛЬКО для избранных серверов"""
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
     
@@ -381,6 +319,7 @@ def measure_speed(server):
                 if chunk:
                     downloaded_bytes += len(chunk)
                 
+                # Защита от бесконечного зависания
                 if time.perf_counter() - dl_start > SPEED_TEST_TIMEOUT:
                     break
                     
@@ -390,6 +329,7 @@ def measure_speed(server):
             if duration > 0:
                 speed_mbps = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
             
+            # Строгое правило: если сервер захлебнулся на старте (менее 500КБ), ставим 0
             if downloaded_bytes < 500000:
                 speed_mbps = 0.0
                 
@@ -407,6 +347,7 @@ def measure_speed(server):
     return server
 
 def get_speed_badge(speed_mbps):
+    """Возвращает значок скорости в зависимости от Mbps."""
     if speed_mbps >= 3.0:
         return "⚡⚡ "
     elif speed_mbps >= 1.5:
@@ -415,7 +356,7 @@ def get_speed_badge(speed_mbps):
         return ""
 
 def main():
-    logger.info(f"🚀 START: Smart Selector (STRICT: ONLY VLESS+REALITY, ANY SNI, Target: {TOTAL_SERVERS_WANTED})")
+    logger.info(f"🚀 START: Smart VLESS Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
     
     install_xray_core()
     download_mmdb()
@@ -426,29 +367,22 @@ def main():
         return
 
     all_configs = []
-    logger.info("🌐 Загрузка источников (отбор только VLESS+Reality)...")
+    logger.info("🌐 Загрузка источников...")
     for url in SOURCES:
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
-                links = extract_links(resp.text)
+                links = extract_vless_links(resp.text)
                 for link in links:
-                    parsed = parse_vless(link) if link.lower().startswith("vless") else parse_vmess(link)
-                    
-                    # ЖЕСТКОЕ УСЛОВИЕ: Добавляем только если это Reality
-                    if parsed and parsed.get('is_reality') == True:
-                        parsed['source'] = url 
-                        all_configs.append(parsed)
+                    parsed = parse_vless(link)
+                    if parsed: all_configs.append(parsed)
         except Exception as e:
             logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
 
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
-    logger.info(f"🔍 Найдено серверов VLESS+Reality: {len(unique_configs)}")
-    
-    if len(unique_configs) == 0:
-        logger.error("❌ Ни один сервер не прошел проверку (Reality). Возможно, в базах нет подходящих конфигов.")
-        return
+    logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
 
+    # ЭТАП 1: Массовый легкий пинг
     valid_servers = []
     logger.info(f"⚡ ЭТАП 1: Быстрый замер Пинга (Workers: {MAX_WORKERS})...")
     
@@ -458,52 +392,41 @@ def main():
             res = f.result()
             if res:
                 valid_servers.append(res)
-                subtype = get_server_subtype(res)
-                short_src = get_short_source(res.get('source'))
-                logger.info(f"   [PING OK] {res['country']} | {subtype} | SNI: {res['sni'] or 'N/A'} | {res['real_delay']}ms | Src: {short_src}")
+                logger.info(f"   [PING OK] {res['country']} | {res['real_delay']}ms")
 
     ru_servers = [s for s in valid_servers if s['country'] == 'RU']
     world_servers = [s for s in valid_servers if s['country'] != 'RU']
 
+    # Сортируем строго по пингу
     ru_servers.sort(key=lambda x: x['real_delay'])
     world_servers.sort(key=lambda x: x['real_delay'])
 
-    candidates_for_speed_test = []
-    candidates_for_speed_test.extend(ru_servers[:5])
-    candidates_for_speed_test.extend(world_servers[:35]) 
-
-    logger.info(f"🏎️ ЭТАП 2: Глубокий замер скорости для {len(candidates_for_speed_test)} кандидатов...")
-    tested_servers = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-        futures = [executor.submit(measure_speed, s) for s in candidates_for_speed_test]
-        for f in concurrent.futures.as_completed(futures):
-            res = f.result()
-            if res['speed_mbps'] > 0.0:
-                tested_servers.append(res)
-                badge = get_speed_badge(res['speed_mbps'])
-                subtype = get_server_subtype(res)
-                short_src = get_short_source(res.get('source'))
-                logger.info(f"   🏆 {res['country']} | {subtype} | Пинг: {res['real_delay']}ms | Скор: {res['speed_mbps']} Mbps {badge.strip()} | Src: {short_src}")
-
-    working_ru = [s for s in tested_servers if s['country'] == 'RU']
-    working_world = [s for s in tested_servers if s['country'] != 'RU']
-
-    working_ru.sort(key=lambda x: x['real_delay'])
-    working_world.sort(key=lambda x: x['real_delay'])
-
     final_selection = []
     
-    best_ru = working_ru[0] if working_ru else None
+    best_ru = ru_servers[0] if ru_servers else None
     needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
     
-    final_selection.extend(working_world[:needed_world])
+    final_selection.extend(world_servers[:needed_world])
     if best_ru:
         final_selection.append(best_ru)
-        short_src = get_short_source(best_ru.get('source'))
-        logger.info(f"🇷🇺 Добавлен лучший рабочий RU сервер: {best_ru['ip']} со скоростью {best_ru['speed_mbps']} Mbps | Src: {short_src}")
+
+    # ЭТАП 2: Тяжелый замер скорости только для Топ-10 серверов
+    logger.info(f"🏎️ ЭТАП 2: Глубокий замер скорости для ТОП-{len(final_selection)} серверов...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=TOTAL_SERVERS_WANTED) as executor:
+        futures = [executor.submit(measure_speed, s) for s in final_selection]
+        concurrent.futures.wait(futures)
+
+    # Вывод результатов тестирования ТОП-10
+    for s in final_selection:
+        badge = get_speed_badge(s['speed_mbps'])
+        logger.info(f"   🏆 {s['country']} | Пинг: {s['real_delay']}ms | Скорость: {s['speed_mbps']} Mbps {badge.strip()}")
+
+    if best_ru:
+        logger.info(f"🇷🇺 Добавлен RU сервер: {best_ru['ip']}")
 
     logger.info(f"📊 Итого в подписке сохранено: {len(final_selection)} серверов")
 
+    # Генерация файлов
     result_links = []
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
@@ -527,8 +450,7 @@ def main():
             "ip": s['ip'],
             "ping": s['real_delay'],
             "speed_mbps": s['speed_mbps'],
-            "country": s['country'],
-            "source": s.get('source', 'Unknown')
+            "country": s['country']
         })
 
     raw_str = "\n".join(result_links)
