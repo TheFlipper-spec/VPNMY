@@ -40,7 +40,9 @@ SOURCES = [
      "https://clck.ru/3RcLDw",
      "https://sub.shadowproxy66.workers.dev/sub/be80a76c-6044-417c-9bff-e587f9380d05#ShadowProxy66(1)",
      "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
-     "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix"
+     "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix",
+
+"https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source"
   
 
 ]
