@@ -41,10 +41,7 @@ SOURCES = [
      "https://sub.shadowproxy66.workers.dev/sub/be80a76c-6044-417c-9bff-e587f9380d05#ShadowProxy66(1)",
      "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
      "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix",
-
-"https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source"
-  
-
+     "https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source"
 ]
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
@@ -137,8 +134,8 @@ def safe_base64_decode(s):
         except:
             return ""
 
-def extract_vless_links(text):
-    regex = r"(?i)(vless://[^\s\"']+)"
+def extract_vpn_links(text):
+    regex = r"(?i)((?:vless|ss|trojan)://[^\s\"']+)"
     links = re.findall(regex, text)
     
     decoded = safe_base64_decode(text)
@@ -154,7 +151,6 @@ def extract_vless_links(text):
 
 def parse_vless(config_str):
     try:
-        if not config_str.lower().startswith("vless://"): return None
         config_str = config_str.strip()
         uuid_val = config_str.split("@")[0][8:]
         part = config_str.split("@")[1].split("?")[0]
@@ -173,6 +169,7 @@ def parse_vless(config_str):
         params = parse_qs(query_part)
         
         conf = {
+            "protocol": "vless",
             "ip": host,
             "port": int(port),
             "uuid": uuid_val,
@@ -190,7 +187,7 @@ def parse_vless(config_str):
             "original": config_str,
             "country": "XX",
             "real_delay": 9999,
-            "speed_mbps": 0.0 # Скорость по умолчанию
+            "speed_mbps": 0.0
         }
         
         if conf['security'] == 'reality' and not conf['pbk']: return None
@@ -198,37 +195,140 @@ def parse_vless(config_str):
     except:
         return None
 
+def parse_trojan(config_str):
+    try:
+        config_str = config_str.strip()
+        password = config_str.split("@")[0][9:]
+        part = config_str.split("@")[1].split("?")[0].split("#")[0]
+        
+        if "]" in part:
+            host_part, port = part.rsplit(":", 1)
+            host = host_part.replace("[", "").replace("]", "")
+        else:
+            host, port = part.rsplit(":", 1)
+            
+        query_part = config_str.split("?")[1].split("#")[0] if "?" in config_str else ""
+        params = parse_qs(query_part)
+        
+        return {
+            "protocol": "trojan",
+            "ip": host,
+            "port": int(port),
+            "password": password,
+            "type": params.get('type', ['tcp'])[0],
+            "security": params.get('security', ['tls'])[0],
+            "sni": params.get('sni', [host])[0],
+            "path": params.get('path', ['/'])[0],
+            "host": params.get('host', [''])[0],
+            "fp": params.get('fp', ['chrome'])[0],
+            "serviceName": params.get('serviceName', [''])[0],
+            "original": config_str,
+            "country": "XX",
+            "real_delay": 9999,
+            "speed_mbps": 0.0
+        }
+    except:
+        return None
+
+def parse_ss(config_str):
+    try:
+        config_str = config_str.strip()
+        main_part = config_str.split("#")[0][5:] 
+        
+        if "@" not in main_part:
+            decoded = safe_base64_decode(main_part)
+            if not decoded or "@" not in decoded: return None
+            userinfo, hostport = decoded.split("@", 1)
+        else:
+            userinfo_raw, hostport = main_part.split("@", 1)
+            if ":" in userinfo_raw:
+                userinfo = unquote(userinfo_raw) 
+            else:
+                userinfo = safe_base64_decode(userinfo_raw)
+        
+        if not userinfo or ":" not in userinfo: return None
+        
+        method, password = userinfo.split(":", 1)
+        
+        if "]" in hostport:
+            host_part, port = hostport.rsplit(":", 1)
+            host = host_part.replace("[", "").replace("]", "")
+        else:
+            host, port = hostport.rsplit(":", 1)
+        
+        return {
+            "protocol": "shadowsocks",
+            "ip": host,
+            "port": int(port),
+            "method": method,
+            "password": password,
+            "type": "tcp",
+            "security": "none",
+            "original": config_str,
+            "country": "XX",
+            "real_delay": 9999,
+            "speed_mbps": 0.0
+        }
+    except:
+        return None
+
 def generate_xray_config(server, local_port):
+    protocol = server.get('protocol', 'vless')
+    
     outbound = {
-        "protocol": "vless",
-        "settings": {
+        "protocol": protocol,
+        "settings": {}
+    }
+    
+    if protocol == "vless":
+        outbound["settings"] = {
             "vnext": [{
                 "address": server['ip'],
                 "port": server['port'],
-                "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]
+                "users": [{"id": server['uuid'], "encryption": "none", "flow": server.get('flow', '')}]
             }]
-        },
-        "streamSettings": {
-            "network": server['type'],
-            "security": server['security']
         }
+    elif protocol == "trojan":
+        outbound["settings"] = {
+            "servers": [{
+                "address": server['ip'],
+                "port": server['port'],
+                "password": server['password']
+            }]
+        }
+    elif protocol == "shadowsocks":
+        outbound["settings"] = {
+            "servers": [{
+                "address": server['ip'],
+                "port": server['port'],
+                "method": server['method'],
+                "password": server['password']
+            }]
+        }
+
+    network = server.get('type', 'tcp')
+    security = server.get('security', 'none')
+    
+    outbound["streamSettings"] = {
+        "network": network,
+        "security": security
     }
 
-    ws_set = {}
-    if server['type'] == 'ws':
-        ws_set = {"path": server['path']}
-        if server['host']: ws_set["headers"] = {"Host": server['host']}
+    if network == 'ws':
+        ws_set = {"path": server.get('path', '/')}
+        host = server.get('host', '')
+        if host: ws_set["headers"] = {"Host": host}
         outbound["streamSettings"]["wsSettings"] = ws_set
-    elif server['type'] == 'grpc':
-        outbound["streamSettings"]["grpcSettings"] = {"serviceName": server['serviceName']}
+    elif network == 'grpc':
+        outbound["streamSettings"]["grpcSettings"] = {"serviceName": server.get('serviceName', '')}
 
-    tls_set = {"serverName": server['sni'], "fingerprint": server['fp']}
-    if server['security'] == 'tls':
+    tls_set = {"serverName": server.get('sni', ''), "fingerprint": server.get('fp', 'chrome')}
+    if security == 'tls':
         outbound["streamSettings"]["tlsSettings"] = tls_set
-    elif server['security'] == 'reality':
+    elif security == 'reality':
         reality_set = tls_set.copy()
         reality_set.update({
-            "show": False, "publicKey": server['pbk'], "shortId": server['sid'], "spiderX": server['spx']
+            "show": False, "publicKey": server.get('pbk', ''), "shortId": server.get('sid', ''), "spiderX": server.get('spx', '/')
         })
         outbound["streamSettings"]["realitySettings"] = reality_set
 
@@ -361,7 +461,7 @@ def get_speed_badge(speed_mbps):
         return ""
 
 def main():
-    logger.info(f"🚀 START: Smart VLESS Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
+    logger.info(f"🚀 START: Smart VPN Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
     
     install_xray_core()
     download_mmdb()
@@ -377,9 +477,16 @@ def main():
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
-                links = extract_vless_links(resp.text)
+                links = extract_vpn_links(resp.text)
                 for link in links:
-                    parsed = parse_vless(link)
+                    parsed = None
+                    if link.lower().startswith("vless://"):
+                        parsed = parse_vless(link)
+                    elif link.lower().startswith("trojan://"):
+                        parsed = parse_trojan(link)
+                    elif link.lower().startswith("ss://"):
+                        parsed = parse_ss(link)
+                        
                     if parsed: all_configs.append(parsed)
         except Exception as e:
             logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
@@ -455,7 +562,8 @@ def main():
             "ip": s['ip'],
             "ping": s['real_delay'],
             "speed_mbps": s['speed_mbps'],
-            "country": s['country']
+            "country": s['country'],
+            "protocol": s['protocol']
         })
 
     raw_str = "\n".join(result_links)
