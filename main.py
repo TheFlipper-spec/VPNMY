@@ -60,7 +60,9 @@ SOURCES = [
      "https://raw.githubusercontent.com/CidVpn/cid-vpn-config/refs/heads/main/general.txt",
      "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix",
      "https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source",
-     "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt"
+     "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt",
+
+"https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" 
    
 ]
 
