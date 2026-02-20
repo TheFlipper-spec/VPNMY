@@ -69,7 +69,6 @@ XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-MAX_WORKERS = 25        
 TCP_TIMEOUT = 1.0       
 REAL_TEST_TIMEOUT = 4.0 
 SPEED_TEST_TIMEOUT = 6.0 
@@ -99,7 +98,7 @@ def install_xray_core():
             os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
         return
 
-    logger.info("📥 Xray core не найден. Скачивание (v1.8.4)...")
+    logger.info("📥 Скачивание Xray core (v1.8.4)...")
     url = "https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip"
     
     try:
@@ -263,7 +262,7 @@ def parse_ss(config_str):
             if not decoded or "@" not in decoded: return None
             userinfo, hostport = decoded.split("@", 1)
         else:
-            userinfo_raw, hostport = main_part.split("@", 1)
+            userinfo_raw, main_part.split("@", 1)
             if ":" in userinfo_raw:
                 userinfo = unquote(userinfo_raw) 
             else:
@@ -370,10 +369,9 @@ def get_speed_badge(speed_mbps):
     else:
         return ""
 
-# --- НОВЫЕ ФУНКЦИИ СБОРА И ПРОВЕРКИ (ASYNCIO) ---
+# --- АСИНХРОННЫЕ ФУНКЦИИ СБОРА И ПРОВЕРКИ ---
 
 async def fetch_from_telegram(session, channel):
-    """Парсинг свежих конфигов из Telegram"""
     url = f"https://t.me/s/{channel}"
     configs = []
     try:
@@ -387,7 +385,6 @@ async def fetch_from_telegram(session, channel):
     return configs
 
 async def fetch_from_github_search(session):
-    """Поиск свежих конфигов по GitHub API"""
     url = "https://api.github.com/search/code?q=%22vless://%22+in:file&sort=indexed&order=desc"
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
@@ -408,7 +405,6 @@ async def fetch_from_github_search(session):
     return configs
 
 async def tcp_ping_async(server):
-    """Асинхронный быстрый отсев по порту"""
     start = time.perf_counter()
     try:
         reader, writer = await asyncio.wait_for(
@@ -422,7 +418,6 @@ async def tcp_ping_async(server):
         return None
 
 async def check_xray_and_speed(server, port_queue):
-    """Полная проверка через ядро Xray с замером скорости"""
     local_port = await port_queue.get()
     config = generate_xray_config(server, local_port)
     config_path = f"temp_conf_{local_port}.json"
@@ -445,14 +440,12 @@ async def check_xray_and_speed(server, port_queue):
         connector = ProxyConnector.from_url(f'socks5://127.0.0.1:{local_port}')
         async with aiohttp.ClientSession(connector=connector) as session:
             
-            # Проверка HTTP 204
             t_start = time.perf_counter()
             async with session.get("http://cp.cloudflare.com/", timeout=REAL_TEST_TIMEOUT) as resp:
                 if resp.status == 204:
                     server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
                     is_working = True
             
-            # Замер скорости
             if is_working:
                 dl_start = time.perf_counter()
                 downloaded = 0
@@ -470,14 +463,28 @@ async def check_xray_and_speed(server, port_queue):
     except Exception:
         pass
     finally:
+        # ИСПРАВЛЕНИЕ: Защита от ProcessLookupError
         if proc:
             try:
-                proc.terminate()
-                await asyncio.wait_for(proc.wait(), timeout=1.0)
+                if proc.returncode is None: # Завершаем только если процесс ещё жив
+                    proc.terminate()
+                    await asyncio.wait_for(proc.wait(), timeout=1.0)
+            except ProcessLookupError:
+                pass # Процесс уже мёртв, игнорируем
             except asyncio.TimeoutError:
-                proc.kill()
+                try:
+                    if proc.returncode is None:
+                        proc.kill()
+                except ProcessLookupError:
+                    pass
+        
+        # Безопасное удаление файла конфига
         if os.path.exists(config_path):
-            os.remove(config_path)
+            try:
+                os.remove(config_path)
+            except Exception:
+                pass
+                
         port_queue.put_nowait(local_port)
 
     return server if is_working and server['speed_mbps'] > 0 else None
@@ -543,11 +550,9 @@ async def async_main():
 
     valid_servers = [s for s in xray_results if s is not None]
     
-    # Расставляем страны
     for s in valid_servers: 
         s['country'] = get_country_code(s['ip'])
         
-    # Сортируем: сначала скорость по убыванию, затем пинг по возрастанию
     valid_servers.sort(key=lambda x: (-x['speed_mbps'], x['real_delay']))
 
     final_selection = []
@@ -571,7 +576,6 @@ async def async_main():
         
     logger.info(f"📊 Итого в подписке сохранено: {len(final_selection)} серверов")
 
-    # Генерация файлов
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     result_links = [f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"]
     json_stats = {"servers": []}
