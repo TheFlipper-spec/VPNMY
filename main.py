@@ -73,9 +73,10 @@ TCP_TIMEOUT = 1.0
 REAL_TEST_TIMEOUT = 4.0 
 SPEED_TEST_TIMEOUT = 6.0 
 MAX_XRAY_CONCURRENT = 20
-CANDIDATES_TO_TEST = 80
-TOTAL_SERVERS_WANTED = 15 
+CANDIDATES_TO_TEST = 200     # Увеличили воронку отбора
+TOTAL_SERVERS_WANTED = 10    # Строго 10 серверов на выходе
 SPEED_TEST_URL = "https://speed.cloudflare.com/__down?bytes=1500000"
+VALIDATION_URL = "http://www.gstatic.com/generate_204" # Проверка реального доступа в сеть
 
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
@@ -138,10 +139,18 @@ def init_geoip():
     except: 
         pass
 
-def get_country_code(ip):
+def get_country_code(ip_or_domain):
     if not geo_reader: return 'XX'
-    try: 
-        code = geo_reader.country(ip).country.iso_code
+    try:
+        ip_to_check = ip_or_domain
+        # Если в адресе есть буквы, пробуем перевести домен в IP
+        if re.search('[a-zA-Z]', ip_or_domain):
+            try:
+                ip_to_check = socket.gethostbyname(ip_or_domain)
+            except Exception:
+                return 'XX' # Если домен мертвый и не резолвится
+                
+        code = geo_reader.country(ip_to_check).country.iso_code
         return code if code else 'XX'
     except: 
         return 'XX'
@@ -441,7 +450,8 @@ async def check_xray_and_speed(server, port_queue):
         async with aiohttp.ClientSession(connector=connector) as session:
             
             t_start = time.perf_counter()
-            async with session.get("http://cp.cloudflare.com/", timeout=REAL_TEST_TIMEOUT) as resp:
+            # Проверка через серверы Google, чтобы исключить ложные срабатывания Cloudflare
+            async with session.get(VALIDATION_URL, timeout=REAL_TEST_TIMEOUT) as resp:
                 if resp.status == 204:
                     server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
                     is_working = True
@@ -461,16 +471,13 @@ async def check_xray_and_speed(server, port_queue):
                     server['speed_mbps'] = round((downloaded * 8 / 1_000_000) / duration, 2)
 
     except Exception:
-        pass # Любые ошибки сети и таймауты просто маркируют сервер как нерабочий
+        pass
     finally:
-        # ИСПРАВЛЕНО: Глухая защита от крашей процессов
         if proc:
             try:
                 proc.terminate()
-            except ProcessLookupError:
-                pass
-            except OSError:
-                pass
+            except ProcessLookupError: pass
+            except OSError: pass
                 
             try:
                 await asyncio.wait_for(proc.wait(), timeout=1.0)
@@ -478,18 +485,14 @@ async def check_xray_and_speed(server, port_queue):
                 try:
                     proc.kill()
                     await proc.wait()
-                except ProcessLookupError:
-                    pass
-                except OSError:
-                    pass
-            except ProcessLookupError:
-                pass
+                except ProcessLookupError: pass
+                except OSError: pass
+            except ProcessLookupError: pass
 
         if os.path.exists(config_path):
             try:
                 os.remove(config_path)
-            except OSError:
-                pass
+            except OSError: pass
                 
         port_queue.put_nowait(local_port)
 
@@ -552,13 +555,11 @@ async def async_main():
         port_queue.put_nowait(port)
 
     xray_tasks = [asyncio.create_task(check_xray_and_speed(s, port_queue)) for s in candidates]
-    
-    # ИСПРАВЛЕНО: Изолируем падения отдельных задач через return_exceptions=True
     xray_results = await asyncio.gather(*xray_tasks, return_exceptions=True)
 
-    # Отсеиваем сервера, которые вернули None или выкинули исключение
     valid_servers = [s for s in xray_results if isinstance(s, dict)]
     
+    # Определяем страну с учетом резолвинга доменов
     for s in valid_servers: 
         s['country'] = get_country_code(s['ip'])
         
