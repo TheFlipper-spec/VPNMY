@@ -61,6 +61,7 @@ SOURCES = [
      "https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source",
      "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt",
 
+"https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt" 
 
 ]
 
