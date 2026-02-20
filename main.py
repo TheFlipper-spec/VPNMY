@@ -60,11 +60,8 @@ SOURCES = [
      "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix",
      "https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source",
      "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt",
-
-"https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
-
-"https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/vless-secure.txt" 
-
+     "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
+     "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/vless-secure.txt" 
 ]
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
@@ -74,7 +71,8 @@ XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-TCP_TIMEOUT = 1.0       
+TCP_TIMEOUT = 1.5            # Увеличено для стабильности при массовом пинге
+PING_CONCURRENCY = 500       # Лимит одновременных TCP-соединений
 REAL_TEST_TIMEOUT = 4.0 
 SPEED_TEST_TIMEOUT = 6.0 
 MAX_XRAY_CONCURRENT = 20
@@ -422,18 +420,20 @@ async def fetch_from_github_search(session):
         logger.error(f"Ошибка поиска GitHub API: {e}")
     return configs
 
-async def tcp_ping_async(server):
-    start = time.perf_counter()
-    try:
-        reader, writer = await asyncio.wait_for(
-            asyncio.open_connection(server['ip'], server['port']), timeout=TCP_TIMEOUT
-        )
-        writer.close()
-        await writer.wait_closed()
-        server['tcp_ping'] = int((time.perf_counter() - start) * 1000)
-        return server
-    except Exception:
-        return None
+async def tcp_ping_async(server, sem):
+    """Шлюз `sem` гарантирует, что мы не превысим лимит открытых сокетов ОС"""
+    async with sem:
+        start = time.perf_counter()
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(server['ip'], server['port']), timeout=TCP_TIMEOUT
+            )
+            writer.close()
+            await writer.wait_closed()
+            server['tcp_ping'] = int((time.perf_counter() - start) * 1000)
+            return server
+        except Exception:
+            return None
 
 async def check_xray_and_speed(server, port_queue):
     local_port = await port_queue.get()
@@ -550,7 +550,9 @@ async def async_main():
     logger.info(f"🔍 Найдено уникальных конфигов: {len(unique_configs)}")
 
     logger.info(f"⚡ ЭТАП 1: Массовый TCP-пинг...")
-    ping_tasks = [asyncio.create_task(tcp_ping_async(c)) for c in unique_configs]
+    # Ограничиваем количество одновременных пингов, чтобы не положить ОС
+    ping_sem = asyncio.Semaphore(PING_CONCURRENCY)
+    ping_tasks = [asyncio.create_task(tcp_ping_async(c, ping_sem)) for c in unique_configs]
     ping_results = await asyncio.gather(*ping_tasks)
     
     alive_servers = sorted([s for s in ping_results if isinstance(s, dict)], key=lambda x: x['tcp_ping'])
