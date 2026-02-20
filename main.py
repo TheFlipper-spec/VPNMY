@@ -414,7 +414,7 @@ async def tcp_ping_async(server):
         await writer.wait_closed()
         server['tcp_ping'] = int((time.perf_counter() - start) * 1000)
         return server
-    except:
+    except Exception:
         return None
 
 async def check_xray_and_speed(server, port_queue):
@@ -461,28 +461,34 @@ async def check_xray_and_speed(server, port_queue):
                     server['speed_mbps'] = round((downloaded * 8 / 1_000_000) / duration, 2)
 
     except Exception:
-        pass
+        pass # Любые ошибки сети и таймауты просто маркируют сервер как нерабочий
     finally:
-        # ИСПРАВЛЕНИЕ: Защита от ProcessLookupError
+        # ИСПРАВЛЕНО: Глухая защита от крашей процессов
         if proc:
             try:
-                if proc.returncode is None: # Завершаем только если процесс ещё жив
-                    proc.terminate()
-                    await asyncio.wait_for(proc.wait(), timeout=1.0)
+                proc.terminate()
             except ProcessLookupError:
-                pass # Процесс уже мёртв, игнорируем
+                pass
+            except OSError:
+                pass
+                
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=1.0)
             except asyncio.TimeoutError:
                 try:
-                    if proc.returncode is None:
-                        proc.kill()
+                    proc.kill()
+                    await proc.wait()
                 except ProcessLookupError:
                     pass
-        
-        # Безопасное удаление файла конфига
+                except OSError:
+                    pass
+            except ProcessLookupError:
+                pass
+
         if os.path.exists(config_path):
             try:
                 os.remove(config_path)
-            except Exception:
+            except OSError:
                 pass
                 
         port_queue.put_nowait(local_port)
@@ -536,7 +542,7 @@ async def async_main():
     ping_tasks = [asyncio.create_task(tcp_ping_async(c)) for c in unique_configs]
     ping_results = await asyncio.gather(*ping_tasks)
     
-    alive_servers = sorted([s for s in ping_results if s is not None], key=lambda x: x['tcp_ping'])
+    alive_servers = sorted([s for s in ping_results if isinstance(s, dict)], key=lambda x: x['tcp_ping'])
     candidates = alive_servers[:CANDIDATES_TO_TEST]
     logger.info(f"✅ Прошли TCP-пинг: {len(alive_servers)}. Отобрано кандидатов для Xray: {len(candidates)}")
 
@@ -546,9 +552,12 @@ async def async_main():
         port_queue.put_nowait(port)
 
     xray_tasks = [asyncio.create_task(check_xray_and_speed(s, port_queue)) for s in candidates]
-    xray_results = await asyncio.gather(*xray_tasks)
+    
+    # ИСПРАВЛЕНО: Изолируем падения отдельных задач через return_exceptions=True
+    xray_results = await asyncio.gather(*xray_tasks, return_exceptions=True)
 
-    valid_servers = [s for s in xray_results if s is not None]
+    # Отсеиваем сервера, которые вернули None или выкинули исключение
+    valid_servers = [s for s in xray_results if isinstance(s, dict)]
     
     for s in valid_servers: 
         s['country'] = get_country_code(s['ip'])
