@@ -47,7 +47,8 @@ TG_CHANNELS = [
     "DailyV2RY",
     "V2rayng_Fast",
     "proxyvpn11",
-    "V2ray_Alpha"
+    "V2ray_Alpha",
+    "V2rayng_Fast" 
 ]
 
 SOURCES = [
