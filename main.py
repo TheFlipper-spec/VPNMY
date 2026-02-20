@@ -17,6 +17,7 @@ import io
 import stat
 import logging
 import asyncio
+import signal
 from urllib.parse import unquote, quote, parse_qs
 
 import aiohttp
@@ -71,11 +72,11 @@ XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-TCP_TIMEOUT = 1.5            # Увеличено для стабильности при массовом пинге
-PING_CONCURRENCY = 500       # Лимит одновременных TCP-соединений
-REAL_TEST_TIMEOUT = 4.0 
+TCP_TIMEOUT = 1.5            # Таймаут TCP пинга
+PING_CONCURRENCY = 200       # Лимит одновременных пингов (снижено для стабильности)
+REAL_TEST_TIMEOUT = 5.0      # Таймаут проверки через Xray
 SPEED_TEST_TIMEOUT = 6.0 
-MAX_XRAY_CONCURRENT = 20
+MAX_XRAY_CONCURRENT = 20     # Сколько Xray запускать одновременно
 CANDIDATES_TO_TEST = 200     
 TOTAL_SERVERS_WANTED = 10    
 SPEED_TEST_URL = "https://speed.cloudflare.com/__down?bytes=1500000"
@@ -94,6 +95,22 @@ COUNTRIES_RU = {
 }
 
 geo_reader = None
+
+def kill_old_xray_processes():
+    """Убивает зависшие процессы Xray перед стартом"""
+    try:
+        # Пытаемся убить все процессы с именем xray
+        subprocess.run(['pkill', '-f', 'xray'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(1) # Даем время на завершение
+    except Exception:
+        pass
+
+def get_free_port():
+    """Находит свободный порт в системе"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
 def install_xray_core():
     if os.path.exists(XRAY_BIN):
@@ -201,7 +218,7 @@ def parse_vless(config_str):
             
         params = parse_qs(query_part)
         
-        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET
+        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET (WS)
         network_type = params.get('type', ['tcp'])[0]
         if network_type == 'ws':
             return None
@@ -377,15 +394,11 @@ def generate_xray_config(server, local_port):
     }
 
 def get_speed_badge(speed_mbps):
-    """Возвращает значок скорости в зависимости от Mbps."""
-    if speed_mbps >= 5.0:
-        return "⚡⚡ "
-    elif speed_mbps >= 1.5:
-        return "⚡ "
-    else:
-        return ""
+    if speed_mbps >= 5.0: return "⚡⚡ "
+    elif speed_mbps >= 1.5: return "⚡ "
+    return ""
 
-# --- АСИНХРОННЫЕ ФУНКЦИИ СБОРА И ПРОВЕРКИ ---
+# --- АСИНХРОННЫЕ ФУНКЦИИ ---
 
 async def fetch_from_telegram(session, channel):
     url = f"https://t.me/s/{channel}"
@@ -421,7 +434,7 @@ async def fetch_from_github_search(session):
     return configs
 
 async def tcp_ping_async(server, sem):
-    """Шлюз `sem` гарантирует, что мы не превысим лимит открытых сокетов ОС"""
+    """Шлюз `sem` гарантирует, что мы не превысим лимит сокетов"""
     async with sem:
         start = time.perf_counter()
         try:
@@ -435,10 +448,11 @@ async def tcp_ping_async(server, sem):
         except Exception:
             return None
 
-async def check_xray_and_speed(server, port_queue):
-    local_port = await port_queue.get()
+async def check_xray_and_speed(server):
+    """Использует динамический свободный порт для исключения конфликтов"""
+    local_port = get_free_port() # <-- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: всегда уникальный порт
     config = generate_xray_config(server, local_port)
-    config_path = f"temp_conf_{local_port}.json"
+    config_path = f"temp_conf_{local_port}_{random.randint(1000,9999)}.json"
     
     with open(config_path, 'w') as f:
         json.dump(config, f)
@@ -449,21 +463,24 @@ async def check_xray_and_speed(server, port_queue):
     is_working = False
 
     try:
+        # Запускаем Xray
         proc = await asyncio.create_subprocess_exec(
             XRAY_BIN, "-c", config_path,
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
         )
-        await asyncio.sleep(0.8) 
+        await asyncio.sleep(0.8) # Даем ядру стартануть
 
         connector = ProxyConnector.from_url(f'socks5://127.0.0.1:{local_port}')
         async with aiohttp.ClientSession(connector=connector) as session:
             
+            # Проверка доступности (через Google для отсева WS Cloudflare)
             t_start = time.perf_counter()
             async with session.get(VALIDATION_URL, timeout=REAL_TEST_TIMEOUT) as resp:
                 if resp.status == 204:
                     server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
                     is_working = True
             
+            # Замер скорости
             if is_working:
                 dl_start = time.perf_counter()
                 downloaded = 0
@@ -481,32 +498,26 @@ async def check_xray_and_speed(server, port_queue):
     except Exception:
         pass
     finally:
+        # Надежно убиваем процесс
         if proc:
             try:
                 proc.terminate()
-            except ProcessLookupError: pass
-            except OSError: pass
-                
-            try:
                 await asyncio.wait_for(proc.wait(), timeout=1.0)
-            except asyncio.TimeoutError:
-                try:
-                    proc.kill()
-                    await proc.wait()
-                except ProcessLookupError: pass
-                except OSError: pass
-            except ProcessLookupError: pass
+            except (ProcessLookupError, asyncio.TimeoutError):
+                try: proc.kill() 
+                except: pass
 
+        # Удаляем конфиг
         if os.path.exists(config_path):
-            try:
-                os.remove(config_path)
-            except OSError: pass
-                
-        port_queue.put_nowait(local_port)
+            try: os.remove(config_path)
+            except: pass
 
     return server if is_working and server['speed_mbps'] > 0 else None
 
 async def async_main():
+    # 1. ЧИСТКА ЗОМБИ (ОБЯЗАТЕЛЬНО)
+    kill_old_xray_processes()
+    
     logger.info(f"🚀 START: Smart VPN Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
     
     install_xray_core()
@@ -517,8 +528,9 @@ async def async_main():
         logger.error(f"❌ ОШИБКА: Не удалось найти {XRAY_BIN}")
         return
 
+    # 2. СБОР
     all_configs = []
-    logger.info("🌐 Загрузка источников (Статика + TG + GitHub)...")
+    logger.info("🌐 Загрузка источников...")
     
     async with aiohttp.ClientSession() as session:
         tasks = [session.get(url, timeout=10) for url in SOURCES]
@@ -536,21 +548,16 @@ async def async_main():
 
             for link in links:
                 parsed = None
-                if link.lower().startswith("vless://"): 
-                    parsed = parse_vless(link)
-                elif link.lower().startswith("trojan://"): 
-                    parsed = parse_trojan(link)
-                elif link.lower().startswith("ss://"): 
-                    parsed = parse_ss(link)
-                    
-                if parsed: 
-                    all_configs.append(parsed)
+                if link.lower().startswith("vless://"): parsed = parse_vless(link)
+                elif link.lower().startswith("trojan://"): parsed = parse_trojan(link)
+                elif link.lower().startswith("ss://"): parsed = parse_ss(link)
+                if parsed: all_configs.append(parsed)
 
     unique_configs = list({f"{c['ip']}:{c['port']}": c for c in all_configs}.values())
     logger.info(f"🔍 Найдено уникальных конфигов: {len(unique_configs)}")
 
+    # 3. ПИНГ (с семафором)
     logger.info(f"⚡ ЭТАП 1: Массовый TCP-пинг...")
-    # Ограничиваем количество одновременных пингов, чтобы не положить ОС
     ping_sem = asyncio.Semaphore(PING_CONCURRENCY)
     ping_tasks = [asyncio.create_task(tcp_ping_async(c, ping_sem)) for c in unique_configs]
     ping_results = await asyncio.gather(*ping_tasks)
@@ -559,12 +566,17 @@ async def async_main():
     candidates = alive_servers[:CANDIDATES_TO_TEST]
     logger.info(f"✅ Прошли TCP-пинг: {len(alive_servers)}. Отобрано кандидатов для Xray: {len(candidates)}")
 
+    # 4. ПРОВЕРКА (С динамическими портами)
     logger.info("🏎️ ЭТАП 2: Протокольная проверка и замер скорости...")
-    port_queue = asyncio.Queue()
-    for port in range(10800, 10800 + MAX_XRAY_CONCURRENT):
-        port_queue.put_nowait(port)
+    
+    # Ограничиваем количество одновременных тяжелых проверок
+    sem_xray = asyncio.Semaphore(MAX_XRAY_CONCURRENT)
+    
+    async def bounded_check(s):
+        async with sem_xray:
+            return await check_xray_and_speed(s)
 
-    xray_tasks = [asyncio.create_task(check_xray_and_speed(s, port_queue)) for s in candidates]
+    xray_tasks = [asyncio.create_task(bounded_check(s)) for s in candidates]
     xray_results = await asyncio.gather(*xray_tasks, return_exceptions=True)
 
     valid_servers = [s for s in xray_results if isinstance(s, dict)]
@@ -582,18 +594,15 @@ async def async_main():
     needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
     
     final_selection.extend(world_servers[:needed_world])
-    if best_ru: 
-        final_selection.append(best_ru)
+    if best_ru: final_selection.append(best_ru)
 
     for s in final_selection:
         badge = get_speed_badge(s['speed_mbps'])
         c_name = COUNTRIES_RU.get(s['country'], s['country'])
         logger.info(f"   🏆 {c_name} | Пинг: {s['real_delay']}ms | Скорость: {s['speed_mbps']} Mbps {badge.strip()}")
 
-    if best_ru:
-        logger.info(f"🇷🇺 Добавлен RU сервер: {best_ru['ip']}")
-        
-    logger.info(f"📊 Итого в подписке сохранено: {len(final_selection)} серверов")
+    if not final_selection and candidates:
+        logger.error("❌ ВНИМАНИЕ: 0 серверов прошли проверку Xray. Возможные причины: 1) Зомби-процессы (исправлено) 2) Блокировка хостера 3) IPv6 проблемы.")
 
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     result_links = [f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"]
@@ -602,11 +611,9 @@ async def async_main():
     for s in final_selection:
         c_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
         speed_badge = get_speed_badge(s['speed_mbps'])
-        
         name = f"{speed_badge}{c_display} | {s['real_delay']}ms"
         final_link = f"{s['original'].split('#')[0]}#{quote(name)}"
         result_links.append(final_link)
-
         json_stats["servers"].append({
             "name": name, "ip": s['ip'], "ping": s['real_delay'],
             "speed_mbps": s['speed_mbps'], "country": s['country'], "protocol": s['protocol']
