@@ -62,9 +62,9 @@ SOURCES = [
      "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix",
      "https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source",
      "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt",
-
-"https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" 
-   
+     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
+     "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
+     "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/vless-secure.txt" 
 ]
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
@@ -74,15 +74,14 @@ XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-TCP_TIMEOUT = 1.5            # Таймаут TCP пинга
-PING_CONCURRENCY = 200       # Лимит одновременных пингов (снижено для стабильности)
-REAL_TEST_TIMEOUT = 5.0      # Таймаут проверки через Xray
+TCP_TIMEOUT = 1.5            
+PING_CONCURRENCY = 200       
+REAL_TEST_TIMEOUT = 5.0      
 SPEED_TEST_TIMEOUT = 6.0 
-MAX_XRAY_CONCURRENT = 20     # Сколько Xray запускать одновременно
+MAX_XRAY_CONCURRENT = 20     
 CANDIDATES_TO_TEST = 200     
 TOTAL_SERVERS_WANTED = 10    
 SPEED_TEST_URL = "https://speed.cloudflare.com/__down?bytes=1500000"
-VALIDATION_URL = "http://www.gstatic.com/generate_204"
 
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
@@ -99,16 +98,13 @@ COUNTRIES_RU = {
 geo_reader = None
 
 def kill_old_xray_processes():
-    """Убивает зависшие процессы Xray перед стартом"""
     try:
-        # Пытаемся убить все процессы с именем xray
         subprocess.run(['pkill', '-f', 'xray'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1) # Даем время на завершение
+        time.sleep(1)
     except Exception:
         pass
 
 def get_free_port():
-    """Находит свободный порт в системе"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(('', 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -220,7 +216,7 @@ def parse_vless(config_str):
             
         params = parse_qs(query_part)
         
-        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET (WS)
+        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET
         network_type = params.get('type', ['tcp'])[0]
         if network_type == 'ws':
             return None
@@ -267,7 +263,6 @@ def parse_trojan(config_str):
         query_part = config_str.split("?")[1].split("#")[0] if "?" in config_str else ""
         params = parse_qs(query_part)
         
-        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET
         network_type = params.get('type', ['tcp'])[0]
         if network_type == 'ws':
             return None
@@ -400,8 +395,6 @@ def get_speed_badge(speed_mbps):
     elif speed_mbps >= 1.5: return "⚡ "
     return ""
 
-# --- АСИНХРОННЫЕ ФУНКЦИИ ---
-
 async def fetch_from_telegram(session, channel):
     url = f"https://t.me/s/{channel}"
     configs = []
@@ -436,7 +429,6 @@ async def fetch_from_github_search(session):
     return configs
 
 async def tcp_ping_async(server, sem):
-    """Шлюз `sem` гарантирует, что мы не превысим лимит сокетов"""
     async with sem:
         start = time.perf_counter()
         try:
@@ -451,8 +443,7 @@ async def tcp_ping_async(server, sem):
             return None
 
 async def check_xray_and_speed(server):
-    """Использует динамический свободный порт для исключения конфликтов"""
-    local_port = get_free_port() # <-- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: всегда уникальный порт
+    local_port = get_free_port()
     config = generate_xray_config(server, local_port)
     config_path = f"temp_conf_{local_port}_{random.randint(1000,9999)}.json"
     
@@ -463,44 +454,61 @@ async def check_xray_and_speed(server):
     server['speed_mbps'] = 0.0
     server['real_delay'] = 9999
     is_working = False
+    youtube_works = False
 
     try:
-        # Запускаем Xray
         proc = await asyncio.create_subprocess_exec(
             XRAY_BIN, "-c", config_path,
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL
         )
-        await asyncio.sleep(0.8) # Даем ядру стартануть
+        await asyncio.sleep(0.8) 
 
         connector = ProxyConnector.from_url(f'socks5://127.0.0.1:{local_port}')
         async with aiohttp.ClientSession(connector=connector) as session:
             
-            # Проверка доступности (через Google для отсева WS Cloudflare)
+            # ЭТАП 1: Проверка на "прочерки" (маршрутизация API)
             t_start = time.perf_counter()
-            async with session.get(VALIDATION_URL, timeout=REAL_TEST_TIMEOUT) as resp:
-                if resp.status == 204:
-                    server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
-                    is_working = True
-            
-            # Замер скорости
+            try:
+                # Запрос к API для определения IP. Если нода не пропускает такой трафик - выкидываем.
+                async with session.get("https://api.ipify.org?format=json", timeout=REAL_TEST_TIMEOUT) as resp:
+                    if resp.status == 200:
+                        server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
+                        is_working = True
+            except Exception:
+                is_working = False
+
+            # ЭТАП 2: Проверка YouTube (отсеиваем "экономные" ноды)
             if is_working:
+                try:
+                    async with session.get("https://www.youtube.com/", timeout=REAL_TEST_TIMEOUT) as resp:
+                        if resp.status in [200, 301, 302, 303]:
+                            youtube_works = True
+                        else:
+                            youtube_works = False
+                except Exception:
+                    youtube_works = False
+
+            # ЭТАП 3: Замер скорости (только если сервер доказал, что умеет открывать Ютуб)
+            if is_working and youtube_works:
                 dl_start = time.perf_counter()
                 downloaded = 0
-                async with session.get(SPEED_TEST_URL, timeout=SPEED_TEST_TIMEOUT) as resp:
-                    if resp.status == 200:
-                        async for chunk in resp.content.iter_chunked(8192):
-                            downloaded += len(chunk)
-                            if time.perf_counter() - dl_start > (SPEED_TEST_TIMEOUT - 1.0): 
-                                break
-                
-                duration = time.perf_counter() - dl_start
-                if duration > 0 and downloaded > 100_000: 
-                    server['speed_mbps'] = round((downloaded * 8 / 1_000_000) / duration, 2)
+                try:
+                    async with session.get(SPEED_TEST_URL, timeout=SPEED_TEST_TIMEOUT) as resp:
+                        if resp.status == 200:
+                            async for chunk in resp.content.iter_chunked(8192):
+                                downloaded += len(chunk)
+                                if time.perf_counter() - dl_start > (SPEED_TEST_TIMEOUT - 1.0): 
+                                    break
+                    
+                    duration = time.perf_counter() - dl_start
+                    if duration > 0 and downloaded > 100_000: 
+                        server['speed_mbps'] = round((downloaded * 8 / 1_000_000) / duration, 2)
+                except Exception:
+                    pass
 
     except Exception:
         pass
     finally:
-        # Надежно убиваем процесс
         if proc:
             try:
                 proc.terminate()
@@ -509,18 +517,16 @@ async def check_xray_and_speed(server):
                 try: proc.kill() 
                 except: pass
 
-        # Удаляем конфиг
         if os.path.exists(config_path):
             try: os.remove(config_path)
             except: pass
 
-    return server if is_working and server['speed_mbps'] > 0 else None
+    # Сервер попадает в финальный список ТОЛЬКО если у него есть скорость и он прошел проверку Ютуба
+    return server if is_working and youtube_works and server['speed_mbps'] > 0 else None
 
 async def async_main():
-    # 1. ЧИСТКА ЗОМБИ (ОБЯЗАТЕЛЬНО)
     kill_old_xray_processes()
-    
-    logger.info(f"🚀 START: Smart VPN Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
+    logger.info(f"🚀 START: Smart VPN Selector (Target: {TOTAL_SERVERS_WANTED}, Strict YouTube Mode)")
     
     install_xray_core()
     download_mmdb()
@@ -530,7 +536,6 @@ async def async_main():
         logger.error(f"❌ ОШИБКА: Не удалось найти {XRAY_BIN}")
         return
 
-    # 2. СБОР
     all_configs = []
     logger.info("🌐 Загрузка источников...")
     
@@ -556,9 +561,8 @@ async def async_main():
                 if parsed: all_configs.append(parsed)
 
     unique_configs = list({f"{c['ip']}:{c['port']}": c for c in all_configs}.values())
-    logger.info(f"🔍 Найдено уникальных конфигов: {len(unique_configs)}")
+    logger.info(f"🔍 Найдено уникальных TCP-конфигов: {len(unique_configs)} (WS удалены)")
 
-    # 3. ПИНГ (с семафором)
     logger.info(f"⚡ ЭТАП 1: Массовый TCP-пинг...")
     ping_sem = asyncio.Semaphore(PING_CONCURRENCY)
     ping_tasks = [asyncio.create_task(tcp_ping_async(c, ping_sem)) for c in unique_configs]
@@ -568,10 +572,7 @@ async def async_main():
     candidates = alive_servers[:CANDIDATES_TO_TEST]
     logger.info(f"✅ Прошли TCP-пинг: {len(alive_servers)}. Отобрано кандидатов для Xray: {len(candidates)}")
 
-    # 4. ПРОВЕРКА (С динамическими портами)
-    logger.info("🏎️ ЭТАП 2: Протокольная проверка и замер скорости...")
-    
-    # Ограничиваем количество одновременных тяжелых проверок
+    logger.info("🏎️ ЭТАП 2: Жесткая проверка YouTube и скорости...")
     sem_xray = asyncio.Semaphore(MAX_XRAY_CONCURRENT)
     
     async def bounded_check(s):
@@ -604,7 +605,7 @@ async def async_main():
         logger.info(f"   🏆 {c_name} | Пинг: {s['real_delay']}ms | Скорость: {s['speed_mbps']} Mbps {badge.strip()}")
 
     if not final_selection and candidates:
-        logger.error("❌ ВНИМАНИЕ: 0 серверов прошли проверку Xray. Возможные причины: 1) Зомби-процессы (исправлено) 2) Блокировка хостера 3) IPv6 проблемы.")
+        logger.error("❌ ВНИМАНИЕ: 0 серверов прошли проверку YouTube. Все найденные сервера блокируют видео или мертвы.")
 
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     result_links = [f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"]
