@@ -73,10 +73,10 @@ TCP_TIMEOUT = 1.0
 REAL_TEST_TIMEOUT = 4.0 
 SPEED_TEST_TIMEOUT = 6.0 
 MAX_XRAY_CONCURRENT = 20
-CANDIDATES_TO_TEST = 200     # Увеличили воронку отбора
-TOTAL_SERVERS_WANTED = 10    # Строго 10 серверов на выходе
+CANDIDATES_TO_TEST = 200     
+TOTAL_SERVERS_WANTED = 10    
 SPEED_TEST_URL = "https://speed.cloudflare.com/__down?bytes=1500000"
-VALIDATION_URL = "http://www.gstatic.com/generate_204" # Проверка реального доступа в сеть
+VALIDATION_URL = "http://www.gstatic.com/generate_204"
 
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
@@ -143,12 +143,11 @@ def get_country_code(ip_or_domain):
     if not geo_reader: return 'XX'
     try:
         ip_to_check = ip_or_domain
-        # Если в адресе есть буквы, пробуем перевести домен в IP
         if re.search('[a-zA-Z]', ip_or_domain):
             try:
                 ip_to_check = socket.gethostbyname(ip_or_domain)
             except Exception:
-                return 'XX' # Если домен мертвый и не резолвится
+                return 'XX'
                 
         code = geo_reader.country(ip_to_check).country.iso_code
         return code if code else 'XX'
@@ -199,12 +198,17 @@ def parse_vless(config_str):
             
         params = parse_qs(query_part)
         
+        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET
+        network_type = params.get('type', ['tcp'])[0]
+        if network_type == 'ws':
+            return None
+        
         conf = {
             "protocol": "vless",
             "ip": host,
             "port": int(port),
             "uuid": uuid_val,
-            "type": params.get('type', ['tcp'])[0],
+            "type": network_type,
             "security": params.get('security', ['none'])[0],
             "flow": params.get('flow', [''])[0],
             "sni": params.get('sni', [''])[0],
@@ -241,12 +245,17 @@ def parse_trojan(config_str):
         query_part = config_str.split("?")[1].split("#")[0] if "?" in config_str else ""
         params = parse_qs(query_part)
         
+        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET
+        network_type = params.get('type', ['tcp'])[0]
+        if network_type == 'ws':
+            return None
+        
         return {
             "protocol": "trojan",
             "ip": host,
             "port": int(port),
             "password": password,
-            "type": params.get('type', ['tcp'])[0],
+            "type": network_type,
             "security": params.get('security', ['tls'])[0],
             "sni": params.get('sni', [host])[0],
             "path": params.get('path', ['/'])[0],
@@ -345,12 +354,7 @@ def generate_xray_config(server, local_port):
         "security": security
     }
 
-    if network == 'ws':
-        ws_set = {"path": server.get('path', '/')}
-        host = server.get('host', '')
-        if host: ws_set["headers"] = {"Host": host}
-        outbound["streamSettings"]["wsSettings"] = ws_set
-    elif network == 'grpc':
+    if network == 'grpc':
         outbound["streamSettings"]["grpcSettings"] = {"serviceName": server.get('serviceName', '')}
 
     tls_set = {"serverName": server.get('sni', ''), "fingerprint": server.get('fp', 'chrome')}
@@ -450,7 +454,6 @@ async def check_xray_and_speed(server, port_queue):
         async with aiohttp.ClientSession(connector=connector) as session:
             
             t_start = time.perf_counter()
-            # Проверка через серверы Google, чтобы исключить ложные срабатывания Cloudflare
             async with session.get(VALIDATION_URL, timeout=REAL_TEST_TIMEOUT) as resp:
                 if resp.status == 204:
                     server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
@@ -559,7 +562,6 @@ async def async_main():
 
     valid_servers = [s for s in xray_results if isinstance(s, dict)]
     
-    # Определяем страну с учетом резолвинга доменов
     for s in valid_servers: 
         s['country'] = get_country_code(s['ip'])
         
