@@ -62,6 +62,8 @@ SOURCES = [
      "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt",
 
 "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/detailed/vless/80.txt",
+
+"https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/detailed/vless/443.txt" 
 ]
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
