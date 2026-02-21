@@ -45,7 +45,39 @@ SOURCES = [
      "https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source",
      "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt",
      "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
-     "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt"
+     "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
+
+    #НОВЫЕ
+     "https://raw.githubusercontent.com/mermeroo/Loon/main/node",
+     "https://raw.githubusercontent.com/mermeroo/Loon/main/node%202",
+     "https://raw.githubusercontent.com/mermeroo/Clash-V2ray/main/v2ray",
+     "https://raw.githubusercontent.com/mermeroo/QX/refs/heads/main/Nodes",
+     "https://raw.githubusercontent.com/mermeroo/Loon/refs/heads/main/all.nodes.txt",
+     "https://raw.githubusercontent.com/mermeroo/QuantumultX/refs/heads/main/Trojan.nodes",
+     "https://raw.githubusercontent.com/personqianduixue/SubCrawler/main/sub/share/all",
+     "https://raw.githubusercontent.com/w1770946466/Auto_proxy/main/Long_term_subscription_num",
+     "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/sub_merge.txt",
+     "https://raw.githubusercontent.com/barry-far/V2ray-Configs/refs/heads/main/All_Configs_Sub.txt",
+     "https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt",
+     "https://raw.githubusercontent.com/Leon406/SubCrawler/main/sub/share/all3",
+     "https://raw.githubusercontent.com/gtang8/SubCrawler/main/sub/share/all",
+     "https://raw.githubusercontent.com/zzz6839/SubCrawler/main/sub/share/all",
+     "https://raw.githubusercontent.com/zjfb/SubCrawler/main/sub/share/all",
+     "https://raw.githubusercontent.com/QQnight/SubCrawler/main/sub/share/all",
+     "https://raw.githubusercontent.com/anorika77/v2ray-subscribe/main/README.md",
+     "https://raw.githubusercontent.com/abshare/abshare.github.io/main/README.md",
+     "https://raw.githubusercontent.com/caijh/FreeProxiesScraper/main/README.md",
+     "https://raw.githubusercontent.com/VpnNetwork01/vpn-net/main/README.md",
+     "https://raw.githubusercontent.com/LayneChai/subscribe/main/README.md",
+     "https://raw.githubusercontent.com/youkai0100/youkai/master/README.md",
+     "https://raw.githubusercontent.com/cdp2020/v2ray/master/README.md",
+     "https://raw.githubusercontent.com/freefq/free/master/README.md",
+     "https://raw.githubusercontent.com/mheidari98/.proxy/main/all",
+     "https://raw.githubusercontent.com/luxl-1379/merge/77247d23def72b25226dfa741614e9b07a569c72/sub/sub_merge_base64.txt",
+     "https://bitbucket.org/huwo1/proxy_nodes/raw/f31ca9ec67b84071515729ff45b011b6b09c10f2/ss.md",
+     "https://bitbucket.org/huwo1/proxy_nodes/raw/f31ca9ec67b84071515729ff45b011b6b09c10f2/vmess.md",
+     "https://bitbucket.org/huwo1/proxy_nodes/raw/f31ca9ec67b84071515729ff45b011b6b09c10f2/proxy.md",
+     "https://bitbucket.org/huwo1/proxy_nodes/raw/f31ca9ec67b84071515729ff45b011b6b09c10f2/trojan.md
     
 ]
 
