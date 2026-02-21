@@ -8,7 +8,6 @@ import re
 import os
 import json
 import uuid
-import geoip2.database
 import subprocess
 import tempfile
 import random
@@ -33,17 +32,14 @@ logger.addHandler(file_handler)
 
 # --- НАСТРОЙКИ ---
 SOURCES = [
-    # Твой текущий источник
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
 ]
 
-MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
-MMDB_FILE = "Country.mmdb"
 XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-MAX_WORKERS = 40        # Увеличено для более быстрого массового пинга
+MAX_WORKERS = 40        
 TCP_TIMEOUT = 1.0       
 REAL_TEST_TIMEOUT = 5.0 
 SPEED_TEST_TIMEOUT = 6.0 
@@ -60,8 +56,6 @@ COUNTRIES_RU = {
     'LT': '🇱🇹 Литва', 'MD': '🇲🇩 Молдова', 'EE': '🇪🇪 Эстония', 'CY': '🇨🇾 Кипр', 'LV': '🇱🇻 Латвия',
     'GR': '🇬🇷 Греция'
 }
-
-geo_reader = None
 
 def install_xray_core():
     if os.path.exists(XRAY_BIN):
@@ -90,33 +84,6 @@ def install_xray_core():
             logger.error(f"❌ Ошибка скачивания Xray: {r.status_code}")
     except Exception as e:
         logger.error(f"❌ Критическая ошибка установки Xray: {e}")
-
-def download_mmdb():
-    if not os.path.exists(MMDB_FILE):
-        logger.info("📥 Скачивание GeoIP базы...")
-        try:
-            r = requests.get(MMDB_URL, stream=True, timeout=20)
-            if r.status_code == 200:
-                with open(MMDB_FILE, 'wb') as f:
-                    for chunk in r.iter_content(1024):
-                        f.write(chunk)
-        except Exception as e:
-            logger.error(f"Ошибка скачивания MMDB: {e}")
-
-def init_geoip():
-    global geo_reader
-    try: 
-        geo_reader = geoip2.database.Reader(MMDB_FILE)
-    except: 
-        pass
-
-def get_country_code(ip):
-    if not geo_reader: return 'XX'
-    try: 
-        code = geo_reader.country(ip).country.iso_code
-        return code if code else 'XX'
-    except: 
-        return 'XX'
 
 def safe_base64_decode(s):
     s = s.strip().replace('\n', '').replace('\r', '').replace(' ', '')
@@ -271,9 +238,9 @@ def generate_xray_config(server, local_port):
     }
 
 def check_real_ping(server):
-    """ЭТАП 1: Быстрый TCP пинг -> затем реальный пинг через Xray"""
+    """ЭТАП 1: TCP пинг -> Реальный Xray пинг и ОПРЕДЕЛЕНИЕ СТРАНЫ ВЫХОДНОГО УЗЛА"""
     
-    # 1. Сначала просто проверяем доступность сервера по сети (чтобы не запускать Xray впустую)
+    # 1. Быстрая проверка доступности порта (чтобы отсеять мертвецов до запуска Xray)
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TCP_TIMEOUT)
@@ -282,7 +249,7 @@ def check_real_ping(server):
     except:
         return None
 
-    # 2. Если сервер доступен, запускаем Xray и пингуем прокси
+    # 2. Xray ping + проверка реальной страны через Cloudflare Trace
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
     
@@ -292,6 +259,7 @@ def check_real_ping(server):
 
     proc = None
     latency = None
+    real_country = 'XX'
 
     try:
         proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -300,16 +268,23 @@ def check_real_ping(server):
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
         
         start = time.perf_counter()
-        resp = requests.get("http://cp.cloudflare.com/", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
+        # Запрашиваем CF Trace ЧЕРЕЗ НАШ ПРОКСИ
+        resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         
-        if resp.status_code == 204:
+        if resp.status_code == 200:
             end = time.perf_counter()
             latency = int((end - start) * 1000)
-        else:
-            latency = None
+            
+            # Cloudflare отдает текст в формате:
+            # ip=123.45.67.89
+            # loc=DE
+            # Парсим страну регулярным выражением:
+            match = re.search(r'loc=([A-Z]{2})', resp.text)
+            if match:
+                real_country = match.group(1)
             
     except:
-        latency = None
+        pass
     finally:
         if proc:
             proc.terminate()
@@ -320,10 +295,9 @@ def check_real_ping(server):
 
     if latency:
         server['real_delay'] = latency
-        code = get_country_code(server['ip'])
-        server['country'] = code
-        if code == 'XX': return None
+        server['country'] = real_country
         return server
+        
     return None
 
 def measure_speed(server):
@@ -397,8 +371,6 @@ def main():
     logger.info(f"🚀 START: Smart Selector (Target: {TOTAL_SERVERS_WANTED}, ONLY FOREIGN)")
     
     install_xray_core()
-    download_mmdb()
-    init_geoip()
     
     if not os.path.exists(XRAY_BIN):
         logger.error(f"❌ ОШИБКА: Не удалось найти {XRAY_BIN}")
@@ -420,50 +392,40 @@ def main():
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
     logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
 
-    # ЭТАП 1: Массовый легкий пинг (Сетевая доступность -> Проверка Xray)
     valid_servers = []
-    logger.info(f"⚡ ЭТАП 1: Замер Пинга (Сетевой доступ + Xray). Workers: {MAX_WORKERS}...")
+    logger.info(f"⚡ ЭТАП 1: Замер Пинга и Геолокации. Workers: {MAX_WORKERS}...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = [executor.submit(check_real_ping, s) for s in unique_configs]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
-                # СТРОГОЕ ПРАВИЛО: Исключаем российские серверы
+                # ТЕПЕРЬ ОН СМОТРИТ НА НАСТОЯЩУЮ СТРАНУ
                 if res['country'] == 'RU':
                     continue
                 
                 valid_servers.append(res)
                 logger.info(f"   [PING OK] {res['country']} | {res['protocol'].upper()} | {res['real_delay']}ms")
 
-    # Сортируем валидные иностранные серверы по пингу от меньшего к большему
     valid_servers.sort(key=lambda x: x['real_delay'])
-
-    # Берем ТОП-40 самых быстрых по пингу серверов для теста на реальную скорость
     candidates_for_speed_test = valid_servers[:40] 
 
-    # ЭТАП 2: Тяжелый замер скорости с отбраковкой нулей
     logger.info(f"🏎️ ЭТАП 2: Глубокий замер скорости для {len(candidates_for_speed_test)} иностранных кандидатов...")
     tested_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
         futures = [executor.submit(measure_speed, s) for s in candidates_for_speed_test]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
-            # Фильтр: Скорость должна быть больше 0.0 (то есть сервер не просто пингуется, но и качает)
             if res['speed_mbps'] > 0.0:
                 tested_servers.append(res)
                 badge = get_speed_badge(res['speed_mbps'])
                 logger.info(f"   🏆 {res['country']} | {res['protocol'].upper()} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps {badge.strip()}")
 
-    # Снова сортируем уже ПОЛНОСТЬЮ проверенные рабочие серверы по пингу
     tested_servers.sort(key=lambda x: x['real_delay'])
-
-    # Просто берем лучшие зарубежные серверы
     final_selection = tested_servers[:TOTAL_SERVERS_WANTED]
 
     logger.info(f"📊 Итого в подписке сохранено иностранных серверов: {len(final_selection)}")
 
-    # Генерация файлов
     result_links = []
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
