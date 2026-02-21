@@ -17,7 +17,6 @@ import io
 import stat
 import logging
 import asyncio
-import signal
 from urllib.parse import unquote, quote, parse_qs
 
 import aiohttp
@@ -47,8 +46,7 @@ TG_CHANNELS = [
     "DailyV2RY",
     "V2rayng_Fast",
     "proxyvpn11",
-    "V2ray_Alpha",
-    "V2rayng_Fast" 
+    "V2ray_Alpha"
 ]
 
 SOURCES = [
@@ -62,7 +60,6 @@ SOURCES = [
      "https://raw.githubusercontent.com/MhdiTaheri/V2rayCollector/refs/heads/main/sub/mix",
      "https://raw.githubusercontent.com/TheFlipper-spec/VPNMY/refs/heads/main/my_source",
      "https://raw.githubusercontent.com/Rayan-Config/C-Sub/refs/heads/main/configs/proxy.txt",
-     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
      "https://raw.githubusercontent.com/hamedcode/port-based-v2ray-configs/main/sub/vless.txt",
      "https://raw.githubusercontent.com/whoahaow/rjsxrd/refs/heads/main/githubmirror/split-by-protocols/vless-secure.txt" 
 ]
@@ -74,14 +71,15 @@ XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 
-TCP_TIMEOUT = 1.5            
-PING_CONCURRENCY = 200       
-REAL_TEST_TIMEOUT = 5.0      
+TCP_TIMEOUT = 1.5            # Увеличено для стабильности при массовом пинге
+PING_CONCURRENCY = 500       # Лимит одновременных TCP-соединений
+REAL_TEST_TIMEOUT = 4.0 
 SPEED_TEST_TIMEOUT = 6.0 
-MAX_XRAY_CONCURRENT = 20     
+MAX_XRAY_CONCURRENT = 20
 CANDIDATES_TO_TEST = 200     
 TOTAL_SERVERS_WANTED = 10    
 SPEED_TEST_URL = "https://speed.cloudflare.com/__down?bytes=1500000"
+VALIDATION_URL = "http://www.gstatic.com/generate_204"
 
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
@@ -92,23 +90,10 @@ COUNTRIES_RU = {
     'ES': '🇪🇸 Испания', 'CA': '🇨🇦 Канада', 'AU': '🇦🇺 Австралия', 'CH': '🇨🇭 Швейцария',
     'AE': '🇦🇪 ОАЭ', 'IN': '🇮🇳 Индия', 'BR': '🇧🇷 Бразилия', 'ZA': '🇿🇦 ЮАР',
     'LT': '🇱🇹 Литва', 'MD': '🇲🇩 Молдова', 'EE': '🇪🇪 Эстония', 'CY': '🇨🇾 Кипр', 'LV': '🇱🇻 Латвия',
-    'GR': '🇬🇷 Греция', 'NO': '🇳🇴 Норвегия'
+    'GR': '🇬🇷 Греция'
 }
 
 geo_reader = None
-
-def kill_old_xray_processes():
-    try:
-        subprocess.run(['pkill', '-f', 'xray'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1)
-    except Exception:
-        pass
-
-def get_free_port():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('', 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
 
 def install_xray_core():
     if os.path.exists(XRAY_BIN):
@@ -263,6 +248,7 @@ def parse_trojan(config_str):
         query_part = config_str.split("?")[1].split("#")[0] if "?" in config_str else ""
         params = parse_qs(query_part)
         
+        # ЖЕСТКАЯ БЛОКИРОВКА WEBSOCKET
         network_type = params.get('type', ['tcp'])[0]
         if network_type == 'ws':
             return None
@@ -391,9 +377,15 @@ def generate_xray_config(server, local_port):
     }
 
 def get_speed_badge(speed_mbps):
-    if speed_mbps >= 5.0: return "⚡⚡ "
-    elif speed_mbps >= 1.5: return "⚡ "
-    return ""
+    """Возвращает значок скорости в зависимости от Mbps."""
+    if speed_mbps >= 5.0:
+        return "⚡⚡ "
+    elif speed_mbps >= 1.5:
+        return "⚡ "
+    else:
+        return ""
+
+# --- АСИНХРОННЫЕ ФУНКЦИИ СБОРА И ПРОВЕРКИ ---
 
 async def fetch_from_telegram(session, channel):
     url = f"https://t.me/s/{channel}"
@@ -429,6 +421,7 @@ async def fetch_from_github_search(session):
     return configs
 
 async def tcp_ping_async(server, sem):
+    """Шлюз `sem` гарантирует, что мы не превысим лимит открытых сокетов ОС"""
     async with sem:
         start = time.perf_counter()
         try:
@@ -442,10 +435,10 @@ async def tcp_ping_async(server, sem):
         except Exception:
             return None
 
-async def check_xray_and_speed(server):
-    local_port = get_free_port()
+async def check_xray_and_speed(server, port_queue):
+    local_port = await port_queue.get()
     config = generate_xray_config(server, local_port)
-    config_path = f"temp_conf_{local_port}_{random.randint(1000,9999)}.json"
+    config_path = f"temp_conf_{local_port}.json"
     
     with open(config_path, 'w') as f:
         json.dump(config, f)
@@ -454,7 +447,6 @@ async def check_xray_and_speed(server):
     server['speed_mbps'] = 0.0
     server['real_delay'] = 9999
     is_working = False
-    youtube_works = False
 
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -466,45 +458,25 @@ async def check_xray_and_speed(server):
         connector = ProxyConnector.from_url(f'socks5://127.0.0.1:{local_port}')
         async with aiohttp.ClientSession(connector=connector) as session:
             
-            # ЭТАП 1: Проверка на "прочерки" (маршрутизация API)
             t_start = time.perf_counter()
-            try:
-                # Запрос к API для определения IP. Если нода не пропускает такой трафик - выкидываем.
-                async with session.get("https://api.ipify.org?format=json", timeout=REAL_TEST_TIMEOUT) as resp:
-                    if resp.status == 200:
-                        server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
-                        is_working = True
-            except Exception:
-                is_working = False
-
-            # ЭТАП 2: Проверка YouTube (отсеиваем "экономные" ноды)
+            async with session.get(VALIDATION_URL, timeout=REAL_TEST_TIMEOUT) as resp:
+                if resp.status == 204:
+                    server['real_delay'] = int((time.perf_counter() - t_start) * 1000)
+                    is_working = True
+            
             if is_working:
-                try:
-                    async with session.get("https://www.youtube.com/", timeout=REAL_TEST_TIMEOUT) as resp:
-                        if resp.status in [200, 301, 302, 303]:
-                            youtube_works = True
-                        else:
-                            youtube_works = False
-                except Exception:
-                    youtube_works = False
-
-            # ЭТАП 3: Замер скорости (только если сервер доказал, что умеет открывать Ютуб)
-            if is_working and youtube_works:
                 dl_start = time.perf_counter()
                 downloaded = 0
-                try:
-                    async with session.get(SPEED_TEST_URL, timeout=SPEED_TEST_TIMEOUT) as resp:
-                        if resp.status == 200:
-                            async for chunk in resp.content.iter_chunked(8192):
-                                downloaded += len(chunk)
-                                if time.perf_counter() - dl_start > (SPEED_TEST_TIMEOUT - 1.0): 
-                                    break
-                    
-                    duration = time.perf_counter() - dl_start
-                    if duration > 0 and downloaded > 100_000: 
-                        server['speed_mbps'] = round((downloaded * 8 / 1_000_000) / duration, 2)
-                except Exception:
-                    pass
+                async with session.get(SPEED_TEST_URL, timeout=SPEED_TEST_TIMEOUT) as resp:
+                    if resp.status == 200:
+                        async for chunk in resp.content.iter_chunked(8192):
+                            downloaded += len(chunk)
+                            if time.perf_counter() - dl_start > (SPEED_TEST_TIMEOUT - 1.0): 
+                                break
+                
+                duration = time.perf_counter() - dl_start
+                if duration > 0 and downloaded > 100_000: 
+                    server['speed_mbps'] = round((downloaded * 8 / 1_000_000) / duration, 2)
 
     except Exception:
         pass
@@ -512,21 +484,30 @@ async def check_xray_and_speed(server):
         if proc:
             try:
                 proc.terminate()
+            except ProcessLookupError: pass
+            except OSError: pass
+                
+            try:
                 await asyncio.wait_for(proc.wait(), timeout=1.0)
-            except (ProcessLookupError, asyncio.TimeoutError):
-                try: proc.kill() 
-                except: pass
+            except asyncio.TimeoutError:
+                try:
+                    proc.kill()
+                    await proc.wait()
+                except ProcessLookupError: pass
+                except OSError: pass
+            except ProcessLookupError: pass
 
         if os.path.exists(config_path):
-            try: os.remove(config_path)
-            except: pass
+            try:
+                os.remove(config_path)
+            except OSError: pass
+                
+        port_queue.put_nowait(local_port)
 
-    # Сервер попадает в финальный список ТОЛЬКО если у него есть скорость и он прошел проверку Ютуба
-    return server if is_working and youtube_works and server['speed_mbps'] > 0 else None
+    return server if is_working and server['speed_mbps'] > 0 else None
 
 async def async_main():
-    kill_old_xray_processes()
-    logger.info(f"🚀 START: Smart VPN Selector (Target: {TOTAL_SERVERS_WANTED}, Strict YouTube Mode)")
+    logger.info(f"🚀 START: Smart VPN Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode)")
     
     install_xray_core()
     download_mmdb()
@@ -537,7 +518,7 @@ async def async_main():
         return
 
     all_configs = []
-    logger.info("🌐 Загрузка источников...")
+    logger.info("🌐 Загрузка источников (Статика + TG + GitHub)...")
     
     async with aiohttp.ClientSession() as session:
         tasks = [session.get(url, timeout=10) for url in SOURCES]
@@ -555,15 +536,21 @@ async def async_main():
 
             for link in links:
                 parsed = None
-                if link.lower().startswith("vless://"): parsed = parse_vless(link)
-                elif link.lower().startswith("trojan://"): parsed = parse_trojan(link)
-                elif link.lower().startswith("ss://"): parsed = parse_ss(link)
-                if parsed: all_configs.append(parsed)
+                if link.lower().startswith("vless://"): 
+                    parsed = parse_vless(link)
+                elif link.lower().startswith("trojan://"): 
+                    parsed = parse_trojan(link)
+                elif link.lower().startswith("ss://"): 
+                    parsed = parse_ss(link)
+                    
+                if parsed: 
+                    all_configs.append(parsed)
 
     unique_configs = list({f"{c['ip']}:{c['port']}": c for c in all_configs}.values())
-    logger.info(f"🔍 Найдено уникальных TCP-конфигов: {len(unique_configs)} (WS удалены)")
+    logger.info(f"🔍 Найдено уникальных конфигов: {len(unique_configs)}")
 
     logger.info(f"⚡ ЭТАП 1: Массовый TCP-пинг...")
+    # Ограничиваем количество одновременных пингов, чтобы не положить ОС
     ping_sem = asyncio.Semaphore(PING_CONCURRENCY)
     ping_tasks = [asyncio.create_task(tcp_ping_async(c, ping_sem)) for c in unique_configs]
     ping_results = await asyncio.gather(*ping_tasks)
@@ -572,14 +559,12 @@ async def async_main():
     candidates = alive_servers[:CANDIDATES_TO_TEST]
     logger.info(f"✅ Прошли TCP-пинг: {len(alive_servers)}. Отобрано кандидатов для Xray: {len(candidates)}")
 
-    logger.info("🏎️ ЭТАП 2: Жесткая проверка YouTube и скорости...")
-    sem_xray = asyncio.Semaphore(MAX_XRAY_CONCURRENT)
-    
-    async def bounded_check(s):
-        async with sem_xray:
-            return await check_xray_and_speed(s)
+    logger.info("🏎️ ЭТАП 2: Протокольная проверка и замер скорости...")
+    port_queue = asyncio.Queue()
+    for port in range(10800, 10800 + MAX_XRAY_CONCURRENT):
+        port_queue.put_nowait(port)
 
-    xray_tasks = [asyncio.create_task(bounded_check(s)) for s in candidates]
+    xray_tasks = [asyncio.create_task(check_xray_and_speed(s, port_queue)) for s in candidates]
     xray_results = await asyncio.gather(*xray_tasks, return_exceptions=True)
 
     valid_servers = [s for s in xray_results if isinstance(s, dict)]
@@ -597,15 +582,18 @@ async def async_main():
     needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
     
     final_selection.extend(world_servers[:needed_world])
-    if best_ru: final_selection.append(best_ru)
+    if best_ru: 
+        final_selection.append(best_ru)
 
     for s in final_selection:
         badge = get_speed_badge(s['speed_mbps'])
         c_name = COUNTRIES_RU.get(s['country'], s['country'])
         logger.info(f"   🏆 {c_name} | Пинг: {s['real_delay']}ms | Скорость: {s['speed_mbps']} Mbps {badge.strip()}")
 
-    if not final_selection and candidates:
-        logger.error("❌ ВНИМАНИЕ: 0 серверов прошли проверку YouTube. Все найденные сервера блокируют видео или мертвы.")
+    if best_ru:
+        logger.info(f"🇷🇺 Добавлен RU сервер: {best_ru['ip']}")
+        
+    logger.info(f"📊 Итого в подписке сохранено: {len(final_selection)} серверов")
 
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     result_links = [f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"]
@@ -614,9 +602,11 @@ async def async_main():
     for s in final_selection:
         c_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
         speed_badge = get_speed_badge(s['speed_mbps'])
+        
         name = f"{speed_badge}{c_display} | {s['real_delay']}ms"
         final_link = f"{s['original'].split('#')[0]}#{quote(name)}"
         result_links.append(final_link)
+
         json_stats["servers"].append({
             "name": name, "ip": s['ip'], "ping": s['real_delay'],
             "speed_mbps": s['speed_mbps'], "country": s['country'], "protocol": s['protocol']
