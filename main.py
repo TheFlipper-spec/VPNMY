@@ -33,10 +33,9 @@ logger.addHandler(file_handler)
 
 # --- НАСТРОЙКИ ---
 SOURCES = [
-    # Твои оригинальные источники
+    # Твой текущий источник
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
 ]
-
 
 MMDB_URL = "https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb"
 MMDB_FILE = "Country.mmdb"
@@ -130,7 +129,6 @@ def safe_base64_decode(s):
             return ""
 
 def extract_links(text):
-    """ОБНОВЛЕНО: Теперь ищет и vless://, и vmess://"""
     regex = r"(?i)((?:vless|vmess)://[^\s\"']+)"
     links = re.findall(regex, text)
     
@@ -146,7 +144,6 @@ def extract_links(text):
     return list(set(links))
 
 def parse_vmess(config_str):
-    """НОВАЯ ФУНКЦИЯ: Парсинг серверов VMess"""
     try:
         b64_str = config_str[8:]
         json_str = safe_base64_decode(b64_str)
@@ -225,7 +222,6 @@ def parse_vless(config_str):
         return None
 
 def generate_xray_config(server, local_port):
-    """ОБНОВЛЕНО: Поддержка генерации конфигов для VLESS и VMess"""
     outbound = {
         "protocol": server['protocol'],
         "settings": {},
@@ -275,7 +271,9 @@ def generate_xray_config(server, local_port):
     }
 
 def check_real_ping(server):
-    """ЭТАП 1: Быстрый пинг"""
+    """ЭТАП 1: Быстрый TCP пинг -> затем реальный пинг через Xray"""
+    
+    # 1. Сначала просто проверяем доступность сервера по сети (чтобы не запускать Xray впустую)
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TCP_TIMEOUT)
@@ -284,6 +282,7 @@ def check_real_ping(server):
     except:
         return None
 
+    # 2. Если сервер доступен, запускаем Xray и пингуем прокси
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
     
@@ -328,7 +327,7 @@ def check_real_ping(server):
     return None
 
 def measure_speed(server):
-    """ЭТАП 2: Тяжелый замер скорости ТОЛЬКО для избранных серверов"""
+    """ЭТАП 2: Тяжелый замер скорости для рабочих серверов"""
     local_port = random.randint(15000, 45000)
     config = generate_xray_config(server, local_port)
     
@@ -369,7 +368,6 @@ def measure_speed(server):
             if duration > 0:
                 speed_mbps = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
             
-            # Строгое правило: если сервер захлебнулся на старте (менее 500КБ), ставим 0
             if downloaded_bytes < 500000:
                 speed_mbps = 0.0
                 
@@ -396,7 +394,7 @@ def get_speed_badge(speed_mbps):
         return ""
 
 def main():
-    logger.info(f"🚀 START: Smart Selector (Target: {TOTAL_SERVERS_WANTED}, Strict Mode, Hybrid Protocol)")
+    logger.info(f"🚀 START: Smart Selector (Target: {TOTAL_SERVERS_WANTED}, ONLY FOREIGN)")
     
     install_xray_core()
     download_mmdb()
@@ -422,63 +420,48 @@ def main():
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
     logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
 
-    # ЭТАП 1: Массовый легкий пинг
+    # ЭТАП 1: Массовый легкий пинг (Сетевая доступность -> Проверка Xray)
     valid_servers = []
-    logger.info(f"⚡ ЭТАП 1: Быстрый замер Пинга (Workers: {MAX_WORKERS})...")
+    logger.info(f"⚡ ЭТАП 1: Замер Пинга (Сетевой доступ + Xray). Workers: {MAX_WORKERS}...")
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = [executor.submit(check_real_ping, s) for s in unique_configs]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
+                # СТРОГОЕ ПРАВИЛО: Исключаем российские серверы
+                if res['country'] == 'RU':
+                    continue
+                
                 valid_servers.append(res)
                 logger.info(f"   [PING OK] {res['country']} | {res['protocol'].upper()} | {res['real_delay']}ms")
 
-    # ТВОЯ ОРИГИНАЛЬНАЯ ЛОГИКА: Разделение на RU и World
-    ru_servers = [s for s in valid_servers if s['country'] == 'RU']
-    world_servers = [s for s in valid_servers if s['country'] != 'RU']
+    # Сортируем валидные иностранные серверы по пингу от меньшего к большему
+    valid_servers.sort(key=lambda x: x['real_delay'])
 
-    ru_servers.sort(key=lambda x: x['real_delay'])
-    world_servers.sort(key=lambda x: x['real_delay'])
-
-    # Берем кандидатов с запасом для проверки скорости, чтобы не получить пустой список после отсева
-    candidates_for_speed_test = []
-    candidates_for_speed_test.extend(ru_servers[:5]) # Проверяем топ-5 RU
-    candidates_for_speed_test.extend(world_servers[:35]) # Проверяем топ-35 World
+    # Берем ТОП-40 самых быстрых по пингу серверов для теста на реальную скорость
+    candidates_for_speed_test = valid_servers[:40] 
 
     # ЭТАП 2: Тяжелый замер скорости с отбраковкой нулей
-    logger.info(f"🏎️ ЭТАП 2: Глубокий замер скорости для {len(candidates_for_speed_test)} кандидатов...")
+    logger.info(f"🏎️ ЭТАП 2: Глубокий замер скорости для {len(candidates_for_speed_test)} иностранных кандидатов...")
     tested_servers = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
         futures = [executor.submit(measure_speed, s) for s in candidates_for_speed_test]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
-            # СТРОГИЙ ФИЛЬТР: Скорость должна быть больше 0.0
+            # Фильтр: Скорость должна быть больше 0.0 (то есть сервер не просто пингуется, но и качает)
             if res['speed_mbps'] > 0.0:
                 tested_servers.append(res)
                 badge = get_speed_badge(res['speed_mbps'])
                 logger.info(f"   🏆 {res['country']} | {res['protocol'].upper()} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps {badge.strip()}")
 
-    # Снова делим ПРОТЕСТИРОВАННЫЕ и РАБОЧИЕ сервера на RU и World
-    working_ru = [s for s in tested_servers if s['country'] == 'RU']
-    working_world = [s for s in tested_servers if s['country'] != 'RU']
+    # Снова сортируем уже ПОЛНОСТЬЮ проверенные рабочие серверы по пингу
+    tested_servers.sort(key=lambda x: x['real_delay'])
 
-    # Сортируем рабочие сервера по пингу (сохраняем твою логику)
-    working_ru.sort(key=lambda x: x['real_delay'])
-    working_world.sort(key=lambda x: x['real_delay'])
+    # Просто берем лучшие зарубежные серверы
+    final_selection = tested_servers[:TOTAL_SERVERS_WANTED]
 
-    # ТВОЯ ОРИГИНАЛЬНАЯ ЛОГИКА: Формирование финальной подписки
-    final_selection = []
-    
-    best_ru = working_ru[0] if working_ru else None
-    needed_world = TOTAL_SERVERS_WANTED - (1 if best_ru else 0)
-    
-    final_selection.extend(working_world[:needed_world])
-    if best_ru:
-        final_selection.append(best_ru)
-        logger.info(f"🇷🇺 Добавлен лучший рабочий RU сервер: {best_ru['ip']} со скоростью {best_ru['speed_mbps']} Mbps")
-
-    logger.info(f"📊 Итого в подписке сохранено: {len(final_selection)} серверов")
+    logger.info(f"📊 Итого в подписке сохранено иностранных серверов: {len(final_selection)}")
 
     # Генерация файлов
     result_links = []
