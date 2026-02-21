@@ -32,7 +32,8 @@ logger.addHandler(file_handler)
 
 # --- НАСТРОЙКИ ---
 SOURCES = [
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
+    "https://clck.ru/3RcLDw"
 ]
 
 XRAY_BIN = "./xray"
@@ -54,7 +55,7 @@ COUNTRIES_RU = {
     'ES': '🇪🇸 Испания', 'CA': '🇨🇦 Канада', 'AU': '🇦🇺 Австралия', 'CH': '🇨🇭 Швейцария',
     'AE': '🇦🇪 ОАЭ', 'IN': '🇮🇳 Индия', 'BR': '🇧🇷 Бразилия', 'ZA': '🇿🇦 ЮАР',
     'LT': '🇱🇹 Литва', 'MD': '🇲🇩 Молдова', 'EE': '🇪🇪 Эстония', 'CY': '🇨🇾 Кипр', 'LV': '🇱🇻 Латвия',
-    'GR': '🇬🇷 Греция'
+    'GR': '🇬🇷 Греция', 'HU': '🇭🇺 Венгрия'
 }
 
 def install_xray_core():
