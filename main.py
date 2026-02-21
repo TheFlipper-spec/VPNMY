@@ -190,6 +190,11 @@ def parse_vless(config_str):
     except:
         return None
 
+def get_free_port():
+    with socket.socket() as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
 def generate_xray_config(server, local_port):
     outbound = {
         "protocol": server['protocol'],
@@ -252,7 +257,7 @@ def check_real_ping(server):
         return None
 
     # 2. Xray ping + проверка реальной страны через Cloudflare Trace
-    local_port = random.randint(15000, 45000)
+    local_port = get_free_port()
     config = generate_xray_config(server, local_port)
     
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
@@ -304,7 +309,7 @@ def check_real_ping(server):
 
 def measure_speed(server):
     """ЭТАП 2: Тяжелый замер скорости для рабочих серверов"""
-    local_port = random.randint(15000, 45000)
+    local_port = get_free_port()
     config = generate_xray_config(server, local_port)
     
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
@@ -439,7 +444,14 @@ def main():
         country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
         speed_badge = get_speed_badge(s['speed_mbps'])
         
-        name = f"{speed_badge}{country_display} | {s['real_delay']}ms"
+        # --- ИЗМЕНЕНИЯ ЗДЕСЬ ---
+        # Формируем имя без пинга
+        name = f"{speed_badge}{country_display}"
+        
+        # Добавляем метку (YouTube), если протокол 'ws'
+        if s.get('type') == 'ws':
+            name += " (YouTube)"
+        # -----------------------
         
         orig = s['original']
         base = orig.split('#')[0]
