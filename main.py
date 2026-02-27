@@ -442,12 +442,8 @@ def main():
 
     final_selection = []
     
-    # №2: Лучший RU/CIS
-    if pool_ru_cis:
-        final_selection.append(pool_ru_cis[0])
-        
-    # №3-10: Топ Global
-    needed_global = TOTAL_SERVERS_WANTED - 1 - len(final_selection) # Минус хардкод, минус RU
+    # №2-10: Топ Global (только иностранные серверы для V1A)
+    needed_global = TOTAL_SERVERS_WANTED - 1 # Минус 1 твой личный хардкод
     final_selection.extend(pool_global[:needed_global])
 
     logger.info(f"📊 Итого собрано: 1(Хардкод) + {len(final_selection)} живых узлов.")
