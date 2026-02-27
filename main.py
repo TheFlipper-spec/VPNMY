@@ -31,7 +31,7 @@ SOURCES = [
 ]
 
 XRAY_BIN = "./xray"
-OUTPUT_FILE = 'V1A'
+OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 HISTORY_FILE = 'stats_history.json'
 MAX_WORKERS = 40
