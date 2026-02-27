@@ -23,7 +23,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 # --- НАСТРОЙКИ ---
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "") # Лучше задать токен, чтобы не ловить rate limits
+GITHUB_TOKEN = os.getenv("TOKEN", "") # Изменено на поиск переменной TOKEN
 SOURCES = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
@@ -41,8 +41,8 @@ SPEED_TEST_TIMEOUT = 6.0
 TOTAL_SERVERS_WANTED = 10
 SPEED_HARD_LIMIT = 1.5
 
-# Твоя личная хардкод-нода (Несгораемый #1)
-MY_PERSONAL_NODE = "vless://3a9fd220-edb1-41b9-9a78-3f61cf8bd937@212.22.82.138:443?type=tcp&encryption=none&security=reality&pbk=PDooiand9xm-TAu-8HajBWr_is01x3IqABwYct5OiAo&fp=chrome&sni=max.ru&sid=10778ea288&spx=%2F&pqv=vyoU6Up2ZhRKlhT4IJaFt0y9Js0VG0Sh2tsrDkPcYhi2w5X8jktGxvNvlXwErzrsZo-Ur_Y4YgFbL_Z2hLlgjzwT7BX7jSKlxeFyEIe_3AparaBodbnSlsGyTNR81rAL_hqnFg86NTIEZ86FQ3YBCWPv03csYbYeVIjr7ZdbnmBJ0TxSV0f6H1oJUzAUxvIiO5Bytfs9zHKph0iIuyQR7jiodvRkBT2fxJQ4nXBu8hba4Y9GILdRASWoJ4ntN0S4Wx2_4Te0BBt4OXiIDFFt9tgDzSbERKN3cDKUJYSwe3SqmWrTK3uyjws7VzSL8nBW_M96gDyZTZ4JpXAdp5M7mbng7egn6pj-b4id3OKAN4lODWviZfBvh4KgCRT4C-ozP4JDRElEFWZHYts9RWI-G44OBz3F99aIp4lNCEtad_oiDlFSFup7eEUOW_RhxQzhlpYxgv5ZERNbdBXHa2hTwmA6RLvgPkibLg23sLJ9TiZ5w672GHSqHVn3pU-udoMZz40ml1VQM8kyFOrZPRlLAtKkJwaREs_1g6PIOH8dIH1TqYbAA4pAJIfbkYx76iQufct-C9lbWTPhk7j89iALPgR7S5k72WDhlP0VhyOK9MhkNhXIvPqUK8dKWYAREsF30IeWbWGSWrcNNAVF-Af1PC3MUqHMG0nUSyUjvCfk4DAyK5zG09Jp81nDlmWYAMmvwDI-FaHfx4rmbCD8Hgf_WKdiZV_DSuUYvEGquh1wxYjVmSfpOsYsU-2vapIBiT3gyBoLKfDcQWDmpDGhQaRiIqUjJUcsX2HhSJDJl9OJb11JAQZVKo-BtbVANJqWWRaXGzdSJsQoX1kdM5K_4imxBCtxMLv_sH75sdJD5CKvdqA8vMErl17eNVBc3qVRsSmC23SQIavDIrreMOhhWtHNaDpcGKHKuvhvL1OQyrEeMm7wundxLf39Wl0Beggb9JkG2hzs0t5XsYdPaf63nky3xlfdTIT1wZptMV_UMtclqzTnw78M8DnwtoS-VCu9nzltSNe7Juit-wZNY1HjaBupEE9H1_fz7j24ptjxmxNxDNR4sH8T3LnfdokiPieSudOHRjZ_crHEHSKQkBeT1pamB-HP2vQTlvIyYfPLPl0AR0Feudlaz5rlof-Rf-zf2MhDBTpzWwhJRFJWDL0M5E-Puth9GPVFU5P3jDk_Q7G3KcagMjPgvRFEvaNUSNosAn9SmQu5j8Nyl1Zeyye_ZHDDaS30bHiCEPA-VIZTj8-u1ZBGgwAlPIiWUJOzwtKBkYkJIu9CFJUS75ujXrKnoeqvuTN9QcoyWIfo_Q2kch_jSNjtytW6ihUikCyl-IRmgBAVRZbj1lsGgMLfz5gB8T9xebq6PR6ugYlU6uZle9q5tSI1Mz44Sa_RKZ714z5eXyRRZewcfqElZtA316Ryc34VUSiUTcxp17e-PiqqYv0V-n96Ro6s0SXgXopzw7mGSQmONmY6Opo9nxtaOuFH9TjvShOnKJ79-WxOPA0rZM1W7Z5m1z0tEljZK0MjFZBDE1NpFbZcdZrfmGG2ctSWgwKdNUIor1cV2fup9EOj7EgnHJ12GW1m8lJYQCfhsnvtmApkw2aH7pdhPBvq6ih4wpdmTCWkpTTeBpWaHfR1U96ZFSHMw4HXkF6c1VZsoKtTfInmt1iFAnsIm2-VUQUMozCPrA7wmoZwHxoCGBjQInuDJByLSAcurntW027egCNbjElWoxxnJY0NboLK99VaQaQ63U2gyqOe9lQ2lAmluiHmtBtn0Yr_AbCCVKPtSLdc-zkFTS_8HsREvR61p4-B_ebh5W6EG1u31xYtT9UQTQ5Ug3phtNqpx5Svpu35jVnRHWjt7DnIYgNgXGeKOzHw0sHla5ArqeIByT71pFz0P4jXQy1NFcdNvPEGsGlddhe-GRn7aAfNRK4CamuNzQ97ASGcmYlK6REtp4y5YnH67wv-SPRp70lHVZHN5pxRNsxY407kewtYV-clCoE3NgaWlWzbYnUDtXTP5vSlVF_39jtM6kvwK3IU08IRz32WWw-K9qU41rowSMj6c7Xw5EzuF4Ze4Uv_puWEdj8XcqnSSPaCLzAFhOvrbwTvGsLB7ccKGtHQia5wKpvkJ9vkqgsygNA3PckCmBlSjCbQqCsJA_sjngHuwf2DolgyxrdiU27aznMugxH9WBU2WFdKhuxaO_pcCFLoiHz9zFcVVBdz6wSt0Z9o9dJXeDznTnKetrnUe0_Kw1QEjAIWUrL1cipfEnf2A1jOB0amx5Xz_-B0K9PiP5HBuq0kFdDoWV-czAbRQ7YRoRbH8JknshuW79E03MbpQMZXiijfHpWR6ZHKR3R9UZeb1LCacTnYrcEX5DDK1DNJgnM88gezZZwMPWAIJdz4w9VQ1twZ_142T42YB9xcNuX5bdt9I9MYXKgYYODPcKyj2N8e5OkB_m8IvQya0OSU_wXjgxPTPP2VV_BrwFndysWlM0XMXPvOWSwhs5znYW9fzKnn375KDfhPnu1oSvG7sGmSNpejxSOh59E8C8z-Sr5c_T_uUAY0SVlhAoY0npyeh7DYXbwvSSzl-c3I2HArDvNFAGVxT3V9oDjhtPgOAQE&flow=xtls-rprx-vision#💎 V1A RU Base"
+# Твоя личная хардкод-нода (Несгораемый #1) - изменено название
+MY_PERSONAL_NODE = "vless://3a9fd220-edb1-41b9-9a78-3f61cf8bd937@212.22.82.138:443?type=tcp&encryption=none&security=reality&pbk=PDooiand9xm-TAu-8HajBWr_is01x3IqABwYct5OiAo&fp=chrome&sni=max.ru&sid=10778ea288&spx=%2F&pqv=vyoU6Up2ZhRKlhT4IJaFt0y9Js0VG0Sh2tsrDkPcYhi2w5X8jktGxvNvlXwErzrsZo-Ur_Y4YgFbL_Z2hLlgjzwT7BX7jSKlxeFyEIe_3AparaBodbnSlsGyTNR81rAL_hqnFg86NTIEZ86FQ3YBCWPv03csYbYeVIjr7ZdbnmBJ0TxSV0f6H1oJUzAUxvIiO5Bytfs9zHKph0iIuyQR7jiodvRkBT2fxJQ4nXBu8hba4Y9GILdRASWoJ4ntN0S4Wx2_4Te0BBt4OXiIDFFt9tgDzSbERKN3cDKUJYSwe3SqmWrTK3uyjws7VzSL8nBW_M96gDyZTZ4JpXAdp5M7mbng7egn6pj-b4id3OKAN4lODWviZfBvh4KgCRT4C-ozP4JDRElEFWZHYts9RWI-G44OBz3F99aIp4lNCEtad_oiDlFSFup7eEUOW_RhxQzhlpYxgv5ZERNbdBXHa2hTwmA6RLvgPkibLg23sLJ9TiZ5w672GHSqHVn3pU-udoMZz40ml1VQM8kyFOrZPRlLAtKkJwaREs_1g6PIOH8dIH1TqYbAA4pAJIfbkYx76iQufct-C9lbWTPhk7j89iALPgR7S5k72WDhlP0VhyOK9MhkNhXIvPqUK8dKWYAREsF30IeWbWGSWrcNNAVF-Af1PC3MUqHMG0nUSyUjvCfk4DAyK5zG09Jp81nDlmWYAMmvwDI-FaHfx4rmbCD8Hgf_WKdiZV_DSuUYvEGquh1wxYjVmSfpOsYsU-2vapIBiT3gyBoLKfDcQWDmpDGhQaRiIqUjJUcsX2HhSJDJl9OJb11JAQZVKo-BtbVANJqWWRaXGzdSJsQoX1kdM5K_4imxBCtxMLv_sH75sdJD5CKvdqA8vMErl17eNVBc3qVRsSmC23SQIavDIrreMOhhWtHNaDpcGKHKuvhvL1OQyrEeMm7wundxLf39Wl0Beggb9JkG2hzs0t5XsYdPaf63nky3xlfdTIT1wZptMV_UMtclqzTnw78M8DnwtoS-VCu9nzltSNe7Juit-wZNY1HjaBupEE9H1_fz7j24ptjxmxNxDNR4sH8T3LnfdokiPieSudOHRjZ_crHEHSKQkBeT1pamB-HP2vQTlvIyYfPLPl0AR0Feudlaz5rlof-Rf-zf2MhDBTpzWwhJRFJWDL0M5E-Puth9GPVFU5P3jDk_Q7G3KcagMjPgvRFEvaNUSNosAn9SmQu5j8Nyl1Zeyye_ZHDDaS30bHiCEPA-VIZTj8-u1ZBGgwAlPIiWUJOzwtKBkYkJIu9CFJUS75ujXrKnoeqvuTN9QcoyWIfo_Q2kch_jSNjtytW6ihUikCyl-IRmgBAVRZbj1lsGgMLfz5gB8T9xebq6PR6ugYlU6uZle9q5tSI1Mz44Sa_RKZ714z5eXyRRZewcfqElZtA316Ryc34VUSiUTcxp17e-PiqqYv0V-n96Ro6s0SXgXopzw7mGSQmONmY6Opo9nxtaOuFH9TjvShOnKJ79-WxOPA0rZM1W7Z5m1z0tEljZK0MjFZBDE1NpFbZcdZrfmGG2ctSWgwKdNUIor1cV2fup9EOj7EgnHJ12GW1m8lJYQCfhsnvtmApkw2aH7pdhPBvq6ih4wpdmTCWkpTTeBpWaHfR1U96ZFSHMw4HXkF6c1VZsoKtTfInmt1iFAnsIm2-VUQUMozCPrA7wmoZwHxoCGBjQInuDJByLSAcurntW027egCNbjElWoxxnJY0NboLK99VaQaQ63U2gyqOe9lQ2lAmluiHmtBtn0Yr_AbCCVKPtSLdc-zkFTS_8HsREvR61p4-B_ebh5W6EG1u31xYtT9UQTQ5Ug3phtNqpx5Svpu35jVnRHWjt7DnIYgNgXGeKOzHw0sHla5ArqeIByT71pFz0P4jXQy1NFcdNvPEGsGlddhe-GRn7aAfNRK4CamuNzQ97ASGcmYlK6REtp4y5YnH67wv-SPRp70lHVZHN5pxRNsxY407kewtYV-clCoE3NgaWlWzbYnUDtXTP5vSlVF_39jtM6kvwK3IU08IRz32WWw-K9qU41rowSMj6c7Xw5EzuF4Ze4Uv_puWEdj8XcqnSSPaCLzAFhOvrbwTvGsLB7ccKGtHQia5wKpvkJ9vkqgsygNA3PckCmBlSjCbQqCsJA_sjngHuwf2DolgyxrdiU27aznMugxH9WBU2WFdKhuxaO_pcCFLoiHz9zFcVVBdz6wSt0Z9o9dJXeDznTnKetrnUe0_Kw1QEjAIWUrL1cipfEnf2A1jOB0amx5Xz_-B0K9PiP5HBuq0kFdDoWV-czAbRQ7YRoRbH8JknshuW79E03MbpQMZXiijfHpWR6ZHKR3R9UZeb1LCacTnYrcEX5DDK1DNJgnM88gezZZwMPWAIJdz4w9VQ1twZ_142T42YB9xcNuX5bdt9I9MYXKgYYODPcKyj2N8e5OkB_m8IvQya0OSU_wXjgxPTPP2VV_BrwFndysWlM0XMXPvOWSwhs5znYW9fzKnn375KDfhPnu1oSvG7sGmSNpejxSOh59E8C8z-Sr5c_T_uUAY0SVlhAoY0npyeh7DYXbwvSSzl-c3I2HArDvNFAGVxT3V9oDjhtPgOAQE&flow=xtls-rprx-vision#💎 V1A RU / БЕЛЫЕ СПИСКИ"
 
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
@@ -159,10 +159,12 @@ def parse_vmess(config_str):
         json_str = safe_base64_decode(b64_str)
         if not json_str: return None
         data = json.loads(json_str)
+        net_type = data.get('net', 'tcp')
+        if net_type == 'ws': return None # Игнорируем WS
         tls = data.get('tls', '')
         return {
             "protocol": "vmess", "ip": data.get('add', ''), "port": int(data.get('port', 443)),
-            "uuid": data.get('id', ''), "type": data.get('net', 'tcp'),
+            "uuid": data.get('id', ''), "type": net_type,
             "security": "tls" if tls == 'tls' else "none", "flow": "",
             "sni": data.get('sni', data.get('host', '')), "pbk": "", "sid": "", "spx": "/",
             "path": data.get('path', '/'), "host": data.get('host', ''), "fp": data.get('fp', 'chrome'),
@@ -187,6 +189,7 @@ def parse_vless(config_str):
             "serviceName": params.get('serviceName', [''])[0], "original": config_str,
             "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
+        if conf['type'] == 'ws': return None # Игнорируем WS
         if conf['security'] == 'reality' and not conf['pbk']: return None
         return conf
     except: return None
@@ -198,7 +201,7 @@ def parse_trojan(config_str):
         part = config_str.split("@")[1].split("?")[0]
         host, port = part.rsplit(":", 1)
         params = parse_qs(config_str.split("?")[1].split("#")[0]) if "?" in config_str else {}
-        return {
+        conf = {
             "protocol": "trojan", "ip": host, "port": int(port), "uuid": password,
             "type": params.get('type', ['tcp'])[0], "security": params.get('security', ['none'])[0],
             "flow": "", "sni": params.get('sni', [''])[0], "pbk": "", "sid": "", "spx": "/",
@@ -206,6 +209,8 @@ def parse_trojan(config_str):
             "fp": params.get('fp', ['chrome'])[0], "serviceName": params.get('serviceName', [''])[0],
             "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
+        if conf['type'] == 'ws': return None # Игнорируем WS
+        return conf
     except: return None
 
 # --- GITHUB LIVE SEARCH (Этап 1) ---
@@ -453,7 +458,8 @@ def main():
     # №1: Хардкод нода пользователя
     result_links.append(MY_PERSONAL_NODE)
 
-    json_stats = {"servers": [{"name": "💎 V1A RU Base (Hardcoded)", "ip": "212.22.82.138", "protocol": "vless reality"}]}
+    # Имя изменено здесь тоже для единообразия в json файле
+    json_stats = {"servers": [{"name": "💎 V1A RU / БЕЛЫЕ СПИСКИ (Hardcoded)", "ip": "212.22.82.138", "protocol": "vless reality"}]}
     
     for s in final_selection:
         country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
@@ -464,7 +470,8 @@ def main():
         streak = history_data.get(node_id, {}).get("streak", 0)
         gold_star = "🌟" if streak >= 3 else ""
 
-        name = f"{gold_star}{speed_badge}{country_display} [YT]" # [YT] означает что прошел YouTube тест
+        # Убрана приписка [YT]
+        name = f"{gold_star}{speed_badge}{country_display}" 
         
         orig = s['original']
         base = orig.split('#')[0]
