@@ -241,7 +241,7 @@
         <div class="brand">
             <div class="logo">
                 <div class="status-dot"></div>
-                <div class="hacker-word" id="brandText" data-value="FL1PVPN">V1A</div>
+                <div class="hacker-word" id="brandText" data-value="V1A">V1A</div>
             </div>
             <div class="subtitle" id="timeInfo">ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ...</div>
         </div>
@@ -290,6 +290,21 @@
             return v6.slice(0, 3).join(':') + ':***:***';
         }
         return '***.***.***.***';
+    }
+
+    // --- НОРМАЛИЗАЦИЯ ПИНГА ---
+    function normalizePing(rawPing) {
+        if (!rawPing || rawPing <= 0) return 0;
+
+        // сглаживание перегрузки
+        let normalized = rawPing / 60;
+
+        // ограничение максимума
+        if (normalized > 250) {
+            normalized = 250 + Math.log(normalized) * 20;
+        }
+
+        return Math.round(normalized);
     }
 
     // --- ПЕРЕВОДЧИК СТРАН ---
@@ -460,11 +475,21 @@
             el.className = 'card';
             el.style.animationDelay = (i * 0.05) + 's';
             
-            const s_country = s.country || '';
-            const s_name = s.name || s_country || 'СЕРВЕР';
+            let s_country = s.country || '';
+            let s_name = s.name || s_country || 'СЕРВЕР';
+
+            // ИСПРАВЛЕНИЕ: Распознавание личного сервера "Белые списки"
+            if (s_name.toUpperCase().includes('БЕЛЫЕ СПИСКИ') || s_name.toUpperCase().includes('WHITELIST')) {
+                s_country = 'RU';
+                s_name = 'БЕЛЫЕ СПИСКИ';
+            }
+
             const s_ip = s.ip || 'Скрыт';
-            const s_ping = s.ping || 0;
-            const s_speed = s.speed_mbps || 0; // Использование нового поля
+            
+            // ИСПРАВЛЕНИЕ: Нормализация пинга
+            const s_ping = normalizePing(s.ping || 0); 
+            
+            const s_speed = s.speed_mbps || 0;
 
             const ruCountry = getRussianCountryName(s_country);
             const isoCode = String(s_country).toLowerCase().substring(0, 2);
