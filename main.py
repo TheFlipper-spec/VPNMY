@@ -48,6 +48,9 @@ MY_PERSONAL_NODE = "vless://3a9fd220-edb1-41b9-9a78-3f61cf8bd937@212.22.82.138:4
 # Твоя личная хардкод-нода (Несгораемый #2) - Финляндия
 MY_FINLAND_NODE = "vless://d975972e-32ba-4684-ad8a-2050e591507b@212.22.82.138:8443?type=tcp&encryption=none&security=reality&pbk=0wb9OHlgxLXjUioPcuDGs_RBQ4hkww2saLKTxT0T-jU&fp=chrome&sni=api-maps.yandex.ru&sid=c6424a351e384d&spx=%2F&pqv=uhaswgBBj0v8j7v3nYtbB5L0sikWI4RS9L-zrfkGqZyGnp27WO99gL-OqPuNkJkPvVQTJ_hFfTXYXSNB8fOe0OiPUk_KzB9qFZXcvayETO01xBhm6cOqMGxCxxQxOWrpkjU3yWAxbTyh5kiqC3fkVjhDZj_01mbDmx9w5e_HvoMgJpNubll-FECxr4d1Vgoz3-MVXMQrKFlyuLcqQg6lsZXYMHAEbBn2hHoXQV2ga67Hw1VxnVPcSJ6W_UGKhM4qj9IUMMXiiYoUAn7VYgbDN6bF8zxnvz0wUnh7MoYudubGNibOfHU1jBsMZmt4tJqRtlq65ejctyENOc-D54VP70oDVUVgDnSRve4G91BkndRtCx0L9H76AcxaUERfiSdIPkqD7DNkI6dnQi3dbx2X-MaNBXUZTAGzU2EF8fwlbgKiBpjUJLf64a1w1LeCIZqSsTNT-Kk_UdsSdAazDXKPYF0t020YyOv1UE3x25vtjgkxf-NxFTAVjjx8v7OJdKigH8g0OsWdwreobR2A0pPEnbz7WW_RqtnJAnthFYmPuMHAwZPFMotWTI_jvc7DEddy27P4ZSeO4vf6LJqFDKBglg1sQBh7NiVTX79FoUDuP5RMzDZ2up3z1WLxVzhLOlBHayVcPV-n6DOEu_vP4wjLjxrk5IMSCjesqZoBQMrOSUvhqvo-Re7gygagE1BMq4o4rQ0aGxstXqr95tCE9bxiJPx4FIoZRVgGv2L7AMIQSoR9ng6u_pC_fGRBG7Hq5eQiauEiXr2ood5zZOkK7XaO18CwmDxL2tbNii2uOruUv07J-2SpVeWxh9MtA1MXvuxnVJ8wa6M9gtY1ZTHP9rn54XRQGm0EUlFoWehaK0hv3gRCE03euF5qZ0Dcsirp_jHMB5fvUPlgO_nllhZym-F-J_KprQo-m16v5nRABVoHicW1G8jws5ducJZ06Ue3jVnOkKpR0Ia5D1uqoUzuyoR1DYTym2DS92znzBdB9FhkBoSzyOQnh6BYnMDt_YEe_skUunm12A9C1UvtuZkNG12DMPYvbZ1cL4q9mekQ63tC-4_B_fd0Y0m3SFvNtlZJYiOrF0YD7PpzwSYELX-yavfnvsRFXWkCmsOOM96e35ICa5qLQdpVkfKTUyFuZkBIwzhykSdn-iaz7l61N0V1jiaH5RfgTigH_fjXtugPN1BwLrJGpli_95NiYXOoZaxfajOk9AYzC_7Mi7YDIXQMS52XZ5-fRXfO8kbZWsbtAtht6YqXN-gftmJXGLmluyBoNuxHztzcqVCx5r8uV3KuMm6xlGNKdG5twUiEWvuF_MI0skbqKM1-e6VdNbmsJOTowcrCSOsDA9y8dWki60qg_Nz6C_dVVh4mHHEzfJTwwW5Jt22tEAwn6ZOvocKEjQDKLYXjR81ayt59_tsHnEYW5NhqGiumQ5PHP-RuTFWv0UV6y7ftf-bIurkSfNNWvCjFEl6Fbn-R0sDSzcfHpFPZuq5dQj_H34AQc-wbjoMWFIghKLLbBV628xPmZRNAxzS43_GT3N0C5POHxGoyXX0_ZEMNKjNHb_ylTAzXc5yzZlznQ0NT-oZK1axtqExHfJeS_NlL5nZ5i6WKpdls3jcZP9kPcdfXrf5SGtY7iuUnN3WNmYwt25c63vjFk-bBAw8FouDi-bBtANVSDfEuC6ecW9-y0M9cV9NjsQP21Y849KCU8GYWgNN1r2gMCyJX7IScURBZOkMsgV4rC1OQjvTvilfnzd2xmuYyV6JuhQHtayYJTe5byhV7Ct0TO4XT3kxC_yrdi5JXFq0w1dtN4YOCPp1CsTQb3fVP0AWAorbgbxzPeOlIiQk37LCOid4eYBwB4mQngkGyWQFEb9YeEyMHbSmIuRGAZFnnELzUoNP9uplN238lASzt0ZwaT17isqcwOByYKtxnhthxQ1LybVzJRPKVqQCgMjQ_KaRxY_E2G7G4mUKAxdHzLQ-XPCZJchsHwlxNSjeGGrrFbWuMptoBZuUYMPhipuqR9oHkkZdWF6cmxXDacrHfxz1ic_lrbq1b9UlJ63knbdVYEcv3gEYqYk5rvT1HauGgjXtVnluiMhLW7a0cSst1X1ui71zLC90XJysWnWWgPPPz84t64nvzna5lQt8RiqNFr1AxuJVXu8vN6RfJLCjGGDSQ2iUtUg6Iv_e7k-NTjSqQSzZzMBp85E_X44SbKLvN19s3XGRsRPhj1KPISENFFJktWMvaTHd75C25FSq5nsjmZvs3tbtHEhhq4KIs3TCNb8gyBiLunb94Byw3a7W8Yrp9jCdlSRVGNyy5ouB3cVz-jKjwUUDEgaR_VIzEDF7HQ6k2F3qJh_XkdK8AUj0AgtcT3K7FYHaVZvQu0-bMFSJg9R3GCmAO2qKiynLojxeb3nz3VGgJtepEXxnur2ftqiXZ61EYqh2sGEtV2zSjQG5fN1fy0y9nRWO_E7ftGER0PqPOBiGVY0R7o5eBnQFtbc-52DvZ7oRYd6oACBjm0tfhtmsyNIlfLddsKX7nNEXADvjVDpGYTdx8q4jpOoUt4HwC3y-iS3GD7qRG3-WfhxgSCmiIg11VoA7weZmrSmxPLIEA0THRotczv-w#💎 🇫🇮  V1A / Финляндия"
 
+# Твоя личная хардкод-нода (Несгораемый #3) - Финляндия 2
+MY_FINLAND_NODE_2 = "vless://3336a974-eca7-4e7b-a41f-1615a8c4dd2a@195.226.92.208:443?type=tcp&encryption=none&security=reality&pbk=nYlCpzfyvz_zv2wFKCaOKaY1dnIoFlfw9ygb2O5Znng&fp=chrome&sni=api-maps.yandex.ru&sid=c6645cc4&spx=%2F&pqv=w6Mx1KajBoe1pEeoFA-Mr2_jV3e32syCRNKJQuxeF-jYMZ1RhoZXXtVDB-1obz8XIipzBmkqthQi588uH17Bp08MQBD_O1p6hQEV1ilgjQ_brUOGxKcyQt2BDG6dpGSCWCFDPUZbN6Zlgh6styN0q4o2UC8Yn3FTwD8AylFkMvC4CrBVHjTcTgdG8eNhy8ahdKCo_qsoVB08M-5xvFtaSAsDqw6GTHxb4Ceww-9804KKhYOUCCp_27m_TImt4oXJurL1uttc8i38Nts9guW_FcTWEenTb8qdYgYvVfi-WGYN7yrljvUvzcq2bsy95EjLQP0qWNiLijmfeOBjJVKpsh3V22yONMw2Pvv1MKP3ewewuZKhrOary6UCKJ6Czo3gEV-xL-AZlbIOIX-5C4vw_lQ97NxmHE6lTrlDVDaosWifQWRH50YLgQ5rMD0dphwVtMsKTFmYWllHcNcaeza2pc-xETqEMeH9BF9YjS7uR15_nZgaB5YB8S7Hx5qay5kHmKPoTbHtK3_TsgCMZHPdZvJ7uhXHBYVpvZsC-kms_KXqg9WR04z-QwjKhMgB_0Kn2LfvLRsFtb2aJyJCaXO5tRlXaePMjUouMNhLbdSzHhZYtyOETvkXb8zMtP3ZMgrGYw9DSfFI0VLpSKxLxVyvU2Lv04oSL56CcZPN2EVFzZUa_AQQK72kHm1LIntz-o9FvL9el1Z1Kh3XTX8g3UGBrJfsyb4AyItMlK7O0p-fiXcKOY305JaAaiNLTzQTGwJXvQ1U2yCQeDotcfvbTATKD-Qe69EZQ7l4llPEjDSK5WwigaDMDkNyAwjgDJ0_vJOOdzsaK8f6CV6hCUTna0DArtbi73RpgzZI1njs4yRloHPThCqCgdPFKbBKwGk1IlYMuZmrg3s3ZmlBxDvvs24EkblRAMm78cMHO_2jmYpTvZFRVdSox3aWfg_vZr84UgpjRcby7tUe_XPfUCYPAtzVw5oiYagjTMS6r0ts3an6wpJ8uQ5sW-tkuM7bH20NL3-wMG48sr7Y2doBnrI6YeHRpoCYw5Dl-5hT2CZBpuVcBn9euP86yfcspNwCATY2ScH1rsF8lW1EM_hFf3Ubhqs1VevPfDUobcsQNpMUqnHjvDyqP-eUAq5wxi4Wu42KpfcD54QtYMnmGsJ48M_9fcgPOllIeuze2VaP4UV3gkljWdOyuSkJxbEMo_2yUqMXXH7EgzTcA4E89ojK8I0tnqAolR0OkyYaHPHCLp2K9bIbuLM2aZuQ9D-zjEki-NOTJU2ymvdDsOcPiXsfJdMefSGr7Ldrv-q0vMvAxSgjjSvf549EoQpUukolIeW26M0ZmoYa47N7mBiFCf5agkT3CuwGTX2ZytqxO_kES_Tgl1Bp8F2q6CdH6eGk1mFLWUpK2LP2yK5KGSvXnrF4_toRYkpA37efULPUvnA1jYM0VHjN0M-D_kre_xASRtMhrn-fvtMuzir9qAaf8YB0dJuxKGBcgzM5i4ytrcOyReZSa4mOMcR7Q5bZvrOPnN5Vc4r1Vx6J0JlpZn8y51IH-fy-sJTpamqZswZf0hLLrC0X1_gMXCi6KkaGJWy9NdM4cYt4xWwyxje7crebxAHiQ4MicP6_5R9vaFqCn49tvs1UCt49C981bhsIVBFLlHkZ8Zt1-alG-mzB3Xnowj2xERiHZ-dvl_lPLSJsfTqxVghExhfcQVZeCzT-YV2SQEJYT77OaWZld6JHlfdGYRo-khE9NDlg4YzoIhW0F84MrWwUNW1vHw72goNFg2OIpBfy1VFp_uxr9IA89OOeRnSQO4-8pcSCX0dTorP40bVEahKcX3EkkU2zcCB0tYA32n49kkXZyNcqRJNZmO_Db-Yj3mztxbnf2WK9UyEVQ7z79BCwhK5zpV3Lg4pnELpbrG-WjldVQQNxeFZu_hNPG01X8SPV0NajnELnkQT6tPCu09GmZExOGSk8TAjlbiJfX4XZZgrshRFtazfSRQpMYi12x9E63L7Nnce64gIS3U42vVbeQ4bi0IO8MXcHAq33srM3OfR3GUZnOho2FlPPGJkjmfKDp4ETu6S3pfhrNHjPVFQxX0_k59D057pTfar2RZODMTb2Iwr0GibDq5nHOkNzwB-tXr5ftyVL-W4ZDS52FZF3fbLWpri2ktwpiel8yRjaBvoD8gOtypQcszpzW6vCHGJgAUud7lJwEx_SDR0sJfFM191I-L0EqO2B9hp1fWO3hBXbPSypbbqM4FdA-OuA3eD6lJ_R_-jPI__wtC3bL-VXDMRjo_0bPrv9t9oCASRXa-g_gMxgx3Amu2PUeShGWrRlRlvw886B_mR4VnWeLyIdARbFr20ZekeNNbhUT8f69qz8KhzMU_LQ78OTUt1YkvTMHLMFZ00xwnQ0zV-QRAaXo_a7df1QksvQ1ph5yBTq_UhZFPGgeoGVX5-7KjdLeyWZK6AWT0VGftPFRENMgjdHiRgsmzSAQwjya-LuLD8xgEG9egjmzFGhkv4BEoUn5bPAnrNve7WCtXOiqXaSgW9Pj0aNkg7TJGunqRrfStiEvTwcDl3qFtexCF-K5q-VdGJyCgUIDRQVo5WrSw2mwrq3AfppaLA&flow=xtls-rprx-vision#💎 🇫🇮  V2A / Финляндия"
+
 COUNTRIES_RU = {
     'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
     'FI': '🇫🇮 Финляндия', 'UK': '🇬🇧 Великобритания', 'GB': '🇬🇧 Великобритания',
@@ -446,11 +449,11 @@ def main():
 
     final_selection = []
     
-    # №3-10: Топ Global (только иностранные серверы для V1A)
-    needed_global = TOTAL_SERVERS_WANTED - 2 # Минус 2 твоих личных хардкода
+    # №4-10: Топ Global (только иностранные серверы для V1A)
+    needed_global = TOTAL_SERVERS_WANTED - 3 # Минус 3 твоих личных хардкода
     final_selection.extend(pool_global[:needed_global])
 
-    logger.info(f"📊 Итого собрано: 2(Хардкода) + {len(final_selection)} живых узлов.")
+    logger.info(f"📊 Итого собрано: 3(Хардкода) + {len(final_selection)} живых узлов.")
 
     # Формирование файла
     result_links = []
@@ -464,10 +467,14 @@ def main():
     # №2: Хардкод нода Финляндии
     result_links.append(MY_FINLAND_NODE)
 
+    # №3: Хардкод нода Финляндии 2
+    result_links.append(MY_FINLAND_NODE_2)
+
     # Имя изменено здесь тоже для единообразия в json файле
     json_stats = {"servers": [
         {"name": "💎 V1A RU / БЕЛЫЕ СПИСКИ (Hardcoded)", "ip": "212.22.82.138", "protocol": "vless reality"},
-        {"name": "💎🇫🇮  V1A / Финляндия", "ip": "212.22.82.138", "protocol": "vless reality"}
+        {"name": "💎🇫🇮  V1A / Финляндия", "ip": "212.22.82.138", "protocol": "vless reality"},
+        {"name": "💎 🇫🇮  V2A / Финляндия", "ip": "195.226.92.208", "protocol": "vless reality"}
     ]}
     
     for s in final_selection:
