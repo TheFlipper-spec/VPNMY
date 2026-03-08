@@ -479,7 +479,7 @@ def main():
     # Имя изменено здесь тоже для единообразия в json файле
     json_stats = {"servers": [
         {"name": "💎 V1A RU / БЕЛЫЕ СПИСКИ (Hardcoded)", "ip": "212.22.82.138", "protocol": "vless reality"},
-        {"name": "💎🇫🇮  V1A / Финляндия", "ip": "212.22.82.138", "protocol": "vless reality"},
+        {"name": "💎 🇫🇮  V1A / Финляндия", "ip": "212.22.82.138", "protocol": "vless reality"},
         {"name": "💎 🇫🇮  V2A / Финляндия", "ip": "195.226.92.208", "protocol": "vless reality"},
         {"name": "💎 🇪🇪  V2A / Эстония", "ip": "195.226.92.208", "protocol": "vless reality"}
     ]}
