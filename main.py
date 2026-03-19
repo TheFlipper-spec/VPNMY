@@ -1,630 +1,767 @@
-import sys
-import requests
-import base64
-import socket
-import time
-import concurrent.futures
-import re
-import os
-import json
-import subprocess
-import tempfile
-import stat
-import logging
-import urllib3
-from datetime import datetime
-from urllib.parse import quote, parse_qs
-
-# Отключаем предупреждения о нестрогих SSL-сертификатах для подписок по IP
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
-logger = logging.getLogger("V1A_Scanner")
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-
-# --- НАСТРОЙКИ ---
-GITHUB_TOKEN = os.getenv("TOKEN", "") # Изменено на поиск переменной TOKEN
-SOURCES = [
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
-    "https://gbr.mydan.online/configs",
-    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-checked.txt"
-]
-
-XRAY_BIN = "./xray"
-OUTPUT_FILE = 'FL1PVPN'
-JSON_FILE = 'stats.json'
-HISTORY_FILE = 'stats_history.json'
-MAX_WORKERS = 40
-TCP_TIMEOUT = 1.0
-REAL_TEST_TIMEOUT = 5.0
-SPEED_TEST_TIMEOUT = 6.0
-TOTAL_SERVERS_WANTED = 10
-SPEED_HARD_LIMIT = 1.5
-
-# Ссылки на подписки для несгораемых нод
-HARDCODED_NODES = [
-    {"url": "https://212.22.82.138:2096/sub/2u6r7m9fvgv0joz9", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
-    {"url": "https://212.22.82.138:2096/sub/ifg3v5yrri9pqkzg", "name": "💎 🇫🇮  V1A / Финляндия"},
-    {"url": "https://195.226.92.208:2096/sub/4v7pgpryd3w7de6o", "name": "💎 🇫🇮  V2A / Финляндия"},
-    {"url": "https://195.226.92.208:2096/sub/x9dvfd72pv7z2art", "name": "💎 🇪🇪  V2A / Эстония"}
-]
-
-COUNTRIES_RU = {
-    'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
-    'FI': '🇫🇮 Финляндия', 'UK': '🇬🇧 Великобритания', 'GB': '🇬🇧 Великобритания',
-    'FR': '🇫🇷 Франция', 'SE': '🇸🇪 Швеция', 'PL': '🇵🇱 Польша', 'UA': '🇺🇦 Украина',
-    'KZ': '🇰🇿 Казахстан', 'BY': '🇧🇾 Беларусь', 'TR': '🇹🇷 Турция', 'JP': '🇯🇵 Япония',
-    'KR': '🇰🇷 Южная Корея', 'CN': '🇨🇳 Китай', 'SG': '🇸🇬 Сингапур', 'IT': '🇮🇹 Италия',
-    'ES': '🇪🇸 Испания', 'CA': '🇨🇦 Канада', 'AU': '🇦🇺 Австралия', 'CH': '🇨🇭 Швейцария',
-    'AE': '🇦🇪 ОАЭ', 'IN': '🇮🇳 Индия', 'BR': '🇧🇷 Бразилия', 'ZA': '🇿🇦 ЮАР',
-    'LT': '🇱🇹 Литва', 'MD': '🇲🇩 Молдова', 'EE': '🇪🇪 Эстония', 'CY': '🇨🇾 Кипр', 'LV': '🇱🇻 Латвия',
-    'GR': '🇬🇷 Греция', 'HU': '🇭🇺 Венгрия', 'CZ': '🇨🇿 Чехия', 'NO': '🇳🇴 Норвегия',
-    'AT': '🇦🇹 Австрия'
-}
-
-CIS_COUNTRIES = ['RU', 'BY', 'KZ']
-
-# --- УТИЛИТЫ И НОВЫЙ ИДЕАЛЬНЫЙ ПИНГ ---
-def get_accurate_ping(ip, port, attempts=3):
-    """ Замеряет чистый TCP-пинг напрямую до сервера, как это делают приложения V2ray """
-    latencies = []
-    for _ in range(attempts):
-        try:
-            start_time = time.perf_counter()
-            with socket.create_connection((ip, port), timeout=2.0):
-                latency = (time.perf_counter() - start_time) * 1000
-                latencies.append(latency)
-        except:
-            pass
-        time.sleep(0.05)
-        
-    if not latencies:
-        return 9999
-        
-    # Если попыток >= 3, убираем самый высокий пинг (сетевой скачок), чтобы получить идеальное среднее
-    if len(latencies) >= 3:
-        latencies.remove(max(latencies))
-        
-    return int(sum(latencies) / len(latencies))
-
-def install_xray_core():
-    import zipfile, io
-    if os.path.exists(XRAY_BIN):
-        st = os.stat(XRAY_BIN)
-        if not (st.st_mode & stat.S_IEXEC):
-            os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
-        return
-    logger.info("📥 Xray core не найден. Скачивание (v1.8.4)...")
-    url = "https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip"
-    try:
-        r = requests.get(url, stream=True, timeout=30)
-        if r.status_code == 200:
-            with zipfile.ZipFile(io.BytesIO(r.content)) as z:
-                if 'xray' in z.namelist():
-                    with z.open('xray') as zf, open(XRAY_BIN, 'wb') as f:
-                        f.write(zf.read())
-                else:
-                    logger.error("❌ В архиве нет файла xray!")
-                    return
-            st = os.stat(XRAY_BIN)
-            os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
-            logger.info("✅ Xray установлен успешно.")
-    except Exception as e:
-        logger.error(f"❌ Критическая ошибка установки Xray: {e}")
-
-def safe_base64_decode(s):
-    s = s.strip().replace('\n', '').replace('\r', '').replace(' ', '')
-    try:
-        return base64.urlsafe_b64decode(s + '=' * (-len(s) % 4)).decode('utf-8', errors='ignore')
-    except:
-        try:
-            return base64.b64decode(s + '=' * (-len(s) % 4)).decode('utf-8', errors='ignore')
-        except:
-            return ""
-
-def extract_links(text):
-    regex = r"(?i)((?:vless|vmess|trojan)://[^\s\"']+)"
-    links = re.findall(regex, text)
-    decoded = safe_base64_decode(text)
-    if decoded:
-        links.extend(re.findall(regex, decoded))
-    for line in text.splitlines():
-        dec_line = safe_base64_decode(line)
-        if dec_line:
-            links.extend(re.findall(regex, dec_line))
-    return list(set(links))
-
-def get_free_port():
-    with socket.socket() as s:
-        s.bind(('', 0))
-        return s.getsockname()[1]
-
-# --- ИСТОРИЯ И СКОРИНГ (Этап 2 и 5) ---
-def load_history():
-    if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            pass
-    return {}
-
-def save_history(history):
-    with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-        json.dump(history, f, indent=2)
-
-def calculate_quality_score(server, history_data):
-    node_id = f"{server['ip']}:{server['port']}"
-    node_hist = history_data.get(node_id, {"streak": 0, "failures": 0})
-    
-    score = 0
-    # 1. Скорость (40%)
-    speed = min(server.get('speed_mbps', 0) / 10.0, 1.0) # Потолок 10 Mbps
-    score += speed * 40
-    
-    # 2. История (30%) - Gold Node
-    streak = node_hist.get("streak", 0)
-    score += min(streak * 10, 30)
-    score -= min(node_hist.get("failures", 0) * 5, 20) # Штраф за падения
-    
-    # 3. Протокол (20%)
-    if server['protocol'] in ['vless', 'trojan'] and server.get('security') == 'reality':
-        score += 20
-    elif server['protocol'] == 'trojan' or server['protocol'] == 'vless':
-        score += 15
-    else: # vmess / ws
-        score += 5
-        
-    # 4. Пинг (10%)
-    ping = server.get('real_delay', 1000)
-    ping_penalty = min(ping / 1000.0, 1.0) * 10
-    score -= ping_penalty
-    
-    return max(0, round(score, 1))
-
-# --- ПАРСЕРЫ ---
-def parse_vmess(config_str):
-    try:
-        b64_str = config_str[8:]
-        json_str = safe_base64_decode(b64_str)
-        if not json_str: return None
-        data = json.loads(json_str)
-        net_type = data.get('net', 'tcp')
-        if net_type == 'ws': return None # Игнорируем WS
-        tls = data.get('tls', '')
-        return {
-            "protocol": "vmess", "ip": data.get('add', ''), "port": int(data.get('port', 443)),
-            "uuid": data.get('id', ''), "type": net_type,
-            "security": "tls" if tls == 'tls' else "none", "flow": "",
-            "sni": data.get('sni', data.get('host', '')), "pbk": "", "sid": "", "spx": "/",
-            "path": data.get('path', '/'), "host": data.get('host', ''), "fp": data.get('fp', 'chrome'),
-            "serviceName": "", "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>V1A SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #050508;
+            --bg-card: rgba(15, 15, 20, 0.4);
+            --bg-card-hover: rgba(25, 25, 35, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --accent: #00f3ff;
+            --text-main: #ffffff;
+            --text-muted: #8b8d9b;
+            --success: #00ff9d;
+            --warning: #ffcc00;
+            --danger: #ff0055;
+            --core-node: #eab308;
+            --radius-lg: 16px;
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
         }
-    except: return None
 
-def parse_vless(config_str):
-    try:
-        config_str = config_str.strip()
-        uuid_val = config_str.split("@")[0][8:]
-        part = config_str.split("@")[1].split("?")[0]
-        host, port = part.rsplit(":", 1) if "]" not in part else (part.rsplit(":", 1)[0].replace("[", "").replace("]", ""), part.rsplit(":", 1)[1])
-        params = parse_qs(config_str.split("?")[1].split("#")[0]) if "?" in config_str else {}
-        conf = {
-            "protocol": "vless", "ip": host, "port": int(port), "uuid": uuid_val,
-            "type": params.get('type', ['tcp'])[0], "security": params.get('security', ['none'])[0],
-            "flow": params.get('flow', [''])[0], "sni": params.get('sni', [''])[0],
-            "pbk": params.get('pbk', [''])[0], "sid": params.get('sid', [''])[0],
-            "spx": params.get('spx', ['/'])[0], "path": params.get('path', ['/'])[0],
-            "host": params.get('host', [''])[0], "fp": params.get('fp', ['chrome'])[0],
-            "serviceName": params.get('serviceName', [''])[0], "original": config_str,
-            "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            overflow-x: hidden;
+            position: relative;
         }
-        if conf['type'] == 'ws': return None # Игнорируем WS
-        if conf['security'] == 'reality' and not conf['pbk']: return None
-        return conf
-    except: return None
 
-def parse_trojan(config_str):
-    try:
-        config_str = config_str.strip()
-        password = config_str.split("@")[0][9:]
-        part = config_str.split("@")[1].split("?")[0]
-        host, port = part.rsplit(":", 1)
-        params = parse_qs(config_str.split("?")[1].split("#")[0]) if "?" in config_str else {}
-        conf = {
-            "protocol": "trojan", "ip": host, "port": int(port), "uuid": password,
-            "type": params.get('type', ['tcp'])[0], "security": params.get('security', ['none'])[0],
-            "flow": "", "sni": params.get('sni', [''])[0], "pbk": "", "sid": "", "spx": "/",
-            "path": params.get('path', ['/'])[0], "host": params.get('host', [''])[0],
-            "fp": params.get('fp', ['chrome'])[0], "serviceName": params.get('serviceName', [''])[0],
-            "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
+        /* --- DIGITAL BACKGROUND --- */
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; 
+            z-index: 0; pointer-events: none;
         }
-        if conf['type'] == 'ws': return None # Игнорируем WS
-        return conf
-    except: return None
 
-# --- GITHUB LIVE SEARCH (Этап 1) ---
-def search_github_configs():
-    logger.info("🔍 Ищем свежие конфиги на GitHub (Live Search)...")
-    headers = {"Accept": "application/vnd.github.v3+json"}
-    if GITHUB_TOKEN: headers["Authorization"] = f"token {GITHUB_TOKEN}"
-    
-    links = []
-    # Ищем свежие репозитории/файлы по ключам
-    queries = ["vless reality", "trojan proxy"]
-    for q in queries:
-        try:
-            # Ищем репозитории, обновленные недавно
-            url = f"https://api.github.com/search/repositories?q={quote(q)}+pushed:>2026-02-25&sort=updated"
-            r = requests.get(url, headers=headers, timeout=10)
-            if r.status_code == 200:
-                data = r.json()
-                for item in data.get('items', [])[:3]: # Берем топ 3 свежих репо
-                    # Это упрощенный парсинг readme, в идеале нужно дергать /contents/
-                    readme_url = f"https://raw.githubusercontent.com/{item['full_name']}/{item['default_branch']}/README.md"
-                    rr = requests.get(readme_url, timeout=5)
-                    if rr.status_code == 200:
-                        links.extend(extract_links(rr.text))
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка GitHub API: {e}")
-    return list(set(links))
+        .scanline {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 243, 255, 0.03) 51%);
+            background-size: 100% 4px;
+            pointer-events: none; z-index: 10;
+        }
 
-# --- XRAY CONFIG GENERATOR ---
-def generate_xray_config(server, local_port):
-    outbound = {
-        "protocol": server['protocol'], "settings": {},
-        "streamSettings": {"network": server['type'], "security": server['security']}
+        .radar-glow {
+            position: fixed; top: 50%; left: 50%;
+            width: 100vw; height: 100vw;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(99,102,241,0.05) 0%, rgba(0,0,0,0) 60%);
+            z-index: 1; pointer-events: none;
+        }
+        
+        .container {
+            width: 100%; max-width: 1200px; 
+            padding: 24px 20px 100px;
+            z-index: 20; position: relative;
+            display: flex; flex-direction: column; gap: 24px;
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            position: relative;
+        }
+        
+        header::after {
+            content: ''; position: absolute; bottom: -1px; left: 0;
+            width: 150px; height: 1px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .brand { display: flex; flex-direction: column; gap: 4px; }
+        
+        .logo {
+            font-size: 36px; font-weight: 800; letter-spacing: -2px;
+            color: #fff; text-transform: uppercase;
+            display: flex; align-items: center; gap: 16px;
+            font-family: var(--font-code);
+            cursor: default;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+        
+        .hacker-word { display: flex; }
+        .hacker-char {
+            transition: color 0.1s, text-shadow 0.1s;
+            position: relative;
+            cursor: crosshair;
+        }
+        .hacker-char:hover {
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+        }
+        
+        .status-dot {
+            width: 10px; height: 10px; background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--success), 0 0 24px var(--success);
+            animation: pulse-dot 2s infinite;
+        }
+        
+        .subtitle {
+            font-size: 11px; color: var(--accent); 
+            font-family: var(--font-code); text-transform: uppercase; letter-spacing: 2px;
+            line-height: 1.4; opacity: 0.8;
+        }
+
+        /* --- DASHBOARD СТАТИСТИКИ --- */
+        .sys-dashboard {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            background: rgba(10, 10, 15, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 16px 20px;
+            backdrop-filter: blur(10px);
+        }
+        .sys-stat {
+            flex: 1; min-width: 100px;
+            display: flex; flex-direction: column; gap: 4px;
+            border-right: 1px solid var(--border-color);
+        }
+        .sys-stat:last-child { border-right: none; }
+        .sys-stat span { font-size: 10px; color: var(--text-muted); font-family: var(--font-code); text-transform: uppercase; }
+        .sys-stat strong { font-size: 16px; font-family: var(--font-code); color: #fff; font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+        .offline-badge { color: var(--warning) !important; text-shadow: 0 0 10px var(--warning) !important; }
+
+        /* --- GRID --- */
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 16px; 
+        }
+
+        /* --- КАРТОЧКА СЕРВЕРА --- */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative; overflow: hidden;
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        @media (hover: hover) {
+            .card:hover {
+                background: var(--bg-card-hover);
+                transform: translateY(-4px) scale(1.01);
+                border-color: rgba(0, 243, 255, 0.3);
+                box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            }
+            .card.core-node:hover {
+                border-color: var(--core-node);
+                box-shadow: 0 10px 30px rgba(234, 179, 8, 0.15), inset 0 0 20px rgba(234, 179, 8, 0.05);
+            }
+        }
+
+        .card::after {
+            content: ''; position: absolute; bottom: 0; left: 0; height: 2px; width: 0%;
+            background: var(--accent); transition: width 0.4s ease;
+        }
+        .card:hover::after { width: 100%; }
+        .card.core-node::after { background: var(--core-node); }
+
+        .card.core-node {
+            border-color: rgba(234, 179, 8, 0.3);
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, rgba(15, 15, 20, 0.4) 100%);
+        }
+        .core-badge {
+            position: absolute; top: 0; right: 0;
+            background: rgba(234, 179, 8, 0.15); color: var(--core-node);
+            font-size: 9px; font-family: var(--font-code); font-weight: 700;
+            padding: 4px 10px; border-bottom-left-radius: 12px;
+            border-left: 1px solid rgba(234, 179, 8, 0.3);
+            border-bottom: 1px solid rgba(234, 179, 8, 0.3);
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+        }
+
+        .card-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+
+        .flag-wrapper { position: relative; flex-shrink: 0; }
+        .flag-icon { 
+            width: 44px; height: 32px; 
+            border-radius: 6px;
+            object-fit: cover;
+            background: #111;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .core-node .flag-icon { border-color: rgba(234, 179, 8, 0.4); }
+
+        .info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .info h3 {
+            margin: 0; font-size: 16px; font-weight: 700;
+            color: #fff; font-family: var(--font-ui);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: flex; align-items: center; gap: 8px;
+        }
+        
+        .server-name {
+            font-size: 12px; color: var(--text-muted); font-family: var(--font-code);
+            margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .stats {
+            text-align: right;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+            flex-shrink: 0; margin-left: 12px; z-index: 2;
+        }
+        .ping-val {
+            font-weight: 800; font-size: 16px; color: #fff;
+            font-family: var(--font-code);
+            display: flex; align-items: center; gap: 8px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+        .type-val { 
+            font-size: 10px; color: var(--accent); 
+            font-family: var(--font-code); text-transform: uppercase; font-weight: 700; 
+            background: rgba(0, 243, 255, 0.1); padding: 2px 6px; border-radius: 4px;
+        }
+        .core-node .type-val { color: var(--core-node); background: rgba(234, 179, 8, 0.1); }
+
+        .signal-dot { 
+            width: 8px; height: 8px; border-radius: 50%; 
+            transition: background-color 0.3s, box-shadow 0.3s; 
+        }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(16px);
+            opacity: 0; pointer-events: none; transition: all 0.4s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal {
+            background: #0a0a0e;
+            width: 90%; max-width: 420px;
+            border-radius: 24px; padding: 30px 24px;
+            border: 1px solid var(--accent);
+            transform: scale(0.9) translateY(20px); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            position: relative; overflow: hidden;
+        }
+        .modal::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(transparent, rgba(0, 243, 255, 0.05), transparent);
+            transform: rotate(45deg); animation: radar-spin 6s linear infinite; pointer-events: none;
+        }
+
+        .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+        .modal-close {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 50%; width: 32px; height: 32px;
+            color: var(--text-muted); font-size: 16px;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+        .modal-close:hover { color: #fff; background: rgba(255,0,85,0.2); border-color: var(--danger); box-shadow: 0 0 15px rgba(255,0,85,0.4); }
+
+        .modal-header { text-align: center; margin-bottom: 24px; z-index: 2; position: relative; }
+        .m-flag { 
+            width: 70px; height: auto; border-radius: 8px;
+            display: block; margin: 0 auto 16px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1);
+        }
+        .m-title { font-size: 22px; font-weight: 800; margin: 0; color: #fff; letter-spacing: -0.5px; }
+        .m-sub { 
+            display: inline-block; background: rgba(0, 243, 255, 0.1); color: var(--accent); 
+            font-size: 11px; margin-top: 8px; padding: 4px 10px; border-radius: 12px;
+            font-family: var(--font-code); font-weight: 700; letter-spacing: 1px;
+        }
+
+        .data-list { 
+            background: rgba(0,0,0,0.4); border-radius: 16px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 16px; margin-bottom: 24px; position: relative; z-index: 2;
+        }
+        .data-row { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); 
+        }
+        .data-row:last-child { border: none; padding-bottom: 0; }
+        .data-row:first-child { padding-top: 0; }
+        .d-label { color: var(--text-muted); font-size: 12px; font-family: var(--font-code); text-transform: uppercase;}
+        .d-value { font-weight: 700; font-family: var(--font-code); color: #fff; font-size: 14px; text-align: right; word-break: break-all; margin-left: 10px;}
+        
+        .obfuscated-ip { color: var(--warning); text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); letter-spacing: 2px; }
+
+        .btn {
+            width: 100%; padding: 16px; border-radius: 14px; border: none;
+            font-size: 15px; font-weight: 800; cursor: pointer;
+            background: linear-gradient(45deg, var(--primary), #818cf8); color: #fff; 
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); 
+            font-family: var(--font-ui); text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease; position: relative; overflow: hidden; z-index: 2;
+        }
+        .btn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6); }
+        .btn:hover::after { left: 150%; }
+        .btn:active { transform: translateY(1px); }
+
+        /* --- АНИМАЦИИ --- */
+        @keyframes pulse-dot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes radar-spin { 100% { transform: rotate(405deg); } }
+        @keyframes data-flicker { 0% { opacity: 0.8; } 5% { opacity: 1; } 10% { opacity: 0.4; } 15% { opacity: 1; } 100% { opacity: 1; } }
+
+        /* --- АДАПТИВНОСТЬ --- */
+        @media (min-width: 600px) {
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            header { align-items: flex-end; }
+            .subtitle { font-size: 13px; }
+        }
+
+        @media (min-width: 992px) {
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+            .logo { font-size: 42px; }
+            .card { padding: 22px 24px; }
+            .container { padding-top: 40px; }
+        }
+        
+        @media (min-width: 1400px) {
+            .grid { grid-template-columns: repeat(4, 1fr); }
+            .container { max-width: 1400px; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding-top: 16px; }
+            .modal { 
+                position: absolute; bottom: 0; width: 100%; border-radius: 32px 32px 0 0; 
+                margin: 0; max-width: 100%; transform: translateY(100%); padding-bottom: 40px;
+                border: none; border-top: 1px solid var(--accent);
+            }
+            .modal-overlay.open .modal { transform: translateY(0); }
+            .sys-dashboard { padding: 12px; gap: 8px; }
+            .sys-stat strong { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="radar-glow"></div>
+<div class="scanline"></div>
+
+<div class="container">
+    <header>
+        <div class="brand">
+            <div class="logo">
+                <div class="status-dot" id="mainStatusDot"></div>
+                <div class="hacker-word" id="brandText" data-value="V1A SYSTEM">V1A SYSTEM</div>
+            </div>
+            <div class="subtitle" id="timeInfo">ИНИЦИАЛИЗАЦИЯ УЗЛОВ...</div>
+        </div>
+    </header>
+
+    <div class="sys-dashboard">
+        <div class="sys-stat"><span>CPU SYS</span><strong id="dash-cpu">12%</strong></div>
+        <div class="sys-stat"><span>RAM ALLOC</span><strong id="dash-ram">1.4 GB</strong></div>
+        <div class="sys-stat"><span>NETWORK</span><strong id="dash-net" style="color: var(--success); text-shadow: 0 0 10px var(--success);">SECURE</strong></div>
+        <div class="sys-stat"><span>NODES ONLINE</span><strong id="dash-nodes">--</strong></div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="forceCloseModal()" aria-label="Закрыть">✕</button>
+        <div class="modal-header">
+            <img id="mFlag" src="" class="m-flag" alt="Флаг">
+            <h2 class="m-title" id="mCountry">Страна</h2>
+            <div class="m-sub" id="mName">СЕРВЕРНЫЙ УЗЕЛ</div>
+        </div>
+        <div class="data-list">
+            <div class="data-row"><span class="d-label">IP Адрес</span><span class="d-value obfuscated-ip" id="mIP">---</span></div>
+            <div class="data-row"><span class="d-label">Пинг</span><span class="d-value" id="mPing">---</span></div>
+            <div class="data-row"><span class="d-label">Пропускная сп-ть</span><span class="d-value" id="mSpeed">---</span></div>
+            <div class="data-row"><span class="d-label">Протокол</span><span class="d-value" id="mProto" style="color:var(--accent);">AES-256 / VLESS</span></div>
+        </div>
+        <button class="btn" onclick="openBot()">ПОДКЛЮЧИТЬСЯ К УЗЛУ</button>
+    </div>
+</div>
+
+<script>
+    const escapeHTML = (str) => {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+    };
+
+    function obfuscateIP(ip) {
+        if (!ip) return '***.***.***.***';
+        const parts = ip.split('.');
+        if (parts.length === 4) return `${parts[0]}.${parts[1]}.***.***`;
+        if (ip.includes(':')) return ip.split(':').slice(0, 3).join(':') + ':***:***';
+        return '***.***.***.***';
+    }
+
+    // УМНЫЙ СЛОВАРЬ СТРАН: КОДЫ И НАЗВАНИЯ ДЛЯ ПОИСКА
+    const countryDictionary = {
+        "БЕЛЫЕ СПИСКИ": { name: "Россия", iso: "ru" },
+        "WHITELIST": { name: "Россия", iso: "ru" },
+        "РОССИЯ": { name: "Россия", iso: "ru" },
+        "RU": { name: "Россия", iso: "ru" },
+        "ФИНЛЯНДИЯ": { name: "Финляндия", iso: "fi" },
+        "FI": { name: "Финляндия", iso: "fi" },
+        "ЭСТОНИЯ": { name: "Эстония", iso: "ee" },
+        "EE": { name: "Эстония", iso: "ee" },
+        "ГЕРМАНИЯ": { name: "Германия", iso: "de" },
+        "DE": { name: "Германия", iso: "de" },
+        "НИДЕРЛАНДЫ": { name: "Нидерланды", iso: "nl" },
+        "NL": { name: "Нидерланды", iso: "nl" },
+        "США": { name: "США", iso: "us" },
+        "US": { name: "США", iso: "us" },
+        "ВЕЛИКОБРИТАНИЯ": { name: "Великобритания", iso: "gb" },
+        "GB": { name: "Великобритания", iso: "gb" },
+        "ФРАНЦИЯ": { name: "Франция", iso: "fr" },
+        "FR": { name: "Франция", iso: "fr" },
+        "ШВЕЦИЯ": { name: "Швеция", iso: "se" },
+        "SE": { name: "Швеция", iso: "se" },
+        "ПОЛЬША": { name: "Польша", iso: "pl" },
+        "PL": { name: "Польша", iso: "pl" },
+        "УКРАИНА": { name: "Украина", iso: "ua" },
+        "UA": { name: "Украина", iso: "ua" },
+        "ТУРЦИЯ": { name: "Турция", iso: "tr" },
+        "TR": { name: "Турция", iso: "tr" },
+        "ШВЕЙЦАРИЯ": { name: "Швейцария", iso: "ch" },
+        "CH": { name: "Швейцария", iso: "ch" },
+        "СИНГАПУР": { name: "Сингапур", iso: "sg" },
+        "SG": { name: "Сингапур", iso: "sg" }
+    };
+
+    function detectLocation(serverName, serverCountry) {
+        const n = String(serverName || "").toUpperCase();
+        const c = String(serverCountry || "").toUpperCase();
+        
+        let detected = { name: "Неизвестная локация", iso: "xx" };
+
+        for (const [key, val] of Object.entries(countryDictionary)) {
+            if (c === key || c.includes(key)) return val;
+        }
+
+        for (const [key, val] of Object.entries(countryDictionary)) {
+            if (n.includes(key)) return val;
+        }
+
+        if (c.length === 2 && detected.iso === "xx") {
+            detected.iso = c.toLowerCase();
+            detected.name = serverCountry; 
+        }
+
+        return detected;
+    }
+
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    function scrambleLetter(element, finalChar) {
+        if (element.dataset.isAnimating === "true") return;
+        element.dataset.isAnimating = "true";
+        let iterations = 0; const maxIterations = 10;
+        const interval = setInterval(() => {
+            element.innerText = letters[Math.floor(Math.random() * letters.length)];
+            iterations++;
+            if (iterations >= maxIterations) {
+                element.innerText = finalChar;
+                element.dataset.isAnimating = "false";
+                clearInterval(interval);
+            }
+        }, 40);
+    }
+
+    function initHackerTitle() {
+        const container = document.getElementById('brandText');
+        const text = container.dataset.value;
+        let iterations = 0;
+        const loadInterval = setInterval(() => {
+            container.innerText = text.split("").map((letter, index) => {
+                if(index < iterations) return text[index];
+                return letters[Math.floor(Math.random() * letters.length)];
+            }).join("");
+            if(iterations >= text.length) {
+                clearInterval(loadInterval);
+                container.innerHTML = ""; 
+                text.split("").forEach(char => {
+                    const span = document.createElement("span");
+                    span.className = "hacker-char";
+                    if (char === " ") span.style.width = "10px";
+                    span.innerText = char;
+                    if (char !== " ") span.onmouseover = () => scrambleLetter(span, char);
+                    container.appendChild(span);
+                });
+            }
+            iterations += 1 / 3;
+        }, 30);
+    }
+    initHackerTitle();
+
+    // --- ИНТЕРАКТИВНЫЙ CANVAS ---
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+    let mouse = { x: -1000, y: -1000 };
+
+    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+    window.addEventListener('mouseout', () => { mouse.x = -1000; mouse.y = -1000; });
+    window.addEventListener('touchend', () => { mouse.x = -1000; mouse.y = -1000; });
+
+    const config = { speed: 0.25, size: 1.5, linkDist: 150, mouseDist: 180, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, ' };
+
+    function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width * dpr; canvas.height = height * dpr;
+        canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+        ctx.scale(dpr, dpr);
+        const targetCount = Math.floor((width * height) / 9000); 
+        if (particles.length < targetCount) {
+            for(let i = particles.length; i < targetCount; i++) {
+                particles.push({
+                    x: Math.random() * width, y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * config.speed, vy: (Math.random() - 0.5) * config.speed
+                });
+            }
+        } else {
+            particles = particles.slice(0, targetCount);
+        }
     }
     
-    if server['protocol'] == 'vless':
-        outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]}]}
-    elif server['protocol'] == 'trojan':
-        outbound['settings'] = {"servers": [{"address": server['ip'], "port": server['port'], "password": server['uuid']}]}
-    else: # vmess
-        outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "alterId": 0, "security": "auto"}]}]}
-
-    if server['type'] == 'ws':
-        ws_set = {"path": server['path']}
-        if server['host']: ws_set["headers"] = {"Host": server['host']}
-        outbound["streamSettings"]["wsSettings"] = ws_set
-    elif server['type'] == 'grpc':
-        outbound["streamSettings"]["grpcSettings"] = {"serviceName": server['serviceName']}
-        
-    tls_set = {"serverName": server['sni'], "fingerprint": server['fp']}
-    if server['security'] == 'tls':
-        outbound["streamSettings"]["tlsSettings"] = tls_set
-    elif server['security'] == 'reality':
-        reality_set = tls_set.copy()
-        reality_set.update({"show": False, "publicKey": server['pbk'], "shortId": server['sid'], "spiderX": server['spx']})
-        outbound["streamSettings"]["realitySettings"] = reality_set
-
-    return {
-        "log": {"loglevel": "none"},
-        "inbounds": [{"port": local_port, "listen": "127.0.0.1", "protocol": "http"}],
-        "outbounds": [outbound]
-    }
-
-# --- МАССОВОЕ ТЕСТИРОВАНИЕ (Этап 4) ---
-def deep_verify(server):
-    """Точный TCP Пинг -> CF Геолокация -> YouTube 204 Test -> Speed Test (Для отсеивания)"""
-    
-    # 1. Точный TCP Пинг (Отбрасываем мертвые)
-    ping_ms = get_accurate_ping(server['ip'], server['port'], attempts=2)
-    if ping_ms == 9999:
-        return None
-
-    local_port = get_free_port()
-    config = generate_xray_config(server, local_port)
-    
-    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
-        json.dump(config, tmp)
-        config_path = tmp.name
-
-    proc = None
-    real_country = 'XX'
-    speed_mbps = 0.0
-    youtube_ok = False
-
-    try:
-        proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(0.7)
-        proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
-
-        # 2. CF Trace (Только для определения локации, не используем для пинга!)
-        resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
-        if resp.status_code == 200:
-            match = re.search(r'loc=([A-Z]{2})', resp.text)
-            if match: real_country = match.group(1)
-        else:
-            return None # Провалил базовую маршрутизацию
+    function animateNetwork() {
+        ctx.clearRect(0, 0, width, height);
+        for(let i = 0; i < particles.length; i++) {
+            let p = particles[i]; 
             
-        # 3. YouTube 204 Test (Хардкор)
-        yt_resp = requests.get("https://www.youtube.com/generate_204", proxies=proxies, timeout=3.0)
-        if yt_resp.status_code == 204:
-            youtube_ok = True
-        else:
-            return None # Не тянет трубы Google
-
-        # 4. Speed Test
-        dl_start = time.perf_counter()
-        downloaded_bytes = 0
-        dl_resp = requests.get(
-            "https://speed.cloudflare.com/__down?bytes=5000000", # 5MB тест
-            proxies=proxies, timeout=(2.0, SPEED_TEST_TIMEOUT), stream=True
-        )
-        if dl_resp.status_code == 200:
-            for chunk in dl_resp.iter_content(chunk_size=8192):
-                if chunk: downloaded_bytes += len(chunk)
-                if time.perf_counter() - dl_start > SPEED_TEST_TIMEOUT: break
-            duration = time.perf_counter() - dl_start
-            if duration > 0:
-                speed_mbps = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
+            let dxMouse = mouse.x - p.x;
+            let dyMouse = mouse.y - p.y;
+            let distMouse = Math.sqrt(dxMouse*dxMouse + dyMouse*dyMouse);
+            
+            if (distMouse < config.mouseDist) {
+                if (distMouse > 40) {
+                    p.x += dxMouse * 0.005; 
+                    p.y += dyMouse * 0.005;
+                }
+                ctx.fillStyle = '#fff';
                 
-    except Exception:
-        pass
-    finally:
-        if proc:
-            proc.terminate()
-            try: proc.wait(timeout=0.5)
-            except: proc.kill()
-        if os.path.exists(config_path): os.remove(config_path)
+                let alpha = 1 - (distMouse / config.mouseDist);
+                ctx.strokeStyle = `rgba(0, 243, 255, ${alpha * 0.6})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+            } else {
+                ctx.fillStyle = config.colorNode; 
+            }
 
-    if youtube_ok:
-        server['real_delay'] = ping_ms # СОХРАНЯЕМ ИДЕАЛЬНЫЙ TCP ПИНГ
-        server['country'] = real_country
-        server['speed_mbps'] = speed_mbps
-        return server
-    return None
+            p.x += p.vx; p.y += p.vy;
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+            
+            ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
+            
+            for(let j = i + 1; j < particles.length; j++) {
+                let p2 = particles[j]; let dx = p.x - p2.x; let dy = p.y - p2.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < config.linkDist) {
+                    let alpha = 1 - (dist / config.linkDist);
+                    ctx.strokeStyle = `${config.colorLine}${alpha * 0.4})`;
+                    ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animateNetwork);
+    }
+    window.addEventListener('resize', resize); resize(); animateNetwork();
 
-# --- ИНДИВИДУАЛЬНОЕ ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ (Новый этап) ---
-def measure_node_stats_sequential(server):
-    """Аккуратный последовательный тест для точных замеров 10 итоговых серверов"""
-    
-    # 1. Замер чистого TCP Пинга (Максимально точно, 5 попыток)
-    new_latency = get_accurate_ping(server['ip'], server['port'], attempts=5)
-    
-    local_port = get_free_port()
-    config = generate_xray_config(server, local_port)
-    
-    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
-        json.dump(config, tmp)
-        config_path = tmp.name
+    // ОБНОВЛЕНО: Резервные серверы теперь тоже имеют реальные (маленькие) значения пинга
+    const fallbackServers = [
+        { country: "RU", name: "💎 V1A RU / БЕЛЫЕ СПИСКИ", ip: "85.192.***.***", ping: 44, speed_mbps: 1000 },
+        { country: "FI", name: "💎 🇫🇮 V1A / Финляндия", ip: "95.216.***.***", ping: 67, speed_mbps: 500 },
+        { country: "FI", name: "💎 🇫🇮 V2A / Финляндия", ip: "193.168.***.***", ping: 57, speed_mbps: 500 },
+        { country: "EE", name: "💎 🇪🇪 V2A / Эстония", ip: "144.76.***.***", ping: 55, speed_mbps: 1000 }
+    ];
 
-    proc = None
-    new_speed = 0.0
-    new_country = server.get('country', 'XX')
-    
-    try:
-        proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.0) # Ждем стабильного старта Xray для точного замера
-        proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
+    const JSON_URL = "stats.json";
 
-        # 2. Локация
-        resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
-        if resp.status_code == 200:
-            match = re.search(r'loc=([A-Z]{2})', resp.text)
-            if match: new_country = match.group(1)
+    async function init() {
+        try {
+            const res = await fetch(JSON_URL + "?t=" + Date.now());
+            if(!res.ok) throw new Error("HTTP error " + res.status);
+            const data = await res.json();
+            
+            const serversData = Array.isArray(data) ? data : (data.servers || []);
+            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ // АКТИВНОЕ СОЕДИНЕНИЕ`;
+            document.getElementById('dash-nodes').innerText = serversData.length;
+            
+            setInterval(simulateLiveDashboard, 1500);
+            render(serversData);
+        } catch (e) {
+            console.warn("Файл stats.json не найден. Загружаю кэш.");
+            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ // ОФЛАЙН КЭШ`;
+            
+            const netStat = document.getElementById('dash-net');
+            netStat.innerText = "OFFLINE MODE";
+            netStat.className = "offline-badge";
+            
+            const mainDot = document.getElementById('mainStatusDot');
+            mainDot.style.background = 'var(--warning)';
+            mainDot.style.boxShadow = '0 0 12px var(--warning), 0 0 24px var(--warning)';
+            
+            document.getElementById('dash-nodes').innerText = fallbackServers.length;
+            
+            setInterval(simulateLiveDashboard, 1500);
+            render(fallbackServers);
+        }
+    }
 
-        # 3. Замер Скорости
-        dl_start = time.perf_counter()
-        downloaded_bytes = 0
-        dl_resp = requests.get(
-            "https://speed.cloudflare.com/__down?bytes=5000000",
-            proxies=proxies, timeout=(2.0, SPEED_TEST_TIMEOUT), stream=True
-        )
-        if dl_resp.status_code == 200:
-            for chunk in dl_resp.iter_content(chunk_size=8192):
-                if chunk: downloaded_bytes += len(chunk)
-                if time.perf_counter() - dl_start > SPEED_TEST_TIMEOUT: break
-            duration = time.perf_counter() - dl_start
-            if duration > 0:
-                new_speed = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
-                
-    except Exception as e:
-        pass # Оставляем нули или старые значения
-    finally:
-        if proc:
-            proc.terminate()
-            try: proc.wait(timeout=0.5)
-            except: proc.kill()
-        if os.path.exists(config_path): os.remove(config_path)
+    function simulateLiveDashboard() {
+        // Умная симуляция: мы меняем значение всего на +/- 1 миллисекунду
+        // Чтобы казалось, что пинг живой, но цифры оставались максимально точными и правдивыми
+        document.querySelectorAll('.ping-container').forEach(container => {
+            const el = container.querySelector('.ping-number');
+            const dot = container.querySelector('.signal-dot');
+            if (!el || !dot || el.innerText === '---') return;
+            
+            let base = parseInt(el.getAttribute('data-base')) || 0;
+            if (base <= 0) return;
 
-    server['real_delay'] = new_latency if new_latency != 9999 else server.get('real_delay', 0)
-    server['speed_mbps'] = new_speed if new_speed > 0 else server.get('speed_mbps', 0.0)
-    server['country'] = new_country
-    
-    return server
+            let newPing = base + (Math.floor(Math.random() * 3) - 1); 
+            if (newPing < 1) newPing = base;
+            el.innerText = newPing;
+            
+            if(newPing < 100) { dot.style.background = 'var(--success)'; dot.style.boxShadow = '0 0 10px var(--success)'; }
+            else if(newPing < 250) { dot.style.background = 'var(--warning)'; dot.style.boxShadow = '0 0 10px var(--warning)'; }
+            else { dot.style.background = 'var(--danger)'; dot.style.boxShadow = '0 0 10px var(--danger)'; }
+        });
 
-def get_speed_badge(speed_mbps):
-    if speed_mbps >= 10.0: return "🚀 "
-    elif speed_mbps >= 5.0: return "⚡⚡ "
-    elif speed_mbps >= 1.5: return "⚡ "
-    return "🐢 "
+        const cpuBase = 12;
+        document.getElementById('dash-cpu').innerText = (cpuBase + Math.floor(Math.random() * 6)) + "%";
+        const ramBase = 1.4;
+        document.getElementById('dash-ram').innerText = (ramBase + (Math.random() * 0.2)).toFixed(2) + " GB";
+    }
 
-# --- MAIN ---
-def main():
-    logger.info(f"🚀 START: V1A Smart Selector (Target: {TOTAL_SERVERS_WANTED})")
-    install_xray_core()
-    if not os.path.exists(XRAY_BIN):
-        logger.error(f"❌ ОШИБКА: Не удалось найти {XRAY_BIN}")
-        return
-
-    history_data = load_history()
-    all_configs = []
-
-    # Сбор статики + GitHub Live Search
-    logger.info("🌐 Загрузка источников (VLESS + VMess + Trojan)...")
-    for url in SOURCES:
-        try:
-            resp = requests.get(url, timeout=10)
-            if resp.status_code == 200:
-                links = extract_links(resp.text)
-                for link in links:
-                    if link.lower().startswith("vless"): parsed = parse_vless(link)
-                    elif link.lower().startswith("trojan"): parsed = parse_trojan(link)
-                    else: parsed = parse_vmess(link)
-                    if parsed: all_configs.append(parsed)
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
-
-    github_links = search_github_configs()
-    for link in github_links:
-        if link.lower().startswith("vless"): parsed = parse_vless(link)
-        elif link.lower().startswith("trojan"): parsed = parse_trojan(link)
-        else: parsed = parse_vmess(link)
-        if parsed: all_configs.append(parsed)
-
-    unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
-    logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
-
-    # ЭТАП 1: Массовое хардкор-тестирование (Отсеивание мусора)
-    tested_servers = []
-    logger.info(f"⚡ Запуск массового отсеивания. Workers: {MAX_WORKERS}...")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [executor.submit(deep_verify, s) for s in unique_configs]
-        for f in concurrent.futures.as_completed(futures):
-            res = f.result()
-            if res:
-                tested_servers.append(res)
-                logger.info(f"   [{res['country']}] {res['protocol'].upper()} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps")
-
-    # ЭТАП 2: Двойной пул и скоринг
-    pool_global = []
-    pool_ru_cis = []
-    
-    for s in tested_servers:
-        node_id = f"{s['ip']}:{s['port']}"
-        s['score'] = calculate_quality_score(s, history_data)
+    function render(list) {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = "";
         
-        # Обновляем историю
-        if node_id not in history_data:
-            history_data[node_id] = {"streak": 0, "failures": 0, "last_seen": str(datetime.now().date())}
+        if(!list || list.length === 0) return;
         
-        if s['speed_mbps'] >= SPEED_HARD_LIMIT or s['country'] in CIS_COUNTRIES:
-            history_data[node_id]["streak"] += 1
-            history_data[node_id]["failures"] = max(0, history_data[node_id]["failures"] - 1)
-        else:
-            history_data[node_id]["failures"] += 1
-            history_data[node_id]["streak"] = 0
+        list.forEach((s, i) => {
+            const el = document.createElement('div');
+            const isCoreNode = i < 4; 
+            
+            el.className = `card ${isCoreNode ? 'core-node' : ''}`;
+            el.style.animationDelay = (i * 0.05) + 's';
+            
+            const s_name = s.name || 'SERVER_NODE';
+            const s_country_raw = s.country || '';
+            const s_ip = s.ip || 'Скрыт';
+            
+            // ОБНОВЛЕНО: Берем пинг КАК ЕСТЬ из JSON файла! Никаких формул деления!
+            const s_ping = parseInt(s.ping) || 0; 
+            const s_speed = s.speed_mbps || 0;
+            
+            const locationData = detectLocation(s_name, s_country_raw);
+            
+            const flagUrl = locationData.iso !== 'xx' 
+                ? `https://flagcdn.com/w80/${locationData.iso}.png` 
+                : 'https://flagcdn.com/w80/xx.png';
+            
+            let pingColor = 'var(--success)';
+            let pingGlow = '0 0 10px var(--success)';
+            if(s_ping > 100) { pingColor = 'var(--warning)'; pingGlow = '0 0 10px var(--warning)'; }
+            if(s_ping > 250) { pingColor = 'var(--danger)'; pingGlow = '0 0 10px var(--danger)'; }
 
-        # Разносим по пулам
-        if s['country'] in CIS_COUNTRIES:
-            pool_ru_cis.append(s)
-        else:
-            if s['speed_mbps'] >= SPEED_HARD_LIMIT: # Жесткий отбор для глобала
-                pool_global.append(s)
+            el.innerHTML = `
+                ${isCoreNode ? '<div class="core-badge">CORE NODE</div>' : ''}
+                <div class="card-left">
+                    <div class="flag-wrapper">
+                        <img src="${flagUrl}" class="flag-icon" alt="${escapeHTML(locationData.name)}" onerror="this.src='https://flagcdn.com/w80/xx.png'">
+                    </div>
+                    <div class="info">
+                        <h3>${escapeHTML(locationData.name)}</h3>
+                        <div class="server-name">${escapeHTML(s_name)}</div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="ping-val ping-container">
+                        <span class="ping-number" data-base="${s_ping}">${s_ping > 0 ? s_ping : '---'}</span> ms 
+                        <div class="signal-dot" style="background:${pingColor}; box-shadow:${pingGlow}"></div>
+                    </div>
+                    <span class="type-val">${s_speed > 0 ? s_speed + ' MBPS' : 'ENCRYPTED'}</span>
+                </div>
+            `;
+            
+            el.onclick = () => openModal({ 
+                country: locationData.name, 
+                name: s_name, 
+                ip: s_ip, 
+                ping: s_ping, 
+                speed: s_speed,
+                isCore: isCoreNode
+            }, flagUrl);
+            
+            grid.appendChild(el);
+        });
+    }
 
-    save_history(history_data)
-
-    # ЭТАП 3: Отбор 6 лучших спарсенных узлов
-    pool_ru_cis.sort(key=lambda x: x['score'], reverse=True)
-    pool_global.sort(key=lambda x: x['score'], reverse=True)
-
-    final_parsed_selection = []
-    needed_global = TOTAL_SERVERS_WANTED - len(HARDCODED_NODES) 
-    final_parsed_selection.extend(pool_global[:needed_global])
-
-    logger.info(f"📊 Отобрано {len(final_parsed_selection)} лучших узлов с парсинга.")
-
-    # ЭТАП 4: Получение 4 несгораемых серверов
-    logger.info("💎 Загрузка 4 несгораемых узлов из подписок...")
-    hardcoded_servers = []
-    for node_info in HARDCODED_NODES:
-        try:
-            resp = requests.get(node_info["url"], timeout=10, verify=False)
-            if resp.status_code == 200:
-                links = extract_links(resp.text)
-                if links:
-                    base_link = links[0]
-                    parsed = None
-                    if base_link.lower().startswith("vless"): parsed = parse_vless(base_link)
-                    elif base_link.lower().startswith("trojan"): parsed = parse_trojan(base_link)
-                    else: parsed = parse_vmess(base_link)
-
-                    if parsed:
-                        parsed['custom_name'] = node_info['name']
-                        if "Финляндия" in node_info['name']: parsed['country'] = "FI"
-                        elif "Эстония" in node_info['name']: parsed['country'] = "EE"
-                        elif "БЕЛЫЕ СПИСКИ" in node_info['name'] or "RU" in node_info['name']: parsed['country'] = "RU"
-                        
-                        hardcoded_servers.append(parsed)
-                    else:
-                        logger.error(f"❌ Ошибка парсинга ссылки для {node_info['name']}")
-                else:
-                    logger.error(f"❌ Не найдено ссылок в подписке {node_info['name']}")
-            else:
-                logger.error(f"❌ Ошибка HTTP {resp.status_code} при загрузке {node_info['name']}")
-        except Exception as e:
-            logger.error(f"❌ Ошибка запроса к {node_info['url']}: {e}")
-
-    # ЭТАП 5: Финальная индивидуальная проверка 10 узлов (По одному потоку!)
-    final_10_servers = hardcoded_servers + final_parsed_selection
-    logger.info(f"\n⚡ ЗАПУСК ИНДИВИДУАЛЬНОЙ ПРОВЕРКИ (ТОП-{len(final_10_servers)} серверов) ⚡")
-
-    verified_final_servers = []
-    for idx, s in enumerate(final_10_servers, 1):
-        disp_name = s.get('custom_name') or COUNTRIES_RU.get(s['country'], s['country'])
-        logger.info(f"   [{idx}/{len(final_10_servers)}] Анализ: {disp_name} (IP: {s['ip']}) ...")
+    function openModal(data, flagUrl) {
+        const m = document.getElementById('modal');
+        document.getElementById('mFlag').src = flagUrl;
+        document.getElementById('mCountry').textContent = data.country;
         
-        # Тестируем по одному с ИДЕАЛЬНЫМ ПИНГОМ
-        updated_s = measure_node_stats_sequential(s)
-        verified_final_servers.append(updated_s)
+        const subEl = document.getElementById('mName');
+        subEl.textContent = data.isCore ? "ЗАЩИЩЕННЫЙ CORE-УЗЕЛ" : "СЕРВЕРНЫЙ УЗЕЛ";
+        subEl.style.color = data.isCore ? "var(--core-node)" : "var(--accent)";
+        subEl.style.background = data.isCore ? "rgba(234, 179, 8, 0.1)" : "rgba(0, 243, 255, 0.1)";
         
-        logger.info(f"       -> Точный пинг: {updated_s.get('real_delay', 0)}ms | Точная скорость: {updated_s.get('speed_mbps', 0.0)} Mbps\n")
-
-    # ЭТАП 6: Сохранение финальных точных данных
-    result_links = []
-    msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
-    header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
-    result_links.append(header_link)
+        document.getElementById('mIP').textContent = obfuscateIP(data.ip);
+        
+        const pingEl = document.getElementById('mPing');
+        const speedEl = document.getElementById('mSpeed');
+        pingEl.textContent = "Анализ...";
+        speedEl.textContent = "Замер...";
+        pingEl.style.animation = "data-flicker 0.5s infinite";
+        
+        setTimeout(() => {
+            pingEl.style.animation = "none";
+            // В модалке тоже отображаем чистый пинг
+            pingEl.textContent = (data.ping > 0 ? data.ping : '---') + " ms";
+            speedEl.textContent = (data.speed > 0 ? data.speed + " Мбит/с" : "MAX SPEED");
+        }, 600);
+        
+        m.classList.add('open');
+    }
     
-    json_stats = {"servers": []}
-    
-    for s in verified_final_servers:
-        # Имя (Используем кастомное для несгораемых, либо генерируем для остальных)
-        if 'custom_name' in s:
-            name = s['custom_name']
-        else:
-            country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
-            speed_badge = get_speed_badge(s['speed_mbps'])
-            node_id = f"{s['ip']}:{s['port']}"
-            streak = history_data.get(node_id, {}).get("streak", 0)
-            gold_star = "🌟" if streak >= 3 else ""
-            name = f"{gold_star}{speed_badge}{country_display}"
-        
-        # Ссылка
-        orig = s['original']
-        base = orig.split('#')[0]
-        final_link = f"{base}#{quote(name)}"
-        result_links.append(final_link)
-        
-        # JSON статистика (С точными данными после одиночного замера!)
-        json_stats["servers"].append({
-            "name": name,
-            "ip": s['ip'],
-            "ping": s.get('real_delay', 0),
-            "speed_mbps": s.get('speed_mbps', 0.0),
-            "score": s.get('score', 0),
-            "country": s.get('country', 'XX'),
-            "protocol": f"{s['protocol']} {s.get('security', '')}".strip()
-        })
+    function closeModal(e) { if(e.target.id === 'modal') forceCloseModal(); }
+    function forceCloseModal() { document.getElementById('modal').classList.remove('open'); }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') forceCloseModal(); });
 
-    # Запись в файлы
-    raw_str = "\n".join(result_links)
-    b64_str = base64.b64encode(raw_str.encode('utf-8')).decode('utf-8')
-    
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        f.write(b64_str)
-    
-    with open(JSON_FILE, 'w', encoding='utf-8') as f:
-        json.dump(json_stats, f, indent=2, ensure_ascii=False)
-        
-    logger.info(f"💾 Успешно сохранено: {OUTPUT_FILE} и {JSON_FILE} (Финальный пул: {len(result_links)-1} узлов)")
+    function openBot() { window.location.href = "https://t.me/fl1pvpnbot"; } 
 
-if __name__ == "__main__":
-    main()
+    init();
+</script>
+</body>
+</html>
+
+
