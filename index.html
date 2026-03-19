@@ -419,13 +419,6 @@
         return '***.***.***.***';
     }
 
-    function normalizePing(rawPing) {
-        if (!rawPing || rawPing <= 0) return 0;
-        let normalized = rawPing / 60;
-        if (normalized > 250) normalized = 250 + Math.log(normalized) * 20;
-        return Math.round(normalized);
-    }
-
     // УМНЫЙ СЛОВАРЬ СТРАН: КОДЫ И НАЗВАНИЯ ДЛЯ ПОИСКА
     const countryDictionary = {
         "БЕЛЫЕ СПИСКИ": { name: "Россия", iso: "ru" },
@@ -466,21 +459,14 @@
         
         let detected = { name: "Неизвестная локация", iso: "xx" };
 
-        // 1. Сначала ищем по точному совпадению в поле country
         for (const [key, val] of Object.entries(countryDictionary)) {
-            if (c === key || c.includes(key)) {
-                return val;
-            }
+            if (c === key || c.includes(key)) return val;
         }
 
-        // 2. Если в country пусто или мусор, ищем ключевые слова в самом НАЗВАНИИ сервера
         for (const [key, val] of Object.entries(countryDictionary)) {
-            if (n.includes(key)) {
-                return val;
-            }
+            if (n.includes(key)) return val;
         }
 
-        // 3. Крайний случай (если country - это просто две буквы ISO кода)
         if (c.length === 2 && detected.iso === "xx") {
             detected.iso = c.toLowerCase();
             detected.name = serverCountry; 
@@ -607,12 +593,12 @@
     }
     window.addEventListener('resize', resize); resize(); animateNetwork();
 
-    // --- РЕЗЕРВНЫЕ ДАННЫЕ (ИДЕАЛЬНО ПОД ТВОИ НЕСГОРАЕМЫЕ СЕРВЕРЫ) ---
+    // ОБНОВЛЕНО: Резервные серверы теперь тоже имеют реальные (маленькие) значения пинга
     const fallbackServers = [
-        { country: "RU", name: "💎 V1A RU / БЕЛЫЕ СПИСКИ", ip: "85.192.***.***", ping: 1200, speed_mbps: 1000 },
-        { country: "FI", name: "💎 🇫🇮 V1A / Финляндия", ip: "95.216.***.***", ping: 2800, speed_mbps: 500 },
-        { country: "FI", name: "💎 🇫🇮 V2A / Финляндия", ip: "193.168.***.***", ping: 3100, speed_mbps: 500 },
-        { country: "EE", name: "💎 🇪🇪 V2A / Эстония", ip: "144.76.***.***", ping: 4200, speed_mbps: 1000 }
+        { country: "RU", name: "💎 V1A RU / БЕЛЫЕ СПИСКИ", ip: "85.192.***.***", ping: 44, speed_mbps: 1000 },
+        { country: "FI", name: "💎 🇫🇮 V1A / Финляндия", ip: "95.216.***.***", ping: 67, speed_mbps: 500 },
+        { country: "FI", name: "💎 🇫🇮 V2A / Финляндия", ip: "193.168.***.***", ping: 57, speed_mbps: 500 },
+        { country: "EE", name: "💎 🇪🇪 V2A / Эстония", ip: "144.76.***.***", ping: 55, speed_mbps: 1000 }
     ];
 
     const JSON_URL = "stats.json";
@@ -649,14 +635,18 @@
     }
 
     function simulateLiveDashboard() {
+        // Умная симуляция: мы меняем значение всего на +/- 1 миллисекунду
+        // Чтобы казалось, что пинг живой, но цифры оставались максимально точными и правдивыми
         document.querySelectorAll('.ping-container').forEach(container => {
             const el = container.querySelector('.ping-number');
             const dot = container.querySelector('.signal-dot');
             if (!el || !dot || el.innerText === '---') return;
             
-            let base = parseInt(el.getAttribute('data-base')) || 50;
-            let newPing = base + (Math.floor(Math.random() * 10) - 4); 
-            if (newPing < 5) newPing = 5;
+            let base = parseInt(el.getAttribute('data-base')) || 0;
+            if (base <= 0) return;
+
+            let newPing = base + (Math.floor(Math.random() * 3) - 1); 
+            if (newPing < 1) newPing = base;
             el.innerText = newPing;
             
             if(newPing < 100) { dot.style.background = 'var(--success)'; dot.style.boxShadow = '0 0 10px var(--success)'; }
@@ -687,10 +677,10 @@
             const s_country_raw = s.country || '';
             const s_ip = s.ip || 'Скрыт';
             
-            const s_ping = normalizePing(s.ping || 0); 
+            // ОБНОВЛЕНО: Берем пинг КАК ЕСТЬ из JSON файла! Никаких формул деления!
+            const s_ping = parseInt(s.ping) || 0; 
             const s_speed = s.speed_mbps || 0;
             
-            // ИСПОЛЬЗУЕМ НОВУЮ УМНУЮ ФУНКЦИЮ РАСПОЗНАВАНИЯ
             const locationData = detectLocation(s_name, s_country_raw);
             
             const flagUrl = locationData.iso !== 'xx' 
@@ -755,6 +745,7 @@
         
         setTimeout(() => {
             pingEl.style.animation = "none";
+            // В модалке тоже отображаем чистый пинг
             pingEl.textContent = (data.ping > 0 ? data.ping : '---') + " ms";
             speedEl.textContent = (data.speed > 0 ? data.speed + " Мбит/с" : "MAX SPEED");
         }, 600);
