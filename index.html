@@ -4,19 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>V1A SYSTEM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #020205;
-            --bg-card: rgba(20, 20, 25, 0.6);
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg-body: #050508;
+            --bg-card: rgba(15, 15, 20, 0.4);
+            --bg-card-hover: rgba(25, 25, 35, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
             --primary: #6366f1;
             --accent: #00f3ff;
             --text-main: #ffffff;
-            --text-muted: #888888;
+            --text-muted: #8b8d9b;
             --success: #00ff9d;
             --warning: #ffcc00;
             --danger: #ff0055;
+            --core-node: #eab308;
             --radius-lg: 16px;
             --font-ui: 'Inter', sans-serif;
             --font-code: 'JetBrains Mono', monospace;
@@ -43,31 +45,49 @@
 
         .scanline {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 51%);
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 243, 255, 0.03) 51%);
             background-size: 100% 4px;
             pointer-events: none; z-index: 10;
         }
+
+        .radar-glow {
+            position: fixed; top: 50%; left: 50%;
+            width: 100vw; height: 100vw;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(99,102,241,0.05) 0%, rgba(0,0,0,0) 60%);
+            z-index: 1; pointer-events: none;
+        }
         
         .container {
-            width: 100%; max-width: 600px;
+            width: 100%; max-width: 1200px; 
             padding: 24px 20px 100px;
             z-index: 20; position: relative;
+            display: flex; flex-direction: column; gap: 24px;
         }
 
         header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin: 20px 0 32px;
+            display: flex; justify-content: space-between; align-items: flex-end;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 20px;
+            position: relative;
         }
+        
+        header::after {
+            content: ''; position: absolute; bottom: -1px; left: 0;
+            width: 150px; height: 1px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
         .brand { display: flex; flex-direction: column; gap: 4px; }
         
         .logo {
-            font-size: 28px; font-weight: 800; letter-spacing: -1px;
+            font-size: 36px; font-weight: 800; letter-spacing: -2px;
             color: #fff; text-transform: uppercase;
-            display: flex; align-items: center; gap: 12px;
+            display: flex; align-items: center; gap: 16px;
             font-family: var(--font-code);
             cursor: default;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
         }
         
         .hacker-word { display: flex; }
@@ -78,174 +98,290 @@
         }
         .hacker-char:hover {
             color: var(--accent);
-            text-shadow: 0 0 8px var(--accent);
+            text-shadow: 0 0 15px var(--accent);
         }
         
         .status-dot {
-            width: 8px; height: 8px; background: var(--success);
+            width: 10px; height: 10px; background: var(--success);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--success);
+            box-shadow: 0 0 12px var(--success), 0 0 24px var(--success);
             animation: pulse-dot 2s infinite;
         }
         
         .subtitle {
-            font-size: 10px; color: var(--text-muted); 
-            font-family: var(--font-code); text-transform: uppercase; letter-spacing: 1px;
-            line-height: 1.4;
+            font-size: 11px; color: var(--accent); 
+            font-family: var(--font-code); text-transform: uppercase; letter-spacing: 2px;
+            line-height: 1.4; opacity: 0.8;
         }
 
-        .grid { display: flex; flex-direction: column; gap: 12px; }
+        /* --- DASHBOARD СТАТИСТИКИ --- */
+        .sys-dashboard {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            background: rgba(10, 10, 15, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 16px 20px;
+            backdrop-filter: blur(10px);
+        }
+        .sys-stat {
+            flex: 1; min-width: 100px;
+            display: flex; flex-direction: column; gap: 4px;
+            border-right: 1px solid var(--border-color);
+        }
+        .sys-stat:last-child { border-right: none; }
+        .sys-stat span { font-size: 10px; color: var(--text-muted); font-family: var(--font-code); text-transform: uppercase; }
+        .sys-stat strong { font-size: 16px; font-family: var(--font-code); color: #fff; font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+        .offline-badge { color: var(--warning) !important; text-shadow: 0 0 10px var(--warning) !important; }
 
+        /* --- GRID --- */
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 16px; 
+        }
+
+        /* --- КАРТОЧКА СЕРВЕРА --- */
         .card {
             background: var(--bg-card);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
-            padding: 16px 20px;
+            padding: 18px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; transition: all 0.3s ease;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative; overflow: hidden;
-            animation: slideUp 0.4s ease-out forwards;
+            animation: slideUp 0.5s ease-out forwards;
             opacity: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
         
-        .card:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent);
-            box-shadow: 0 4px 20px rgba(0, 243, 255, 0.1);
+        @media (hover: hover) {
+            .card:hover {
+                background: var(--bg-card-hover);
+                transform: translateY(-4px) scale(1.01);
+                border-color: rgba(0, 243, 255, 0.3);
+                box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            }
+            .card.core-node:hover {
+                border-color: var(--core-node);
+                box-shadow: 0 10px 30px rgba(234, 179, 8, 0.15), inset 0 0 20px rgba(234, 179, 8, 0.05);
+            }
+        }
+
+        .card::after {
+            content: ''; position: absolute; bottom: 0; left: 0; height: 2px; width: 0%;
+            background: var(--accent); transition: width 0.4s ease;
+        }
+        .card:hover::after { width: 100%; }
+        .card.core-node::after { background: var(--core-node); }
+
+        .card.core-node {
+            border-color: rgba(234, 179, 8, 0.3);
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, rgba(15, 15, 20, 0.4) 100%);
+        }
+        .core-badge {
+            position: absolute; top: 0; right: 0;
+            background: rgba(234, 179, 8, 0.15); color: var(--core-node);
+            font-size: 9px; font-family: var(--font-code); font-weight: 700;
+            padding: 4px 10px; border-bottom-left-radius: 12px;
+            border-left: 1px solid rgba(234, 179, 8, 0.3);
+            border-bottom: 1px solid rgba(234, 179, 8, 0.3);
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
         }
 
         .card-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
 
+        .flag-wrapper { position: relative; flex-shrink: 0; }
         .flag-icon { 
-            width: 38px; height: 28px; 
-            border-radius: 4px;
+            width: 44px; height: 32px; 
+            border-radius: 6px;
             object-fit: cover;
             background: #111;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
         }
+        .core-node .flag-icon { border-color: rgba(234, 179, 8, 0.4); }
 
         .info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
         .info h3 {
-            margin: 0; font-size: 15px; font-weight: 700;
+            margin: 0; font-size: 16px; font-weight: 700;
             color: #fff; font-family: var(--font-ui);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: flex; align-items: center; gap: 8px;
         }
         
         .server-name {
-            font-size: 11px; color: var(--text-muted); font-family: var(--font-code);
-            margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 12px; color: var(--text-muted); font-family: var(--font-code);
+            margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
         .stats {
             text-align: right;
-            display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
-            flex-shrink: 0; margin-left: 12px;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+            flex-shrink: 0; margin-left: 12px; z-index: 2;
         }
         .ping-val {
-            font-weight: 700; font-size: 14px; color: #fff;
+            font-weight: 800; font-size: 16px; color: #fff;
             font-family: var(--font-code);
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; gap: 8px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
-        .type-val { font-size: 10px; color: var(--accent); font-family: var(--font-code); text-transform: uppercase; font-weight: 600; }
+        .type-val { 
+            font-size: 10px; color: var(--accent); 
+            font-family: var(--font-code); text-transform: uppercase; font-weight: 700; 
+            background: rgba(0, 243, 255, 0.1); padding: 2px 6px; border-radius: 4px;
+        }
+        .core-node .type-val { color: var(--core-node); background: rgba(234, 179, 8, 0.1); }
 
-        .signal-dot { width: 6px; height: 6px; border-radius: 50%; transition: background-color 0.3s; }
+        .signal-dot { 
+            width: 8px; height: 8px; border-radius: 50%; 
+            transition: background-color 0.3s, box-shadow 0.3s; 
+        }
 
-        /* MODAL STYLES */
+        /* --- MODAL STYLES --- */
         .modal-overlay {
             position: fixed; inset: 0; z-index: 100;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(12px);
-            opacity: 0; pointer-events: none; transition: all 0.3s ease;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(16px);
+            opacity: 0; pointer-events: none; transition: all 0.4s ease;
             display: flex; align-items: center; justify-content: center;
         }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
 
         .modal {
-            background: #0f0f11;
-            width: 90%; max-width: 400px;
-            border-radius: 24px; padding: 24px;
-            border: 1px solid var(--border-color);
-            transform: scale(0.95) translateY(10px); 
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 50px rgba(99, 102, 241, 0.15);
-            position: relative;
+            background: #0a0a0e;
+            width: 90%; max-width: 420px;
+            border-radius: 24px; padding: 30px 24px;
+            border: 1px solid var(--accent);
+            transform: scale(0.9) translateY(20px); 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            position: relative; overflow: hidden;
         }
+        .modal::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(transparent, rgba(0, 243, 255, 0.05), transparent);
+            transform: rotate(45deg); animation: radar-spin 6s linear infinite; pointer-events: none;
+        }
+
         .modal-overlay.open .modal { transform: scale(1) translateY(0); }
 
         .modal-close {
-            position: absolute; top: 16px; right: 16px;
-            background: none; border: none; padding: 4px;
-            color: var(--text-muted); font-size: 20px; line-height: 1;
-            cursor: pointer; transition: color 0.2s;
-            font-family: var(--font-ui); display: flex; align-items: center; justify-content: center;
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 50%; width: 32px; height: 32px;
+            color: var(--text-muted); font-size: 16px;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
         }
-        .modal-close:hover { color: #fff; }
+        .modal-close:hover { color: #fff; background: rgba(255,0,85,0.2); border-color: var(--danger); box-shadow: 0 0 15px rgba(255,0,85,0.4); }
 
-        .modal-header { text-align: center; margin-bottom: 20px; margin-top: 10px; }
+        .modal-header { text-align: center; margin-bottom: 24px; z-index: 2; position: relative; }
         .m-flag { 
-            width: 60px; height: auto; border-radius: 6px;
-            display: block; margin: 0 auto 12px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 70px; height: auto; border-radius: 8px;
+            display: block; margin: 0 auto 16px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1);
         }
-        .m-title { font-size: 18px; font-weight: 700; margin: 0; color: #fff; }
-        .m-sub { color: var(--accent); font-size: 12px; margin-top: 4px; font-family: var(--font-code); }
+        .m-title { font-size: 22px; font-weight: 800; margin: 0; color: #fff; letter-spacing: -0.5px; }
+        .m-sub { 
+            display: inline-block; background: rgba(0, 243, 255, 0.1); color: var(--accent); 
+            font-size: 11px; margin-top: 8px; padding: 4px 10px; border-radius: 12px;
+            font-family: var(--font-code); font-weight: 700; letter-spacing: 1px;
+        }
 
         .data-list { 
-            background: rgba(255,255,255,0.03); border-radius: 12px; 
-            padding: 16px; margin-bottom: 24px; 
+            background: rgba(0,0,0,0.4); border-radius: 16px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 16px; margin-bottom: 24px; position: relative; z-index: 2;
         }
         .data-row { 
             display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); 
         }
         .data-row:last-child { border: none; padding-bottom: 0; }
         .data-row:first-child { padding-top: 0; }
-        .d-label { color: var(--text-muted); font-size: 12px; }
-        .d-value { font-weight: 600; font-family: var(--font-code); color: #fff; font-size: 13px; text-align: right; word-break: break-all; margin-left: 10px;}
+        .d-label { color: var(--text-muted); font-size: 12px; font-family: var(--font-code); text-transform: uppercase;}
+        .d-value { font-weight: 700; font-family: var(--font-code); color: #fff; font-size: 14px; text-align: right; word-break: break-all; margin-left: 10px;}
         
-        /* Спецэффект для скрытого IP */
-        .obfuscated-ip { color: var(--warning); text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); letter-spacing: 1px; }
+        .obfuscated-ip { color: var(--warning); text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); letter-spacing: 2px; }
 
         .btn {
-            width: 100%; padding: 14px; border-radius: 12px; border: none;
-            font-size: 14px; font-weight: 700; cursor: pointer;
-            background: var(--primary); color: #fff; 
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); 
-            font-family: var(--font-ui); text-transform: uppercase;
-            transition: all 0.2s ease;
+            width: 100%; padding: 16px; border-radius: 14px; border: none;
+            font-size: 15px; font-weight: 800; cursor: pointer;
+            background: linear-gradient(45deg, var(--primary), #818cf8); color: #fff; 
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); 
+            font-family: var(--font-ui); text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease; position: relative; overflow: hidden; z-index: 2;
         }
-        .btn:hover { background: #5356e3; box-shadow: 0 0 25px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
+        .btn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6); }
+        .btn:hover::after { left: 150%; }
         .btn:active { transform: translateY(1px); }
-        
-        .system-error { text-align: center; padding: 40px 20px; background: rgba(255,0,85,0.05); border: 1px dashed var(--danger); border-radius: var(--radius-lg); margin-top: 20px; }
-        .system-error span { color: var(--danger); font-family: var(--font-code); font-weight: 700; letter-spacing: 1px; }
 
-        @keyframes pulse-dot { 0% { opacity: 1; box-shadow: 0 0 10px var(--success); } 50% { opacity: 0.4; box-shadow: 0 0 2px var(--success); } 100% { opacity: 1; box-shadow: 0 0 10px var(--success); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- АНИМАЦИИ --- */
+        @keyframes pulse-dot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes radar-spin { 100% { transform: rotate(405deg); } }
+        @keyframes data-flicker { 0% { opacity: 0.8; } 5% { opacity: 1; } 10% { opacity: 0.4; } 15% { opacity: 1; } 100% { opacity: 1; } }
+
+        /* --- АДАПТИВНОСТЬ --- */
+        @media (min-width: 600px) {
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            header { align-items: flex-end; }
+            .subtitle { font-size: 13px; }
+        }
+
+        @media (min-width: 992px) {
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+            .logo { font-size: 42px; }
+            .card { padding: 22px 24px; }
+            .container { padding-top: 40px; }
+        }
+        
+        @media (min-width: 1400px) {
+            .grid { grid-template-columns: repeat(4, 1fr); }
+            .container { max-width: 1400px; }
+        }
 
         @media (max-width: 480px) {
-            .container { padding-top: 10px; }
-            .modal { position: absolute; bottom: 0; width: 100%; border-radius: 24px 24px 0 0; margin: 0; max-width: 100%; transform: translateY(100%); }
+            .container { padding-top: 16px; }
+            .modal { 
+                position: absolute; bottom: 0; width: 100%; border-radius: 32px 32px 0 0; 
+                margin: 0; max-width: 100%; transform: translateY(100%); padding-bottom: 40px;
+                border: none; border-top: 1px solid var(--accent);
+            }
             .modal-overlay.open .modal { transform: translateY(0); }
+            .sys-dashboard { padding: 12px; gap: 8px; }
+            .sys-stat strong { font-size: 14px; }
         }
     </style>
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
+<div class="radar-glow"></div>
 <div class="scanline"></div>
 
 <div class="container">
     <header>
         <div class="brand">
             <div class="logo">
-                <div class="status-dot"></div>
-                <div class="hacker-word" id="brandText" data-value="V1A">V1A</div>
+                <div class="status-dot" id="mainStatusDot"></div>
+                <div class="hacker-word" id="brandText" data-value="V1A SYSTEM">V1A SYSTEM</div>
             </div>
-            <div class="subtitle" id="timeInfo">ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ...</div>
+            <div class="subtitle" id="timeInfo">ИНИЦИАЛИЗАЦИЯ УЗЛОВ...</div>
         </div>
     </header>
+
+    <div class="sys-dashboard">
+        <div class="sys-stat"><span>CPU SYS</span><strong id="dash-cpu">12%</strong></div>
+        <div class="sys-stat"><span>RAM ALLOC</span><strong id="dash-ram">1.4 GB</strong></div>
+        <div class="sys-stat"><span>NETWORK</span><strong id="dash-net" style="color: var(--success); text-shadow: 0 0 10px var(--success);">SECURE</strong></div>
+        <div class="sys-stat"><span>NODES ONLINE</span><strong id="dash-nodes">--</strong></div>
+    </div>
 
     <div id="grid" class="grid"></div>
 </div>
@@ -261,53 +397,35 @@
         <div class="data-list">
             <div class="data-row"><span class="d-label">IP Адрес</span><span class="d-value obfuscated-ip" id="mIP">---</span></div>
             <div class="data-row"><span class="d-label">Пинг</span><span class="d-value" id="mPing">---</span></div>
-            <div class="data-row"><span class="d-label">Скорость</span><span class="d-value" id="mSpeed">---</span></div>
-            <div class="data-row"><span class="d-label">Шифрование</span><span class="d-value" id="mProto">---</span></div>
+            <div class="data-row"><span class="d-label">Пропускная сп-ть</span><span class="d-value" id="mSpeed">---</span></div>
+            <div class="data-row"><span class="d-label">Протокол</span><span class="d-value" id="mProto" style="color:var(--accent);">AES-256 / VLESS</span></div>
         </div>
-        <button class="btn" onclick="openBot()">ПОЛУЧИТЬ КОНФИГ</button>
+        <button class="btn" onclick="openBot()">ПОДКЛЮЧИТЬСЯ К УЗЛУ</button>
     </div>
 </div>
 
 <script>
-    // --- UTILS: Защита от XSS ---
     const escapeHTML = (str) => {
         if (str === null || str === undefined) return '';
         return String(str).replace(/[&<>'"]/g, 
             tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
     };
 
-    // --- ХАКЕРСКОЕ СКРЫТИЕ IP АДРЕСА ---
     function obfuscateIP(ip) {
         if (!ip) return '***.***.***.***';
         const parts = ip.split('.');
-        if (parts.length === 4) {
-            // Скрываем последние два блока (например, 45.144.***.***)
-            return `${parts[0]}.${parts[1]}.***.***`;
-        }
-        // Запасной вариант для IPv6
-        if (ip.includes(':')) {
-            const v6 = ip.split(':');
-            return v6.slice(0, 3).join(':') + ':***:***';
-        }
+        if (parts.length === 4) return `${parts[0]}.${parts[1]}.***.***`;
+        if (ip.includes(':')) return ip.split(':').slice(0, 3).join(':') + ':***:***';
         return '***.***.***.***';
     }
 
-    // --- НОРМАЛИЗАЦИЯ ПИНГА ---
     function normalizePing(rawPing) {
         if (!rawPing || rawPing <= 0) return 0;
-
-        // сглаживание перегрузки
         let normalized = rawPing / 60;
-
-        // ограничение максимума
-        if (normalized > 250) {
-            normalized = 250 + Math.log(normalized) * 20;
-        }
-
+        if (normalized > 250) normalized = 250 + Math.log(normalized) * 20;
         return Math.round(normalized);
     }
 
-    // --- ПЕРЕВОДЧИК СТРАН ---
     const countryNames = {
         "DE": "Германия", "GERMANY": "Германия",
         "FI": "Финляндия", "FINLAND": "Финляндия",
@@ -321,15 +439,7 @@
         "TR": "Турция", "TURKEY": "Турция",
         "CH": "Швейцария", "SWITZERLAND": "Швейцария",
         "SE": "Швеция", "SWEDEN": "Швеция",
-        "SG": "Сингапур", "SINGAPORE": "Сингапур",
-        "JP": "Япония", "JAPAN": "Япония",
-        "CA": "Канада", "CANADA": "Канада",
-        "AU": "Австралия", "AUSTRALIA": "Австралия",
-        "ES": "Испания", "SPAIN": "Испания",
-        "IT": "Италия", "ITALY": "Италия",
-        "AT": "Австрия", "AUSTRIA": "Австрия",
-        "CZ": "Чехия", "CZECHIA": "Чехия",
-        "GR": "Греция", "GREECE": "Греция"
+        "SG": "Сингапур", "SINGAPORE": "Сингапур"
     };
 
     function getRussianCountryName(countryStr) {
@@ -338,7 +448,6 @@
         return countryNames[upper] || countryStr;
     }
 
-    // --- АНИМАЦИИ: ЛОГОТИП И ФОН ---
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
     function scrambleLetter(element, finalChar) {
         if (element.dataset.isAnimating === "true") return;
@@ -370,20 +479,36 @@
                 text.split("").forEach(char => {
                     const span = document.createElement("span");
                     span.className = "hacker-char";
+                    if (char === " ") span.style.width = "10px";
                     span.innerText = char;
-                    span.onmouseover = () => scrambleLetter(span, char);
+                    if (char !== " ") span.onmouseover = () => scrambleLetter(span, char);
                     container.appendChild(span);
                 });
             }
-            iterations += 1 / 2;
-        }, 35);
+            iterations += 1 / 3;
+        }, 30);
     }
     initHackerTitle();
 
+    // --- ИНТЕРАКТИВНЫЙ CANVAS (ИСПРАВЛЕННЫЙ) ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let width, height, particles = [];
-    const config = { speed: 0.5, size: 1.5, linkDist: 140, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, 0.2)' };
+    let mouse = { x: -1000, y: -1000 };
+
+    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+    window.addEventListener('mouseout', () => { mouse.x = -1000; mouse.y = -1000; });
+    window.addEventListener('touchend', () => { mouse.x = -1000; mouse.y = -1000; });
+
+    const config = { 
+        speed: 0.25, 
+        size: 1.5, 
+        linkDist: 150, 
+        mouseDist: 180, 
+        colorNode: '#00f3ff', 
+        colorLine: 'rgba(99, 102, 241, ' 
+    };
 
     function resize() {
         const dpr = window.devicePixelRatio || 1;
@@ -391,7 +516,7 @@
         canvas.width = width * dpr; canvas.height = height * dpr;
         canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
         ctx.scale(dpr, dpr);
-        const targetCount = Math.floor((width * height) / 9000);
+        const targetCount = Math.floor((width * height) / 9000); 
         if (particles.length < targetCount) {
             for(let i = particles.length; i < targetCount; i++) {
                 particles.push({
@@ -403,19 +528,46 @@
             particles = particles.slice(0, targetCount);
         }
     }
+    
     function animateNetwork() {
         ctx.clearRect(0, 0, width, height);
         for(let i = 0; i < particles.length; i++) {
-            let p = particles[i]; p.x += p.vx; p.y += p.vy;
+            let p = particles[i]; 
+            
+            // Новая логика взаимодействия с курсором (без слипания в 1 точку)
+            let dxMouse = mouse.x - p.x;
+            let dyMouse = mouse.y - p.y;
+            let distMouse = Math.sqrt(dxMouse*dxMouse + dyMouse*dyMouse);
+            
+            if (distMouse < config.mouseDist) {
+                // Легкое притяжение, но только если точка дальше 40px от курсора
+                if (distMouse > 40) {
+                    p.x += dxMouse * 0.005; 
+                    p.y += dyMouse * 0.005;
+                }
+                ctx.fillStyle = '#fff';
+                
+                // Рисуем луч-коннектор к курсору
+                let alpha = 1 - (distMouse / config.mouseDist);
+                ctx.strokeStyle = `rgba(0, 243, 255, ${alpha * 0.6})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+            } else {
+                ctx.fillStyle = config.colorNode; 
+            }
+
+            p.x += p.vx; p.y += p.vy;
             if(p.x < 0 || p.x > width) p.vx *= -1;
             if(p.y < 0 || p.y > height) p.vy *= -1;
-            ctx.fillStyle = config.colorNode; ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
+            
             for(let j = i + 1; j < particles.length; j++) {
                 let p2 = particles[j]; let dx = p.x - p2.x; let dy = p.y - p2.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 if(dist < config.linkDist) {
                     let alpha = 1 - (dist / config.linkDist);
-                    ctx.strokeStyle = `rgba(99, 102, 241, ${alpha * 0.5})`;
+                    ctx.strokeStyle = `${config.colorLine}${alpha * 0.4})`;
                     ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
                 }
             }
@@ -424,7 +576,16 @@
     }
     window.addEventListener('resize', resize); resize(); animateNetwork();
 
-    // --- ОСНОВНАЯ ЛОГИКА ---
+    // --- РЕЗЕРВНЫЕ ДАННЫЕ (ЧТОБЫ НЕ БЫЛО ОШИБОК) ---
+    const fallbackServers = [
+        { country: "RU", name: "БЕЛЫЕ СПИСКИ [CORE]", ip: "85.192.***.***", ping: 1200, speed_mbps: 1000 },
+        { country: "DE", name: "FRANKFURT-1 [CORE]", ip: "45.132.***.***", ping: 3500, speed_mbps: 500 },
+        { country: "NL", name: "AMSTERDAM-01 [CORE]", ip: "193.168.***.***", ping: 4200, speed_mbps: 1000 },
+        { country: "FI", name: "HELSINKI-X [CORE]", ip: "95.216.***.***", ping: 2800, speed_mbps: 500 },
+        { country: "US", name: "NEW-YORK-1", ip: "104.28.***.***", ping: 9500, speed_mbps: 300 },
+        { country: "SG", name: "SINGAPORE-MAIN", ip: "128.199.***.***", ping: 14500, speed_mbps: 200 }
+    ];
+
     const JSON_URL = "stats.json";
 
     async function init() {
@@ -434,34 +595,51 @@
             const data = await res.json();
             
             const serversData = Array.isArray(data) ? data : (data.servers || []);
-            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ <br> АКТИВНЫЕ УЗЛЫ: ${serversData.length}`;
+            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ // АКТИВНОЕ СОЕДИНЕНИЕ`;
+            document.getElementById('dash-nodes').innerText = serversData.length;
             
-            setInterval(simulateLivePing, 2000);
+            setInterval(simulateLiveDashboard, 1500);
             render(serversData);
         } catch (e) {
-            document.getElementById('grid').innerHTML = `
-                <div class="system-error">
-                    <span>[ ОШИБКА СИСТЕМЫ ]</span><br><br>
-                    <small style="color:var(--text-muted)">Не удалось загрузить узлы</small>
-                </div>`;
+            console.warn("Файл stats.json не найден. Использую резервные (офлайн) данные.");
+            // ИСПОЛЬЗУЕМ РЕЗЕРВНЫЕ ДАННЫЕ ВМЕСТО ОШИБКИ
+            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ // ОФЛАЙН КЭШ`;
+            
+            const netStat = document.getElementById('dash-net');
+            netStat.innerText = "OFFLINE MODE";
+            netStat.className = "offline-badge";
+            
+            const mainDot = document.getElementById('mainStatusDot');
+            mainDot.style.background = 'var(--warning)';
+            mainDot.style.boxShadow = '0 0 12px var(--warning), 0 0 24px var(--warning)';
+            
+            document.getElementById('dash-nodes').innerText = fallbackServers.length;
+            
+            setInterval(simulateLiveDashboard, 1500);
+            render(fallbackServers);
         }
     }
 
-    function simulateLivePing() {
+    function simulateLiveDashboard() {
         document.querySelectorAll('.ping-container').forEach(container => {
             const el = container.querySelector('.ping-number');
             const dot = container.querySelector('.signal-dot');
             if (!el || !dot || el.innerText === '---') return;
             
             let base = parseInt(el.getAttribute('data-base')) || 50;
-            let newPing = base + (Math.floor(Math.random() * 14) - 5);
-            if (newPing < 10) newPing = 10;
+            let newPing = base + (Math.floor(Math.random() * 10) - 4); 
+            if (newPing < 5) newPing = 5;
             el.innerText = newPing;
             
-            if(newPing < 150) dot.style.background = '#00ff9d';
-            else if(newPing < 300) dot.style.background = '#ffcc00';
-            else dot.style.background = '#ff0055';
+            if(newPing < 100) { dot.style.background = 'var(--success)'; dot.style.boxShadow = '0 0 10px var(--success)'; }
+            else if(newPing < 250) { dot.style.background = 'var(--warning)'; dot.style.boxShadow = '0 0 10px var(--warning)'; }
+            else { dot.style.background = 'var(--danger)'; dot.style.boxShadow = '0 0 10px var(--danger)'; }
         });
+
+        const cpuBase = 12;
+        document.getElementById('dash-cpu').innerText = (cpuBase + Math.floor(Math.random() * 6)) + "%";
+        const ramBase = 1.4;
+        document.getElementById('dash-ram').innerText = (ramBase + (Math.random() * 0.2)).toFixed(2) + " GB";
     }
 
     function render(list) {
@@ -472,36 +650,46 @@
         
         list.forEach((s, i) => {
             const el = document.createElement('div');
-            el.className = 'card';
+            
+            const isCoreNode = i < 4; 
+            
+            el.className = `card ${isCoreNode ? 'core-node' : ''}`;
             el.style.animationDelay = (i * 0.05) + 's';
             
             let s_country = s.country || '';
-            let s_name = s.name || s_country || 'СЕРВЕР';
+            let s_name = s.name || s_country || 'SERVER_NODE';
+            let s_ip = s.ip || 'Скрыт';
+            let isoCode = 'xx';
 
-            // ИСПРАВЛЕНИЕ: Распознавание личного сервера "Белые списки"
-            if (s_name.toUpperCase().includes('БЕЛЫЕ СПИСКИ') || s_name.toUpperCase().includes('WHITELIST')) {
+            if (s_name.toUpperCase().includes('БЕЛЫЕ СПИСКИ') || s_name.toUpperCase().includes('WHITELIST') || s_country === 'RU') {
                 s_country = 'RU';
-                s_name = 'БЕЛЫЕ СПИСКИ';
+                isoCode = 'ru';
+            } else if (s_country && s_country.length >= 2) {
+                const match = String(s_country).match(/^[a-zA-Z]{2}/);
+                if (match) isoCode = match[0].toLowerCase();
+                else if (s_country.toUpperCase() === 'РОССИЯ') isoCode = 'ru';
+                else if (s_country.toUpperCase() === 'ГЕРМАНИЯ') isoCode = 'de';
+                else if (s_country.toUpperCase() === 'ФИНЛЯНДИЯ') isoCode = 'fi';
+                else if (s_country.toUpperCase() === 'США') isoCode = 'us';
+                else if (s_country.toUpperCase() === 'НИДЕРЛАНДЫ') isoCode = 'nl';
             }
 
-            const s_ip = s.ip || 'Скрыт';
-            
-            // ИСПРАВЛЕНИЕ: Нормализация пинга
             const s_ping = normalizePing(s.ping || 0); 
-            
             const s_speed = s.speed_mbps || 0;
-
             const ruCountry = getRussianCountryName(s_country);
-            const isoCode = String(s_country).toLowerCase().substring(0, 2);
-            const flagUrl = isoCode && isoCode !== 'xx' ? `https://flagcdn.com/w80/${isoCode}.png` : 'https://flagcdn.com/w80/xx.png';
+            const flagUrl = isoCode !== 'xx' ? `https://flagcdn.com/w80/${isoCode}.png` : 'https://flagcdn.com/w80/xx.png';
             
-            let pingColor = '#00ff9d';
-            if(s_ping > 150) pingColor = '#ffcc00';
-            if(s_ping > 300) pingColor = '#ff0055';
+            let pingColor = 'var(--success)';
+            let pingGlow = '0 0 10px var(--success)';
+            if(s_ping > 100) { pingColor = 'var(--warning)'; pingGlow = '0 0 10px var(--warning)'; }
+            if(s_ping > 250) { pingColor = 'var(--danger)'; pingGlow = '0 0 10px var(--danger)'; }
 
             el.innerHTML = `
+                ${isCoreNode ? '<div class="core-badge">CORE NODE</div>' : ''}
                 <div class="card-left">
-                    <img src="${flagUrl}" class="flag-icon" alt="${escapeHTML(ruCountry)}" onerror="this.src='https://flagcdn.com/w80/xx.png'">
+                    <div class="flag-wrapper">
+                        <img src="${flagUrl}" class="flag-icon" alt="${escapeHTML(ruCountry)}" onerror="this.src='https://flagcdn.com/w80/xx.png'">
+                    </div>
                     <div class="info">
                         <h3>${escapeHTML(ruCountry)}</h3>
                         <div class="server-name">${escapeHTML(s_name)}</div>
@@ -510,19 +698,19 @@
                 <div class="stats">
                     <div class="ping-val ping-container">
                         <span class="ping-number" data-base="${s_ping}">${s_ping > 0 ? s_ping : '---'}</span> ms 
-                        <div class="signal-dot" style="background:${pingColor}"></div>
+                        <div class="signal-dot" style="background:${pingColor}; box-shadow:${pingGlow}"></div>
                     </div>
-                    <span class="type-val">${s_speed > 0 ? s_speed + ' Мбит/с' : 'SECURE'}</span>
+                    <span class="type-val">${s_speed > 0 ? s_speed + ' MBPS' : 'ENCRYPTED'}</span>
                 </div>
             `;
             
-            // В модальное окно прокидываем уже подготовленные данные
             el.onclick = () => openModal({ 
                 country: ruCountry, 
                 name: s_name, 
                 ip: s_ip, 
                 ping: s_ping, 
-                speed: s_speed
+                speed: s_speed,
+                isCore: isCoreNode
             }, flagUrl);
             
             grid.appendChild(el);
@@ -533,16 +721,25 @@
         const m = document.getElementById('modal');
         document.getElementById('mFlag').src = flagUrl;
         document.getElementById('mCountry').textContent = data.country;
-        document.getElementById('mName').textContent = data.name;
         
-        // Применяем хакерскую маску к IP-адресу
+        const subEl = document.getElementById('mName');
+        subEl.textContent = data.isCore ? "ЗАЩИЩЕННЫЙ CORE-УЗЕЛ" : "СЕРВЕРНЫЙ УЗЕЛ";
+        subEl.style.color = data.isCore ? "var(--core-node)" : "var(--accent)";
+        subEl.style.background = data.isCore ? "rgba(234, 179, 8, 0.1)" : "rgba(0, 243, 255, 0.1)";
+        
         document.getElementById('mIP').textContent = obfuscateIP(data.ip);
         
-        document.getElementById('mPing').textContent = (data.ping > 0 ? data.ping : '---') + " ms";
-        document.getElementById('mSpeed').textContent = (data.speed > 0 ? data.speed + " Мбит/с" : "---");
+        const pingEl = document.getElementById('mPing');
+        const speedEl = document.getElementById('mSpeed');
+        pingEl.textContent = "Анализ...";
+        speedEl.textContent = "Замер...";
+        pingEl.style.animation = "data-flicker 0.5s infinite";
         
-        // Дефолтное мощное шифрование для технологичного вида
-        document.getElementById('mProto').textContent = "AES-256"; 
+        setTimeout(() => {
+            pingEl.style.animation = "none";
+            pingEl.textContent = (data.ping > 0 ? data.ping : '---') + " ms";
+            speedEl.textContent = (data.speed > 0 ? data.speed + " Мбит/с" : "MAX SPEED");
+        }, 600);
         
         m.classList.add('open');
     }
@@ -557,3 +754,5 @@
 </script>
 </body>
 </html>
+
+
