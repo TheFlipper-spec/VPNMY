@@ -426,26 +426,67 @@
         return Math.round(normalized);
     }
 
-    const countryNames = {
-        "DE": "Германия", "GERMANY": "Германия",
-        "FI": "Финляндия", "FINLAND": "Финляндия",
-        "RU": "Россия", "RUSSIA": "Россия",
-        "US": "США", "UNITED STATES": "США", "USA": "США",
-        "NL": "Нидерланды", "NETHERLANDS": "Нидерланды",
-        "GB": "Великобритания", "UK": "Великобритания", 
-        "FR": "Франция", "FRANCE": "Франция",
-        "PL": "Польша", "POLAND": "Польша",
-        "UA": "Украина", "UKRAINE": "Украина",
-        "TR": "Турция", "TURKEY": "Турция",
-        "CH": "Швейцария", "SWITZERLAND": "Швейцария",
-        "SE": "Швеция", "SWEDEN": "Швеция",
-        "SG": "Сингапур", "SINGAPORE": "Сингапур"
+    // УМНЫЙ СЛОВАРЬ СТРАН: КОДЫ И НАЗВАНИЯ ДЛЯ ПОИСКА
+    const countryDictionary = {
+        "БЕЛЫЕ СПИСКИ": { name: "Россия", iso: "ru" },
+        "WHITELIST": { name: "Россия", iso: "ru" },
+        "РОССИЯ": { name: "Россия", iso: "ru" },
+        "RU": { name: "Россия", iso: "ru" },
+        "ФИНЛЯНДИЯ": { name: "Финляндия", iso: "fi" },
+        "FI": { name: "Финляндия", iso: "fi" },
+        "ЭСТОНИЯ": { name: "Эстония", iso: "ee" },
+        "EE": { name: "Эстония", iso: "ee" },
+        "ГЕРМАНИЯ": { name: "Германия", iso: "de" },
+        "DE": { name: "Германия", iso: "de" },
+        "НИДЕРЛАНДЫ": { name: "Нидерланды", iso: "nl" },
+        "NL": { name: "Нидерланды", iso: "nl" },
+        "США": { name: "США", iso: "us" },
+        "US": { name: "США", iso: "us" },
+        "ВЕЛИКОБРИТАНИЯ": { name: "Великобритания", iso: "gb" },
+        "GB": { name: "Великобритания", iso: "gb" },
+        "ФРАНЦИЯ": { name: "Франция", iso: "fr" },
+        "FR": { name: "Франция", iso: "fr" },
+        "ШВЕЦИЯ": { name: "Швеция", iso: "se" },
+        "SE": { name: "Швеция", iso: "se" },
+        "ПОЛЬША": { name: "Польша", iso: "pl" },
+        "PL": { name: "Польша", iso: "pl" },
+        "УКРАИНА": { name: "Украина", iso: "ua" },
+        "UA": { name: "Украина", iso: "ua" },
+        "ТУРЦИЯ": { name: "Турция", iso: "tr" },
+        "TR": { name: "Турция", iso: "tr" },
+        "ШВЕЙЦАРИЯ": { name: "Швейцария", iso: "ch" },
+        "CH": { name: "Швейцария", iso: "ch" },
+        "СИНГАПУР": { name: "Сингапур", iso: "sg" },
+        "SG": { name: "Сингапур", iso: "sg" }
     };
 
-    function getRussianCountryName(countryStr) {
-        if (!countryStr) return "Неизвестная локация";
-        const upper = String(countryStr).trim().toUpperCase();
-        return countryNames[upper] || countryStr;
+    function detectLocation(serverName, serverCountry) {
+        const n = String(serverName || "").toUpperCase();
+        const c = String(serverCountry || "").toUpperCase();
+        
+        let detected = { name: "Неизвестная локация", iso: "xx" };
+
+        // 1. Сначала ищем по точному совпадению в поле country
+        for (const [key, val] of Object.entries(countryDictionary)) {
+            if (c === key || c.includes(key)) {
+                return val;
+            }
+        }
+
+        // 2. Если в country пусто или мусор, ищем ключевые слова в самом НАЗВАНИИ сервера
+        for (const [key, val] of Object.entries(countryDictionary)) {
+            if (n.includes(key)) {
+                return val;
+            }
+        }
+
+        // 3. Крайний случай (если country - это просто две буквы ISO кода)
+        if (c.length === 2 && detected.iso === "xx") {
+            detected.iso = c.toLowerCase();
+            detected.name = serverCountry; 
+        }
+
+        return detected;
     }
 
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
@@ -490,7 +531,7 @@
     }
     initHackerTitle();
 
-    // --- ИНТЕРАКТИВНЫЙ CANVAS (ИСПРАВЛЕННЫЙ) ---
+    // --- ИНТЕРАКТИВНЫЙ CANVAS ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let width, height, particles = [];
@@ -501,14 +542,7 @@
     window.addEventListener('mouseout', () => { mouse.x = -1000; mouse.y = -1000; });
     window.addEventListener('touchend', () => { mouse.x = -1000; mouse.y = -1000; });
 
-    const config = { 
-        speed: 0.25, 
-        size: 1.5, 
-        linkDist: 150, 
-        mouseDist: 180, 
-        colorNode: '#00f3ff', 
-        colorLine: 'rgba(99, 102, 241, ' 
-    };
+    const config = { speed: 0.25, size: 1.5, linkDist: 150, mouseDist: 180, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, ' };
 
     function resize() {
         const dpr = window.devicePixelRatio || 1;
@@ -534,20 +568,17 @@
         for(let i = 0; i < particles.length; i++) {
             let p = particles[i]; 
             
-            // Новая логика взаимодействия с курсором (без слипания в 1 точку)
             let dxMouse = mouse.x - p.x;
             let dyMouse = mouse.y - p.y;
             let distMouse = Math.sqrt(dxMouse*dxMouse + dyMouse*dyMouse);
             
             if (distMouse < config.mouseDist) {
-                // Легкое притяжение, но только если точка дальше 40px от курсора
                 if (distMouse > 40) {
                     p.x += dxMouse * 0.005; 
                     p.y += dyMouse * 0.005;
                 }
                 ctx.fillStyle = '#fff';
                 
-                // Рисуем луч-коннектор к курсору
                 let alpha = 1 - (distMouse / config.mouseDist);
                 ctx.strokeStyle = `rgba(0, 243, 255, ${alpha * 0.6})`;
                 ctx.lineWidth = 1;
@@ -576,14 +607,12 @@
     }
     window.addEventListener('resize', resize); resize(); animateNetwork();
 
-    // --- РЕЗЕРВНЫЕ ДАННЫЕ (ЧТОБЫ НЕ БЫЛО ОШИБОК) ---
+    // --- РЕЗЕРВНЫЕ ДАННЫЕ (ИДЕАЛЬНО ПОД ТВОИ НЕСГОРАЕМЫЕ СЕРВЕРЫ) ---
     const fallbackServers = [
-        { country: "RU", name: "БЕЛЫЕ СПИСКИ [CORE]", ip: "85.192.***.***", ping: 1200, speed_mbps: 1000 },
-        { country: "DE", name: "FRANKFURT-1 [CORE]", ip: "45.132.***.***", ping: 3500, speed_mbps: 500 },
-        { country: "NL", name: "AMSTERDAM-01 [CORE]", ip: "193.168.***.***", ping: 4200, speed_mbps: 1000 },
-        { country: "FI", name: "HELSINKI-X [CORE]", ip: "95.216.***.***", ping: 2800, speed_mbps: 500 },
-        { country: "US", name: "NEW-YORK-1", ip: "104.28.***.***", ping: 9500, speed_mbps: 300 },
-        { country: "SG", name: "SINGAPORE-MAIN", ip: "128.199.***.***", ping: 14500, speed_mbps: 200 }
+        { country: "RU", name: "💎 V1A RU / БЕЛЫЕ СПИСКИ", ip: "85.192.***.***", ping: 1200, speed_mbps: 1000 },
+        { country: "FI", name: "💎 🇫🇮 V1A / Финляндия", ip: "95.216.***.***", ping: 2800, speed_mbps: 500 },
+        { country: "FI", name: "💎 🇫🇮 V2A / Финляндия", ip: "193.168.***.***", ping: 3100, speed_mbps: 500 },
+        { country: "EE", name: "💎 🇪🇪 V2A / Эстония", ip: "144.76.***.***", ping: 4200, speed_mbps: 1000 }
     ];
 
     const JSON_URL = "stats.json";
@@ -601,8 +630,7 @@
             setInterval(simulateLiveDashboard, 1500);
             render(serversData);
         } catch (e) {
-            console.warn("Файл stats.json не найден. Использую резервные (офлайн) данные.");
-            // ИСПОЛЬЗУЕМ РЕЗЕРВНЫЕ ДАННЫЕ ВМЕСТО ОШИБКИ
+            console.warn("Файл stats.json не найден. Загружаю кэш.");
             document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ // ОФЛАЙН КЭШ`;
             
             const netStat = document.getElementById('dash-net');
@@ -650,34 +678,24 @@
         
         list.forEach((s, i) => {
             const el = document.createElement('div');
-            
             const isCoreNode = i < 4; 
             
             el.className = `card ${isCoreNode ? 'core-node' : ''}`;
             el.style.animationDelay = (i * 0.05) + 's';
             
-            let s_country = s.country || '';
-            let s_name = s.name || s_country || 'SERVER_NODE';
-            let s_ip = s.ip || 'Скрыт';
-            let isoCode = 'xx';
-
-            if (s_name.toUpperCase().includes('БЕЛЫЕ СПИСКИ') || s_name.toUpperCase().includes('WHITELIST') || s_country === 'RU') {
-                s_country = 'RU';
-                isoCode = 'ru';
-            } else if (s_country && s_country.length >= 2) {
-                const match = String(s_country).match(/^[a-zA-Z]{2}/);
-                if (match) isoCode = match[0].toLowerCase();
-                else if (s_country.toUpperCase() === 'РОССИЯ') isoCode = 'ru';
-                else if (s_country.toUpperCase() === 'ГЕРМАНИЯ') isoCode = 'de';
-                else if (s_country.toUpperCase() === 'ФИНЛЯНДИЯ') isoCode = 'fi';
-                else if (s_country.toUpperCase() === 'США') isoCode = 'us';
-                else if (s_country.toUpperCase() === 'НИДЕРЛАНДЫ') isoCode = 'nl';
-            }
-
+            const s_name = s.name || 'SERVER_NODE';
+            const s_country_raw = s.country || '';
+            const s_ip = s.ip || 'Скрыт';
+            
             const s_ping = normalizePing(s.ping || 0); 
             const s_speed = s.speed_mbps || 0;
-            const ruCountry = getRussianCountryName(s_country);
-            const flagUrl = isoCode !== 'xx' ? `https://flagcdn.com/w80/${isoCode}.png` : 'https://flagcdn.com/w80/xx.png';
+            
+            // ИСПОЛЬЗУЕМ НОВУЮ УМНУЮ ФУНКЦИЮ РАСПОЗНАВАНИЯ
+            const locationData = detectLocation(s_name, s_country_raw);
+            
+            const flagUrl = locationData.iso !== 'xx' 
+                ? `https://flagcdn.com/w80/${locationData.iso}.png` 
+                : 'https://flagcdn.com/w80/xx.png';
             
             let pingColor = 'var(--success)';
             let pingGlow = '0 0 10px var(--success)';
@@ -688,10 +706,10 @@
                 ${isCoreNode ? '<div class="core-badge">CORE NODE</div>' : ''}
                 <div class="card-left">
                     <div class="flag-wrapper">
-                        <img src="${flagUrl}" class="flag-icon" alt="${escapeHTML(ruCountry)}" onerror="this.src='https://flagcdn.com/w80/xx.png'">
+                        <img src="${flagUrl}" class="flag-icon" alt="${escapeHTML(locationData.name)}" onerror="this.src='https://flagcdn.com/w80/xx.png'">
                     </div>
                     <div class="info">
-                        <h3>${escapeHTML(ruCountry)}</h3>
+                        <h3>${escapeHTML(locationData.name)}</h3>
                         <div class="server-name">${escapeHTML(s_name)}</div>
                     </div>
                 </div>
@@ -705,7 +723,7 @@
             `;
             
             el.onclick = () => openModal({ 
-                country: ruCountry, 
+                country: locationData.name, 
                 name: s_name, 
                 ip: s_ip, 
                 ping: s_ping, 
