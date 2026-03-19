@@ -287,9 +287,9 @@ def generate_xray_config(server, local_port):
         "outbounds": [outbound]
     }
 
-# --- ТЕСТИРОВАНИЕ (Этап 4) ---
+# --- МАССОВОЕ ТЕСТИРОВАНИЕ (Этап 4) ---
 def deep_verify(server):
-    """TCP Пинг -> CF Геолокация -> YouTube 204 Test -> Speed Test"""
+    """Быстрый TCP Пинг -> CF Геолокация -> YouTube 204 Test -> Speed Test (Для отсеивания)"""
     
     # 1. TCP Check
     try:
@@ -365,6 +365,66 @@ def deep_verify(server):
         return server
     return None
 
+# --- ИНДИВИДУАЛЬНОЕ ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ (Новый этап) ---
+def measure_node_stats_sequential(server):
+    """Аккуратный последовательный тест для точных замеров 10 итоговых серверов"""
+    local_port = get_free_port()
+    config = generate_xray_config(server, local_port)
+    
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
+        json.dump(config, tmp)
+        config_path = tmp.name
+
+    proc = None
+    new_latency = 0
+    new_speed = 0.0
+    new_country = server.get('country', 'XX')
+    
+    try:
+        proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(1.0) # Ждем стабильного старта Xray для точного замера
+        proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
+
+        # 1. Замер Пинга и Локации
+        start = time.perf_counter()
+        resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
+        if resp.status_code == 200:
+            new_latency = int((time.perf_counter() - start) * 1000)
+            match = re.search(r'loc=([A-Z]{2})', resp.text)
+            if match: new_country = match.group(1)
+
+        # 2. Замер Скорости
+        dl_start = time.perf_counter()
+        downloaded_bytes = 0
+        dl_resp = requests.get(
+            "https://speed.cloudflare.com/__down?bytes=5000000",
+            proxies=proxies, timeout=(2.0, SPEED_TEST_TIMEOUT), stream=True
+        )
+        if dl_resp.status_code == 200:
+            for chunk in dl_resp.iter_content(chunk_size=8192):
+                if chunk: downloaded_bytes += len(chunk)
+                if time.perf_counter() - dl_start > SPEED_TEST_TIMEOUT: break
+            duration = time.perf_counter() - dl_start
+            if duration > 0:
+                new_speed = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
+                
+    except Exception as e:
+        pass # Оставляем нули или старые значения
+    finally:
+        if proc:
+            proc.terminate()
+            try: proc.wait(timeout=0.5)
+            except: proc.kill()
+        if os.path.exists(config_path): os.remove(config_path)
+
+    # Обновляем данные. Если тест провалился, оставляем данные из массового замера,
+    # чтобы сервер не пропал из-за случайного секундного сбоя.
+    server['real_delay'] = new_latency if new_latency > 0 else server.get('real_delay', 0)
+    server['speed_mbps'] = new_speed if new_speed > 0 else server.get('speed_mbps', 0.0)
+    server['country'] = new_country
+    
+    return server
+
 def get_speed_badge(speed_mbps):
     if speed_mbps >= 10.0: return "🚀 "
     elif speed_mbps >= 5.0: return "⚡⚡ "
@@ -407,9 +467,9 @@ def main():
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
     logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
 
-    # ЭТАП 4: Хардкор-тестирование
+    # ЭТАП 1: Массовое хардкор-тестирование (Отсеивание мусора)
     tested_servers = []
-    logger.info(f"⚡ Запуск Deep Verification. Workers: {MAX_WORKERS}...")
+    logger.info(f"⚡ Запуск массового отсеивания. Workers: {MAX_WORKERS}...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = [executor.submit(deep_verify, s) for s in unique_configs]
         for f in concurrent.futures.as_completed(futures):
@@ -418,7 +478,7 @@ def main():
                 tested_servers.append(res)
                 logger.info(f"   [{res['country']}] {res['protocol'].upper()} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps")
 
-    # ЭТАП 3: Двойной пул
+    # ЭТАП 2: Двойной пул и скоринг
     pool_global = []
     pool_ru_cis = []
     
@@ -446,35 +506,41 @@ def main():
 
     save_history(history_data)
 
-    # ЭТАП 6: Сборка элитного отряда
+    # ЭТАП 3: Отбор 6 лучших спарсенных узлов
     pool_ru_cis.sort(key=lambda x: x['score'], reverse=True)
     pool_global.sort(key=lambda x: x['score'], reverse=True)
 
-    final_selection = []
-    
-    # №5-10: Топ Global (только иностранные серверы для V1A)
-    needed_global = TOTAL_SERVERS_WANTED - len(HARDCODED_NODES) # Вычитаем хардкод ноды
-    final_selection.extend(pool_global[:needed_global])
+    final_parsed_selection = []
+    needed_global = TOTAL_SERVERS_WANTED - len(HARDCODED_NODES) 
+    final_parsed_selection.extend(pool_global[:needed_global])
 
-    logger.info(f"📊 Итого собрано: {len(HARDCODED_NODES)}(Хардкода) + {len(final_selection)} живых узлов.")
+    logger.info(f"📊 Отобрано {len(final_parsed_selection)} лучших узлов с парсинга.")
 
-    # Формирование файла
-    result_links = []
-    msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
-    header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
-    result_links.append(header_link)
-    
-    # Получение несгораемых нод по ссылкам подписок
+    # ЭТАП 4: Получение 4 несгораемых серверов
+    logger.info("💎 Загрузка 4 несгораемых узлов из подписок...")
+    hardcoded_servers = []
     for node_info in HARDCODED_NODES:
         try:
-            # verify=False нужен, так как IP-адреса часто используют самоподписанные сертификаты
             resp = requests.get(node_info["url"], timeout=10, verify=False)
             if resp.status_code == 200:
                 links = extract_links(resp.text)
                 if links:
-                    # Берем первую ссылку из подписки, отрезаем старое имя и клеим наше красивое
-                    base_link = links[0].split('#')[0]
-                    result_links.append(f"{base_link}#{quote(node_info['name'])}")
+                    base_link = links[0]
+                    parsed = None
+                    if base_link.lower().startswith("vless"): parsed = parse_vless(base_link)
+                    elif base_link.lower().startswith("trojan"): parsed = parse_trojan(base_link)
+                    else: parsed = parse_vmess(base_link)
+
+                    if parsed:
+                        parsed['custom_name'] = node_info['name']
+                        # Первичное определение страны по названию (будет уточнено при тесте)
+                        if "Финляндия" in node_info['name']: parsed['country'] = "FI"
+                        elif "Эстония" in node_info['name']: parsed['country'] = "EE"
+                        elif "БЕЛЫЕ СПИСКИ" in node_info['name'] or "RU" in node_info['name']: parsed['country'] = "RU"
+                        
+                        hardcoded_servers.append(parsed)
+                    else:
+                        logger.error(f"❌ Ошибка парсинга ссылки для {node_info['name']}")
                 else:
                     logger.error(f"❌ Не найдено ссылок в подписке {node_info['name']}")
             else:
@@ -482,41 +548,59 @@ def main():
         except Exception as e:
             logger.error(f"❌ Ошибка запроса к {node_info['url']}: {e}")
 
-    # Имя изменено здесь тоже для единообразия в json файле
-    json_stats = {"servers": [
-        {"name": "💎 V1A RU / БЕЛЫЕ СПИСКИ (Hardcoded)", "ip": "212.22.82.138", "protocol": "vless reality"},
-        {"name": "💎 🇫🇮  V1A / Финляндия", "ip": "212.22.82.138", "protocol": "vless reality"},
-        {"name": "💎 🇫🇮  V2A / Финляндия", "ip": "195.226.92.208", "protocol": "vless reality"},
-        {"name": "💎 🇪🇪  V2A / Эстония", "ip": "195.226.92.208", "protocol": "vless reality"}
-    ]}
-    
-    for s in final_selection:
-        country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
-        speed_badge = get_speed_badge(s['speed_mbps'])
-        
-        # Индикатор Золотой Ноды
-        node_id = f"{s['ip']}:{s['port']}"
-        streak = history_data.get(node_id, {}).get("streak", 0)
-        gold_star = "🌟" if streak >= 3 else ""
+    # ЭТАП 5: Финальная индивидуальная проверка 10 узлов (По одному потоку!)
+    final_10_servers = hardcoded_servers + final_parsed_selection
+    logger.info(f"\n⚡ ЗАПУСК ИНДИВИДУАЛЬНОЙ ПРОВЕРКИ (ТОП-{len(final_10_servers)} серверов) ⚡")
 
-        # Убрана приписка [YT]
-        name = f"{gold_star}{speed_badge}{country_display}" 
+    verified_final_servers = []
+    for idx, s in enumerate(final_10_servers, 1):
+        disp_name = s.get('custom_name') or COUNTRIES_RU.get(s['country'], s['country'])
+        logger.info(f"   [{idx}/{len(final_10_servers)}] Анализ: {disp_name} (IP: {s['ip']}) ...")
         
+        # Тестируем по одному
+        updated_s = measure_node_stats_sequential(s)
+        verified_final_servers.append(updated_s)
+        
+        logger.info(f"       -> Точный пинг: {updated_s.get('real_delay', 0)}ms | Точная скорость: {updated_s.get('speed_mbps', 0.0)} Mbps\n")
+
+    # ЭТАП 6: Сохранение финальных точных данных
+    result_links = []
+    msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
+    header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
+    result_links.append(header_link)
+    
+    json_stats = {"servers": []}
+    
+    for s in verified_final_servers:
+        # Имя (Используем кастомное для несгораемых, либо генерируем для остальных)
+        if 'custom_name' in s:
+            name = s['custom_name']
+        else:
+            country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
+            speed_badge = get_speed_badge(s['speed_mbps'])
+            node_id = f"{s['ip']}:{s['port']}"
+            streak = history_data.get(node_id, {}).get("streak", 0)
+            gold_star = "🌟" if streak >= 3 else ""
+            name = f"{gold_star}{speed_badge}{country_display}"
+        
+        # Ссылка
         orig = s['original']
         base = orig.split('#')[0]
         final_link = f"{base}#{quote(name)}"
         result_links.append(final_link)
         
+        # JSON статистика (С точными данными после одиночного замера!)
         json_stats["servers"].append({
             "name": name,
             "ip": s['ip'],
-            "ping": s['real_delay'],
-            "speed_mbps": s['speed_mbps'],
-            "score": s['score'],
-            "country": s['country'],
+            "ping": s.get('real_delay', 0),
+            "speed_mbps": s.get('speed_mbps', 0.0),
+            "score": s.get('score', 0),
+            "country": s.get('country', 'XX'),
             "protocol": f"{s['protocol']} {s.get('security', '')}".strip()
         })
 
+    # Запись в файлы
     raw_str = "\n".join(result_links)
     b64_str = base64.b64encode(raw_str.encode('utf-8')).decode('utf-8')
     
@@ -526,7 +610,7 @@ def main():
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_stats, f, indent=2, ensure_ascii=False)
         
-    logger.info(f"💾 Подписка успешно сохранена: {OUTPUT_FILE} (Сформирован пул из {len(result_links)-1} узлов)")
+    logger.info(f"💾 Успешно сохранено: {OUTPUT_FILE} и {JSON_FILE} (Финальный пул: {len(result_links)-1} узлов)")
 
 if __name__ == "__main__":
     main()
