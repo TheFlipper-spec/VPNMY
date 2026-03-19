@@ -69,7 +69,29 @@ COUNTRIES_RU = {
 
 CIS_COUNTRIES = ['RU', 'BY', 'KZ']
 
-# --- УТИЛИТЫ ---
+# --- УТИЛИТЫ И НОВЫЙ ИДЕАЛЬНЫЙ ПИНГ ---
+def get_accurate_ping(ip, port, attempts=3):
+    """ Замеряет чистый TCP-пинг напрямую до сервера, как это делают приложения V2ray """
+    latencies = []
+    for _ in range(attempts):
+        try:
+            start_time = time.perf_counter()
+            with socket.create_connection((ip, port), timeout=2.0):
+                latency = (time.perf_counter() - start_time) * 1000
+                latencies.append(latency)
+        except:
+            pass
+        time.sleep(0.05)
+        
+    if not latencies:
+        return 9999
+        
+    # Если попыток >= 3, убираем самый высокий пинг (сетевой скачок), чтобы получить идеальное среднее
+    if len(latencies) >= 3:
+        latencies.remove(max(latencies))
+        
+    return int(sum(latencies) / len(latencies))
+
 def install_xray_core():
     import zipfile, io
     if os.path.exists(XRAY_BIN):
@@ -289,15 +311,12 @@ def generate_xray_config(server, local_port):
 
 # --- МАССОВОЕ ТЕСТИРОВАНИЕ (Этап 4) ---
 def deep_verify(server):
-    """Быстрый TCP Пинг -> CF Геолокация -> YouTube 204 Test -> Speed Test (Для отсеивания)"""
+    """Точный TCP Пинг -> CF Геолокация -> YouTube 204 Test -> Speed Test (Для отсеивания)"""
     
-    # 1. TCP Check
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(TCP_TIMEOUT)
-        sock.connect((server['ip'], server['port']))
-        sock.close()
-    except: return None
+    # 1. Точный TCP Пинг (Отбрасываем мертвые)
+    ping_ms = get_accurate_ping(server['ip'], server['port'], attempts=2)
+    if ping_ms == 9999:
+        return None
 
     local_port = get_free_port()
     config = generate_xray_config(server, local_port)
@@ -308,7 +327,6 @@ def deep_verify(server):
 
     proc = None
     real_country = 'XX'
-    latency = None
     speed_mbps = 0.0
     youtube_ok = False
 
@@ -317,11 +335,9 @@ def deep_verify(server):
         time.sleep(0.7)
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
 
-        # 2. CF Trace & Пинг
-        start = time.perf_counter()
+        # 2. CF Trace (Только для определения локации, не используем для пинга!)
         resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         if resp.status_code == 200:
-            latency = int((time.perf_counter() - start) * 1000)
             match = re.search(r'loc=([A-Z]{2})', resp.text)
             if match: real_country = match.group(1)
         else:
@@ -358,8 +374,8 @@ def deep_verify(server):
             except: proc.kill()
         if os.path.exists(config_path): os.remove(config_path)
 
-    if latency and youtube_ok:
-        server['real_delay'] = latency
+    if youtube_ok:
+        server['real_delay'] = ping_ms # СОХРАНЯЕМ ИДЕАЛЬНЫЙ TCP ПИНГ
         server['country'] = real_country
         server['speed_mbps'] = speed_mbps
         return server
@@ -368,6 +384,10 @@ def deep_verify(server):
 # --- ИНДИВИДУАЛЬНОЕ ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ (Новый этап) ---
 def measure_node_stats_sequential(server):
     """Аккуратный последовательный тест для точных замеров 10 итоговых серверов"""
+    
+    # 1. Замер чистого TCP Пинга (Максимально точно, 5 попыток)
+    new_latency = get_accurate_ping(server['ip'], server['port'], attempts=5)
+    
     local_port = get_free_port()
     config = generate_xray_config(server, local_port)
     
@@ -376,7 +396,6 @@ def measure_node_stats_sequential(server):
         config_path = tmp.name
 
     proc = None
-    new_latency = 0
     new_speed = 0.0
     new_country = server.get('country', 'XX')
     
@@ -385,15 +404,13 @@ def measure_node_stats_sequential(server):
         time.sleep(1.0) # Ждем стабильного старта Xray для точного замера
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
 
-        # 1. Замер Пинга и Локации
-        start = time.perf_counter()
+        # 2. Локация
         resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         if resp.status_code == 200:
-            new_latency = int((time.perf_counter() - start) * 1000)
             match = re.search(r'loc=([A-Z]{2})', resp.text)
             if match: new_country = match.group(1)
 
-        # 2. Замер Скорости
+        # 3. Замер Скорости
         dl_start = time.perf_counter()
         downloaded_bytes = 0
         dl_resp = requests.get(
@@ -417,9 +434,7 @@ def measure_node_stats_sequential(server):
             except: proc.kill()
         if os.path.exists(config_path): os.remove(config_path)
 
-    # Обновляем данные. Если тест провалился, оставляем данные из массового замера,
-    # чтобы сервер не пропал из-за случайного секундного сбоя.
-    server['real_delay'] = new_latency if new_latency > 0 else server.get('real_delay', 0)
+    server['real_delay'] = new_latency if new_latency != 9999 else server.get('real_delay', 0)
     server['speed_mbps'] = new_speed if new_speed > 0 else server.get('speed_mbps', 0.0)
     server['country'] = new_country
     
@@ -533,7 +548,6 @@ def main():
 
                     if parsed:
                         parsed['custom_name'] = node_info['name']
-                        # Первичное определение страны по названию (будет уточнено при тесте)
                         if "Финляндия" in node_info['name']: parsed['country'] = "FI"
                         elif "Эстония" in node_info['name']: parsed['country'] = "EE"
                         elif "БЕЛЫЕ СПИСКИ" in node_info['name'] or "RU" in node_info['name']: parsed['country'] = "RU"
@@ -557,7 +571,7 @@ def main():
         disp_name = s.get('custom_name') or COUNTRIES_RU.get(s['country'], s['country'])
         logger.info(f"   [{idx}/{len(final_10_servers)}] Анализ: {disp_name} (IP: {s['ip']}) ...")
         
-        # Тестируем по одному
+        # Тестируем по одному с ИДЕАЛЬНЫМ ПИНГОМ
         updated_s = measure_node_stats_sequential(s)
         verified_final_servers.append(updated_s)
         
