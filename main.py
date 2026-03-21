@@ -15,7 +15,6 @@ import urllib3
 from datetime import datetime
 from urllib.parse import quote, parse_qs
 
-# Отключаем предупреждения о нестрогих SSL-сертификатах для подписок по IP
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -27,7 +26,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 # --- НАСТРОЙКИ ---
-GITHUB_TOKEN = os.getenv("TOKEN", "") # Изменено на поиск переменной TOKEN
+GITHUB_TOKEN = os.getenv("TOKEN", "") 
 SOURCES = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
@@ -39,6 +38,7 @@ XRAY_BIN = "./xray"
 OUTPUT_FILE = 'FL1PVPN'
 JSON_FILE = 'stats.json'
 HISTORY_FILE = 'stats_history.json'
+COUNTRIES_FILE = 'countries.json'
 MAX_WORKERS = 40
 TCP_TIMEOUT = 1.0
 REAL_TEST_TIMEOUT = 5.0
@@ -46,7 +46,6 @@ SPEED_TEST_TIMEOUT = 6.0
 TOTAL_SERVERS_WANTED = 10
 SPEED_HARD_LIMIT = 1.5
 
-# Ссылки на подписки для несгораемых нод
 HARDCODED_NODES = [
     {"url": "https://212.22.82.138:2096/sub/2u6r7m9fvgv0joz9", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
     {"url": "https://212.22.82.138:2096/sub/ifg3v5yrri9pqkzg", "name": "💎 🇫🇮  V1A / Финляндия"},
@@ -54,24 +53,21 @@ HARDCODED_NODES = [
     {"url": "https://195.226.92.208:2096/sub/x9dvfd72pv7z2art", "name": "💎 🇪🇪  V2A / Эстония"}
 ]
 
-COUNTRIES_RU = {
-    'RU': '🇷🇺 Россия', 'US': '🇺🇸 США', 'DE': '🇩🇪 Германия', 'NL': '🇳🇱 Нидерланды',
-    'FI': '🇫🇮 Финляндия', 'UK': '🇬🇧 Великобритания', 'GB': '🇬🇧 Великобритания',
-    'FR': '🇫🇷 Франция', 'SE': '🇸🇪 Швеция', 'PL': '🇵🇱 Польша', 'UA': '🇺🇦 Украина',
-    'KZ': '🇰🇿 Казахстан', 'BY': '🇧🇾 Беларусь', 'TR': '🇹🇷 Турция', 'JP': '🇯🇵 Япония',
-    'KR': '🇰🇷 Южная Корея', 'CN': '🇨🇳 Китай', 'SG': '🇸🇬 Сингапур', 'IT': '🇮🇹 Италия',
-    'ES': '🇪🇸 Испания', 'CA': '🇨🇦 Канада', 'AU': '🇦🇺 Австралия', 'CH': '🇨🇭 Швейцария',
-    'AE': '🇦🇪 ОАЭ', 'IN': '🇮🇳 Индия', 'BR': '🇧🇷 Бразилия', 'ZA': '🇿🇦 ЮАР',
-    'LT': '🇱🇹 Литва', 'MD': '🇲🇩 Молдова', 'EE': '🇪🇪 Эстония', 'CY': '🇨🇾 Кипр', 'LV': '🇱🇻 Латвия',
-    'GR': '🇬🇷 Греция', 'HU': '🇭🇺 Венгрия', 'CZ': '🇨🇿 Чехия', 'NO': '🇳🇴 Норвегия',
-    'AT': '🇦🇹 Австрия'
-}
-
 CIS_COUNTRIES = ['RU', 'BY', 'KZ']
 
-# --- УТИЛИТЫ И НОВЫЙ ИДЕАЛЬНЫЙ ПИНГ ---
+# Загрузка внешней базы стран
+COUNTRIES_RU = {}
+try:
+    if os.path.exists(COUNTRIES_FILE):
+        with open(COUNTRIES_FILE, 'r', encoding='utf-8') as f:
+            COUNTRIES_RU = json.load(f)
+    else:
+        logger.warning(f"⚠️ Файл {COUNTRIES_FILE} не найден! Названия стран будут отображаться кодами.")
+except Exception as e:
+    logger.error(f"❌ Ошибка загрузки {COUNTRIES_FILE}: {e}")
+
+# --- УТИЛИТЫ ---
 def get_accurate_ping(ip, port, attempts=3):
-    """ Замеряет чистый TCP-пинг напрямую до сервера, как это делают приложения V2ray """
     latencies = []
     for _ in range(attempts):
         try:
@@ -86,7 +82,6 @@ def get_accurate_ping(ip, port, attempts=3):
     if not latencies:
         return 9999
         
-    # Если попыток >= 3, убираем самый высокий пинг (сетевой скачок), чтобы получить идеальное среднее
     if len(latencies) >= 3:
         latencies.remove(max(latencies))
         
@@ -144,7 +139,6 @@ def get_free_port():
         s.bind(('', 0))
         return s.getsockname()[1]
 
-# --- ИСТОРИЯ И СКОРИНГ (Этап 2 и 5) ---
 def load_history():
     if os.path.exists(HISTORY_FILE):
         try:
@@ -163,31 +157,26 @@ def calculate_quality_score(server, history_data):
     node_hist = history_data.get(node_id, {"streak": 0, "failures": 0})
     
     score = 0
-    # 1. Скорость (40%)
-    speed = min(server.get('speed_mbps', 0) / 10.0, 1.0) # Потолок 10 Mbps
+    speed = min(server.get('speed_mbps', 0) / 10.0, 1.0)
     score += speed * 40
     
-    # 2. История (30%) - Gold Node
     streak = node_hist.get("streak", 0)
     score += min(streak * 10, 30)
-    score -= min(node_hist.get("failures", 0) * 5, 20) # Штраф за падения
+    score -= min(node_hist.get("failures", 0) * 5, 20)
     
-    # 3. Протокол (20%)
     if server['protocol'] in ['vless', 'trojan'] and server.get('security') == 'reality':
         score += 20
     elif server['protocol'] == 'trojan' or server['protocol'] == 'vless':
         score += 15
-    else: # vmess / ws
+    else:
         score += 5
         
-    # 4. Пинг (10%)
     ping = server.get('real_delay', 1000)
     ping_penalty = min(ping / 1000.0, 1.0) * 10
     score -= ping_penalty
     
     return max(0, round(score, 1))
 
-# --- ПАРСЕРЫ ---
 def parse_vmess(config_str):
     try:
         b64_str = config_str[8:]
@@ -195,7 +184,7 @@ def parse_vmess(config_str):
         if not json_str: return None
         data = json.loads(json_str)
         net_type = data.get('net', 'tcp')
-        if net_type == 'ws': return None # Игнорируем WS
+        if net_type == 'ws': return None
         tls = data.get('tls', '')
         return {
             "protocol": "vmess", "ip": data.get('add', ''), "port": int(data.get('port', 443)),
@@ -224,7 +213,7 @@ def parse_vless(config_str):
             "serviceName": params.get('serviceName', [''])[0], "original": config_str,
             "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
-        if conf['type'] == 'ws': return None # Игнорируем WS
+        if conf['type'] == 'ws': return None
         if conf['security'] == 'reality' and not conf['pbk']: return None
         return conf
     except: return None
@@ -244,28 +233,24 @@ def parse_trojan(config_str):
             "fp": params.get('fp', ['chrome'])[0], "serviceName": params.get('serviceName', [''])[0],
             "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
-        if conf['type'] == 'ws': return None # Игнорируем WS
+        if conf['type'] == 'ws': return None
         return conf
     except: return None
 
-# --- GITHUB LIVE SEARCH (Этап 1) ---
 def search_github_configs():
     logger.info("🔍 Ищем свежие конфиги на GitHub (Live Search)...")
     headers = {"Accept": "application/vnd.github.v3+json"}
     if GITHUB_TOKEN: headers["Authorization"] = f"token {GITHUB_TOKEN}"
     
     links = []
-    # Ищем свежие репозитории/файлы по ключам
     queries = ["vless reality", "trojan proxy"]
     for q in queries:
         try:
-            # Ищем репозитории, обновленные недавно
             url = f"https://api.github.com/search/repositories?q={quote(q)}+pushed:>2026-02-25&sort=updated"
             r = requests.get(url, headers=headers, timeout=10)
             if r.status_code == 200:
                 data = r.json()
-                for item in data.get('items', [])[:3]: # Берем топ 3 свежих репо
-                    # Это упрощенный парсинг readme, в идеале нужно дергать /contents/
+                for item in data.get('items', [])[:3]:
                     readme_url = f"https://raw.githubusercontent.com/{item['full_name']}/{item['default_branch']}/README.md"
                     rr = requests.get(readme_url, timeout=5)
                     if rr.status_code == 200:
@@ -274,7 +259,6 @@ def search_github_configs():
             logger.warning(f"⚠️ Ошибка GitHub API: {e}")
     return list(set(links))
 
-# --- XRAY CONFIG GENERATOR ---
 def generate_xray_config(server, local_port):
     outbound = {
         "protocol": server['protocol'], "settings": {},
@@ -285,7 +269,7 @@ def generate_xray_config(server, local_port):
         outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]}]}
     elif server['protocol'] == 'trojan':
         outbound['settings'] = {"servers": [{"address": server['ip'], "port": server['port'], "password": server['uuid']}]}
-    else: # vmess
+    else: 
         outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "alterId": 0, "security": "auto"}]}]}
 
     if server['type'] == 'ws':
@@ -309,14 +293,14 @@ def generate_xray_config(server, local_port):
         "outbounds": [outbound]
     }
 
-# --- МАССОВОЕ ТЕСТИРОВАНИЕ (Этап 4) ---
+# --- ЭТАП 1: МАССОВОЕ ТЕСТИРОВАНИЕ (Real Ping через HTTP) ---
 def deep_verify(server):
-    """Точный TCP Пинг -> CF Геолокация -> YouTube 204 Test -> Speed Test (Для отсеивания)"""
-    
-    # 1. Точный TCP Пинг (Отбрасываем мертвые)
-    ping_ms = get_accurate_ping(server['ip'], server['port'], attempts=2)
-    if ping_ms == 9999:
-        return None
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(TCP_TIMEOUT)
+        sock.connect((server['ip'], server['port']))
+        sock.close()
+    except: return None
 
     local_port = get_free_port()
     config = generate_xray_config(server, local_port)
@@ -327,6 +311,7 @@ def deep_verify(server):
 
     proc = None
     real_country = 'XX'
+    latency = None
     speed_mbps = 0.0
     youtube_ok = False
 
@@ -335,26 +320,28 @@ def deep_verify(server):
         time.sleep(0.7)
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
 
-        # 2. CF Trace (Только для определения локации, не используем для пинга!)
+        # CF Trace & Real Ping (HTTP latency)
+        start = time.perf_counter()
         resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         if resp.status_code == 200:
+            latency = int((time.perf_counter() - start) * 1000)
             match = re.search(r'loc=([A-Z]{2})', resp.text)
             if match: real_country = match.group(1)
         else:
-            return None # Провалил базовую маршрутизацию
+            return None 
             
-        # 3. YouTube 204 Test (Хардкор)
+        # YouTube 204 Test
         yt_resp = requests.get("https://www.youtube.com/generate_204", proxies=proxies, timeout=3.0)
         if yt_resp.status_code == 204:
             youtube_ok = True
         else:
-            return None # Не тянет трубы Google
+            return None 
 
-        # 4. Speed Test
+        # Speed Test
         dl_start = time.perf_counter()
         downloaded_bytes = 0
         dl_resp = requests.get(
-            "https://speed.cloudflare.com/__down?bytes=5000000", # 5MB тест
+            "https://speed.cloudflare.com/__down?bytes=5000000",
             proxies=proxies, timeout=(2.0, SPEED_TEST_TIMEOUT), stream=True
         )
         if dl_resp.status_code == 200:
@@ -374,18 +361,16 @@ def deep_verify(server):
             except: proc.kill()
         if os.path.exists(config_path): os.remove(config_path)
 
-    if youtube_ok:
-        server['real_delay'] = ping_ms # СОХРАНЯЕМ ИДЕАЛЬНЫЙ TCP ПИНГ
+    if latency and youtube_ok:
+        server['real_delay'] = latency
         server['country'] = real_country
         server['speed_mbps'] = speed_mbps
         return server
     return None
 
-# --- ИНДИВИДУАЛЬНОЕ ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ (Новый этап) ---
+# --- ЭТАП 2: ФИНАЛЬНОЕ ПОСЛЕДОВАТЕЛЬНОЕ ТЕСТИРОВАНИЕ ТОП-10 ---
 def measure_node_stats_sequential(server):
-    """Аккуратный последовательный тест для точных замеров 10 итоговых серверов"""
-    
-    # 1. Замер чистого TCP Пинга (Максимально точно, 5 попыток)
+    # 1. Замер чистого TCP Пинга (для отображения на сайте)
     new_latency = get_accurate_ping(server['ip'], server['port'], attempts=5)
     
     local_port = get_free_port()
@@ -401,16 +386,16 @@ def measure_node_stats_sequential(server):
     
     try:
         proc = subprocess.Popen([XRAY_BIN, "-c", config_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.0) # Ждем стабильного старта Xray для точного замера
+        time.sleep(1.0) 
         proxies = {"http": f"http://127.0.0.1:{local_port}", "https": f"http://127.0.0.1:{local_port}"}
 
-        # 2. Локация
+        # Локация
         resp = requests.get("https://cloudflare.com/cdn-cgi/trace", proxies=proxies, timeout=REAL_TEST_TIMEOUT)
         if resp.status_code == 200:
             match = re.search(r'loc=([A-Z]{2})', resp.text)
             if match: new_country = match.group(1)
 
-        # 3. Замер Скорости
+        # Скорость
         dl_start = time.perf_counter()
         downloaded_bytes = 0
         dl_resp = requests.get(
@@ -425,8 +410,8 @@ def measure_node_stats_sequential(server):
             if duration > 0:
                 new_speed = round((downloaded_bytes * 8 / 1_000_000) / duration, 2)
                 
-    except Exception as e:
-        pass # Оставляем нули или старые значения
+    except Exception:
+        pass 
     finally:
         if proc:
             proc.terminate()
@@ -434,6 +419,7 @@ def measure_node_stats_sequential(server):
             except: proc.kill()
         if os.path.exists(config_path): os.remove(config_path)
 
+    # Перезаписываем задержку на точный TCP пинг
     server['real_delay'] = new_latency if new_latency != 9999 else server.get('real_delay', 0)
     server['speed_mbps'] = new_speed if new_speed > 0 else server.get('speed_mbps', 0.0)
     server['country'] = new_country
@@ -457,7 +443,6 @@ def main():
     history_data = load_history()
     all_configs = []
 
-    # Сбор статики + GitHub Live Search
     logger.info("🌐 Загрузка источников (VLESS + VMess + Trojan)...")
     for url in SOURCES:
         try:
@@ -482,18 +467,17 @@ def main():
     unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
     logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
 
-    # ЭТАП 1: Массовое хардкор-тестирование (Отсеивание мусора)
+    # ================== STAGE 1 ==================
     tested_servers = []
-    logger.info(f"⚡ Запуск массового отсеивания. Workers: {MAX_WORKERS}...")
+    logger.info(f"⚡ ЭТАП 1: Массовое отсеивание (Real Ping). Workers: {MAX_WORKERS}...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = [executor.submit(deep_verify, s) for s in unique_configs]
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
                 tested_servers.append(res)
-                logger.info(f"   [{res['country']}] {res['protocol'].upper()} | Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps")
+                logger.info(f"   [{res['country']}] {res['protocol'].upper()} | HTTP Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps")
 
-    # ЭТАП 2: Двойной пул и скоринг
     pool_global = []
     pool_ru_cis = []
     
@@ -501,7 +485,6 @@ def main():
         node_id = f"{s['ip']}:{s['port']}"
         s['score'] = calculate_quality_score(s, history_data)
         
-        # Обновляем историю
         if node_id not in history_data:
             history_data[node_id] = {"streak": 0, "failures": 0, "last_seen": str(datetime.now().date())}
         
@@ -512,16 +495,14 @@ def main():
             history_data[node_id]["failures"] += 1
             history_data[node_id]["streak"] = 0
 
-        # Разносим по пулам
         if s['country'] in CIS_COUNTRIES:
             pool_ru_cis.append(s)
         else:
-            if s['speed_mbps'] >= SPEED_HARD_LIMIT: # Жесткий отбор для глобала
+            if s['speed_mbps'] >= SPEED_HARD_LIMIT: 
                 pool_global.append(s)
 
     save_history(history_data)
 
-    # ЭТАП 3: Отбор 6 лучших спарсенных узлов
     pool_ru_cis.sort(key=lambda x: x['score'], reverse=True)
     pool_global.sort(key=lambda x: x['score'], reverse=True)
 
@@ -531,7 +512,6 @@ def main():
 
     logger.info(f"📊 Отобрано {len(final_parsed_selection)} лучших узлов с парсинга.")
 
-    # ЭТАП 4: Получение 4 несгораемых серверов
     logger.info("💎 Загрузка 4 несгораемых узлов из подписок...")
     hardcoded_servers = []
     for node_info in HARDCODED_NODES:
@@ -562,22 +542,20 @@ def main():
         except Exception as e:
             logger.error(f"❌ Ошибка запроса к {node_info['url']}: {e}")
 
-    # ЭТАП 5: Финальная индивидуальная проверка 10 узлов (По одному потоку!)
+    # ================== STAGE 2 ==================
     final_10_servers = hardcoded_servers + final_parsed_selection
-    logger.info(f"\n⚡ ЗАПУСК ИНДИВИДУАЛЬНОЙ ПРОВЕРКИ (ТОП-{len(final_10_servers)} серверов) ⚡")
+    logger.info(f"\n⚡ ЭТАП 2: Индивидуальная проверка (ТОП-{len(final_10_servers)}). Замер точного TCP Пинга ⚡")
 
     verified_final_servers = []
     for idx, s in enumerate(final_10_servers, 1):
         disp_name = s.get('custom_name') or COUNTRIES_RU.get(s['country'], s['country'])
         logger.info(f"   [{idx}/{len(final_10_servers)}] Анализ: {disp_name} (IP: {s['ip']}) ...")
         
-        # Тестируем по одному с ИДЕАЛЬНЫМ ПИНГОМ
         updated_s = measure_node_stats_sequential(s)
         verified_final_servers.append(updated_s)
         
-        logger.info(f"       -> Точный пинг: {updated_s.get('real_delay', 0)}ms | Точная скорость: {updated_s.get('speed_mbps', 0.0)} Mbps\n")
+        logger.info(f"       -> Точный TCP пинг: {updated_s.get('real_delay', 0)}ms | Точная скорость: {updated_s.get('speed_mbps', 0.0)} Mbps\n")
 
-    # ЭТАП 6: Сохранение финальных точных данных
     result_links = []
     msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
     header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
@@ -586,7 +564,6 @@ def main():
     json_stats = {"servers": []}
     
     for s in verified_final_servers:
-        # Имя (Используем кастомное для несгораемых, либо генерируем для остальных)
         if 'custom_name' in s:
             name = s['custom_name']
         else:
@@ -597,13 +574,11 @@ def main():
             gold_star = "🌟" if streak >= 3 else ""
             name = f"{gold_star}{speed_badge}{country_display}"
         
-        # Ссылка
         orig = s['original']
         base = orig.split('#')[0]
         final_link = f"{base}#{quote(name)}"
         result_links.append(final_link)
         
-        # JSON статистика (С точными данными после одиночного замера!)
         json_stats["servers"].append({
             "name": name,
             "ip": s['ip'],
@@ -614,7 +589,6 @@ def main():
             "protocol": f"{s['protocol']} {s.get('security', '')}".strip()
         })
 
-    # Запись в файлы
     raw_str = "\n".join(result_links)
     b64_str = base64.b64encode(raw_str.encode('utf-8')).decode('utf-8')
     
