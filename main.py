@@ -32,7 +32,7 @@ SOURCES = [
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt",
     "https://gbr.mydan.online/configs",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-checked.txt",
-"https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt" 
+    "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt" 
 ]
 
 XRAY_BIN = "./xray"
@@ -504,8 +504,9 @@ def main():
 
     save_history(history_data)
 
-    pool_ru_cis.sort(key=lambda x: x['score'], reverse=True)
-    pool_global.sort(key=lambda x: x['score'], reverse=True)
+    # Приоритет сортировки: сначала наименьший пинг, затем наивысший скор (скорость/стабильность)
+    pool_ru_cis.sort(key=lambda x: (x.get('real_delay', 9999), -x.get('score', 0)))
+    pool_global.sort(key=lambda x: (x.get('real_delay', 9999), -x.get('score', 0)))
 
     final_parsed_selection = []
     needed_global = TOTAL_SERVERS_WANTED - len(HARDCODED_NODES) 
