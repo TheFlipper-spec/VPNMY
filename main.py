@@ -51,7 +51,6 @@ SPEED_HARD_LIMIT = 1.5
 HARDCODED_NODES = [
     {"url": "https://212.22.82.138:2096/sub/2u6r7m9fvgv0joz9", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
     {
-        # Вставь сюда все 10 ссылок подписок для V1A / Финляндия
         "urls": [
             "https://212.22.82.138:2096/sub/ifg3v5yrri9pqkzg",
             "https://212.22.82.138:2096/sub/lu8pftmyl3owcffm",
@@ -63,12 +62,39 @@ HARDCODED_NODES = [
             "https://212.22.82.138:2096/sub/jorsfwrxn92fjo6z",
             "https://212.22.82.138:2096/sub/stbjwtshnqyi6kd9",
             "https://212.22.82.138:2096/sub/imz17bgrbb1102nu"
-
         ], 
         "name": "💎 🇫🇮  V1A / Финляндия"
     },
-    {"url": "https://195.226.92.208:2096/sub/4v7pgpryd3w7de6o", "name": "💎 🇫🇮  V2A / Финляндия"},
-    {"url": "https://195.226.92.208:2096/sub/x9dvfd72pv7z2art", "name": "💎 🇪🇪  V2A / Эстония"}
+    {
+        "urls": [
+            "https://195.226.92.208:2096/sub/4v7pgpryd3w7de6o",
+            "https://195.226.92.208:2096/sub/s2zzdnfb112x0fcm",
+            "https://195.226.92.208:2096/sub/nccaiet9t8mhhf00",
+            "https://195.226.92.208:2096/sub/7d5yixnp5yaec4wn",
+            "https://195.226.92.208:2096/sub/rtm9ogilc0tmp1sy",
+            "https://195.226.92.208:2096/sub/n7pftrqv1g6p5pdk",
+            "https://195.226.92.208:2096/sub/qqh3w0tnea6tlmy6",
+            "https://195.226.92.208:2096/sub/ki5ufc1rpi96oaku",
+            "https://195.226.92.208:2096/sub/eoqmjwyjtu52takt",
+            "https://195.226.92.208:2096/sub/2hl3m4mgjvmtw783"
+        ],
+        "name": "💎 🇫🇮  V2A / Финляндия"
+    },
+    {
+        "urls": [
+            "https://195.226.92.208:2096/sub/x9dvfd72pv7z2art",
+            "https://195.226.92.208:2096/sub/ao2tsylns82xwmcu",
+            "https://195.226.92.208:2096/sub/jxmca4tlnsp4ykgk",
+            "https://195.226.92.208:2096/sub/8lv5533epskqzedi",
+            "https://195.226.92.208:2096/sub/ojpapyd6j44a1iji",
+            "https://195.226.92.208:2096/sub/kzg1epy9mvc9kiel",
+            "https://195.226.92.208:2096/sub/tb311lgvw7kqpie9",
+            "https://195.226.92.208:2096/sub/ndjuc43v37i3ix5y",
+            "https://195.226.92.208:2096/sub/eaopf0epjrarqspq",
+            "https://195.226.92.208:2096/sub/2tjc8qiwhvlvcp2u"
+        ],
+        "name": "💎 🇪🇪  V2A / Эстония"
+    }
 ]
 
 CIS_COUNTRIES = ['RU', 'BY', 'KZ']
