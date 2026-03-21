@@ -47,9 +47,26 @@ SPEED_TEST_TIMEOUT = 6.0
 TOTAL_SERVERS_WANTED = 10
 SPEED_HARD_LIMIT = 1.5
 
+# ВАЖНО: Добавлена поддержка "urls" (списка) для ротации.
 HARDCODED_NODES = [
     {"url": "https://212.22.82.138:2096/sub/2u6r7m9fvgv0joz9", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
-    {"url": "https://212.22.82.138:2096/sub/ifg3v5yrri9pqkzg", "name": "💎 🇫🇮  V1A / Финляндия"},
+    {
+        # Вставь сюда все 10 ссылок подписок для V1A / Финляндия
+        "urls": [
+            "https://212.22.82.138:2096/sub/ifg3v5yrri9pqkzg",
+            "https://212.22.82.138:2096/sub/lu8pftmyl3owcffm",
+            "https://212.22.82.138:2096/sub/bcb1rdvd339gdaay",
+            "https://212.22.82.138:2096/sub/6j3uzx9idnbpe3zv",
+            "https://212.22.82.138:2096/sub/uvrlxuflrm411bgr",
+            "https://212.22.82.138:2096/sub/9sh4pb9u7ds09yta",
+            "https://212.22.82.138:2096/sub/tqe59rfpcygu3erb",
+            "https://212.22.82.138:2096/sub/jorsfwrxn92fjo6z",
+            "https://212.22.82.138:2096/sub/stbjwtshnqyi6kd9",
+            "https://212.22.82.138:2096/sub/imz17bgrbb1102nu"
+
+        ], 
+        "name": "💎 🇫🇮  V1A / Финляндия"
+    },
     {"url": "https://195.226.92.208:2096/sub/4v7pgpryd3w7de6o", "name": "💎 🇫🇮  V2A / Финляндия"},
     {"url": "https://195.226.92.208:2096/sub/x9dvfd72pv7z2art", "name": "💎 🇪🇪  V2A / Эстония"}
 ]
@@ -514,11 +531,28 @@ def main():
 
     logger.info(f"📊 Отобрано {len(final_parsed_selection)} лучших узлов с парсинга.")
 
-    logger.info("💎 Загрузка 4 несгораемых узлов из подписок...")
+    logger.info("💎 Загрузка несгораемых узлов из подписок с ротацией...")
     hardcoded_servers = []
     for node_info in HARDCODED_NODES:
         try:
-            resp = requests.get(node_info["url"], timeout=10, verify=False)
+            # Получаем список ссылок или создаем список из одной ссылки
+            if "urls" in node_info and isinstance(node_info["urls"], list):
+                urls_list = node_info["urls"]
+            else:
+                urls_list = [node_info["url"]]
+            
+            # --- ЛОГИКА РОТАЦИИ КАЖДЫЕ 10 МИНУТ ---
+            # time.time() возвращает секунды. Делим на 600 (10 минут). 
+            # Это дает нам "номер текущего 10-минутного окна".
+            # Остаток от деления на кол-во ссылок всегда будет выдавать индекс от 0 до (len - 1).
+            current_slot = int(time.time() // 600)
+            selected_url = urls_list[current_slot % len(urls_list)]
+            
+            if len(urls_list) > 1:
+                client_num = (current_slot % len(urls_list)) + 1
+                logger.info(f"🔄 Ротация {node_info['name']}: выбран клиент {client_num} из {len(urls_list)}")
+
+            resp = requests.get(selected_url, timeout=10, verify=False)
             if resp.status_code == 200:
                 links = extract_links(resp.text)
                 if links:
@@ -542,7 +576,8 @@ def main():
             else:
                 logger.error(f"❌ Ошибка HTTP {resp.status_code} при загрузке {node_info['name']}")
         except Exception as e:
-            logger.error(f"❌ Ошибка запроса к {node_info['url']}: {e}")
+            target_url = node_info.get("url") or (node_info.get("urls")[0] if "urls" in node_info else "Unknown")
+            logger.error(f"❌ Ошибка запроса к {target_url}: {e}")
 
     # ================== STAGE 2 ==================
     final_10_servers = hardcoded_servers + final_parsed_selection
