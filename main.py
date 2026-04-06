@@ -63,7 +63,7 @@ HARDCODED_NODES = [
             "https://212.22.82.138:2096/sub/stbjwtshnqyi6kd9",
             "https://212.22.82.138:2096/sub/imz17bgrbb1102nu"
         ], 
-        "name": "💎 🇫🇮  V1A / Финляндия"
+        "name": "💎 🇷🇺  V1A / ИНТЕРНЕТ ДО РКН"
     },
     {
         "urls": [
@@ -93,7 +93,7 @@ HARDCODED_NODES = [
             "https://195.226.92.208:2096/sub/eaopf0epjrarqspq",
             "https://195.226.92.208:2096/sub/2tjc8qiwhvlvcp2u"
         ],
-        "name": "💎 🇪🇪  V2A / Эстония"
+        "name": "💎 🇫🇮  V2A / Финляндия Warp"
     }
 ]
 
