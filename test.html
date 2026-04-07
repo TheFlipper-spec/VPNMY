@@ -1,473 +1,440 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  ShieldCheck, ShieldAlert, Activity, Globe, MapPin, 
-  Wifi, WifiOff, Server, CheckCircle2, XCircle, 
-  AlertTriangle, Play, RefreshCw, Lock, Unlock, EyeOff
-} from 'lucide-react';
-
-// Цели для тестирования
-const BLOCKED_SITES = [
-  { id: 'insta', name: 'Instagram', url: 'https://www.instagram.com/favicon.ico' },
-  { id: 'x', name: 'X (Twitter)', url: 'https://twitter.com/favicon.ico' },
-  { id: 'meduza', name: 'Meduza', url: 'https://meduza.io/favicon.ico' },
-  { id: 'bbc', name: 'BBC News', url: 'https://www.bbc.com/favicon.ico' },
-  { id: 'youtube', name: 'YouTube (Троттлинг)', url: 'https://www.youtube.com/favicon.ico' }
-];
-
-const WHITELIST_SITES = [
-  { id: 'vk', name: 'ВКонтакте', url: 'https://vk.com/favicon.ico' },
-  { id: 'ya', name: 'Яндекс', url: 'https://ya.ru/favicon.ico' },
-  { id: 'ozon', name: 'Ozon', url: 'https://www.ozon.ru/favicon.ico' },
-  { id: 'mail', name: 'Mail.ru', url: 'https://mail.ru/favicon.ico' }
-];
-
-export default function App() {
-  const [status, setStatus] = useState('idle'); // idle, testing, results
-  const [progress, setProgress] = useState(0);
-  const [currentTest, setCurrentTest] = useState('');
-  
-  const [ipData, setIpData] = useState(null);
-  const [blockedResults, setBlockedResults] = useState({});
-  const [whitelistResults, setWhitelistResults] = useState({});
-  const [pingData, setPingData] = useState({ min: 0, max: 0, avg: 0 });
-  
-  const [score, setScore] = useState(0);
-  const [analysis, setAnalysis] = useState({ strengths: [], weaknesses: [] });
-
-  // Функция для проверки доступности ресурса (обход CORS ошибки)
-  const pingResource = async (url) => {
-    const start = Date.now();
-    try {
-      // no-cors позволяет отправить запрос. 
-      // Если провайдер режет соединение (ERR_CONNECTION_RESET), fetch выдаст ошибку.
-      // Если сайт доступен, fetch выполнится, хоть мы и не сможем прочитать тело ответа.
-      await fetch(url, { mode: 'no-cors', cache: 'no-store' });
-      const time = Date.now() - start;
-      return { success: true, time };
-    } catch (error) {
-      return { success: false, time: 0, error: error.message };
-    }
-  };
-
-  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const runTests = async () => {
-    setStatus('testing');
-    setProgress(0);
-    setBlockedResults({});
-    setWhitelistResults({});
-    setIpData(null);
-    setScore(0);
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPN Inspector Pro</title>
+    <!-- Подключаем Tailwind CSS для дизайна -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем React для работы приложения -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    let totalScore = 0;
-    let pings = [];
-    let localStrengths = [];
-    let localWeaknesses = [];
+    <style>
+        /* Анимация сканирования */
+        @keyframes scan {
+            0% { transform: translateY(0); opacity: 0.5; }
+            100% { transform: translateY(300px); opacity: 0; }
+        }
+        .animate-scan {
+            animation: scan 2s ease-in-out infinite alternate;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30">
+    <div id="root"></div>
 
-    // 1. Проверка IP
-    setCurrentTest('Анализ маршрутизации и определение IP...');
-    try {
-      const ipRes = await fetch('https://ipapi.co/json/');
-      const ipJson = await ipRes.json();
-      setIpData(ipJson);
-      
-      if (ipJson.country === 'RU') {
-        localWeaknesses.push('VPN выключен или используется российский сервер (не обходит цензуру).');
-      } else {
-        totalScore += 25;
-        localStrengths.push(`Трафик успешно зашифрован. Выходная нода: ${ipJson.country_name}.`);
-      }
-    } catch (e) {
-      setIpData({ ip: 'Неизвестно', country_name: 'Ошибка API', org: 'Скрыто' });
-      localWeaknesses.push('Не удалось определить IP. Возможно, слишком сильная фильтрация.');
-    }
-    setProgress(20);
-    await delay(800);
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    // 2. Проверка заблокированных сайтов (Обход РКН)
-    setCurrentTest('Стресс-тест: Пробитие Великого Русского Файрвола (ТСПУ)...');
-    let blockedSuccessCount = 0;
-    const tempBlocked = {};
-    
-    for (const site of BLOCKED_SITES) {
-      setCurrentTest(`Проверка доступа к ${site.name}...`);
-      const result = await pingResource(site.url);
-      tempBlocked[site.id] = result;
-      setBlockedResults({ ...tempBlocked });
-      
-      if (result.success) {
-        blockedSuccessCount++;
-        pings.push(result.time);
-      }
-      setProgress(prev => prev + (40 / BLOCKED_SITES.length));
-      await delay(500); // Искусственная задержка для визуала
-    }
+        // Библиотека иконок (SVG)
+        const Icon = ({ name, className }) => {
+            const icons = {
+                ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></>,
+                ShieldAlert: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+                Activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>,
+                Globe: <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></>,
+                MapPin: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>,
+                RefreshCw: <><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
+                Lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+                Play: <polygon points="5 3 19 12 5 21 5 3"/>,
+                CheckCircle2: <><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></>,
+                XCircle: <><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></>,
+                AlertTriangle: <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+                EyeOff: <><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></>
+            };
+            return (
+                <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {icons[name]}
+                </svg>
+            );
+        };
 
-    const blockedRatio = blockedSuccessCount / BLOCKED_SITES.length;
-    totalScore += blockedRatio * 50; // Максимум 50 баллов за обход
+        const BLOCKED_SITES = [
+            { id: 'insta', name: 'Instagram', url: 'https://www.instagram.com/favicon.ico' },
+            { id: 'x', name: 'X (Twitter)', url: 'https://twitter.com/favicon.ico' },
+            { id: 'meduza', name: 'Meduza', url: 'https://meduza.io/favicon.ico' },
+            { id: 'bbc', name: 'BBC News', url: 'https://www.bbc.com/favicon.ico' },
+            { id: 'youtube', name: 'YouTube', url: 'https://www.youtube.com/favicon.ico' }
+        ];
 
-    if (blockedRatio === 1) {
-      localStrengths.push('Идеальный обход цензуры. Все заблокированные сайты доступны.');
-    } else if (blockedRatio > 0) {
-      localStrengths.push('Частичный обход цензуры. Некоторые протоколы распознаются.');
-      localWeaknesses.push('VPN подвержен фрагментарным блокировкам (ТСПУ режет часть пакетов).');
-    } else {
-      localWeaknesses.push('VPN не может обойти блокировки Роскомнадзора. Соединение перехватывается.');
-    }
+        const WHITELIST_SITES = [
+            { id: 'vk', name: 'ВКонтакте', url: 'https://vk.com/favicon.ico' },
+            { id: 'ya', name: 'Яндекс', url: 'https://ya.ru/favicon.ico' },
+            { id: 'ozon', name: 'Ozon', url: 'https://www.ozon.ru/favicon.ico' },
+            { id: 'mail', name: 'Mail.ru', url: 'https://mail.ru/favicon.ico' }
+        ];
 
-    // 3. Проверка Белого списка (Чебурнет / RU сегмент)
-    setCurrentTest('Тест "Белый список": Доступность Рунета через VPN...');
-    let whitelistSuccessCount = 0;
-    const tempWhitelist = {};
-
-    for (const site of WHITELIST_SITES) {
-      setCurrentTest(`Пинг отечественного сервиса: ${site.name}...`);
-      const result = await pingResource(site.url);
-      tempWhitelist[site.id] = result;
-      setWhitelistResults({ ...tempWhitelist });
-      
-      if (result.success) {
-        whitelistSuccessCount++;
-      }
-      setProgress(prev => prev + (25 / WHITELIST_SITES.length));
-      await delay(400);
-    }
-
-    const whiteRatio = whitelistSuccessCount / WHITELIST_SITES.length;
-    totalScore += whiteRatio * 15; // Максимум 15 баллов
-
-    if (whiteRatio === 1) {
-      localStrengths.push('Отличная совместимость. Российские сервисы (ВК, банки) не блокируют этот VPN.');
-    } else if (whiteRatio < 1 && whiteRatio > 0) {
-      localWeaknesses.push('Часть российских сервисов блокирует IP-адрес этого VPN сервера.');
-    } else {
-      localWeaknesses.push('Полная изоляция от Рунета. Российские сайты не открываются (IP в черном списке).');
-    }
-
-    // 4. Анализ скорости
-    setCurrentTest('Анализ стабильности и скорости пакетов...');
-    if (pings.length > 0) {
-      const avg = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
-      const min = Math.min(...pings);
-      const max = Math.max(...pings);
-      setPingData({ min, max, avg });
-      
-      if (avg < 150) {
-        totalScore += 10;
-        localStrengths.push(`Отличный пинг (~${avg}мс). Подходит для видео и звонков.`);
-      } else if (avg < 500) {
-        totalScore += 5;
-        localWeaknesses.push(`Высокий пинг (~${avg}мс). Возможны задержки при загрузке тяжелого контента.`);
-      } else {
-        localWeaknesses.push(`Критически высокий пинг (>500мс). Маршрутизация неоптимальна.`);
-      }
-    } else {
-      setPingData({ min: 0, max: 0, avg: 0 });
-    }
-    setProgress(100);
-    await delay(600);
-
-    setScore(Math.round(totalScore));
-    setAnalysis({ strengths: localStrengths, weaknesses: localWeaknesses });
-    setStatus('results');
-  };
-
-  // --- UI Компоненты ---
-
-  const getScoreColor = (s) => {
-    if (s >= 80) return 'text-emerald-400';
-    if (s >= 50) return 'text-amber-400';
-    return 'text-rose-500';
-  };
-
-  const getScoreGradient = (s) => {
-    if (s >= 80) return 'from-emerald-500 to-teal-400';
-    if (s >= 50) return 'from-amber-500 to-orange-400';
-    return 'from-rose-600 to-red-500';
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30 p-4 md:p-8">
-      
-      {/* Header */}
-      <header className="max-w-5xl mx-auto mb-10 text-center space-y-4">
-        <div className="inline-flex items-center justify-center p-3 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-          <ShieldCheck className="w-10 h-10 text-indigo-400" />
-        </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-          VPN Inspector Pro
-        </h1>
-        <p className="text-slate-400 max-w-2xl mx-auto text-lg">
-          Глубокий анализ вашего соединения. Проверка обхода ТСПУ, устойчивости к блокировкам Роскомнадзора и работы в условиях "Белых списков".
-        </p>
-      </header>
-
-      <main className="max-w-5xl mx-auto">
-        
-        {/* Исходное состояние / Кнопка запуска */}
-        {status === 'idle' && (
-          <div className="flex flex-col items-center justify-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-sm shadow-2xl">
-            <Lock className="w-16 h-16 text-slate-600 mb-6" />
-            <h2 className="text-2xl font-bold text-white mb-2">Готов к сканированию сети</h2>
-            <p className="text-slate-400 mb-8 text-center max-w-md">
-              Нажмите кнопку ниже, чтобы начать стресс-тест вашего текущего подключения. Мы отправим тестовые пакеты к заблокированным и разрешенным ресурсам.
-            </p>
-            <button 
-              onClick={runTests}
-              className="group relative px-8 py-4 bg-indigo-600 hover:bg-indigo-500 transition-all duration-300 rounded-full font-bold text-lg text-white shadow-[0_0_40px_rgba(79,70,229,0.4)] hover:shadow-[0_0_60px_rgba(79,70,229,0.6)] flex items-center gap-3 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
-              <Play className="w-6 h-6 relative z-10" fill="currentColor" />
-              <span className="relative z-10">Запустить глубокий тест</span>
-            </button>
-          </div>
-        )}
-
-        {/* Состояние загрузки */}
-        {status === 'testing' && (
-          <div className="bg-slate-900/80 rounded-3xl border border-indigo-500/30 p-10 backdrop-blur-md shadow-2xl relative overflow-hidden">
-            {/* Анимация сканирования (линия сверху вниз) */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_20px_#6366f1] animate-[scan_2s_ease-in-out_infinite]" style={{ animationDirection: 'alternate' }}></div>
+        function App() {
+            const [status, setStatus] = useState('idle'); 
+            const [progress, setProgress] = useState(0);
+            const [currentTest, setCurrentTest] = useState('');
             
-            <div className="flex flex-col items-center text-center space-y-8 relative z-10">
-              <div className="relative">
-                <RefreshCw className="w-20 h-20 text-indigo-400 animate-spin" />
-                <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full"></div>
-              </div>
-              
-              <div className="space-y-3 w-full max-w-lg">
-                <h3 className="text-2xl font-bold text-white">Анализ пакетов...</h3>
-                <p className="text-indigo-300 font-mono text-sm h-6">{currentTest}</p>
-                
-                <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden mt-6">
-                  <div 
-                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500 ease-out rounded-full relative"
-                    style={{ width: `${progress}%` }}
-                  >
-                    <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
-                  </div>
-                </div>
-                <div className="text-right text-slate-500 font-mono text-xs mt-1">{Math.round(progress)}%</div>
-              </div>
-            </div>
-            <style>{`
-              @keyframes scan {
-                0% { transform: translateY(0); opacity: 0.5; }
-                100% { transform: translateY(300px); opacity: 0; }
-              }
-            `}</style>
-          </div>
-        )}
-
-        {/* Результаты */}
-        {status === 'results' && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            const [ipData, setIpData] = useState(null);
+            const [blockedResults, setBlockedResults] = useState({});
+            const [whitelistResults, setWhitelistResults] = useState({});
+            const [pingData, setPingData] = useState({ min: 0, max: 0, avg: 0 });
             
-            {/* Верхний блок: Оценка и IP */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* Главный скор */}
-              <div className="md:col-span-1 bg-slate-900 rounded-3xl border border-slate-800 p-8 flex flex-col items-center justify-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <Activity className="w-32 h-32" />
-                </div>
-                <h3 className="text-slate-400 font-medium mb-6">Качество соединения</h3>
+            const [score, setScore] = useState(0);
+            const [analysis, setAnalysis] = useState({ strengths: [], weaknesses: [] });
+
+            const pingResource = async (url) => {
+                const start = Date.now();
+                try {
+                    await fetch(url, { mode: 'no-cors', cache: 'no-store' });
+                    return { success: true, time: Date.now() - start };
+                } catch (error) {
+                    return { success: false, time: 0, error: error.message };
+                }
+            };
+
+            const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+            const runTests = async () => {
+                setStatus('testing');
+                setProgress(0);
+                setBlockedResults({});
+                setWhitelistResults({});
+                setIpData(null);
+                setScore(0);
                 
-                <div className="relative flex items-center justify-center w-40 h-40">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" strokeWidth="8" />
-                    <circle 
-                      cx="50" cy="50" r="45" fill="none" 
-                      stroke="currentColor" strokeWidth="8"
-                      strokeDasharray={`${2 * Math.PI * 45}`}
-                      strokeDashoffset={`${2 * Math.PI * 45 * (1 - score / 100)}`}
-                      className={`transition-all duration-1500 ease-out ${getScoreColor(score)} drop-shadow-[0_0_10px_currentColor]`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center">
-                    <span className={`text-5xl font-black ${getScoreColor(score)}`}>{score}%</span>
-                  </div>
-                </div>
+                let totalScore = 0;
+                let pings = [];
+                let localStrengths = [];
+                let localWeaknesses = [];
 
-                <div className="mt-6 text-center">
-                  {score >= 80 && <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-sm font-medium">Отличный VPN</span>}
-                  {score >= 50 && score < 80 && <span className="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-sm font-medium">Средняя защита</span>}
-                  {score < 50 && <span className="px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-sm font-medium">Скомпрометировано</span>}
-                </div>
-              </div>
+                setCurrentTest('Анализ маршрутизации и определение IP...');
+                try {
+                    const ipRes = await fetch('https://ipapi.co/json/');
+                    const ipJson = await ipRes.json();
+                    setIpData(ipJson);
+                    
+                    if (ipJson.country === 'RU') {
+                        localWeaknesses.push('VPN выключен или используется российский сервер (не обходит цензуру).');
+                    } else {
+                        totalScore += 25;
+                        localStrengths.push(`Трафик успешно зашифрован. Выходная нода: ${ipJson.country_name || 'Неизвестно'}.`);
+                    }
+                } catch (e) {
+                    setIpData({ ip: 'Неизвестно', country_name: 'Ошибка API', org: 'Скрыто' });
+                    localWeaknesses.push('Не удалось определить IP. Возможно, слишком сильная фильтрация.');
+                }
+                setProgress(20);
+                await delay(800);
 
-              {/* Данные сети */}
-              <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                <div className="col-span-2 sm:col-span-1 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between">
-                  <div className="flex items-center gap-3 mb-4 text-slate-400">
-                    <MapPin className="w-5 h-5 text-indigo-400" />
-                    <h3 className="font-medium">Маршрутизация</h3>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-white mb-1">{ipData?.country_name || 'Неизвестно'}</div>
-                    <div className="text-slate-500 font-mono text-sm">{ipData?.ip || '0.0.0.0'}</div>
-                    <div className="text-slate-500 text-sm mt-2 line-clamp-1 truncate" title={ipData?.org}>{ipData?.org || 'ISP Скрыт'}</div>
-                  </div>
-                </div>
+                setCurrentTest('Стресс-тест: Пробитие Великого Русского Файрвола (ТСПУ)...');
+                let blockedSuccessCount = 0;
+                const tempBlocked = {};
+                
+                for (const site of BLOCKED_SITES) {
+                    setCurrentTest(`Проверка доступа к ${site.name}...`);
+                    const result = await pingResource(site.url);
+                    tempBlocked[site.id] = result;
+                    setBlockedResults({ ...tempBlocked });
+                    
+                    if (result.success) {
+                        blockedSuccessCount++;
+                        pings.push(result.time);
+                    }
+                    setProgress(prev => prev + (40 / BLOCKED_SITES.length));
+                    await delay(500); 
+                }
 
-                <div className="col-span-2 sm:col-span-1 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between">
-                  <div className="flex items-center gap-3 mb-4 text-slate-400">
-                    <Activity className="w-5 h-5 text-indigo-400" />
-                    <h3 className="font-medium">Задержка (Пинг)</h3>
-                  </div>
-                  <div>
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <div className="text-3xl font-bold text-white">{pingData.avg || '--'}</div>
-                      <div className="text-slate-500 text-sm">мс</div>
-                    </div>
-                    <div className="flex gap-4 text-sm text-slate-500 mt-2">
-                      <div>Мин: <span className="text-slate-300 font-mono">{pingData.min || '-'}</span></div>
-                      <div>Макс: <span className="text-slate-300 font-mono">{pingData.max || '-'}</span></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                const blockedRatio = blockedSuccessCount / BLOCKED_SITES.length;
+                totalScore += blockedRatio * 50; 
 
-            {/* Сильные и слабые стороны */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-slate-900/50 rounded-2xl border border-emerald-500/20 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <ShieldCheck className="w-6 h-6 text-emerald-400" />
-                  <h3 className="text-lg font-bold text-emerald-400">Сильные стороны</h3>
-                </div>
-                {analysis.strengths.length > 0 ? (
-                  <ul className="space-y-3">
-                    {analysis.strengths.map((str, idx) => (
-                      <li key={idx} className="flex gap-3 text-slate-300 text-sm bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/10">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                        <span>{str}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-slate-500 text-sm italic py-4">Преимуществ не обнаружено.</div>
-                )}
-              </div>
+                if (blockedRatio === 1) {
+                    localStrengths.push('Идеальный обход цензуры. Все заблокированные сайты доступны.');
+                } else if (blockedRatio > 0) {
+                    localStrengths.push('Частичный обход цензуры. Некоторые протоколы распознаются.');
+                    localWeaknesses.push('VPN подвержен фрагментарным блокировкам (ТСПУ режет часть пакетов).');
+                } else {
+                    localWeaknesses.push('VPN не может обойти блокировки Роскомнадзора. Соединение перехватывается.');
+                }
 
-              <div className="bg-slate-900/50 rounded-2xl border border-rose-500/20 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertTriangle className="w-6 h-6 text-rose-400" />
-                  <h3 className="text-lg font-bold text-rose-400">Уязвимости и проблемы</h3>
-                </div>
-                {analysis.weaknesses.length > 0 ? (
-                  <ul className="space-y-3">
-                    {analysis.weaknesses.map((weak, idx) => (
-                      <li key={idx} className="flex gap-3 text-slate-300 text-sm bg-rose-500/5 p-3 rounded-xl border border-rose-500/10">
-                        <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
-                        <span>{weak}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-slate-500 text-sm italic py-4">Проблем не обнаружено. Отличный результат!</div>
-                )}
-              </div>
-            </div>
+                setCurrentTest('Тест "Белый список": Доступность Рунета через VPN...');
+                let whitelistSuccessCount = 0;
+                const tempWhitelist = {};
 
-            {/* Детализация тестов (Grid) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Блок: Обход цензуры */}
-              <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden">
-                <div className="p-6 border-b border-slate-800 bg-slate-800/20 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <EyeOff className="w-5 h-5 text-indigo-400" />
-                    <h3 className="font-bold text-white">Обход блокировок (ТСПУ)</h3>
-                  </div>
-                  <span className="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-1 rounded">Глобальная сеть</span>
-                </div>
-                <div className="p-4 space-y-2">
-                  {BLOCKED_SITES.map(site => {
-                    const res = blockedResults[site.id];
-                    return (
-                      <div key={site.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/50 transition-colors">
-                        <div className="font-medium text-slate-300">{site.name}</div>
-                        <div className="flex items-center gap-3">
-                          {res ? (
-                            res.success ? (
-                              <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full text-sm">
-                                <span className="font-mono text-xs">{res.time}мс</span>
-                                <CheckCircle2 className="w-4 h-4" />
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2 text-rose-400 bg-rose-400/10 px-3 py-1 rounded-full text-sm">
-                                <span className="text-xs">Заблокировано</span>
-                                <ShieldAlert className="w-4 h-4" />
-                              </div>
-                            )
-                          ) : (
-                            <div className="w-16 h-6 bg-slate-800 rounded animate-pulse"></div>
-                          )}
+                for (const site of WHITELIST_SITES) {
+                    setCurrentTest(`Пинг отечественного сервиса: ${site.name}...`);
+                    const result = await pingResource(site.url);
+                    tempWhitelist[site.id] = result;
+                    setWhitelistResults({ ...tempWhitelist });
+                    
+                    if (result.success) {
+                        whitelistSuccessCount++;
+                    }
+                    setProgress(prev => prev + (25 / WHITELIST_SITES.length));
+                    await delay(400);
+                }
+
+                const whiteRatio = whitelistSuccessCount / WHITELIST_SITES.length;
+                totalScore += whiteRatio * 15; 
+
+                if (whiteRatio === 1) {
+                    localStrengths.push('Отличная совместимость. Российские сервисы не блокируют этот VPN.');
+                } else if (whiteRatio > 0) {
+                    localWeaknesses.push('Часть российских сервисов блокирует IP-адрес этого VPN сервера.');
+                } else {
+                    localWeaknesses.push('Полная изоляция от Рунета. Российские сайты не открываются (IP в черном списке).');
+                }
+
+                setCurrentTest('Анализ стабильности и скорости пакетов...');
+                if (pings.length > 0) {
+                    const avg = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
+                    const min = Math.min(...pings);
+                    const max = Math.max(...pings);
+                    setPingData({ min, max, avg });
+                    
+                    if (avg < 150) {
+                        totalScore += 10;
+                        localStrengths.push(`Отличный пинг (~${avg}мс). Подходит для видео и звонков.`);
+                    } else if (avg < 500) {
+                        totalScore += 5;
+                        localWeaknesses.push(`Высокий пинг (~${avg}мс). Возможны задержки при загрузке контента.`);
+                    } else {
+                        localWeaknesses.push(`Критически высокий пинг (>500мс). Маршрутизация неоптимальна.`);
+                    }
+                } else {
+                    setPingData({ min: 0, max: 0, avg: 0 });
+                }
+                setProgress(100);
+                await delay(600);
+
+                setScore(Math.round(totalScore));
+                setAnalysis({ strengths: localStrengths, weaknesses: localWeaknesses });
+                setStatus('results');
+            };
+
+            const getScoreColor = (s) => {
+                if (s >= 80) return 'text-emerald-400';
+                if (s >= 50) return 'text-amber-400';
+                return 'text-rose-500';
+            };
+
+            return (
+                <div className="min-h-screen p-4 md:p-8">
+                    <header className="max-w-5xl mx-auto mb-10 text-center space-y-4">
+                        <div className="inline-flex items-center justify-center p-3 bg-indigo-500/10 rounded-2xl mb-2 border border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                            <Icon name="ShieldCheck" className="w-10 h-10 text-indigo-400" />
                         </div>
-                      </div>
-                    );
-                  })}
+                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+                            VPN Inspector Pro
+                        </h1>
+                        <p className="text-slate-400 max-w-2xl mx-auto text-lg">
+                            Глубокий анализ вашего соединения. Проверка обхода ТСПУ, устойчивости к блокировкам Роскомнадзора и работы в условиях "Белых списков".
+                        </p>
+                    </header>
+
+                    <main className="max-w-5xl mx-auto">
+                        {status === 'idle' && (
+                            <div className="flex flex-col items-center justify-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-sm shadow-2xl">
+                                <Icon name="Lock" className="w-16 h-16 text-slate-600 mb-6" />
+                                <h2 className="text-2xl font-bold text-white mb-2">Готов к сканированию сети</h2>
+                                <p className="text-slate-400 mb-8 text-center max-w-md">
+                                    Нажмите кнопку ниже, чтобы начать стресс-тест вашего текущего подключения.
+                                </p>
+                                <button 
+                                    onClick={runTests}
+                                    className="group relative px-8 py-4 bg-indigo-600 hover:bg-indigo-500 transition-all duration-300 rounded-full font-bold text-lg text-white shadow-[0_0_40px_rgba(79,70,229,0.4)] hover:shadow-[0_0_60px_rgba(79,70,229,0.6)] flex items-center gap-3 overflow-hidden"
+                                >
+                                    <Icon name="Play" className="w-6 h-6 relative z-10" />
+                                    <span className="relative z-10">Запустить глубокий тест</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {status === 'testing' && (
+                            <div className="bg-slate-900/80 rounded-3xl border border-indigo-500/30 p-10 backdrop-blur-md shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 shadow-[0_0_20px_#6366f1] animate-scan"></div>
+                                <div className="flex flex-col items-center text-center space-y-8 relative z-10">
+                                    <div className="relative">
+                                        <Icon name="RefreshCw" className="w-20 h-20 text-indigo-400 animate-spin" />
+                                        <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full"></div>
+                                    </div>
+                                    <div className="space-y-3 w-full max-w-lg">
+                                        <h3 className="text-2xl font-bold text-white">Анализ пакетов...</h3>
+                                        <p className="text-indigo-300 font-mono text-sm h-6">{currentTest}</p>
+                                        <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden mt-6">
+                                            <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
+                                        </div>
+                                        <div className="text-right text-slate-500 font-mono text-xs mt-1">{Math.round(progress)}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {status === 'results' && (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="md:col-span-1 bg-slate-900 rounded-3xl border border-slate-800 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                                            <Icon name="Activity" className="w-32 h-32" />
+                                        </div>
+                                        <h3 className="text-slate-400 font-medium mb-6">Качество соединения</h3>
+                                        <div className="relative flex items-center justify-center w-40 h-40">
+                                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" strokeWidth="8" />
+                                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8"
+                                                    strokeDasharray={`${2 * Math.PI * 45}`}
+                                                    strokeDashoffset={`${2 * Math.PI * 45 * (1 - score / 100)}`}
+                                                    className={`transition-all duration-1000 ease-out ${getScoreColor(score)}`}
+                                                    strokeLinecap="round" />
+                                            </svg>
+                                            <div className="absolute flex flex-col items-center">
+                                                <span className={`text-5xl font-black ${getScoreColor(score)}`}>{score}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                                        <div className="col-span-2 sm:col-span-1 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between">
+                                            <div className="flex items-center gap-3 mb-4 text-slate-400">
+                                                <Icon name="MapPin" className="w-5 h-5 text-indigo-400" />
+                                                <h3 className="font-medium">Маршрутизация</h3>
+                                            </div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-white mb-1">{ipData?.country_name || 'Неизвестно'}</div>
+                                                <div className="text-slate-500 font-mono text-sm">{ipData?.ip || '0.0.0.0'}</div>
+                                                <div className="text-slate-500 text-sm mt-2">{ipData?.org || 'ISP Скрыт'}</div>
+                                            </div>
+                                        </div>
+                                        <div className="col-span-2 sm:col-span-1 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between">
+                                            <div className="flex items-center gap-3 mb-4 text-slate-400">
+                                                <Icon name="Activity" className="w-5 h-5 text-indigo-400" />
+                                                <h3 className="font-medium">Задержка (Пинг)</h3>
+                                            </div>
+                                            <div>
+                                                <div className="flex items-baseline gap-2 mb-1">
+                                                    <div className="text-3xl font-bold text-white">{pingData.avg || '--'}</div>
+                                                    <div className="text-slate-500 text-sm">мс</div>
+                                                </div>
+                                                <div className="flex gap-4 text-sm text-slate-500 mt-2">
+                                                    <div>Мин: <span className="text-slate-300">{pingData.min || '-'}</span></div>
+                                                    <div>Макс: <span className="text-slate-300">{pingData.max || '-'}</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-slate-900/50 rounded-2xl border border-emerald-500/20 p-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Icon name="ShieldCheck" className="w-6 h-6 text-emerald-400" />
+                                            <h3 className="text-lg font-bold text-emerald-400">Сильные стороны</h3>
+                                        </div>
+                                        <ul className="space-y-3">
+                                            {analysis.strengths.length > 0 ? analysis.strengths.map((str, idx) => (
+                                                <li key={idx} className="flex gap-3 text-slate-300 text-sm bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/10">
+                                                    <Icon name="CheckCircle2" className="w-5 h-5 text-emerald-500 shrink-0" />
+                                                    <span>{str}</span>
+                                                </li>
+                                            )) : <li className="text-slate-500 text-sm italic">Преимуществ не обнаружено.</li>}
+                                        </ul>
+                                    </div>
+                                    <div className="bg-slate-900/50 rounded-2xl border border-rose-500/20 p-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Icon name="AlertTriangle" className="w-6 h-6 text-rose-400" />
+                                            <h3 className="text-lg font-bold text-rose-400">Уязвимости и проблемы</h3>
+                                        </div>
+                                        <ul className="space-y-3">
+                                            {analysis.weaknesses.length > 0 ? analysis.weaknesses.map((weak, idx) => (
+                                                <li key={idx} className="flex gap-3 text-slate-300 text-sm bg-rose-500/5 p-3 rounded-xl border border-rose-500/10">
+                                                    <Icon name="XCircle" className="w-5 h-5 text-rose-500 shrink-0" />
+                                                    <span>{weak}</span>
+                                                </li>
+                                            )) : <li className="text-slate-500 text-sm italic">Проблем не обнаружено. Отличный результат!</li>}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden">
+                                        <div className="p-6 border-b border-slate-800 bg-slate-800/20 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Icon name="EyeOff" className="w-5 h-5 text-indigo-400" />
+                                                <h3 className="font-bold text-white">Обход блокировок (ТСПУ)</h3>
+                                            </div>
+                                            <span className="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-1 rounded">Глобальная сеть</span>
+                                        </div>
+                                        <div className="p-4 space-y-2">
+                                            {BLOCKED_SITES.map(site => {
+                                                const res = blockedResults[site.id];
+                                                return (
+                                                    <div key={site.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/50 transition-colors">
+                                                        <div className="font-medium text-slate-300">{site.name}</div>
+                                                        <div className="flex items-center gap-3">
+                                                            {res ? (res.success ? (
+                                                                <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full text-sm">
+                                                                    <span className="font-mono text-xs">{res.time}мс</span>
+                                                                    <Icon name="CheckCircle2" className="w-4 h-4" />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2 text-rose-400 bg-rose-400/10 px-3 py-1 rounded-full text-sm">
+                                                                    <span className="text-xs">Заблокировано</span>
+                                                                    <Icon name="ShieldAlert" className="w-4 h-4" />
+                                                                </div>
+                                                            )) : <div className="w-16 h-6 bg-slate-800 rounded animate-pulse"></div>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden">
+                                        <div className="p-6 border-b border-slate-800 bg-slate-800/20 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Icon name="Globe" className="w-5 h-5 text-indigo-400" />
+                                                <h3 className="font-bold text-white">Тест "Белый список"</h3>
+                                            </div>
+                                            <span className="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-1 rounded">Рунет / Сплит</span>
+                                        </div>
+                                        <div className="p-4 space-y-2">
+                                            {WHITELIST_SITES.map(site => {
+                                                const res = whitelistResults[site.id];
+                                                return (
+                                                    <div key={site.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/50 transition-colors">
+                                                        <div className="font-medium text-slate-300">{site.name}</div>
+                                                        <div className="flex items-center gap-3">
+                                                            {res ? (res.success ? (
+                                                                <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full text-sm">
+                                                                    <span className="font-mono text-xs">{res.time}мс</span>
+                                                                    <Icon name="CheckCircle2" className="w-4 h-4" />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-2 text-rose-400 bg-rose-400/10 px-3 py-1 rounded-full text-sm">
+                                                                    <span className="text-xs">IP в бане</span>
+                                                                    <Icon name="XCircle" className="w-4 h-4" />
+                                                                </div>
+                                                            )) : <div className="w-16 h-6 bg-slate-800 rounded animate-pulse"></div>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-center pt-8">
+                                    <button onClick={runTests} className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full transition-colors border border-slate-700">
+                                        <Icon name="RefreshCw" className="w-5 h-5" />
+                                        <span>Протестировать снова</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </main>
                 </div>
-              </div>
+            );
+        }
 
-              {/* Блок: Белый список / Рунет */}
-              <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden">
-                <div className="p-6 border-b border-slate-800 bg-slate-800/20 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Globe className="w-5 h-5 text-indigo-400" />
-                    <h3 className="font-bold text-white">Тест "Белый список"</h3>
-                  </div>
-                  <span className="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-1 rounded">Рунет / Сплит</span>
-                </div>
-                <div className="p-4 space-y-2">
-                  {WHITELIST_SITES.map(site => {
-                    const res = whitelistResults[site.id];
-                    return (
-                      <div key={site.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/50 transition-colors">
-                        <div className="font-medium text-slate-300">{site.name}</div>
-                        <div className="flex items-center gap-3">
-                          {res ? (
-                            res.success ? (
-                              <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full text-sm">
-                                <span className="font-mono text-xs">{res.time}мс</span>
-                                <CheckCircle2 className="w-4 h-4" />
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2 text-rose-400 bg-rose-400/10 px-3 py-1 rounded-full text-sm">
-                                <span className="text-xs">IP в бане</span>
-                                <XCircle className="w-4 h-4" />
-                              </div>
-                            )
-                          ) : (
-                            <div className="w-16 h-6 bg-slate-800 rounded animate-pulse"></div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Кнопка повтора */}
-            <div className="flex justify-center pt-8">
-              <button 
-                onClick={runTests}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full transition-colors border border-slate-700"
-              >
-                <RefreshCw className="w-5 h-5" />
-                <span>Протестировать снова</span>
-              </button>
-            </div>
-
-          </div>
-        )}
-
-      </main>
-    </div>
-  );
-}
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
 
