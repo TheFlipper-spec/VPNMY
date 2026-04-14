@@ -33,7 +33,7 @@ SOURCES = [
     "https://gbr.mydan.online/configs",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-checked.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt",
-"https://gistpad.com/raw/mia-vpn-tg-reverse-engineer-s-basement#mia-vpn-tg-reverse-engineer-s-basement" 
+"https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi" 
 ]
 
 XRAY_BIN = "./xray"
