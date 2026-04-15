@@ -33,7 +33,7 @@ SOURCES = [
     "https://gbr.mydan.online/configs",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-checked.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt",
-"https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi" 
+    "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi" 
 ]
 
 XRAY_BIN = "./xray"
@@ -621,10 +621,6 @@ def main():
         logger.info(f"       -> Точный TCP пинг: {updated_s.get('real_delay', 0)}ms | Точная скорость: {updated_s.get('speed_mbps', 0.0)} Mbps\n")
 
     result_links = []
-    msk_time = time.strftime('%H:%M', time.gmtime(time.time() + 3*3600))
-    header_link = f"vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1080?encryption=none&security=none&type=tcp#{quote(f'Обновлено: {msk_time} (MSK)')}"
-    result_links.append(header_link)
-    
     json_stats = {"servers": []}
     
     for s in verified_final_servers:
@@ -662,7 +658,7 @@ def main():
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(json_stats, f, indent=2, ensure_ascii=False)
         
-    logger.info(f"💾 Успешно сохранено: {OUTPUT_FILE} и {JSON_FILE} (Финальный пул: {len(result_links)-1} узлов)")
+    logger.info(f"💾 Успешно сохранено: {OUTPUT_FILE} и {JSON_FILE} (Финальный пул: {len(result_links)} узлов)")
 
 if __name__ == "__main__":
     main()
