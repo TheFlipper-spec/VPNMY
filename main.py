@@ -68,31 +68,31 @@ HARDCODED_NODES = [
     },
     {
         "urls": [
-            "https://195.226.92.208:2096/sub/4v7pgpryd3w7de6o",
-            "https://195.226.92.208:2096/sub/s2zzdnfb112x0fcm",
-            "https://195.226.92.208:2096/sub/nccaiet9t8mhhf00",
-            "https://195.226.92.208:2096/sub/7d5yixnp5yaec4wn",
-            "https://195.226.92.208:2096/sub/rtm9ogilc0tmp1sy",
-            "https://195.226.92.208:2096/sub/n7pftrqv1g6p5pdk",
-            "https://195.226.92.208:2096/sub/qqh3w0tnea6tlmy6",
-            "https://195.226.92.208:2096/sub/ki5ufc1rpi96oaku",
-            "https://195.226.92.208:2096/sub/eoqmjwyjtu52takt",
-            "https://195.226.92.208:2096/sub/2hl3m4mgjvmtw783"
+            "https://141.0.184.185:2096/sub/4v7pgpryd3w7de6o",
+            "https://141.0.184.185:2096/sub/s2zzdnfb112x0fcm",
+            "https://141.0.184.185:2096/sub/nccaiet9t8mhhf00",
+            "https://141.0.184.185:2096/sub/7d5yixnp5yaec4wn",
+            "https://141.0.184.185:2096/sub/rtm9ogilc0tmp1sy",
+            "https://141.0.184.185:2096/sub/n7pftrqv1g6p5pdk",
+            "https://141.0.184.185:2096/sub/qqh3w0tnea6tlmy6",
+            "https://141.0.184.185:2096/sub/ki5ufc1rpi96oaku",
+            "https://141.0.184.185:2096/sub/eoqmjwyjtu52takt",
+            "https://141.0.184.185:2096/sub/2hl3m4mgjvmtw783"
         ],
         "name": "💎 🇫🇮  V2A / Финляндия"
     },
     {
         "urls": [
-            "https://195.226.92.208:2096/sub/x9dvfd72pv7z2art",
-            "https://195.226.92.208:2096/sub/ao2tsylns82xwmcu",
-            "https://195.226.92.208:2096/sub/jxmca4tlnsp4ykgk",
-            "https://195.226.92.208:2096/sub/8lv5533epskqzedi",
-            "https://195.226.92.208:2096/sub/ojpapyd6j44a1iji",
-            "https://195.226.92.208:2096/sub/kzg1epy9mvc9kiel",
-            "https://195.226.92.208:2096/sub/tb311lgvw7kqpie9",
-            "https://195.226.92.208:2096/sub/ndjuc43v37i3ix5y",
-            "https://195.226.92.208:2096/sub/eaopf0epjrarqspq",
-            "https://195.226.92.208:2096/sub/2tjc8qiwhvlvcp2u"
+            "https://141.0.184.185:2096/sub/x9dvfd72pv7z2art",
+            "https://141.0.184.185:2096/sub/ao2tsylns82xwmcu",
+            "https://141.0.184.185:2096/sub/jxmca4tlnsp4ykgk",
+            "https://141.0.184.185:2096/sub/8lv5533epskqzedi",
+            "https://141.0.184.185:2096/sub/ojpapyd6j44a1iji",
+            "https://141.0.184.185:2096/sub/kzg1epy9mvc9kiel",
+            "https://141.0.184.185:2096/sub/tb311lgvw7kqpie9",
+            "https://141.0.184.185:2096/sub/ndjuc43v37i3ix5y",
+            "https://141.0.184.185:2096/sub/eaopf0epjrarqspq",
+            "https://141.0.184.185:2096/sub/2tjc8qiwhvlvcp2u"
         ],
         "name": "💎 🇫🇮  V2A / Финляндия Warp"
     }
