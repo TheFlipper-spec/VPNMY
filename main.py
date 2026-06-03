@@ -68,31 +68,31 @@ HARDCODED_NODES = [
     },
     {
         "urls": [
-            "https://141.0.184.185:2096/sub/4v7pgpryd3w7de6o",
-            "https://141.0.184.185:2096/sub/s2zzdnfb112x0fcm",
-            "https://141.0.184.185:2096/sub/nccaiet9t8mhhf00",
-            "https://141.0.184.185:2096/sub/7d5yixnp5yaec4wn",
-            "https://141.0.184.185:2096/sub/rtm9ogilc0tmp1sy",
-            "https://141.0.184.185:2096/sub/n7pftrqv1g6p5pdk",
-            "https://141.0.184.185:2096/sub/qqh3w0tnea6tlmy6",
-            "https://141.0.184.185:2096/sub/ki5ufc1rpi96oaku",
-            "https://141.0.184.185:2096/sub/eoqmjwyjtu52takt",
-            "https://141.0.184.185:2096/sub/2hl3m4mgjvmtw783"
+            "https://192.124.181.250:2096/sub/4v7pgpryd3w7de6o",
+            "https://192.124.181.250:2096/sub/s2zzdnfb112x0fcm",
+            "https://192.124.181.250:2096/sub/nccaiet9t8mhhf00",
+            "https://192.124.181.250:2096/sub/7d5yixnp5yaec4wn",
+            "https://192.124.181.250:2096/sub/rtm9ogilc0tmp1sy",
+            "https://192.124.181.250:2096/sub/n7pftrqv1g6p5pdk",
+            "https://192.124.181.250:2096/sub/qqh3w0tnea6tlmy6",
+            "https://192.124.181.250:2096/sub/ki5ufc1rpi96oaku",
+            "https://192.124.181.250:2096/sub/eoqmjwyjtu52takt",
+            "https://192.124.181.250:2096/sub/2hl3m4mgjvmtw783"
         ],
         "name": "💎 🇫🇮  V2A / Финляндия"
     },
     {
         "urls": [
-            "https://141.0.184.185:2096/sub/x9dvfd72pv7z2art",
-            "https://141.0.184.185:2096/sub/ao2tsylns82xwmcu",
-            "https://141.0.184.185:2096/sub/jxmca4tlnsp4ykgk",
-            "https://141.0.184.185:2096/sub/8lv5533epskqzedi",
-            "https://141.0.184.185:2096/sub/ojpapyd6j44a1iji",
-            "https://141.0.184.185:2096/sub/kzg1epy9mvc9kiel",
-            "https://141.0.184.185:2096/sub/tb311lgvw7kqpie9",
-            "https://141.0.184.185:2096/sub/ndjuc43v37i3ix5y",
-            "https://141.0.184.185:2096/sub/eaopf0epjrarqspq",
-            "https://141.0.184.185:2096/sub/2tjc8qiwhvlvcp2u"
+            "https://192.124.181.250:2096/sub/x9dvfd72pv7z2art",
+            "https://192.124.181.250:2096/sub/ao2tsylns82xwmcu",
+            "https://192.124.181.250:2096/sub/jxmca4tlnsp4ykgk",
+            "https://192.124.181.250:2096/sub/8lv5533epskqzedi",
+            "https://192.124.181.250:2096/sub/ojpapyd6j44a1iji",
+            "https://192.124.181.250:2096/sub/kzg1epy9mvc9kiel",
+            "https://192.124.181.250:2096/sub/tb311lgvw7kqpie9",
+            "https://192.124.181.250:2096/sub/ndjuc43v37i3ix5y",
+            "https://192.124.181.250:2096/sub/eaopf0epjrarqspq",
+            "https://192.124.181.250:2096/sub/2tjc8qiwhvlvcp2u"
         ],
         "name": "💎 🇫🇮  V2A / Финляндия Warp"
     }
@@ -497,168 +497,4 @@ def main():
                 for link in links:
                     if link.lower().startswith("vless"): parsed = parse_vless(link)
                     elif link.lower().startswith("trojan"): parsed = parse_trojan(link)
-                    else: parsed = parse_vmess(link)
-                    if parsed: all_configs.append(parsed)
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
-
-    github_links = search_github_configs()
-    for link in github_links:
-        if link.lower().startswith("vless"): parsed = parse_vless(link)
-        elif link.lower().startswith("trojan"): parsed = parse_trojan(link)
-        else: parsed = parse_vmess(link)
-        if parsed: all_configs.append(parsed)
-
-    unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
-    logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
-
-    # ================== STAGE 1 ==================
-    tested_servers = []
-    logger.info(f"⚡ ЭТАП 1: Массовое отсеивание (Real Ping). Workers: {MAX_WORKERS}...")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = [executor.submit(deep_verify, s) for s in unique_configs]
-        for f in concurrent.futures.as_completed(futures):
-            res = f.result()
-            if res:
-                tested_servers.append(res)
-                logger.info(f"   [{res['country']}] {res['protocol'].upper()} | HTTP Пинг: {res['real_delay']}ms | Скорость: {res['speed_mbps']} Mbps")
-
-    pool_global = []
-    pool_ru_cis = []
-    
-    for s in tested_servers:
-        node_id = f"{s['ip']}:{s['port']}"
-        s['score'] = calculate_quality_score(s, history_data)
-        
-        if node_id not in history_data:
-            history_data[node_id] = {"streak": 0, "failures": 0, "last_seen": str(datetime.now().date())}
-        
-        if s['speed_mbps'] >= SPEED_HARD_LIMIT or s['country'] in CIS_COUNTRIES:
-            history_data[node_id]["streak"] += 1
-            history_data[node_id]["failures"] = max(0, history_data[node_id]["failures"] - 1)
-        else:
-            history_data[node_id]["failures"] += 1
-            history_data[node_id]["streak"] = 0
-
-        if s['country'] in CIS_COUNTRIES:
-            pool_ru_cis.append(s)
-        else:
-            if s['speed_mbps'] >= SPEED_HARD_LIMIT: 
-                pool_global.append(s)
-
-    save_history(history_data)
-
-    # Приоритет сортировки: сначала наименьший пинг, затем наивысший скор (скорость/стабильность)
-    pool_ru_cis.sort(key=lambda x: (x.get('real_delay', 9999), -x.get('score', 0)))
-    pool_global.sort(key=lambda x: (x.get('real_delay', 9999), -x.get('score', 0)))
-
-    final_parsed_selection = []
-    needed_global = TOTAL_SERVERS_WANTED - len(HARDCODED_NODES) 
-    final_parsed_selection.extend(pool_global[:needed_global])
-
-    logger.info(f"📊 Отобрано {len(final_parsed_selection)} лучших узлов с парсинга.")
-
-    logger.info("💎 Загрузка несгораемых узлов из подписок с ротацией...")
-    hardcoded_servers = []
-    for node_info in HARDCODED_NODES:
-        try:
-            # Получаем список ссылок или создаем список из одной ссылки
-            if "urls" in node_info and isinstance(node_info["urls"], list):
-                urls_list = node_info["urls"]
-            else:
-                urls_list = [node_info["url"]]
-            
-            # --- ЛОГИКА РОТАЦИИ КАЖДЫЕ 10 МИНУТ ---
-            # time.time() возвращает секунды. Делим на 600 (10 минут). 
-            # Это дает нам "номер текущего 10-минутного окна".
-            # Остаток от деления на кол-во ссылок всегда будет выдавать индекс от 0 до (len - 1).
-            current_slot = int(time.time() // 600)
-            selected_url = urls_list[current_slot % len(urls_list)]
-            
-            if len(urls_list) > 1:
-                client_num = (current_slot % len(urls_list)) + 1
-                logger.info(f"🔄 Ротация {node_info['name']}: выбран клиент {client_num} из {len(urls_list)}")
-
-            resp = requests.get(selected_url, timeout=10, verify=False)
-            if resp.status_code == 200:
-                links = extract_links(resp.text)
-                if links:
-                    base_link = links[0]
-                    parsed = None
-                    if base_link.lower().startswith("vless"): parsed = parse_vless(base_link)
-                    elif base_link.lower().startswith("trojan"): parsed = parse_trojan(base_link)
-                    else: parsed = parse_vmess(base_link)
-
-                    if parsed:
-                        parsed['custom_name'] = node_info['name']
-                        if "Финляндия" in node_info['name']: parsed['country'] = "FI"
-                        elif "Эстония" in node_info['name']: parsed['country'] = "EE"
-                        elif "БЕЛЫЕ СПИСКИ" in node_info['name'] or "RU" in node_info['name']: parsed['country'] = "RU"
-                        
-                        hardcoded_servers.append(parsed)
-                    else:
-                        logger.error(f"❌ Ошибка парсинга ссылки для {node_info['name']}")
-                else:
-                    logger.error(f"❌ Не найдено ссылок в подписке {node_info['name']}")
-            else:
-                logger.error(f"❌ Ошибка HTTP {resp.status_code} при загрузке {node_info['name']}")
-        except Exception as e:
-            target_url = node_info.get("url") or (node_info.get("urls")[0] if "urls" in node_info else "Unknown")
-            logger.error(f"❌ Ошибка запроса к {target_url}: {e}")
-
-    # ================== STAGE 2 ==================
-    final_10_servers = hardcoded_servers + final_parsed_selection
-    logger.info(f"\n⚡ ЭТАП 2: Индивидуальная проверка (ТОП-{len(final_10_servers)}). Замер точного TCP Пинга ⚡")
-
-    verified_final_servers = []
-    for idx, s in enumerate(final_10_servers, 1):
-        disp_name = s.get('custom_name') or COUNTRIES_RU.get(s['country'], s['country'])
-        logger.info(f"   [{idx}/{len(final_10_servers)}] Анализ: {disp_name} (IP: {s['ip']}) ...")
-        
-        updated_s = measure_node_stats_sequential(s)
-        verified_final_servers.append(updated_s)
-        
-        logger.info(f"       -> Точный TCP пинг: {updated_s.get('real_delay', 0)}ms | Точная скорость: {updated_s.get('speed_mbps', 0.0)} Mbps\n")
-
-    result_links = []
-    json_stats = {"servers": []}
-    
-    for s in verified_final_servers:
-        if 'custom_name' in s:
-            name = s['custom_name']
-        else:
-            country_display = COUNTRIES_RU.get(s['country'], f"🏳️ {s['country']}")
-            speed_badge = get_speed_badge(s['speed_mbps'])
-            node_id = f"{s['ip']}:{s['port']}"
-            streak = history_data.get(node_id, {}).get("streak", 0)
-            gold_star = "🌟" if streak >= 3 else ""
-            name = f"{gold_star}{speed_badge}{country_display}"
-        
-        orig = s['original']
-        base = orig.split('#')[0]
-        final_link = f"{base}#{quote(name)}"
-        result_links.append(final_link)
-        
-        json_stats["servers"].append({
-            "name": name,
-            "ip": s['ip'],
-            "ping": s.get('real_delay', 0),
-            "speed_mbps": s.get('speed_mbps', 0.0),
-            "score": s.get('score', 0),
-            "country": s.get('country', 'XX'),
-            "protocol": f"{s['protocol']} {s.get('security', '')}".strip()
-        })
-
-    raw_str = "\n".join(result_links)
-    b64_str = base64.b64encode(raw_str.encode('utf-8')).decode('utf-8')
-    
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        f.write(b64_str)
-    
-    with open(JSON_FILE, 'w', encoding='utf-8') as f:
-        json.dump(json_stats, f, indent=2, ensure_ascii=False)
-        
-    logger.info(f"💾 Успешно сохранено: {OUTPUT_FILE} и {JSON_FILE} (Финальный пул: {len(result_links)} узлов)")
-
-if __name__ == "__main__":
-    main()
+                  
