@@ -137,15 +137,21 @@ def install_xray_core():
     desired_version = "1.8.24" # Обновлено для поддержки xhttp/httpupgrade/splithttp
     
     if os.path.exists(XRAY_BIN):
+        # ИСПРАВЛЕНИЕ ЗАВИСАНИЯ: Сначала даем права, потом запускаем Xray, иначе будет скрытая ошибка и повторная загрузка
+        st = os.stat(XRAY_BIN)
+        if not (st.st_mode & stat.S_IEXEC):
+            try:
+                os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
+            except Exception as e:
+                logger.warning(f"⚠️ Ошибка выдачи прав Xray: {e}")
+                
         try:
             result = subprocess.run([XRAY_BIN, "version"], capture_output=True, text=True, timeout=2)
             if desired_version in result.stdout:
-                st = os.stat(XRAY_BIN)
-                if not (st.st_mode & stat.S_IEXEC):
-                    os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
                 return
         except:
             pass
+            
         logger.info(f"🔄 Текущая версия Xray устарела или неисправна. Обновляем до {desired_version}...")
         try:
             os.remove(XRAY_BIN)
@@ -327,16 +333,26 @@ def generate_xray_config(server, local_port):
     
     if server['protocol'] == 'vless':
         user = {"id": server['uuid'], "encryption": "none"}
-        if server.get('flow'): user['flow'] = server['flow']
+        flow = server.get('flow', '')
+        # ИСПРАВЛЕНИЕ КРАША: Xray падает, если использовать flow vision для xhttp/ws
+        if flow and server['type'] not in ['tcp', 'h2']:
+            flow = ''
+        if flow: 
+            user['flow'] = flow
         outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [user]}]}
     elif server['protocol'] == 'trojan':
         outbound['settings'] = {"servers": [{"address": server['ip'], "port": server['port'], "password": server['uuid']}]}
     else: 
         outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "alterId": 0, "security": "auto"}]}]}
 
+    # ИСПРАВЛЕНИЕ ПУТИ: Гарантируем, что path всегда начинается с "/" для HTTP транспортов
+    path = server.get('path', '/')
+    if not path.startswith('/'): 
+        path = '/' + path
+
     # --- Настройка транспортов ---
     if server['type'] == 'ws':
-        ws_set = {"path": server.get('path', '/')}
+        ws_set = {"path": path}
         if server.get('host'): ws_set["headers"] = {"Host": server['host']}
         outbound["streamSettings"]["wsSettings"] = ws_set
         
@@ -346,18 +362,18 @@ def generate_xray_config(server, local_port):
         outbound["streamSettings"]["grpcSettings"] = grpc_set
         
     elif server['type'] == 'xhttp':
-        xhttp_set = {"path": server.get('path', '/')}
+        xhttp_set = {"path": path}
         if server.get('host'): xhttp_set["host"] = server['host']
         if server.get('mode'): xhttp_set["mode"] = server['mode']
         outbound["streamSettings"]["xhttpSettings"] = xhttp_set
         
     elif server['type'] == 'httpupgrade':
-        hu_set = {"path": server.get('path', '/')}
+        hu_set = {"path": path}
         if server.get('host'): hu_set["host"] = server['host']
         outbound["streamSettings"]["httpupgradeSettings"] = hu_set
         
     elif server['type'] == 'splithttp':
-        sh_set = {"path": server.get('path', '/')}
+        sh_set = {"path": path}
         if server.get('host'): sh_set["host"] = server['host']
         outbound["streamSettings"]["splithttpSettings"] = sh_set
         
@@ -379,11 +395,11 @@ def generate_xray_config(server, local_port):
 # --- ЭТАП 1: МАССОВОЕ ТЕСТИРОВАНИЕ (Real Ping через HTTP) ---
 def deep_verify(server):
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(TCP_TIMEOUT)
-        sock.connect((server['ip'], server['port']))
-        sock.close()
-    except: return None
+        # ИСПРАВЛЕНИЕ: Замена socket.connect на create_connection предотвращает сбои с IPv6 / DNS
+        with socket.create_connection((server['ip'], server['port']), timeout=TCP_TIMEOUT):
+            pass
+    except: 
+        return None
 
     local_port = get_free_port()
     config = generate_xray_config(server, local_port)
