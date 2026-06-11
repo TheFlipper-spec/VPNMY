@@ -137,7 +137,6 @@ def install_xray_core():
     desired_version = "1.8.24" # Обновлено для поддержки xhttp/httpupgrade/splithttp
     
     if os.path.exists(XRAY_BIN):
-        # ИСПРАВЛЕНИЕ ЗАВИСАНИЯ: Сначала даем права, потом запускаем Xray, иначе будет скрытая ошибка и повторная загрузка
         st = os.stat(XRAY_BIN)
         if not (st.st_mode & stat.S_IEXEC):
             try:
@@ -189,7 +188,8 @@ def safe_base64_decode(s):
             return ""
 
 def extract_links(text):
-    regex = r"(?i)((?:vless|vmess|trojan)://[^\s\"']+)"
+    # ИСПРАВЛЕНИЕ РЕГУЛЯРКИ: Теперь не обрезает гигантские xhttp/reality ссылки с пробелами
+    regex = r"(?i)((?:vless|vmess|trojan)://[^\r\n\"'<>]+)"
     links = re.findall(regex, text)
     decoded = safe_base64_decode(text)
     if decoded:
@@ -258,6 +258,7 @@ def parse_vmess(config_str):
             "sni": data.get('sni', data.get('host', '')), "pbk": "", "sid": "", "spx": "/",
             "path": data.get('path', '/'), "host": data.get('host', ''), "fp": data.get('fp', 'chrome'),
             "serviceName": data.get('serviceName', ''), "mode": data.get('mode', ''), "authority": data.get('authority', ''),
+            "extra": data.get('extra', ''),
             "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
     except: return None
@@ -278,6 +279,7 @@ def parse_vless(config_str):
             "host": params.get('host', [''])[0], "fp": params.get('fp', ['chrome'])[0],
             "serviceName": params.get('serviceName', [''])[0], "mode": params.get('mode', [''])[0],
             "authority": params.get('authority', [''])[0],
+            "extra": params.get('extra', [''])[0], # ИСПРАВЛЕНИЕ: добавлены экстра параметры для xhttp
             "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
         if conf['security'] == 'reality' and not conf['pbk']: return None
@@ -298,6 +300,7 @@ def parse_trojan(config_str):
             "path": params.get('path', ['/'])[0], "host": params.get('host', [''])[0],
             "fp": params.get('fp', ['chrome'])[0], "serviceName": params.get('serviceName', [''])[0],
             "mode": params.get('mode', [''])[0], "authority": params.get('authority', [''])[0],
+            "extra": params.get('extra', [''])[0],
             "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
         return conf
@@ -313,17 +316,27 @@ def search_github_configs():
     for q in queries:
         try:
             url = f"https://api.github.com/search/repositories?q={quote(q)}+pushed:>2026-02-25&sort=updated"
-            r = requests.get(url, headers=headers, timeout=10)
+            r = requests.get(url, headers=headers, timeout=5) # Оптимизировано: снижен таймаут
             if r.status_code == 200:
                 data = r.json()
-                for item in data.get('items', [])[:3]:
+                for item in data.get('items', [])[:2]: # Оптимизировано: меньше репозиториев
                     readme_url = f"https://raw.githubusercontent.com/{item['full_name']}/{item['default_branch']}/README.md"
-                    rr = requests.get(readme_url, timeout=5)
-                    if rr.status_code == 200:
-                        links.extend(extract_links(rr.text))
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка GitHub API: {e}")
+                    try:
+                        rr = requests.get(readme_url, timeout=5)
+                        if rr.status_code == 200:
+                            links.extend(extract_links(rr.text[:50000])) # Оптимизировано: лимит текста
+                    except: pass
+        except: pass
     return list(set(links))
+
+def fetch_source(url):
+    try:
+        resp = requests.get(url, timeout=5)
+        if resp.status_code == 200:
+            return extract_links(resp.text)
+    except Exception as e:
+        logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
+    return []
 
 def generate_xray_config(server, local_port):
     outbound = {
@@ -334,7 +347,6 @@ def generate_xray_config(server, local_port):
     if server['protocol'] == 'vless':
         user = {"id": server['uuid'], "encryption": "none"}
         flow = server.get('flow', '')
-        # ИСПРАВЛЕНИЕ КРАША: Xray падает, если использовать flow vision для xhttp/ws
         if flow and server['type'] not in ['tcp', 'h2']:
             flow = ''
         if flow: 
@@ -345,7 +357,6 @@ def generate_xray_config(server, local_port):
     else: 
         outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "alterId": 0, "security": "auto"}]}]}
 
-    # ИСПРАВЛЕНИЕ ПУТИ: Гарантируем, что path всегда начинается с "/" для HTTP транспортов
     path = server.get('path', '/')
     if not path.startswith('/'): 
         path = '/' + path
@@ -365,6 +376,26 @@ def generate_xray_config(server, local_port):
         xhttp_set = {"path": path}
         if server.get('host'): xhttp_set["host"] = server['host']
         if server.get('mode'): xhttp_set["mode"] = server['mode']
+        
+        # ИСПРАВЛЕНИЕ: Парсинг extra для XHTTP (паддинги 3x-ui)
+        extra_str = server.get('extra', '')
+        if extra_str:
+            extra_dict = {}
+            if extra_str.startswith('{') and extra_str.endswith('}'):
+                content = extra_str[1:-1]
+                for pair in content.split(','):
+                    if '=' in pair:
+                        k, v = pair.split('=', 1)
+                        extra_dict[k.strip()] = v.strip()
+            elif '=' in extra_str:
+                for pair in extra_str.split('&'):
+                    if '=' in pair:
+                        k, v = pair.split('=', 1)
+                        extra_dict[k.strip()] = v.strip()
+            
+            if extra_dict:
+                xhttp_set["extra"] = extra_dict
+                
         outbound["streamSettings"]["xhttpSettings"] = xhttp_set
         
     elif server['type'] == 'httpupgrade':
@@ -395,7 +426,6 @@ def generate_xray_config(server, local_port):
 # --- ЭТАП 1: МАССОВОЕ ТЕСТИРОВАНИЕ (Real Ping через HTTP) ---
 def deep_verify(server):
     try:
-        # ИСПРАВЛЕНИЕ: Замена socket.connect на create_connection предотвращает сбои с IPv6 / DNS
         with socket.create_connection((server['ip'], server['port']), timeout=TCP_TIMEOUT):
             pass
     except: 
@@ -542,29 +572,29 @@ def main():
     history_data = load_history()
     all_configs = []
 
+    # ИСПРАВЛЕНИЕ СКОРОСТИ: Загружаем все источники ПАРАЛЛЕЛЬНО
     logger.info("🌐 Загрузка источников (VLESS + VMess + Trojan)...")
-    for url in SOURCES:
-        try:
-            resp = requests.get(url, timeout=10)
-            if resp.status_code == 200:
-                links = extract_links(resp.text)
-                for link in links:
-                    if link.lower().startswith("vless"): parsed = parse_vless(link)
-                    elif link.lower().startswith("trojan"): parsed = parse_trojan(link)
-                    else: parsed = parse_vmess(link)
-                    if parsed: all_configs.append(parsed)
-        except Exception as e:
-            logger.warning(f"⚠️ Ошибка источника {url[:30]}...: {e}")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(fetch_source, url) for url in SOURCES]
+        futures.append(executor.submit(search_github_configs))
+        
+        for f in concurrent.futures.as_completed(futures):
+            links = f.result()
+            for link in links:
+                parsed = None
+                if link.lower().startswith("vless"): parsed = parse_vless(link)
+                elif link.lower().startswith("trojan"): parsed = parse_trojan(link)
+                else: parsed = parse_vmess(link)
+                if parsed: all_configs.append(parsed)
 
-    github_links = search_github_configs()
-    for link in github_links:
-        if link.lower().startswith("vless"): parsed = parse_vless(link)
-        elif link.lower().startswith("trojan"): parsed = parse_trojan(link)
-        else: parsed = parse_vmess(link)
-        if parsed: all_configs.append(parsed)
-
-    unique_configs = {f"{c['ip']}:{c['port']}": c for c in all_configs}.values()
-    logger.info(f"🔍 Уникальных конфигов собрано: {len(unique_configs)}")
+    unique_configs = list({f"{c['ip']}:{c['port']}": c for c in all_configs}.values())
+    
+    # ИСПРАВЛЕНИЕ СКОРОСТИ: Лимитируем количество серверов для теста, чтобы не виснуть на 7 минут
+    if len(unique_configs) > 150:
+        logger.info(f"⚡ Найдено слишком много серверов ({len(unique_configs)}). Ограничиваем до 150 для скорости...")
+        unique_configs = unique_configs[:150]
+        
+    logger.info(f"🔍 Уникальных конфигов для глубокой проверки: {len(unique_configs)}")
 
     # ================== STAGE 1 ==================
     tested_servers = []
@@ -623,9 +653,6 @@ def main():
                 urls_list = [node_info["url"]]
             
             # --- ЛОГИКА РОТАЦИИ КАЖДЫЕ 10 МИНУТ ---
-            # time.time() возвращает секунды. Делим на 600 (10 минут). 
-            # Это дает нам "номер текущего 10-минутного окна".
-            # Остаток от деления на кол-во ссылок всегда будет выдавать индекс от 0 до (len - 1).
             current_slot = int(time.time() // 600)
             selected_url = urls_list[current_slot % len(urls_list)]
             
