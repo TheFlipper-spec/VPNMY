@@ -134,13 +134,26 @@ def get_accurate_ping(ip, port, attempts=3):
 
 def install_xray_core():
     import zipfile, io
+    desired_version = "1.8.24" # Обновлено для поддержки xhttp/httpupgrade/splithttp
+    
     if os.path.exists(XRAY_BIN):
-        st = os.stat(XRAY_BIN)
-        if not (st.st_mode & stat.S_IEXEC):
-            os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
-        return
-    logger.info("📥 Xray core не найден. Скачивание (v1.8.4)...")
-    url = "https://github.com/XTLS/Xray-core/releases/download/v1.8.4/Xray-linux-64.zip"
+        try:
+            result = subprocess.run([XRAY_BIN, "version"], capture_output=True, text=True, timeout=2)
+            if desired_version in result.stdout:
+                st = os.stat(XRAY_BIN)
+                if not (st.st_mode & stat.S_IEXEC):
+                    os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
+                return
+        except:
+            pass
+        logger.info(f"🔄 Текущая версия Xray устарела или неисправна. Обновляем до {desired_version}...")
+        try:
+            os.remove(XRAY_BIN)
+        except:
+            pass
+
+    logger.info(f"📥 Xray core ({desired_version}) скачивается...")
+    url = f"https://github.com/XTLS/Xray-core/releases/download/v{desired_version}/Xray-linux-64.zip"
     try:
         r = requests.get(url, stream=True, timeout=30)
         if r.status_code == 200:
@@ -154,6 +167,8 @@ def install_xray_core():
             st = os.stat(XRAY_BIN)
             os.chmod(XRAY_BIN, st.st_mode | stat.S_IEXEC)
             logger.info("✅ Xray установлен успешно.")
+        else:
+            logger.error(f"❌ Ошибка скачивания: HTTP {r.status_code}")
     except Exception as e:
         logger.error(f"❌ Критическая ошибка установки Xray: {e}")
 
@@ -229,7 +244,6 @@ def parse_vmess(config_str):
         if not json_str: return None
         data = json.loads(json_str)
         net_type = data.get('net', 'tcp')
-        if net_type == 'ws': return None
         tls = data.get('tls', '')
         return {
             "protocol": "vmess", "ip": data.get('add', ''), "port": int(data.get('port', 443)),
@@ -237,7 +251,8 @@ def parse_vmess(config_str):
             "security": "tls" if tls == 'tls' else "none", "flow": "",
             "sni": data.get('sni', data.get('host', '')), "pbk": "", "sid": "", "spx": "/",
             "path": data.get('path', '/'), "host": data.get('host', ''), "fp": data.get('fp', 'chrome'),
-            "serviceName": "", "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
+            "serviceName": data.get('serviceName', ''), "mode": data.get('mode', ''), "authority": data.get('authority', ''),
+            "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
     except: return None
 
@@ -255,10 +270,10 @@ def parse_vless(config_str):
             "pbk": params.get('pbk', [''])[0], "sid": params.get('sid', [''])[0],
             "spx": params.get('spx', ['/'])[0], "path": params.get('path', ['/'])[0],
             "host": params.get('host', [''])[0], "fp": params.get('fp', ['chrome'])[0],
-            "serviceName": params.get('serviceName', [''])[0], "original": config_str,
-            "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
+            "serviceName": params.get('serviceName', [''])[0], "mode": params.get('mode', [''])[0],
+            "authority": params.get('authority', [''])[0],
+            "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
-        if conf['type'] == 'ws': return None
         if conf['security'] == 'reality' and not conf['pbk']: return None
         return conf
     except: return None
@@ -276,9 +291,9 @@ def parse_trojan(config_str):
             "flow": "", "sni": params.get('sni', [''])[0], "pbk": "", "sid": "", "spx": "/",
             "path": params.get('path', ['/'])[0], "host": params.get('host', [''])[0],
             "fp": params.get('fp', ['chrome'])[0], "serviceName": params.get('serviceName', [''])[0],
+            "mode": params.get('mode', [''])[0], "authority": params.get('authority', [''])[0],
             "original": config_str, "country": "XX", "real_delay": 9999, "speed_mbps": 0.0
         }
-        if conf['type'] == 'ws': return None
         return conf
     except: return None
 
@@ -311,25 +326,48 @@ def generate_xray_config(server, local_port):
     }
     
     if server['protocol'] == 'vless':
-        outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "encryption": "none", "flow": server['flow']}]}]}
+        user = {"id": server['uuid'], "encryption": "none"}
+        if server.get('flow'): user['flow'] = server['flow']
+        outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [user]}]}
     elif server['protocol'] == 'trojan':
         outbound['settings'] = {"servers": [{"address": server['ip'], "port": server['port'], "password": server['uuid']}]}
     else: 
         outbound['settings'] = {"vnext": [{"address": server['ip'], "port": server['port'], "users": [{"id": server['uuid'], "alterId": 0, "security": "auto"}]}]}
 
+    # --- Настройка транспортов ---
     if server['type'] == 'ws':
-        ws_set = {"path": server['path']}
-        if server['host']: ws_set["headers"] = {"Host": server['host']}
+        ws_set = {"path": server.get('path', '/')}
+        if server.get('host'): ws_set["headers"] = {"Host": server['host']}
         outbound["streamSettings"]["wsSettings"] = ws_set
-    elif server['type'] == 'grpc':
-        outbound["streamSettings"]["grpcSettings"] = {"serviceName": server['serviceName']}
         
-    tls_set = {"serverName": server['sni'], "fingerprint": server['fp']}
+    elif server['type'] == 'grpc':
+        grpc_set = {"serviceName": server.get('serviceName', '')}
+        if server.get('authority'): grpc_set["authority"] = server['authority']
+        outbound["streamSettings"]["grpcSettings"] = grpc_set
+        
+    elif server['type'] == 'xhttp':
+        xhttp_set = {"path": server.get('path', '/')}
+        if server.get('host'): xhttp_set["host"] = server['host']
+        if server.get('mode'): xhttp_set["mode"] = server['mode']
+        outbound["streamSettings"]["xhttpSettings"] = xhttp_set
+        
+    elif server['type'] == 'httpupgrade':
+        hu_set = {"path": server.get('path', '/')}
+        if server.get('host'): hu_set["host"] = server['host']
+        outbound["streamSettings"]["httpupgradeSettings"] = hu_set
+        
+    elif server['type'] == 'splithttp':
+        sh_set = {"path": server.get('path', '/')}
+        if server.get('host'): sh_set["host"] = server['host']
+        outbound["streamSettings"]["splithttpSettings"] = sh_set
+        
+    # --- Настройка TLS / Reality ---
+    tls_set = {"serverName": server.get('sni', ''), "fingerprint": server.get('fp', 'chrome')}
     if server['security'] == 'tls':
         outbound["streamSettings"]["tlsSettings"] = tls_set
     elif server['security'] == 'reality':
         reality_set = tls_set.copy()
-        reality_set.update({"show": False, "publicKey": server['pbk'], "shortId": server['sid'], "spiderX": server['spx']})
+        reality_set.update({"show": False, "publicKey": server.get('pbk', ''), "shortId": server.get('sid', ''), "spiderX": server.get('spx', '/')})
         outbound["streamSettings"]["realitySettings"] = reality_set
 
     return {
