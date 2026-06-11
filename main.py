@@ -50,7 +50,7 @@ SPEED_HARD_LIMIT = 1.5
 
 # ВАЖНО: Добавлена поддержка "urls" (списка) для ротации.
 HARDCODED_NODES = [
-    {"url": "https://212.22.82.138:2096/sub/2u6r7m9fvgv0joz9", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
+    {"url": "https://212.22.82.138:2096/sub/z6970xox361vzvwr", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
     {
         "urls": [
             "https://212.22.82.138:2096/sub/ifg3v5yrri9pqkzg",
