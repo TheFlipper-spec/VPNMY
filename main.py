@@ -33,7 +33,9 @@ SOURCES = [
     "https://gbr.mydan.online/configs",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-checked.txt",
     "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-SNI-RU-all.txt",
-    "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi" 
+    "https://raw.githubusercontent.com/Temnuk/naabuzil/refs/heads/main/wifi",
+
+"https://gist.githubusercontent.com/shirinyannver31-ux/6b16a88d07db0830b49ab8b02536c3b6/raw/VedaVPN.txt"  
 ]
 
 XRAY_BIN = "./xray"
