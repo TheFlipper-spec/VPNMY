@@ -50,19 +50,19 @@ SPEED_HARD_LIMIT = 1.5
 
 # ВАЖНО: Добавлена поддержка "urls" (списка) для ротации.
 HARDCODED_NODES = [
-    {"url": "https://212.22.82.138:2096/sub/z6970xox361vzvwr", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
+    {"url": "https://185.73.126.237:2096/sub/z6970xox361vzvwr", "name": "💎 🇷🇺 V1A / БЕЛЫЕ СПИСКИ"},
     {
         "urls": [
-            "https://212.22.82.138:2096/sub/ifg3v5yrri9pqkzg",
-            "https://212.22.82.138:2096/sub/lu8pftmyl3owcffm",
-            "https://212.22.82.138:2096/sub/bcb1rdvd339gdaay",
-            "https://212.22.82.138:2096/sub/6j3uzx9idnbpe3zv",
-            "https://212.22.82.138:2096/sub/uvrlxuflrm411bgr",
-            "https://212.22.82.138:2096/sub/9sh4pb9u7ds09yta",
-            "https://212.22.82.138:2096/sub/tqe59rfpcygu3erb",
-            "https://212.22.82.138:2096/sub/jorsfwrxn92fjo6z",
-            "https://212.22.82.138:2096/sub/stbjwtshnqyi6kd9",
-            "https://212.22.82.138:2096/sub/imz17bgrbb1102nu"
+            "https://185.73.126.237:2096/sub/ifg3v5yrri9pqkzg",
+            "https://185.73.126.237:2096/sub/lu8pftmyl3owcffm",
+            "https://185.73.126.237:2096/sub/bcb1rdvd339gdaay",
+            "https://185.73.126.237:2096/sub/6j3uzx9idnbpe3zv",
+            "https://185.73.126.237:2096/sub/uvrlxuflrm411bgr",
+            "https://185.73.126.237:2096/sub/9sh4pb9u7ds09yta",
+            "https://185.73.126.237:2096/sub/tqe59rfpcygu3erb",
+            "https://185.73.126.237:2096/sub/jorsfwrxn92fjo6z",
+            "https://185.73.126.237:2096/sub/stbjwtshnqyi6kd9",
+            "https://185.73.126.237:2096/sub/imz17bgrbb1102nu"
         ], 
         "name": "💎 🇷🇺  V1A / ИНТЕРНЕТ ДО РКН"
     },
