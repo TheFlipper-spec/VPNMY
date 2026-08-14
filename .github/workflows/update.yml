@@ -1,17 +1,15 @@
+
 name: Update VPN Subscription
 
-#on:
-  #schedule:
-    #- cron: '4,14,24,34,44,54 * * * *'
+on:
+  # Настройте расписание (cron) здесь, если нужно автоматизировать запуск
+  # schedule:
+  #   - cron: '4,14,24,34,44,54 * * * *'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    # ВОЗВРАЩЕНО: Явное указание HOME для корректной работы git --global
-    env:
-      HOME: /root
 
     permissions:
       contents: write
@@ -27,7 +25,7 @@ jobs:
           git config --global --add safe.directory '*'
 
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5  # Обновлено до актуальной v5
         with:
           python-version: '3.10'
           cache: 'pip'
@@ -67,12 +65,8 @@ jobs:
           
           COUNT=$(python3 -c "import json; print(len(json.load(open('stats.json'))['servers']))" 2>/dev/null || echo "?")
           
-          # Коммитим нужные файлы
+          # Коммитим изменения
           git commit -m "🚀 Update $COUNT Servers | $(date -u +'%Y-%m-%d %H:%M UTC')"
           
-          # Прячем все остальные изменения (например, измененные права xray или корневые логи),
-          # чтобы они не блокировали слияние (pull)
-          git stash --include-untracked
-          
-          git pull --rebase origin main
+          # Отправляем изменения напрямую. Так как окружение чистое, pull/rebase здесь не требуются.
           git push origin main
