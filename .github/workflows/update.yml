@@ -7,7 +7,7 @@ name: Update VPN Subscription
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     
     # ВОЗВРАЩЕНО: Явное указание HOME для корректной работы git --global
     env:
