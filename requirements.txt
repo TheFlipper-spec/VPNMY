@@ -1,11 +1,2 @@
-# --- Асинхронное ядро (Новое) ---
-aiohttp
-aiohttp-socks
-
-# --- Базовые библиотеки проекта ---
-pyTelegramBotAPI
-requests
-geoip2
-PySocks
-urllib3
-maxminddb
+# Версия закреплена: автоматический запуск не должен ломаться из-за внезапного релиза зависимости.
+requests[socks]==2.34.2

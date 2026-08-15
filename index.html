@@ -1,767 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>V1A SYSTEM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-body: #050508;
-            --bg-card: rgba(15, 15, 20, 0.4);
-            --bg-card-hover: rgba(25, 25, 35, 0.6);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --primary: #6366f1;
-            --accent: #00f3ff;
-            --text-main: #ffffff;
-            --text-muted: #8b8d9b;
-            --success: #00ff9d;
-            --warning: #ffcc00;
-            --danger: #ff0055;
-            --core-node: #eab308;
-            --radius-lg: 16px;
-            --font-ui: 'Inter', sans-serif;
-            --font-code: 'JetBrains Mono', monospace;
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            font-family: var(--font-ui);
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* --- DIGITAL BACKGROUND --- */
-        #bg-canvas {
-            position: fixed; top: 0; left: 0; 
-            z-index: 0; pointer-events: none;
-        }
-
-        .scanline {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 243, 255, 0.03) 51%);
-            background-size: 100% 4px;
-            pointer-events: none; z-index: 10;
-        }
-
-        .radar-glow {
-            position: fixed; top: 50%; left: 50%;
-            width: 100vw; height: 100vw;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(99,102,241,0.05) 0%, rgba(0,0,0,0) 60%);
-            z-index: 1; pointer-events: none;
-        }
-        
-        .container {
-            width: 100%; max-width: 1200px; 
-            padding: 24px 20px 100px;
-            z-index: 20; position: relative;
-            display: flex; flex-direction: column; gap: 24px;
-        }
-
-        header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 20px;
-            position: relative;
-        }
-        
-        header::after {
-            content: ''; position: absolute; bottom: -1px; left: 0;
-            width: 150px; height: 1px;
-            background: linear-gradient(90deg, var(--accent), transparent);
-            box-shadow: 0 0 10px var(--accent);
-        }
-
-        .brand { display: flex; flex-direction: column; gap: 4px; }
-        
-        .logo {
-            font-size: 36px; font-weight: 800; letter-spacing: -2px;
-            color: #fff; text-transform: uppercase;
-            display: flex; align-items: center; gap: 16px;
-            font-family: var(--font-code);
-            cursor: default;
-            text-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-        }
-        
-        .hacker-word { display: flex; }
-        .hacker-char {
-            transition: color 0.1s, text-shadow 0.1s;
-            position: relative;
-            cursor: crosshair;
-        }
-        .hacker-char:hover {
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--accent);
-        }
-        
-        .status-dot {
-            width: 10px; height: 10px; background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 12px var(--success), 0 0 24px var(--success);
-            animation: pulse-dot 2s infinite;
-        }
-        
-        .subtitle {
-            font-size: 11px; color: var(--accent); 
-            font-family: var(--font-code); text-transform: uppercase; letter-spacing: 2px;
-            line-height: 1.4; opacity: 0.8;
-        }
-
-        /* --- DASHBOARD СТАТИСТИКИ --- */
-        .sys-dashboard {
-            display: flex; gap: 16px; flex-wrap: wrap;
-            background: rgba(10, 10, 15, 0.6);
-            border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 16px 20px;
-            backdrop-filter: blur(10px);
-        }
-        .sys-stat {
-            flex: 1; min-width: 100px;
-            display: flex; flex-direction: column; gap: 4px;
-            border-right: 1px solid var(--border-color);
-        }
-        .sys-stat:last-child { border-right: none; }
-        .sys-stat span { font-size: 10px; color: var(--text-muted); font-family: var(--font-code); text-transform: uppercase; }
-        .sys-stat strong { font-size: 16px; font-family: var(--font-code); color: #fff; font-weight: 700; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
-        .offline-badge { color: var(--warning) !important; text-shadow: 0 0 10px var(--warning) !important; }
-
-        /* --- GRID --- */
-        .grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 16px; 
-        }
-
-        /* --- КАРТОЧКА СЕРВЕРА --- */
-        .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 18px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            position: relative; overflow: hidden;
-            animation: slideUp 0.5s ease-out forwards;
-            opacity: 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        
-        @media (hover: hover) {
-            .card:hover {
-                background: var(--bg-card-hover);
-                transform: translateY(-4px) scale(1.01);
-                border-color: rgba(0, 243, 255, 0.3);
-                box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(0, 243, 255, 0.05);
-            }
-            .card.core-node:hover {
-                border-color: var(--core-node);
-                box-shadow: 0 10px 30px rgba(234, 179, 8, 0.15), inset 0 0 20px rgba(234, 179, 8, 0.05);
-            }
-        }
-
-        .card::after {
-            content: ''; position: absolute; bottom: 0; left: 0; height: 2px; width: 0%;
-            background: var(--accent); transition: width 0.4s ease;
-        }
-        .card:hover::after { width: 100%; }
-        .card.core-node::after { background: var(--core-node); }
-
-        .card.core-node {
-            border-color: rgba(234, 179, 8, 0.3);
-            background: linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, rgba(15, 15, 20, 0.4) 100%);
-        }
-        .core-badge {
-            position: absolute; top: 0; right: 0;
-            background: rgba(234, 179, 8, 0.15); color: var(--core-node);
-            font-size: 9px; font-family: var(--font-code); font-weight: 700;
-            padding: 4px 10px; border-bottom-left-radius: 12px;
-            border-left: 1px solid rgba(234, 179, 8, 0.3);
-            border-bottom: 1px solid rgba(234, 179, 8, 0.3);
-            letter-spacing: 1px;
-            box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
-        }
-
-        .card-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
-
-        .flag-wrapper { position: relative; flex-shrink: 0; }
-        .flag-icon { 
-            width: 44px; height: 32px; 
-            border-radius: 6px;
-            object-fit: cover;
-            background: #111;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .core-node .flag-icon { border-color: rgba(234, 179, 8, 0.4); }
-
-        .info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-        .info h3 {
-            margin: 0; font-size: 16px; font-weight: 700;
-            color: #fff; font-family: var(--font-ui);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            display: flex; align-items: center; gap: 8px;
-        }
-        
-        .server-name {
-            font-size: 12px; color: var(--text-muted); font-family: var(--font-code);
-            margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        .stats {
-            text-align: right;
-            display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
-            flex-shrink: 0; margin-left: 12px; z-index: 2;
-        }
-        .ping-val {
-            font-weight: 800; font-size: 16px; color: #fff;
-            font-family: var(--font-code);
-            display: flex; align-items: center; gap: 8px;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
-        }
-        .type-val { 
-            font-size: 10px; color: var(--accent); 
-            font-family: var(--font-code); text-transform: uppercase; font-weight: 700; 
-            background: rgba(0, 243, 255, 0.1); padding: 2px 6px; border-radius: 4px;
-        }
-        .core-node .type-val { color: var(--core-node); background: rgba(234, 179, 8, 0.1); }
-
-        .signal-dot { 
-            width: 8px; height: 8px; border-radius: 50%; 
-            transition: background-color 0.3s, box-shadow 0.3s; 
-        }
-
-        /* --- MODAL STYLES --- */
-        .modal-overlay {
-            position: fixed; inset: 0; z-index: 100;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(16px);
-            opacity: 0; pointer-events: none; transition: all 0.4s ease;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-        .modal {
-            background: #0a0a0e;
-            width: 90%; max-width: 420px;
-            border-radius: 24px; padding: 30px 24px;
-            border: 1px solid var(--accent);
-            transform: scale(0.9) translateY(20px); 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.15), inset 0 0 20px rgba(0, 243, 255, 0.05);
-            position: relative; overflow: hidden;
-        }
-        .modal::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(transparent, rgba(0, 243, 255, 0.05), transparent);
-            transform: rotate(45deg); animation: radar-spin 6s linear infinite; pointer-events: none;
-        }
-
-        .modal-overlay.open .modal { transform: scale(1) translateY(0); }
-
-        .modal-close {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 50%; width: 32px; height: 32px;
-            color: var(--text-muted); font-size: 16px;
-            cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; z-index: 10;
-        }
-        .modal-close:hover { color: #fff; background: rgba(255,0,85,0.2); border-color: var(--danger); box-shadow: 0 0 15px rgba(255,0,85,0.4); }
-
-        .modal-header { text-align: center; margin-bottom: 24px; z-index: 2; position: relative; }
-        .m-flag { 
-            width: 70px; height: auto; border-radius: 8px;
-            display: block; margin: 0 auto 16px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1);
-        }
-        .m-title { font-size: 22px; font-weight: 800; margin: 0; color: #fff; letter-spacing: -0.5px; }
-        .m-sub { 
-            display: inline-block; background: rgba(0, 243, 255, 0.1); color: var(--accent); 
-            font-size: 11px; margin-top: 8px; padding: 4px 10px; border-radius: 12px;
-            font-family: var(--font-code); font-weight: 700; letter-spacing: 1px;
-        }
-
-        .data-list { 
-            background: rgba(0,0,0,0.4); border-radius: 16px; 
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 16px; margin-bottom: 24px; position: relative; z-index: 2;
-        }
-        .data-row { 
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); 
-        }
-        .data-row:last-child { border: none; padding-bottom: 0; }
-        .data-row:first-child { padding-top: 0; }
-        .d-label { color: var(--text-muted); font-size: 12px; font-family: var(--font-code); text-transform: uppercase;}
-        .d-value { font-weight: 700; font-family: var(--font-code); color: #fff; font-size: 14px; text-align: right; word-break: break-all; margin-left: 10px;}
-        
-        .obfuscated-ip { color: var(--warning); text-shadow: 0 0 8px rgba(255, 204, 0, 0.4); letter-spacing: 2px; }
-
-        .btn {
-            width: 100%; padding: 16px; border-radius: 14px; border: none;
-            font-size: 15px; font-weight: 800; cursor: pointer;
-            background: linear-gradient(45deg, var(--primary), #818cf8); color: #fff; 
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); 
-            font-family: var(--font-ui); text-transform: uppercase; letter-spacing: 1px;
-            transition: all 0.3s ease; position: relative; overflow: hidden; z-index: 2;
-        }
-        .btn::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transform: skewX(-20deg); transition: 0.5s;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(99, 102, 241, 0.6); }
-        .btn:hover::after { left: 150%; }
-        .btn:active { transform: translateY(1px); }
-
-        /* --- АНИМАЦИИ --- */
-        @keyframes pulse-dot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes radar-spin { 100% { transform: rotate(405deg); } }
-        @keyframes data-flicker { 0% { opacity: 0.8; } 5% { opacity: 1; } 10% { opacity: 0.4; } 15% { opacity: 1; } 100% { opacity: 1; } }
-
-        /* --- АДАПТИВНОСТЬ --- */
-        @media (min-width: 600px) {
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-            header { align-items: flex-end; }
-            .subtitle { font-size: 13px; }
-        }
-
-        @media (min-width: 992px) {
-            .grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
-            .logo { font-size: 42px; }
-            .card { padding: 22px 24px; }
-            .container { padding-top: 40px; }
-        }
-        
-        @media (min-width: 1400px) {
-            .grid { grid-template-columns: repeat(4, 1fr); }
-            .container { max-width: 1400px; }
-        }
-
-        @media (max-width: 480px) {
-            .container { padding-top: 16px; }
-            .modal { 
-                position: absolute; bottom: 0; width: 100%; border-radius: 32px 32px 0 0; 
-                margin: 0; max-width: 100%; transform: translateY(100%); padding-bottom: 40px;
-                border: none; border-top: 1px solid var(--accent);
-            }
-            .modal-overlay.open .modal { transform: translateY(0); }
-            .sys-dashboard { padding: 12px; gap: 8px; }
-            .sys-stat strong { font-size: 14px; }
-        }
-    </style>
-</head>
-<body>
-
-<canvas id="bg-canvas"></canvas>
-<div class="radar-glow"></div>
-<div class="scanline"></div>
-
-<div class="container">
-    <header>
-        <div class="brand">
-            <div class="logo">
-                <div class="status-dot" id="mainStatusDot"></div>
-                <div class="hacker-word" id="brandText" data-value="V1A SYSTEM">V1A SYSTEM</div>
-            </div>
-            <div class="subtitle" id="timeInfo">ИНИЦИАЛИЗАЦИЯ УЗЛОВ...</div>
-        </div>
-    </header>
-
-    <div class="sys-dashboard">
-        <div class="sys-stat"><span>CPU SYS</span><strong id="dash-cpu">12%</strong></div>
-        <div class="sys-stat"><span>RAM ALLOC</span><strong id="dash-ram">1.4 GB</strong></div>
-        <div class="sys-stat"><span>NETWORK</span><strong id="dash-net" style="color: var(--success); text-shadow: 0 0 10px var(--success);">SECURE</strong></div>
-        <div class="sys-stat"><span>NODES ONLINE</span><strong id="dash-nodes">--</strong></div>
-    </div>
-
-    <div id="grid" class="grid"></div>
-</div>
-
-<div class="modal-overlay" id="modal" onclick="closeModal(event)">
-    <div class="modal" onclick="event.stopPropagation()">
-        <button class="modal-close" onclick="forceCloseModal()" aria-label="Закрыть">✕</button>
-        <div class="modal-header">
-            <img id="mFlag" src="" class="m-flag" alt="Флаг">
-            <h2 class="m-title" id="mCountry">Страна</h2>
-            <div class="m-sub" id="mName">СЕРВЕРНЫЙ УЗЕЛ</div>
-        </div>
-        <div class="data-list">
-            <div class="data-row"><span class="d-label">IP Адрес</span><span class="d-value obfuscated-ip" id="mIP">---</span></div>
-            <div class="data-row"><span class="d-label">Пинг</span><span class="d-value" id="mPing">---</span></div>
-            <div class="data-row"><span class="d-label">Пропускная сп-ть</span><span class="d-value" id="mSpeed">---</span></div>
-            <div class="data-row"><span class="d-label">Протокол</span><span class="d-value" id="mProto" style="color:var(--accent);">AES-256 / VLESS</span></div>
-        </div>
-        <button class="btn" onclick="openBot()">ПОДКЛЮЧИТЬСЯ К УЗЛУ</button>
-    </div>
-</div>
-
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b10">
+<meta name="description" content="FL1P VPN — подписка с автоматической проверкой каждые 10 минут."><title>FL1P VPN — актуальная подписка</title>
+<style>
+:root{color-scheme:dark;--bg:#090b10;--card:#12161e;--line:#29303c;--text:#f7f8fb;--muted:#9ca6b7;--orange:#ff693f;--amber:#ffba58;--green:#4ed990;--red:#ff6b72;--blue:#77baff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,rgba(255,105,63,.17),transparent 35rem),var(--bg);color:var(--text);font:16px/1.55 Inter,system-ui,sans-serif}.shell{width:min(1140px,calc(100% - 32px));margin:auto}header{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:-.03em}.mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--orange),var(--amber));color:#1d0d07}.brand small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}header a{color:var(--muted);text-decoration:none;font-size:13px}main{padding:58px 0 80px}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}.box,.node,.metric,.step{background:linear-gradient(145deg,#171b24ed,#10131aee);border:1px solid var(--line);border-radius:22px}.hero-copy{padding:clamp(28px,5vw,56px)}.eyebrow{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 5px #ffba5818}.dot.ok{background:var(--green)}.dot.error{background:var(--red)}h1{font-size:clamp(44px,7vw,76px);line-height:.98;letter-spacing:-.065em;margin:24px 0 18px}h1 span{color:var(--amber)}.lead{color:#cbd1dc;font-size:clamp(17px,2vw,20px);max-width:680px}.truth{border-top:1px solid var(--line);margin-top:26px;padding-top:20px;color:var(--muted);font-size:13px}.sub{padding:26px;display:flex;flex-direction:column}.sub h2{margin:0;font-size:22px}.sub p{color:var(--muted);font-size:14px}.url{background:#080a0e;border:1px solid var(--line);border-radius:14px;padding:14px;color:#bac4d4;font:12px/1.5 monospace;overflow-wrap:anywhere}.btn{min-height:50px;border:0;border-radius:14px;margin-top:12px;display:flex;align-items:center;justify-content:center;font-weight:850;cursor:pointer;text-decoration:none;background:linear-gradient(135deg,var(--orange),var(--amber));color:#1a0b06}.btn.alt{background:#1a1f29;color:white;border:1px solid var(--line)}.btn.done{background:var(--green)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:26px 0}.metric{padding:19px}.metric span,.stat span{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:24px;letter-spacing:-.03em}.head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:54px 0 18px}.head h2{font-size:36px;letter-spacing:-.04em;margin:0}.head p,.legend{color:var(--muted);margin:0}.legend{font-size:12px;max-width:360px;text-align:right}.nodes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.node{padding:21px;min-height:210px;display:flex;flex-direction:column}.node-top{display:flex;justify-content:space-between}.flag{font-size:30px}.pill{font-size:10px;text-transform:uppercase;color:var(--blue);border:1px solid #77baff44;padding:5px 9px;border-radius:99px}.pill.white{color:var(--amber);border-color:#ffba5844}.node h3{margin:17px 0 3px}.proto{color:var(--muted);font-size:11px;text-transform:uppercase}.stats{border-top:1px solid var(--line);padding-top:16px;margin-top:auto;display:grid;grid-template-columns:1fr 1fr}.stat strong{font-size:14px}.empty{grid-column:1/-1;text-align:center;padding:40px;border:1px dashed var(--line);border-radius:18px;color:var(--muted)}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.step{padding:23px}.num{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#ff693f20;color:var(--orange);font-weight:900}.step p,.notice{color:var(--muted);font-size:14px}.notice{margin-top:24px;padding:20px;border:1px solid #ffba5833;border-radius:17px;background:#ffba580a}footer{border-top:1px solid var(--line);padding:28px 0;color:var(--muted);font-size:12px}.foot{display:flex;justify-content:space-between}@media(max-width:850px){.hero{grid-template-columns:1fr}.nodes{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){header>a{display:none}.metrics,.nodes,.steps{grid-template-columns:1fr}.head{align-items:start;flex-direction:column}.legend{text-align:left}h1{font-size:45px}.foot{flex-direction:column;gap:8px}}
+</style></head>
+<body><header class="shell"><div class="brand"><span class="mark">F</span><span>FL1P VPN<small>для русскоязычных пользователей</small></span></div><a href="https://github.com/TheFlipper-spec/VPNMY">Исходный код на GitHub ↗</a></header>
+<main class="shell"><section class="hero"><div class="box hero-copy"><div class="eyebrow"><span class="dot" id="dot"></span><span id="status">Загружаем состояние</span></div><h1>Одна ссылка.<br><span>Свежие узлы.</span></h1><p class="lead">Открытая подписка для России. Конфигурации проверяются и автоматически обновляются каждые 10 минут.</p><div class="truth" id="truth">Показываем только данные последнего запуска GitHub Actions — без выдуманной телеметрии.</div></div><aside class="box sub"><h2>Ссылка на подписку</h2><p>Добавьте её в приложение один раз и включите автообновление профиля.</p><div class="url" id="url"></div><button class="btn" id="copy">Скопировать подписку</button><a class="btn alt" href="https://t.me/fl1pvpnbot">Открыть Telegram-бота</a></aside></section>
+<section class="metrics"><div class="metric"><span>Опубликовано узлов</span><strong id="count">—</strong></div><div class="metric"><span>Доступно источников</span><strong id="sources">—</strong></div><div class="metric"><span>Проверка, МСК</span><strong id="updated">—</strong></div><div class="metric"><span>Интервал</span><strong>10 минут</strong></div></section>
+<section><div class="head"><div><h2>Узлы в подписке</h2><p>Обычный интернет и режим белых списков.</p></div><div class="legend">Задержка измерена с GitHub runner и может отличаться от вашей.</div></div><div class="nodes" id="nodes"><div class="empty">Загружаем результаты…</div></div></section>
+<section><div class="head"><div><h2>Как подключиться</h2><p>Без регистрации, в три шага.</p></div></div><div class="steps"><article class="step"><span class="num">1</span><h3>Установите клиент</h3><p>Например Hiddify, v2rayNG или Streisand с поддержкой VLESS, VMess и Trojan.</p></article><article class="step"><span class="num">2</span><h3>Добавьте URL</h3><p>Скопируйте ссылку выше и импортируйте её как удалённый профиль.</p></article><article class="step"><span class="num">3</span><h3>Обновляйте профиль</h3><p>Выберите интервал от 10 минут и подходящий узел.</p></article></div><div class="notice"><b>Важно.</b> Это агрегатор бесплатных публичных конфигураций, а не собственная коммерческая инфраструктура. Узлы могут исчезать между проверками. Используйте HTTPS и соблюдайте применимое законодательство.</div></section></main>
+<footer><div class="shell foot"><span>FL1P VPN · без фиктивной телеметрии</span><span>Публичное состояние: <a href="stats.json">stats.json</a></span></div></footer>
 <script>
-    const escapeHTML = (str) => {
-        if (str === null || str === undefined) return '';
-        return String(str).replace(/[&<>'"]/g, 
-            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
-    };
+"use strict";
+const sub = new URL("FL1PVPN", location.href).href;
+const url = document.getElementById("url");
+const copy = document.getElementById("copy");
+const nodes = document.getElementById("nodes");
+url.textContent = sub;
 
-    function obfuscateIP(ip) {
-        if (!ip) return '***.***.***.***';
-        const parts = ip.split('.');
-        if (parts.length === 4) return `${parts[0]}.${parts[1]}.***.***`;
-        if (ip.includes(':')) return ip.split(':').slice(0, 3).join(':') + ':***:***';
-        return '***.***.***.***';
-    }
+function msk(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "нет данных";
+  return new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+  }).format(date);
+}
 
-    // УМНЫЙ СЛОВАРЬ СТРАН: КОДЫ И НАЗВАНИЯ ДЛЯ ПОИСКА
-    const countryDictionary = {
-        "БЕЛЫЕ СПИСКИ": { name: "Россия", iso: "ru" },
-        "WHITELIST": { name: "Россия", iso: "ru" },
-        "РОССИЯ": { name: "Россия", iso: "ru" },
-        "RU": { name: "Россия", iso: "ru" },
-        "ФИНЛЯНДИЯ": { name: "Финляндия", iso: "fi" },
-        "FI": { name: "Финляндия", iso: "fi" },
-        "ЭСТОНИЯ": { name: "Эстония", iso: "ee" },
-        "EE": { name: "Эстония", iso: "ee" },
-        "ГЕРМАНИЯ": { name: "Германия", iso: "de" },
-        "DE": { name: "Германия", iso: "de" },
-        "НИДЕРЛАНДЫ": { name: "Нидерланды", iso: "nl" },
-        "NL": { name: "Нидерланды", iso: "nl" },
-        "США": { name: "США", iso: "us" },
-        "US": { name: "США", iso: "us" },
-        "ВЕЛИКОБРИТАНИЯ": { name: "Великобритания", iso: "gb" },
-        "GB": { name: "Великобритания", iso: "gb" },
-        "ФРАНЦИЯ": { name: "Франция", iso: "fr" },
-        "FR": { name: "Франция", iso: "fr" },
-        "ШВЕЦИЯ": { name: "Швеция", iso: "se" },
-        "SE": { name: "Швеция", iso: "se" },
-        "ПОЛЬША": { name: "Польша", iso: "pl" },
-        "PL": { name: "Польша", iso: "pl" },
-        "УКРАИНА": { name: "Украина", iso: "ua" },
-        "UA": { name: "Украина", iso: "ua" },
-        "ТУРЦИЯ": { name: "Турция", iso: "tr" },
-        "TR": { name: "Турция", iso: "tr" },
-        "ШВЕЙЦАРИЯ": { name: "Швейцария", iso: "ch" },
-        "CH": { name: "Швейцария", iso: "ch" },
-        "СИНГАПУР": { name: "Сингапур", iso: "sg" },
-        "SG": { name: "Сингапур", iso: "sg" }
-    };
+function card(server) {
+  const article = document.createElement("article"); article.className = "node";
+  const top = document.createElement("div"); top.className = "node-top";
+  const flag = document.createElement("span"); flag.className = "flag"; flag.textContent = server.country_flag || "🌐";
+  const pill = document.createElement("span"); pill.className = "pill" + (server.category === "whitelist" ? " white" : "");
+  pill.textContent = server.category_name || "Интернет"; top.append(flag, pill);
+  const title = document.createElement("h3"); title.textContent = server.country_name || "Локация не определена";
+  const protocol = document.createElement("div"); protocol.className = "proto";
+  protocol.textContent = [server.protocol, server.transport, server.security].filter(Boolean).join(" · ");
+  const stats = document.createElement("div"); stats.className = "stats";
+  const values = [
+    ["Контрольный TCP", server.tcp_ms ? `${server.tcp_ms} мс` : "—"],
+    ["Пробная скорость", server.speed_mbps ? `≈ ${server.speed_mbps} Мбит/с` : "не замерена"]
+  ];
+  for (const [label, value] of values) {
+    const block = document.createElement("div"); block.className = "stat";
+    const caption = document.createElement("span"); caption.textContent = label;
+    const strong = document.createElement("strong"); strong.textContent = value;
+    block.append(caption, strong); stats.append(block);
+  }
+  article.append(top, title, protocol, stats); return article;
+}
 
-    function detectLocation(serverName, serverCountry) {
-        const n = String(serverName || "").toUpperCase();
-        const c = String(serverCountry || "").toUpperCase();
-        
-        let detected = { name: "Неизвестная локация", iso: "xx" };
+copy.onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(sub); copy.textContent = "Ссылка скопирована"; copy.classList.add("done");
+    setTimeout(() => { copy.textContent = "Скопировать подписку"; copy.classList.remove("done"); }, 2000);
+  } catch { copy.textContent = "Скопируйте URL выше"; }
+};
 
-        for (const [key, val] of Object.entries(countryDictionary)) {
-            if (c === key || c.includes(key)) return val;
-        }
-
-        for (const [key, val] of Object.entries(countryDictionary)) {
-            if (n.includes(key)) return val;
-        }
-
-        if (c.length === 2 && detected.iso === "xx") {
-            detected.iso = c.toLowerCase();
-            detected.name = serverCountry; 
-        }
-
-        return detected;
-    }
-
-    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-    function scrambleLetter(element, finalChar) {
-        if (element.dataset.isAnimating === "true") return;
-        element.dataset.isAnimating = "true";
-        let iterations = 0; const maxIterations = 10;
-        const interval = setInterval(() => {
-            element.innerText = letters[Math.floor(Math.random() * letters.length)];
-            iterations++;
-            if (iterations >= maxIterations) {
-                element.innerText = finalChar;
-                element.dataset.isAnimating = "false";
-                clearInterval(interval);
-            }
-        }, 40);
-    }
-
-    function initHackerTitle() {
-        const container = document.getElementById('brandText');
-        const text = container.dataset.value;
-        let iterations = 0;
-        const loadInterval = setInterval(() => {
-            container.innerText = text.split("").map((letter, index) => {
-                if(index < iterations) return text[index];
-                return letters[Math.floor(Math.random() * letters.length)];
-            }).join("");
-            if(iterations >= text.length) {
-                clearInterval(loadInterval);
-                container.innerHTML = ""; 
-                text.split("").forEach(char => {
-                    const span = document.createElement("span");
-                    span.className = "hacker-char";
-                    if (char === " ") span.style.width = "10px";
-                    span.innerText = char;
-                    if (char !== " ") span.onmouseover = () => scrambleLetter(span, char);
-                    container.appendChild(span);
-                });
-            }
-            iterations += 1 / 3;
-        }, 30);
-    }
-    initHackerTitle();
-
-    // --- ИНТЕРАКТИВНЫЙ CANVAS ---
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let width, height, particles = [];
-    let mouse = { x: -1000, y: -1000 };
-
-    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
-    window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
-    window.addEventListener('mouseout', () => { mouse.x = -1000; mouse.y = -1000; });
-    window.addEventListener('touchend', () => { mouse.x = -1000; mouse.y = -1000; });
-
-    const config = { speed: 0.25, size: 1.5, linkDist: 150, mouseDist: 180, colorNode: '#00f3ff', colorLine: 'rgba(99, 102, 241, ' };
-
-    function resize() {
-        const dpr = window.devicePixelRatio || 1;
-        width = window.innerWidth; height = window.innerHeight;
-        canvas.width = width * dpr; canvas.height = height * dpr;
-        canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
-        ctx.scale(dpr, dpr);
-        const targetCount = Math.floor((width * height) / 9000); 
-        if (particles.length < targetCount) {
-            for(let i = particles.length; i < targetCount; i++) {
-                particles.push({
-                    x: Math.random() * width, y: Math.random() * height,
-                    vx: (Math.random() - 0.5) * config.speed, vy: (Math.random() - 0.5) * config.speed
-                });
-            }
-        } else {
-            particles = particles.slice(0, targetCount);
-        }
-    }
-    
-    function animateNetwork() {
-        ctx.clearRect(0, 0, width, height);
-        for(let i = 0; i < particles.length; i++) {
-            let p = particles[i]; 
-            
-            let dxMouse = mouse.x - p.x;
-            let dyMouse = mouse.y - p.y;
-            let distMouse = Math.sqrt(dxMouse*dxMouse + dyMouse*dyMouse);
-            
-            if (distMouse < config.mouseDist) {
-                if (distMouse > 40) {
-                    p.x += dxMouse * 0.005; 
-                    p.y += dyMouse * 0.005;
-                }
-                ctx.fillStyle = '#fff';
-                
-                let alpha = 1 - (distMouse / config.mouseDist);
-                ctx.strokeStyle = `rgba(0, 243, 255, ${alpha * 0.6})`;
-                ctx.lineWidth = 1;
-                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
-            } else {
-                ctx.fillStyle = config.colorNode; 
-            }
-
-            p.x += p.vx; p.y += p.vy;
-            if(p.x < 0 || p.x > width) p.vx *= -1;
-            if(p.y < 0 || p.y > height) p.vy *= -1;
-            
-            ctx.beginPath(); ctx.arc(p.x, p.y, config.size, 0, Math.PI * 2); ctx.fill();
-            
-            for(let j = i + 1; j < particles.length; j++) {
-                let p2 = particles[j]; let dx = p.x - p2.x; let dy = p.y - p2.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                if(dist < config.linkDist) {
-                    let alpha = 1 - (dist / config.linkDist);
-                    ctx.strokeStyle = `${config.colorLine}${alpha * 0.4})`;
-                    ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-                }
-            }
-        }
-        requestAnimationFrame(animateNetwork);
-    }
-    window.addEventListener('resize', resize); resize(); animateNetwork();
-
-    // ОБНОВЛЕНО: Резервные серверы теперь тоже имеют реальные (маленькие) значения пинга
-    const fallbackServers = [
-        { country: "RU", name: "💎 V1A RU / БЕЛЫЕ СПИСКИ", ip: "85.192.***.***", ping: 44, speed_mbps: 1000 },
-        { country: "FI", name: "💎 🇫🇮 V1A / Финляндия", ip: "95.216.***.***", ping: 67, speed_mbps: 500 },
-        { country: "FI", name: "💎 🇫🇮 V2A / Финляндия", ip: "193.168.***.***", ping: 57, speed_mbps: 500 },
-        { country: "EE", name: "💎 🇪🇪 V2A / Эстония", ip: "144.76.***.***", ping: 55, speed_mbps: 1000 }
-    ];
-
-    const JSON_URL = "stats.json";
-
-    async function init() {
-        try {
-            const res = await fetch(JSON_URL + "?t=" + Date.now());
-            if(!res.ok) throw new Error("HTTP error " + res.status);
-            const data = await res.json();
-            
-            const serversData = Array.isArray(data) ? data : (data.servers || []);
-            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ // АКТИВНОЕ СОЕДИНЕНИЕ`;
-            document.getElementById('dash-nodes').innerText = serversData.length;
-            
-            setInterval(simulateLiveDashboard, 1500);
-            render(serversData);
-        } catch (e) {
-            console.warn("Файл stats.json не найден. Загружаю кэш.");
-            document.getElementById('timeInfo').innerHTML = `СИСТЕМА В СЕТИ // ОФЛАЙН КЭШ`;
-            
-            const netStat = document.getElementById('dash-net');
-            netStat.innerText = "OFFLINE MODE";
-            netStat.className = "offline-badge";
-            
-            const mainDot = document.getElementById('mainStatusDot');
-            mainDot.style.background = 'var(--warning)';
-            mainDot.style.boxShadow = '0 0 12px var(--warning), 0 0 24px var(--warning)';
-            
-            document.getElementById('dash-nodes').innerText = fallbackServers.length;
-            
-            setInterval(simulateLiveDashboard, 1500);
-            render(fallbackServers);
-        }
-    }
-
-    function simulateLiveDashboard() {
-        // Умная симуляция: мы меняем значение всего на +/- 1 миллисекунду
-        // Чтобы казалось, что пинг живой, но цифры оставались максимально точными и правдивыми
-        document.querySelectorAll('.ping-container').forEach(container => {
-            const el = container.querySelector('.ping-number');
-            const dot = container.querySelector('.signal-dot');
-            if (!el || !dot || el.innerText === '---') return;
-            
-            let base = parseInt(el.getAttribute('data-base')) || 0;
-            if (base <= 0) return;
-
-            let newPing = base + (Math.floor(Math.random() * 3) - 1); 
-            if (newPing < 1) newPing = base;
-            el.innerText = newPing;
-            
-            if(newPing < 100) { dot.style.background = 'var(--success)'; dot.style.boxShadow = '0 0 10px var(--success)'; }
-            else if(newPing < 250) { dot.style.background = 'var(--warning)'; dot.style.boxShadow = '0 0 10px var(--warning)'; }
-            else { dot.style.background = 'var(--danger)'; dot.style.boxShadow = '0 0 10px var(--danger)'; }
-        });
-
-        const cpuBase = 12;
-        document.getElementById('dash-cpu').innerText = (cpuBase + Math.floor(Math.random() * 6)) + "%";
-        const ramBase = 1.4;
-        document.getElementById('dash-ram').innerText = (ramBase + (Math.random() * 0.2)).toFixed(2) + " GB";
-    }
-
-    function render(list) {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = "";
-        
-        if(!list || list.length === 0) return;
-        
-        list.forEach((s, i) => {
-            const el = document.createElement('div');
-            const isCoreNode = i < 4; 
-            
-            el.className = `card ${isCoreNode ? 'core-node' : ''}`;
-            el.style.animationDelay = (i * 0.05) + 's';
-            
-            const s_name = s.name || 'SERVER_NODE';
-            const s_country_raw = s.country || '';
-            const s_ip = s.ip || 'Скрыт';
-            
-            // ОБНОВЛЕНО: Берем пинг КАК ЕСТЬ из JSON файла! Никаких формул деления!
-            const s_ping = parseInt(s.ping) || 0; 
-            const s_speed = s.speed_mbps || 0;
-            
-            const locationData = detectLocation(s_name, s_country_raw);
-            
-            const flagUrl = locationData.iso !== 'xx' 
-                ? `https://flagcdn.com/w80/${locationData.iso}.png` 
-                : 'https://flagcdn.com/w80/xx.png';
-            
-            let pingColor = 'var(--success)';
-            let pingGlow = '0 0 10px var(--success)';
-            if(s_ping > 100) { pingColor = 'var(--warning)'; pingGlow = '0 0 10px var(--warning)'; }
-            if(s_ping > 250) { pingColor = 'var(--danger)'; pingGlow = '0 0 10px var(--danger)'; }
-
-            el.innerHTML = `
-                ${isCoreNode ? '<div class="core-badge">CORE NODE</div>' : ''}
-                <div class="card-left">
-                    <div class="flag-wrapper">
-                        <img src="${flagUrl}" class="flag-icon" alt="${escapeHTML(locationData.name)}" onerror="this.src='https://flagcdn.com/w80/xx.png'">
-                    </div>
-                    <div class="info">
-                        <h3>${escapeHTML(locationData.name)}</h3>
-                        <div class="server-name">${escapeHTML(s_name)}</div>
-                    </div>
-                </div>
-                <div class="stats">
-                    <div class="ping-val ping-container">
-                        <span class="ping-number" data-base="${s_ping}">${s_ping > 0 ? s_ping : '---'}</span> ms 
-                        <div class="signal-dot" style="background:${pingColor}; box-shadow:${pingGlow}"></div>
-                    </div>
-                    <span class="type-val">${s_speed > 0 ? s_speed + ' MBPS' : 'ENCRYPTED'}</span>
-                </div>
-            `;
-            
-            el.onclick = () => openModal({ 
-                country: locationData.name, 
-                name: s_name, 
-                ip: s_ip, 
-                ping: s_ping, 
-                speed: s_speed,
-                isCore: isCoreNode
-            }, flagUrl);
-            
-            grid.appendChild(el);
-        });
-    }
-
-    function openModal(data, flagUrl) {
-        const m = document.getElementById('modal');
-        document.getElementById('mFlag').src = flagUrl;
-        document.getElementById('mCountry').textContent = data.country;
-        
-        const subEl = document.getElementById('mName');
-        subEl.textContent = data.isCore ? "ЗАЩИЩЕННЫЙ CORE-УЗЕЛ" : "СЕРВЕРНЫЙ УЗЕЛ";
-        subEl.style.color = data.isCore ? "var(--core-node)" : "var(--accent)";
-        subEl.style.background = data.isCore ? "rgba(234, 179, 8, 0.1)" : "rgba(0, 243, 255, 0.1)";
-        
-        document.getElementById('mIP').textContent = obfuscateIP(data.ip);
-        
-        const pingEl = document.getElementById('mPing');
-        const speedEl = document.getElementById('mSpeed');
-        pingEl.textContent = "Анализ...";
-        speedEl.textContent = "Замер...";
-        pingEl.style.animation = "data-flicker 0.5s infinite";
-        
-        setTimeout(() => {
-            pingEl.style.animation = "none";
-            // В модалке тоже отображаем чистый пинг
-            pingEl.textContent = (data.ping > 0 ? data.ping : '---') + " ms";
-            speedEl.textContent = (data.speed > 0 ? data.speed + " Мбит/с" : "MAX SPEED");
-        }, 600);
-        
-        m.classList.add('open');
-    }
-    
-    function closeModal(e) { if(e.target.id === 'modal') forceCloseModal(); }
-    function forceCloseModal() { document.getElementById('modal').classList.remove('open'); }
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') forceCloseModal(); });
-
-    function openBot() { window.location.href = "https://t.me/fl1pvpnbot"; } 
-
-    init();
-</script>
-</body>
-</html>
-
-
+async function loadStats() {
+  try {
+    const response = await fetch(`stats.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(String(response.status));
+    const data = await response.json();
+    const servers = Array.isArray(data.servers) ? data.servers : [];
+    const deep = data.check_mode === "xray"; const healthy = data.status === "healthy" && deep;
+    document.getElementById("dot").className = "dot" + (healthy ? " ok" : "");
+    document.getElementById("status").textContent = healthy ? "Подписка проверена и работает" : (deep ? "Ограниченный режим" : "Предварительная TCP-проверка");
+    document.getElementById("truth").textContent = deep
+      ? "Каждый опубликованный узел провёл HTTPS-запрос через отдельный Xray-туннель."
+      : "Первый production-запуск GitHub Actions заменит этот набор полностью проверенными узлами.";
+    document.getElementById("count").textContent = String(servers.length);
+    const sources = Array.isArray(data.sources) ? data.sources : [];
+    document.getElementById("sources").textContent = `${sources.filter(item => item.available).length} / ${sources.length}`;
+    document.getElementById("updated").textContent = msk(data.updated_at);
+    nodes.replaceChildren();
+    if (!servers.length) nodes.innerHTML = '<div class="empty">Доступных узлов нет.</div>';
+    else servers.forEach(server => nodes.append(card(server)));
+  } catch (error) {
+    document.getElementById("dot").className = "dot error";
+    document.getElementById("status").textContent = "Статус временно недоступен";
+    nodes.innerHTML = '<div class="empty">Не удалось загрузить stats.json. Резервные выдуманные данные не подставляются.</div>';
+    console.error(error);
+  }
+}
+loadStats();
+</script></body></html>
