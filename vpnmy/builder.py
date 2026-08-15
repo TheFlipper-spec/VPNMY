@@ -144,6 +144,7 @@ def build_subscription(
         category_quotas=config.category_quotas,
         target_count=config.target_count,
         max_per_endpoint=config.max_per_endpoint,
+        country_limits=config.country_limits,
     )
     if len(selected) < config.min_publish_count:
         raise BuildError(
