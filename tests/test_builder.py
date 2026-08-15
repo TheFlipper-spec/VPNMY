@@ -84,6 +84,13 @@ def test_build(tmp_path, countries_file, monkeypatch):
     assert r.published == 3 and json.loads(c.paths.stats.read_text())["check_mode"] == "xray"
 
 
+def test_diagnostic_mode_can_never_publish(tmp_path, countries_file):
+    c = cfg(tmp_path, countries_file)
+    with pytest.raises(BuildError, match="только вместе с --dry-run"):
+        build_subscription(c, skip_deep_check=True, dry_run=False)
+    assert not c.paths.subscription_base64.exists()
+
+
 def test_fail_safe(tmp_path, countries_file, monkeypatch):
     c = cfg(tmp_path, countries_file)
     c.paths.subscription_base64.write_text("old")

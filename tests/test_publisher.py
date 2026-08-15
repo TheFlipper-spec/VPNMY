@@ -1,6 +1,10 @@
 import base64
 import json
+import os
 from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
 
 from vpnmy.config import BuildConfig, Paths
 from vpnmy.models import CheckResult, Source
@@ -45,12 +49,37 @@ def test_payload(tmp_path, countries_file):
         base64.b64decode(paths.subscription_base64.read_text()).decode()
         == paths.subscription_raw.read_text()
     )
-    first_line = paths.subscription_raw.read_text().splitlines()[0]
-    assert first_line.startswith("#profile-title: base64:")
-    assert "FL1P VPN" in base64.b64decode(first_line.rsplit(":", 1)[1]).decode()
+    lines = paths.subscription_raw.read_text().splitlines()
+    assert len(lines) == 1
+    assert lines[0].startswith("vless://")
     stats = json.loads(paths.stats.read_text())
     assert stats["schema_version"] == 3
+    assert stats["subscription_metadata_lines"] == 0
     assert stats["total"] == 1
     assert stats["servers"][0]["verified"] is True
     assert stats["servers"][0]["ip"] == "1.1.1.1"
     assert "🇩🇪 FL1P" in stats["servers"][0]["name"]
+
+
+def test_atomic_publish_rolls_back_partial_replacement(tmp_path, monkeypatch):
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    first.write_bytes(b"old first")
+    second.write_bytes(b"old second")
+    real_replace = os.replace
+    failed = False
+
+    def fail_once(source, target):
+        nonlocal failed
+        if Path(target) == second and not failed:
+            failed = True
+            raise OSError("disk failure")
+        return real_replace(source, target)
+
+    monkeypatch.setattr(os, "replace", fail_once)
+    with pytest.raises(OSError, match="disk failure"):
+        atomic_publish({first: b"new first", second: b"new second"})
+
+    assert first.read_bytes() == b"old first"
+    assert second.read_bytes() == b"old second"
+    assert not list(tmp_path.glob(".*"))

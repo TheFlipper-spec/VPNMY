@@ -21,8 +21,31 @@ def load_history(path: Path) -> dict[str, Any]:
         return empty_history()
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("корень истории должен быть JSON-объектом")
         if data.get("schema_version") != SCHEMA_VERSION or not isinstance(data.get("nodes"), dict):
             raise ValueError("неподдерживаемая схема")
+        if any(
+            not isinstance(node_id, str) or not isinstance(row, dict)
+            for node_id, row in data["nodes"].items()
+        ):
+            raise ValueError("история содержит некорректную запись узла")
+        numeric_fields = {
+            "successes",
+            "failures",
+            "streak",
+            "tcp_ms",
+            "http_ms",
+            "speed_mbps",
+            "checks_passed",
+        }
+        if any(
+            isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0
+            for row in data["nodes"].values()
+            for field, value in row.items()
+            if field in numeric_fields
+        ):
+            raise ValueError("история содержит некорректное числовое значение")
         return data
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         LOGGER.warning("История проверок повреждена и будет создана заново: %s", exc)

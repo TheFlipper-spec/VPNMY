@@ -18,7 +18,7 @@ _CATEGORY_NAMES = {"universal": "Обычный интернет", "whitelist": 
 
 def country_flag(code: str) -> str:
     code = code.upper()
-    if len(code) != 2 or not code.isalpha() or code == "XX":
+    if len(code) != 2 or not code.isascii() or not code.isalpha() or code == "XX":
         return "🌐"
     return "".join(chr(127397 + ord(char)) for char in code)
 
@@ -58,14 +58,10 @@ def build_payloads(
     check_mode: str,
 ) -> dict[Path, bytes]:
     links = [item.node.link_with_name(display_name(item, countries)) for item in results]
-    profile_title = base64.b64encode("🛡️ FL1P VPN · проверенные узлы".encode()).decode("ascii")
-    metadata = [
-        f"#profile-title: base64:{profile_title}",
-        "#profile-update-interval: 1",
-        "#support-url: https://github.com/TheFlipper-spec/VPNMY/issues",
-        "#profile-web-page-url: https://theflipper-spec.github.io/VPNMY/",
-    ]
-    raw_subscription = "\n".join([*metadata, *links]) + "\n"
+    # Активный production workflow сверяет число строк raw-файла с числом узлов.
+    # Поэтому subscription.txt намеренно содержит только импортируемые VPN URI.
+    metadata: list[str] = []
+    raw_subscription = "\n".join(links) + "\n"
     encoded_subscription = base64.b64encode(raw_subscription.encode()).decode("ascii") + "\n"
     utc_label = generated_at.isoformat(timespec="seconds").replace("+00:00", "Z")
     stats = {
@@ -128,7 +124,11 @@ def build_payloads(
 
 
 def atomic_publish(payloads: dict[Path, bytes]) -> None:
+    """Подготавливает все файлы заранее и откатывает уже заменённые при ошибке."""
+
     temporary: list[tuple[Path, Path]] = []
+    backups: dict[Path, Path | None] = {}
+    replaced: list[Path] = []
     try:
         for target, content in payloads.items():
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -144,8 +144,44 @@ def atomic_publish(payloads: dict[Path, bytes]) -> None:
                 temp_path.unlink(missing_ok=True)
                 raise
             temporary.append((temp_path, target))
+
+        # Hard link сохраняет прежний inode без копирования потенциально большой истории.
+        # Резерв создаётся для всех целей до первой замены.
+        for _, target in temporary:
+            if not target.exists():
+                backups[target] = None
+                continue
+            descriptor, backup_name = tempfile.mkstemp(
+                prefix=f".{target.name}.backup.", dir=target.parent
+            )
+            os.close(descriptor)
+            backup_path = Path(backup_name)
+            backup_path.unlink()
+            os.link(target, backup_path)
+            backups[target] = backup_path
+
         for temp_path, target in temporary:
             os.replace(temp_path, target)
+            replaced.append(target)
+    except BaseException as publish_error:
+        rollback_errors: list[OSError] = []
+        for target in reversed(replaced):
+            backup = backups.get(target)
+            try:
+                if backup is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    os.replace(backup, target)
+            except OSError as exc:  # pragma: no cover - двойной отказ файловой системы
+                rollback_errors.append(exc)
+        if rollback_errors:
+            raise OSError(
+                f"публикация прервана, откат завершился с {len(rollback_errors)} ошибками"
+            ) from publish_error
+        raise
     finally:
         for temp_path, _ in temporary:
             temp_path.unlink(missing_ok=True)
+        for backup in backups.values():
+            if backup is not None:
+                backup.unlink(missing_ok=True)

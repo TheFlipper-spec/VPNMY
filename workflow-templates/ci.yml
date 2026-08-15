@@ -25,15 +25,4 @@ jobs:
       - run: ruff check .
       - run: pytest
       - name: Проверить опубликованные артефакты
-        run: |
-          python - <<'PY'
-          import base64, json
-          from pathlib import Path
-          raw = Path("subscription.txt").read_text(encoding="utf-8")
-          encoded = Path("FL1PVPN").read_text(encoding="ascii").strip()
-          assert base64.b64decode(encoded, validate=True).decode("utf-8") == raw
-          stats = json.loads(Path("stats.json").read_text(encoding="utf-8"))
-          links = [line for line in raw.splitlines() if line.startswith(("vless://", "vmess://", "trojan://"))]
-          assert stats["total"] == len(stats["servers"]) == len(links)
-          assert len(links) == len(set(links))
-          PY
+        run: python -m vpnmy.artifacts

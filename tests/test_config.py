@@ -62,8 +62,31 @@ def test_escape_rejected(tmp_path):
         load_config(write(tmp_path, d))
 
 
+def test_source_fields_must_really_be_strings(tmp_path):
+    d = data()
+    d["sources"][0]["name"] = 123
+    with pytest.raises(ConfigError, match="должны быть строками"):
+        load_config(write(tmp_path, d))
+
+
+def test_country_codes_must_be_unique_ascii_iso_codes(tmp_path):
+    d = data()
+    d["preferred_countries"] = ["ru", "RU"]
+    config_file = write(tmp_path, d)
+    with pytest.raises(ConfigError, match="повторяющиеся"):
+        load_config(config_file)
+
+    d["preferred_countries"] = ["ДЕ"]
+    config_file.write_text(json.dumps(d))
+    with pytest.raises(ConfigError, match="двухбуквенных"):
+        load_config(config_file)
+
+
 def test_project_config_contains_requested_sources():
     root = Path(__file__).resolve().parents[1]
-    sources = {source.source_id: source.url for source in load_config(root / "config/subscription.json").sources}
+    sources = {
+        source.source_id: source.url
+        for source in load_config(root / "config/subscription.json").sources
+    }
     assert sources["vlessforu"] == "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
     assert sources["vedalink"] == "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr"
