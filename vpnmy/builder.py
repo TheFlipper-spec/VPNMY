@@ -109,6 +109,7 @@ def build_subscription(
                     float(old.get("speed_mbps", 0)),
                     str(old.get("country") or infer_country(probe.node)),
                     checked_at,
+                    resolved_ip=probe.resolved_ip,
                 )
             )
         failed: list[Node] = []
@@ -125,6 +126,11 @@ def build_subscription(
             speed_test_bytes=config.speed_test_bytes,
             workers=config.verify_workers,
         )
+        unconfirmed = [result for result in checked if result.checks_passed < 2]
+        if unconfirmed:
+            LOGGER.warning("Отброшены узлы без двойного HTTPS-подтверждения: %d", len(unconfirmed))
+            failed.extend(result.node for result in unconfirmed)
+            checked = [result for result in checked if result.checks_passed >= 2]
         check_mode = "xray"
     if check_mode == "xray":
         for result in checked:

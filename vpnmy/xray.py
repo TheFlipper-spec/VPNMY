@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import json
 import logging
 import os
@@ -21,6 +22,10 @@ from .models import CheckResult, Node, ProbeResult
 LOGGER = logging.getLogger(__name__)
 _TRACE_URL = "https://www.cloudflare.com/cdn-cgi/trace"
 _SPEED_URL = "https://speed.cloudflare.com/__down?bytes={bytes_count}"
+_CONFIRMATION_TARGETS = (
+    ("https://www.gstatic.com/generate_204", frozenset({204}), None),
+    ("https://detectportal.firefox.com/success.txt", frozenset({200}), "success"),
+)
 
 
 class XrayError(RuntimeError):
@@ -212,13 +217,55 @@ def _stop(process: subprocess.Popen[bytes]) -> None:
         process.wait(timeout=1)
 
 
+def _parse_trace(body: str) -> tuple[str, str] | None:
+    fields: dict[str, str] = {}
+    for line in body.splitlines():
+        key, separator, value = line.partition("=")
+        if separator and key and key not in fields:
+            fields[key] = value.strip()
+    try:
+        exit_ip = ipaddress.ip_address(fields.get("ip", ""))
+    except ValueError:
+        return None
+    country = fields.get("loc", "").upper()
+    if not exit_ip.is_global or not re.fullmatch(r"[A-Z]{2}", country):
+        return None
+    return exit_ip.compressed, country
+
+
+def _confirm_open_internet(
+    session: requests.Session, proxies: dict[str, str], timeout: float
+) -> bool:
+    """Подтверждает доступ вторым HTTPS-запросом, независимым от Cloudflare trace."""
+    request_timeout = (3.0, min(timeout, 6.0))
+    for url, expected_statuses, expected_body in _CONFIRMATION_TARGETS:
+        try:
+            with session.get(
+                url,
+                proxies=proxies,
+                timeout=request_timeout,
+                allow_redirects=False,
+                stream=True,
+            ) as response:
+                if response.status_code not in expected_statuses:
+                    continue
+                if expected_body is None:
+                    return True
+                body = next(response.iter_content(chunk_size=64), b"")
+                if body.decode("utf-8", errors="replace").strip() == expected_body:
+                    return True
+        except requests.RequestException:
+            continue
+    return False
+
+
 def verify_node(
     probe: ProbeResult, *, xray_bin: str, timeout: float, speed_test_bytes: int
 ) -> CheckResult | None:
     local_port = _free_port()
-    config = build_xray_config(probe.node, local_port)
     process: subprocess.Popen[bytes] | None = None
     try:
+        config = build_xray_config(probe.node, local_port)
         with tempfile.TemporaryDirectory(prefix="vpnmy-xray-") as directory:
             config_path = Path(directory) / "config.json"
             config_path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
@@ -237,16 +284,16 @@ def verify_node(
             }
             with requests.Session() as session:
                 session.trust_env = False
-                session.headers["User-Agent"] = "FL1P-VPN-Healthcheck/2.0"
+                session.headers["User-Agent"] = "FL1P-VPN-Healthcheck/2.1"
                 started = time.perf_counter()
                 response = session.get(_TRACE_URL, proxies=proxies, timeout=(3.0, timeout))
                 response.raise_for_status()
                 body = response.text[:16_384]
                 http_ms = max(1, round((time.perf_counter() - started) * 1000))
-                if "h=" not in body or "ip=" not in body:
+                trace = _parse_trace(body)
+                if trace is None or not _confirm_open_internet(session, proxies, timeout):
                     return None
-                match = re.search(r"(?m)^loc=([A-Z]{2})\r?$", body)
-                country = match.group(1) if match else "XX"
+                _exit_ip, country = trace
                 speed_mbps = 0.0
                 if speed_test_bytes > 0:
                     try:
@@ -268,9 +315,16 @@ def verify_node(
                         LOGGER.debug("Замер скорости недоступен для узла %s", probe.node.node_id)
                 checked_at = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
                 return CheckResult(
-                    probe.node, probe.tcp_ms, http_ms, speed_mbps, country, checked_at
+                    probe.node,
+                    probe.tcp_ms,
+                    http_ms,
+                    speed_mbps,
+                    country,
+                    checked_at,
+                    resolved_ip=probe.resolved_ip,
+                    checks_passed=2,
                 )
-    except (OSError, requests.RequestException, subprocess.SubprocessError, ValueError):
+    except (OSError, requests.RequestException, subprocess.SubprocessError, ValueError, XrayError):
         return None
     finally:
         if process is not None:
@@ -296,9 +350,14 @@ def verify_all(
             for probe in probes
         }
         for future in as_completed(futures):
-            result = future.result()
+            node = futures[future]
+            try:
+                result = future.result()
+            except Exception:  # pragma: no cover - страховка от сбоя отдельного worker
+                LOGGER.exception("Непредвиденная ошибка проверки узла %s", node.node_id)
+                result = None
             if result is None:
-                failed.append(futures[future])
+                failed.append(node)
             else:
                 verified.append(result)
     verified.sort(key=lambda item: (item.http_ms, item.node.node_id))

@@ -52,3 +52,14 @@ def test_dedup(source):
     a = parse_link(vless(), source)
     b = parse_link(vless(fragment="x"), source)
     assert len(deduplicate([a, b])) == 1
+
+
+def test_marketing_query_does_not_create_duplicate(source):
+    a = parse_link(vless().replace("#", "&descriptions=channel-one#"), source)
+    b = parse_link(vless().replace("#", "&descriptions=channel-two#"), source)
+    assert len(deduplicate([a, b])) == 1
+
+
+def test_duplicate_query_parameter_rejected(source):
+    with pytest.raises(ParseError):
+        parse_link(vless().replace("#", "&type=grpc#"), source)

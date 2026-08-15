@@ -8,6 +8,21 @@ from typing import Any
 
 from .models import CheckResult, Node, ProbeResult
 
+_TRANSPORT_SCORES = {
+    # Наиболее широко поддерживаемые транспорты получают небольшой приоритет.
+    "tcp": 5.0,
+    "ws": 5.0,
+    "grpc": 4.0,
+    "httpupgrade": 3.0,
+    "raw": 2.0,
+    "http": 2.0,
+    "h2": 2.0,
+    "xhttp": 1.0,
+    "splithttp": 1.0,
+    "kcp": 0.5,
+    "quic": 0.5,
+}
+
 _COUNTRY_HINTS = {
     "russia": "RU",
     "россия": "RU",
@@ -102,11 +117,11 @@ def shortlist(
     endpoint_counts: Counter[str] = Counter()
 
     def add(item: ProbeResult) -> bool:
-        if item.node.node_id in chosen_ids or endpoint_counts[item.node.endpoint_key] >= 2:
+        if item.node.node_id in chosen_ids or endpoint_counts[item.endpoint_key] >= 2:
             return False
         chosen.append(item)
         chosen_ids.add(item.node.node_id)
-        endpoint_counts[item.node.endpoint_key] += 1
+        endpoint_counts[item.endpoint_key] += 1
         return True
 
     for category, quota in category_quotas.items():
@@ -143,10 +158,18 @@ def quality_score(
     latency = max(0.0, 10.0 * (1 - min(result.http_ms, 1500) / 1500))
     throughput = min(result.speed_mbps / 20.0, 1.0) * 7
     security = 3.0 if result.node.security in {"tls", "reality"} else 0.0
+    compatibility = _TRANSPORT_SCORES.get(result.node.transport, 0.0)
     return round(
         min(
             100.0,
-            current_check + reliability + stability + geography + latency + throughput + security,
+            current_check
+            + reliability
+            + stability
+            + geography
+            + latency
+            + throughput
+            + security
+            + compatibility,
         ),
         1,
     )
@@ -170,6 +193,8 @@ def select_final(
             item.country,
             item.checked_at,
             quality_score(item, history, preferred_countries),
+            item.resolved_ip,
+            item.checks_passed,
         )
         for item in results
     ]
@@ -181,12 +206,12 @@ def select_final(
     def add(item: CheckResult) -> bool:
         if (
             item.node.node_id in selected_ids
-            or endpoint_counts[item.node.endpoint_key] >= max_per_endpoint
+            or endpoint_counts[item.endpoint_key] >= max_per_endpoint
         ):
             return False
         selected.append(item)
         selected_ids.add(item.node.node_id)
-        endpoint_counts[item.node.endpoint_key] += 1
+        endpoint_counts[item.endpoint_key] += 1
         return True
 
     for category, quota in category_quotas.items():

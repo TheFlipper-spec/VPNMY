@@ -20,7 +20,17 @@ def test_payload(tmp_path, countries_file):
         "vless://123e4567-e89b-12d3-a456-426614174000@1.1.1.1:443?encryption=none&security=tls&type=ws&sni=x.com",
         s,
     )
-    r = CheckResult(n, 20, 50, 10, "DE", "2026-01-01T00:00:00Z", 90)
+    r = CheckResult(
+        n,
+        20,
+        50,
+        10,
+        "DE",
+        "2026-01-01T00:00:00Z",
+        90,
+        resolved_ip="1.1.1.1",
+        checks_passed=2,
+    )
     p = build_payloads(
         [r],
         config=c,
@@ -35,4 +45,12 @@ def test_payload(tmp_path, countries_file):
         base64.b64decode(paths.subscription_base64.read_text()).decode()
         == paths.subscription_raw.read_text()
     )
-    assert json.loads(paths.stats.read_text())["total"] == 1
+    first_line = paths.subscription_raw.read_text().splitlines()[0]
+    assert first_line.startswith("#profile-title: base64:")
+    assert "FL1P VPN" in base64.b64decode(first_line.rsplit(":", 1)[1]).decode()
+    stats = json.loads(paths.stats.read_text())
+    assert stats["schema_version"] == 3
+    assert stats["total"] == 1
+    assert stats["servers"][0]["verified"] is True
+    assert stats["servers"][0]["ip"] == "1.1.1.1"
+    assert "🇩🇪 FL1P" in stats["servers"][0]["name"]

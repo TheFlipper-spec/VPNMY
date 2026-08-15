@@ -1,10 +1,10 @@
 name: Проверка кода
 on:
   pull_request:
-    paths: ["**.py", "config/**", "tests/**", "requirements*.txt", "pyproject.toml", ".github/workflows/**"]
+    paths: ["**.py", "config/**", "tests/**", "index.html", "requirements*.txt", "pyproject.toml", ".github/workflows/**"]
   push:
     branches: [main]
-    paths: ["**.py", "config/**", "tests/**", "requirements*.txt", "pyproject.toml", ".github/workflows/**"]
+    paths: ["**.py", "config/**", "tests/**", "index.html", "requirements*.txt", "pyproject.toml", ".github/workflows/**"]
 permissions:
   contents: read
 concurrency:
@@ -24,13 +24,16 @@ jobs:
       - run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
       - run: ruff check .
       - run: pytest
-      - name: Проверить артефакты
+      - name: Проверить опубликованные артефакты
         run: |
           python - <<'PY'
           import base64, json
           from pathlib import Path
-          raw = Path("subscription.txt").read_text()
-          assert base64.b64decode(Path("FL1PVPN").read_text().strip()).decode() == raw
-          stats = json.loads(Path("stats.json").read_text())
-          assert stats["total"] == len(stats["servers"]) == len(raw.splitlines())
+          raw = Path("subscription.txt").read_text(encoding="utf-8")
+          encoded = Path("FL1PVPN").read_text(encoding="ascii").strip()
+          assert base64.b64decode(encoded, validate=True).decode("utf-8") == raw
+          stats = json.loads(Path("stats.json").read_text(encoding="utf-8"))
+          links = [line for line in raw.splitlines() if line.startswith(("vless://", "vmess://", "trojan://"))]
+          assert stats["total"] == len(stats["servers"]) == len(links)
+          assert len(links) == len(set(links))
           PY

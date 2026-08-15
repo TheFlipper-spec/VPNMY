@@ -60,3 +60,10 @@ def test_escape_rejected(tmp_path):
     d["paths"]["stats"] = "../x"
     with pytest.raises(ConfigError):
         load_config(write(tmp_path, d))
+
+
+def test_project_config_contains_requested_sources():
+    root = Path(__file__).resolve().parents[1]
+    sources = {source.source_id: source.url for source in load_config(root / "config/subscription.json").sources}
+    assert sources["vlessforu"] == "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
+    assert sources["vedalink"] == "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr"

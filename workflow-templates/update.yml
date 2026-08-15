@@ -61,12 +61,19 @@ jobs:
           encoded = Path("FL1PVPN").read_text(encoding="ascii").strip()
           raw = Path("subscription.txt").read_text(encoding="utf-8")
           stats = json.loads(Path("stats.json").read_text(encoding="utf-8"))
-          assert base64.b64decode(encoded).decode("utf-8") == raw
+          lines = raw.splitlines()
+          links = [line for line in lines if line.startswith(("vless://", "vmess://", "trojan://"))]
+          assert base64.b64decode(encoded, validate=True).decode("utf-8") == raw
+          assert stats["schema_version"] >= 3
           assert stats["check_mode"] == "xray"
-          assert stats["total"] == len(stats["servers"]) >= 3
-          assert len(raw.splitlines()) == stats["total"]
+          assert stats["verification"]["required_https_requests"] >= 2
+          assert stats["total"] == len(stats["servers"]) == len(links) >= 3
+          assert len(links) == len(set(links))
+          assert lines[0].startswith("#profile-title: base64:")
+          assert all(server["verified"] and server["checks_passed"] >= 2 for server in stats["servers"])
           PY
       - name: Опубликовать изменения
+        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

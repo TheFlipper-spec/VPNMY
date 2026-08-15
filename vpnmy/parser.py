@@ -117,8 +117,13 @@ def _options(query: str) -> dict[str, str]:
     if len(query) > 32_000:
         raise ParseError("слишком длинная строка параметров")
     result: dict[str, str] = {}
+    seen: set[str] = set()
     for key, value in parse_qsl(query, keep_blank_values=True, max_num_fields=128):
-        result.setdefault(key, value)
+        normalized_key = key.casefold()
+        if not key or normalized_key in seen:
+            raise ParseError("пустой или повторяющийся параметр URI")
+        seen.add(normalized_key)
+        result[key] = value
     return result
 
 
@@ -155,7 +160,11 @@ def _parse_vmess(link: str, source: Source) -> Node:
         "host": str(data.get("host") or ""),
         "path": str(data.get("path") or "/"),
         "serviceName": str(data.get("serviceName") or data.get("path") or ""),
+        "authority": str(data.get("authority") or ""),
+        "mode": str(data.get("mode") or ""),
+        "headerType": str(data.get("type") or "none"),
         "fp": str(data.get("fp") or "chrome"),
+        "allowInsecure": str(data.get("allowInsecure") or data.get("insecure") or "0"),
         "aid": str(data.get("aid") or "0"),
         "scy": str(data.get("scy") or data.get("security") or "auto"),
         "alpn": str(data.get("alpn") or ""),

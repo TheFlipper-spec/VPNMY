@@ -43,6 +43,8 @@ def record_success(history: dict[str, Any], result: CheckResult) -> None:
             "tcp_ms": result.tcp_ms,
             "http_ms": result.http_ms,
             "speed_mbps": result.speed_mbps,
+            "resolved_ip": result.resolved_ip,
+            "checks_passed": result.checks_passed,
         }
     )
 

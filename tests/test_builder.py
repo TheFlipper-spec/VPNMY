@@ -73,6 +73,7 @@ def test_build(tmp_path, countries_file, monkeypatch):
                     10,
                     "RU" if p.node.category == "whitelist" else "DE",
                     "2026-01-01T00:00:00Z",
+                    checks_passed=2,
                 )
                 for p in ps
             ],
