@@ -7,6 +7,17 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import quote, urlsplit, urlunsplit
 
+_NON_CONFIG_METADATA_KEYS = {
+    "description",
+    "descriptions",
+    "email",
+    "name",
+    "ps",
+    "remark",
+    "remarks",
+    "telegram",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class Source:
@@ -39,14 +50,22 @@ class Node:
     def canonical_link(self) -> str:
         """Конфигурация без названия и порядка query-полей для дедупликации."""
         if self.scheme == "vmess" and self.vmess is not None:
-            payload = {key: value for key, value in self.vmess.items() if key != "ps"}
+            payload = {
+                key: value
+                for key, value in self.vmess.items()
+                if key.casefold() not in _NON_CONFIG_METADATA_KEYS
+            }
         else:
             payload = {
                 "scheme": self.scheme,
                 "host": self.host.lower(),
                 "port": self.port,
                 "user": self.user,
-                "options": self.options,
+                "options": {
+                    key: value
+                    for key, value in self.options.items()
+                    if key.casefold() not in _NON_CONFIG_METADATA_KEYS
+                },
             }
         return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -87,6 +106,12 @@ class Node:
 class ProbeResult:
     node: Node
     tcp_ms: int
+    resolved_ip: str = ""
+
+    @property
+    def endpoint_key(self) -> str:
+        """Физический адрес узла, если DNS уже был разрешён."""
+        return f"{self.resolved_ip or self.node.host.lower()}:{self.node.port}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,3 +123,10 @@ class CheckResult:
     country: str
     checked_at: str
     score: float = 0.0
+    resolved_ip: str = ""
+    checks_passed: int = 1
+
+    @property
+    def endpoint_key(self) -> str:
+        """Физический адрес узла, используемый для защиты от дублей."""
+        return f"{self.resolved_ip or self.node.host.lower()}:{self.node.port}"

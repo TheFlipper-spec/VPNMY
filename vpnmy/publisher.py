@@ -40,7 +40,11 @@ def load_country_names(path: Path) -> dict[str, str]:
 def display_name(result: CheckResult, countries: dict[str, str]) -> str:
     country = countries.get(result.country, "Локация не определена")
     category = "Белые списки" if result.node.category == "whitelist" else "Интернет"
-    return f"FL1P • {country_flag(result.country)} {country} • {category} • {result.node.node_id[:4].upper()}"
+    node_id = result.node.node_id[:4].upper()
+    return (
+        f"{country_flag(result.country)} FL1P • {country} • {category} • "
+        f"{result.http_ms} мс • {node_id}"
+    )
 
 
 def build_payloads(
@@ -54,11 +58,18 @@ def build_payloads(
     check_mode: str,
 ) -> dict[Path, bytes]:
     links = [item.node.link_with_name(display_name(item, countries)) for item in results]
-    raw_subscription = "\n".join(links) + "\n"
+    profile_title = base64.b64encode("🛡️ FL1P VPN · проверенные узлы".encode()).decode("ascii")
+    metadata = [
+        f"#profile-title: base64:{profile_title}",
+        "#profile-update-interval: 1",
+        "#support-url: https://github.com/TheFlipper-spec/VPNMY/issues",
+        "#profile-web-page-url: https://theflipper-spec.github.io/VPNMY/",
+    ]
+    raw_subscription = "\n".join([*metadata, *links]) + "\n"
     encoded_subscription = base64.b64encode(raw_subscription.encode()).decode("ascii") + "\n"
     utc_label = generated_at.isoformat(timespec="seconds").replace("+00:00", "Z")
     stats = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "diagnostic"
         if check_mode != "xray"
         else ("healthy" if len(results) >= config.target_count else "degraded"),
@@ -68,6 +79,12 @@ def build_payloads(
         "update_interval_minutes": 10,
         "total": len(results),
         "subscription_file": config.paths.subscription_base64.name,
+        "subscription_raw_file": config.paths.subscription_raw.name,
+        "subscription_metadata_lines": len(metadata),
+        "verification": {
+            "method": "xray_https" if check_mode == "xray" else "tcp_only",
+            "required_https_requests": 2 if check_mode == "xray" else 0,
+        },
         "sources": source_stats,
         "servers": [
             {
@@ -82,13 +99,18 @@ def build_payloads(
                 "transport": item.node.transport,
                 "security": item.node.security,
                 "host": item.node.host,
-                "ip": item.node.host,
+                "ip": item.resolved_ip or None,
                 "port": item.node.port,
                 "ping": item.tcp_ms,
                 "tcp_ms": item.tcp_ms,
                 "http_ms": item.http_ms,
                 "speed_mbps": item.speed_mbps,
                 "score": item.score,
+                "verified": check_mode == "xray" and item.checks_passed >= 2,
+                "checks_passed": item.checks_passed,
+                "success_streak": int(
+                    history.get("nodes", {}).get(item.node.node_id, {}).get("streak", 0)
+                ),
                 "source": item.node.source_name,
                 "checked_at": item.checked_at,
             }

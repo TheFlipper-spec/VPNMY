@@ -31,3 +31,35 @@ def test_quotas():
         max_per_endpoint=1,
     )
     assert len(out) == 3 and {x.node.category for x in out} == {"universal", "whitelist"}
+
+
+def test_same_physical_endpoint_is_not_published_twice():
+    results = [
+        CheckResult(
+            node(0, "one.example.com", "universal"),
+            10,
+            20,
+            10,
+            "DE",
+            "x",
+            resolved_ip="1.1.1.1",
+        ),
+        CheckResult(
+            node(1, "two.example.com", "universal"),
+            11,
+            21,
+            10,
+            "DE",
+            "x",
+            resolved_ip="1.1.1.1",
+        ),
+    ]
+    out = select_final(
+        results,
+        history={"nodes": {}},
+        preferred_countries=("DE",),
+        category_quotas={"universal": 2},
+        target_count=2,
+        max_per_endpoint=1,
+    )
+    assert len(out) == 1

@@ -31,6 +31,7 @@ def probe_node(node: Node, timeout: float) -> ProbeResult | None:
     except (OSError, ValueError):
         return None
     best_ms: int | None = None
+    best_ip = ""
     for family, socktype, proto, sockaddr in addresses[:4]:
         sock = socket.socket(family, socktype, proto)
         sock.settimeout(timeout)
@@ -38,12 +39,14 @@ def probe_node(node: Node, timeout: float) -> ProbeResult | None:
         try:
             sock.connect(sockaddr)
             elapsed = max(1, round((time.perf_counter() - started) * 1000))
-            best_ms = elapsed if best_ms is None else min(best_ms, elapsed)
+            if best_ms is None or elapsed < best_ms:
+                best_ms = elapsed
+                best_ip = str(sockaddr[0])
         except OSError:
             pass
         finally:
             sock.close()
-    return ProbeResult(node, best_ms) if best_ms is not None else None
+    return ProbeResult(node, best_ms, best_ip) if best_ms is not None else None
 
 
 def probe_all(nodes: list[Node], timeout: float, workers: int) -> list[ProbeResult]:
