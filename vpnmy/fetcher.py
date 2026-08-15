@@ -38,7 +38,6 @@ def _session() -> requests.Session:
         respect_retry_after_header=True,
     )
     session = requests.Session()
-    session.trust_env = False
     session.headers.update(
         {
             "User-Agent": "FL1P-VPN-Subscription/2.1 (+https://github.com/TheFlipper-spec/VPNMY)",
