@@ -183,6 +183,7 @@ def select_final(
     category_quotas: dict[str, int],
     target_count: int,
     max_per_endpoint: int,
+    country_limits: dict[str, int] | None = None,
 ) -> list[CheckResult]:
     scored = [
         CheckResult(
@@ -202,13 +203,21 @@ def select_final(
     selected: list[CheckResult] = []
     selected_ids: set[str] = set()
     endpoint_counts: Counter[str] = Counter()
+    selected_countries: Counter[str] = Counter()
+    country_limits = {code.upper(): limit for code, limit in (country_limits or {}).items()}
 
     def add(item: CheckResult) -> bool:
+        country = item.country.upper()
         if (
             item.node.node_id in selected_ids
             or endpoint_counts[item.endpoint_key] >= max_per_endpoint
+            or (
+                country in country_limits
+                and selected_countries[country] >= country_limits[country]
+            )
         ):
             return False
+        selected_countries[country] += 1
         selected.append(item)
         selected_ids.add(item.node.node_id)
         endpoint_counts[item.endpoint_key] += 1

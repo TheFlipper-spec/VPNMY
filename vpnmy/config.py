@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -42,6 +42,9 @@ class BuildConfig:
     verify_timeout_seconds: float
     speed_test_bytes: int
     xray_bin: str
+    # Верхние границы по странам позволяют держать российские узлы резервом,
+    # не отдавая им большую часть подписки.
+    country_limits: dict[str, int] = field(default_factory=dict)
 
 
 _REQUIRED_CATEGORIES = {"universal", "whitelist"}
@@ -161,6 +164,19 @@ def load_config(path: str | Path) -> BuildConfig:
         raise ConfigError("category_quotas содержит некорректные значения")
     if sum(quotas.values()) > target:
         raise ConfigError("сумма category_quotas не может превышать target_count")
+    country_limits_raw = raw.get("country_limits", {})
+    if not isinstance(country_limits_raw, dict) or any(
+        not isinstance(code, str)
+        or len(code) != 2
+        or not code.isalpha()
+        or isinstance(value, bool)
+        or not isinstance(value, int)
+        or value < 0
+        or value > target
+        for code, value in country_limits_raw.items()
+    ):
+        raise ConfigError("country_limits содержит некорректные значения")
+    country_limits = {code.upper(): int(value) for code, value in country_limits_raw.items()}
     preferred = raw.get("preferred_countries")
     if not isinstance(preferred, list) or any(
         not isinstance(code, str) or len(code) != 2 for code in preferred
@@ -186,4 +202,5 @@ def load_config(path: str | Path) -> BuildConfig:
         _number(raw, "verify_timeout_seconds", 1, 60),
         _integer(raw, "speed_test_bytes", 0, 5_000_000),
         xray_bin,
+        country_limits,
     )
