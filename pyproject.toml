@@ -1,0 +1,19 @@
+[project]
+name = "vpnmy-subscription"
+version = "2.0.0"
+description = "Проверяемая VPN-подписка для русскоязычной аудитории"
+requires-python = ">=3.11"
+dependencies = ["requests[socks]==2.34.2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
