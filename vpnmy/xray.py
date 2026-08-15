@@ -130,14 +130,27 @@ def _stream_settings(node: Node) -> dict[str, Any]:
     return stream
 
 
-def build_xray_config(node: Node, local_port: int) -> dict[str, Any]:
+def build_xray_config(
+    node: Node, local_port: int, *, server_address: str | None = None
+) -> dict[str, Any]:
+    # После DNS/TCP-пробы закрепляем проверку за тем же публичным IP. Иначе
+    # контролируемый домен может повторно разрешиться во внутренний адрес runner-а.
+    outbound_address = server_address or node.host
+    if server_address:
+        try:
+            address = ipaddress.ip_address(server_address)
+        except ValueError as exc:
+            raise XrayError("результат DNS-проверки содержит некорректный IP-адрес") from exc
+        if not address.is_global:
+            raise XrayError("Xray запрещено подключаться к локальному или служебному IP-адресу")
+        outbound_address = address.compressed
     if node.scheme == "vless":
         user: dict[str, Any] = {"id": node.user, "encryption": "none"}
         flow = node.options.get("flow", "")
         if flow and node.transport in {"tcp", "raw"}:
             user["flow"] = flow
         outbound_settings: dict[str, Any] = {
-            "vnext": [{"address": node.host, "port": node.port, "users": [user]}]
+            "vnext": [{"address": outbound_address, "port": node.port, "users": [user]}]
         }
     elif node.scheme == "vmess":
         try:
@@ -147,7 +160,7 @@ def build_xray_config(node: Node, local_port: int) -> dict[str, Any]:
         outbound_settings = {
             "vnext": [
                 {
-                    "address": node.host,
+                    "address": outbound_address,
                     "port": node.port,
                     "users": [
                         {
@@ -161,7 +174,7 @@ def build_xray_config(node: Node, local_port: int) -> dict[str, Any]:
         }
     elif node.scheme == "trojan":
         outbound_settings = {
-            "servers": [{"address": node.host, "port": node.port, "password": node.user}]
+            "servers": [{"address": outbound_address, "port": node.port, "password": node.user}]
         }
     else:
         raise XrayError(f"неподдерживаемый протокол: {node.scheme}")
@@ -233,6 +246,18 @@ def _parse_trace(body: str) -> tuple[str, str] | None:
     return exit_ip.compressed, country
 
 
+def _read_limited(response: requests.Response, limit: int) -> bytes:
+    content = bytearray()
+    for chunk in response.iter_content(chunk_size=min(64 * 1024, limit)):
+        if not chunk:
+            continue
+        remaining = limit - len(content)
+        content.extend(chunk[:remaining])
+        if len(content) >= limit:
+            break
+    return bytes(content)
+
+
 def _confirm_open_internet(
     session: requests.Session, proxies: dict[str, str], timeout: float
 ) -> bool:
@@ -251,7 +276,7 @@ def _confirm_open_internet(
                     continue
                 if expected_body is None:
                     return True
-                body = next(response.iter_content(chunk_size=64), b"")
+                body = _read_limited(response, 64)
                 if body.decode("utf-8", errors="replace").strip() == expected_body:
                     return True
         except requests.RequestException:
@@ -265,7 +290,11 @@ def verify_node(
     local_port = _free_port()
     process: subprocess.Popen[bytes] | None = None
     try:
-        config = build_xray_config(probe.node, local_port)
+        config = build_xray_config(
+            probe.node,
+            local_port,
+            server_address=probe.resolved_ip or None,
+        )
         with tempfile.TemporaryDirectory(prefix="vpnmy-xray-") as directory:
             config_path = Path(directory) / "config.json"
             config_path.write_text(json.dumps(config, ensure_ascii=False), encoding="utf-8")
@@ -286,9 +315,14 @@ def verify_node(
                 session.trust_env = False
                 session.headers["User-Agent"] = "FL1P-VPN-Healthcheck/2.1"
                 started = time.perf_counter()
-                response = session.get(_TRACE_URL, proxies=proxies, timeout=(3.0, timeout))
-                response.raise_for_status()
-                body = response.text[:16_384]
+                with session.get(
+                    _TRACE_URL,
+                    proxies=proxies,
+                    timeout=(3.0, timeout),
+                    stream=True,
+                ) as response:
+                    response.raise_for_status()
+                    body = _read_limited(response, 16_384).decode("utf-8", errors="replace")
                 http_ms = max(1, round((time.perf_counter() - started) * 1000))
                 trace = _parse_trace(body)
                 if trace is None or not _confirm_open_internet(session, proxies, timeout):
@@ -307,7 +341,11 @@ def verify_node(
                         ) as speed_response:
                             speed_response.raise_for_status()
                             for chunk in speed_response.iter_content(chunk_size=64 * 1024):
-                                downloaded += len(chunk)
+                                if not chunk:
+                                    continue
+                                downloaded += min(len(chunk), speed_test_bytes - downloaded)
+                                if downloaded >= speed_test_bytes:
+                                    break
                         elapsed = time.perf_counter() - speed_started
                         if downloaded and elapsed > 0:
                             speed_mbps = round(downloaded * 8 / 1_000_000 / elapsed, 2)

@@ -50,6 +50,10 @@ class BuildConfig:
 _REQUIRED_CATEGORIES = {"universal", "whitelist"}
 
 
+def _is_country_code(value: Any) -> bool:
+    return isinstance(value, str) and len(value) == 2 and value.isascii() and value.isalpha()
+
+
 def _integer(data: dict[str, Any], key: str, minimum: int, maximum: int) -> int:
     value = data.get(key)
     if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
@@ -99,21 +103,34 @@ def load_config(path: str | Path) -> BuildConfig:
         if not isinstance(row, dict):
             raise ConfigError(f"sources[{index}] должен быть объектом")
         try:
-            source_id = str(row["id"]).strip()
-            name = str(row["name"]).strip()
-            url = str(row["url"]).strip()
-            category = str(row["category"]).strip().lower()
+            source_id_raw = row["id"]
+            name_raw = row["name"]
+            url_raw = row["url"]
+            category_raw = row["category"]
         except KeyError as exc:
             raise ConfigError(f"в sources[{index}] отсутствует поле {exc.args[0]}") from exc
+        if not all(
+            isinstance(value, str) for value in (source_id_raw, name_raw, url_raw, category_raw)
+        ):
+            raise ConfigError(f"строковые поля sources[{index}] должны быть строками")
+        source_id = source_id_raw.strip()
+        name = name_raw.strip()
+        url = url_raw.strip()
+        category = category_raw.strip().lower()
         if not source_id or not name or source_id in source_ids:
             raise ConfigError(f"некорректный или повторяющийся id источника: {source_id!r}")
-        parsed_url = urlsplit(url)
-        if parsed_url.scheme != "https" or not parsed_url.hostname:
+        try:
+            parsed_url = urlsplit(url)
+            hostname = parsed_url.hostname
+            _ = parsed_url.port  # проверяет диапазон и формат явно указанного порта
+        except ValueError as exc:
+            raise ConfigError(f"источник {source_id} содержит некорректный URL") from exc
+        if parsed_url.scheme != "https" or not hostname:
             raise ConfigError(f"источник {source_id} должен использовать публичный HTTPS URL")
         if parsed_url.username or parsed_url.password:
             raise ConfigError(f"источник {source_id} не должен содержать логин или токен в URL")
         try:
-            source_address = ipaddress.ip_address(parsed_url.hostname)
+            source_address = ipaddress.ip_address(hostname)
         except ValueError:
             source_address = None
         if source_address is not None and not source_address.is_global:
@@ -166,9 +183,7 @@ def load_config(path: str | Path) -> BuildConfig:
         raise ConfigError("сумма category_quotas не может превышать target_count")
     country_limits_raw = raw.get("country_limits", {})
     if not isinstance(country_limits_raw, dict) or any(
-        not isinstance(code, str)
-        or len(code) != 2
-        or not code.isalpha()
+        not _is_country_code(code)
         or isinstance(value, bool)
         or not isinstance(value, int)
         or value < 0
@@ -178,10 +193,11 @@ def load_config(path: str | Path) -> BuildConfig:
         raise ConfigError("country_limits содержит некорректные значения")
     country_limits = {code.upper(): int(value) for code, value in country_limits_raw.items()}
     preferred = raw.get("preferred_countries")
-    if not isinstance(preferred, list) or any(
-        not isinstance(code, str) or len(code) != 2 for code in preferred
-    ):
-        raise ConfigError("preferred_countries должен быть списком ISO-кодов")
+    if not isinstance(preferred, list) or any(not _is_country_code(code) for code in preferred):
+        raise ConfigError("preferred_countries должен быть списком двухбуквенных ISO-кодов")
+    normalized_preferred = [code.upper() for code in preferred]
+    if len(normalized_preferred) != len(set(normalized_preferred)):
+        raise ConfigError("preferred_countries не должен содержать повторяющиеся ISO-коды")
     xray_bin = os.environ.get("VPNMY_XRAY_BIN", raw.get("xray_bin", "xray"))
     if not isinstance(xray_bin, str) or not xray_bin.strip():
         raise ConfigError("xray_bin должен быть непустой строкой")
@@ -193,7 +209,7 @@ def load_config(path: str | Path) -> BuildConfig:
         max_candidates,
         _integer(raw, "max_per_endpoint", 1, 10),
         {key: int(value) for key, value in quotas.items()},
-        tuple(code.upper() for code in preferred),
+        tuple(normalized_preferred),
         _integer(raw, "fetch_workers", 1, 32),
         _integer(raw, "probe_workers", 1, 256),
         _integer(raw, "verify_workers", 1, 32),

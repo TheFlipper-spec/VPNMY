@@ -41,6 +41,11 @@ def build_subscription(
     dry_run: bool = False,
     now: datetime | None = None,
 ) -> BuildReport:
+    if skip_deep_check and not dry_run:
+        raise BuildError(
+            "диагностический TCP-режим разрешён только вместе с --dry-run; "
+            "непроверенные узлы не будут опубликованы"
+        )
     now = (now or datetime.now(UTC)).astimezone(UTC)
     xray_bin = None if skip_deep_check else resolve_xray(config.xray_bin)
     history = load_history(config.paths.history)
@@ -118,7 +123,8 @@ def build_subscription(
             "Глубокая проверка отключена: результат нельзя считать проверенным через VPN-туннель"
         )
     else:
-        assert xray_bin is not None
+        if xray_bin is None:  # страховка для вызовов API в обход CLI
+            raise BuildError("Xray не был подготовлен для глубокой проверки")
         checked, failed = verify_all(
             probes_for_check,
             xray_bin=xray_bin,

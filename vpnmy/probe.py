@@ -56,7 +56,11 @@ def probe_all(nodes: list[Node], timeout: float, workers: int) -> list[ProbeResu
     ) as executor:
         futures = [executor.submit(probe_node, node, timeout) for node in nodes]
         for future in as_completed(futures):
-            result = future.result()
+            try:
+                result = future.result()
+            except (OSError, ValueError):
+                LOGGER.debug("Непредвиденная ошибка TCP-проверки", exc_info=True)
+                continue
             if result is not None:
                 reachable.append(result)
     reachable.sort(key=lambda item: (item.tcp_ms, item.node.node_id))

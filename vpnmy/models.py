@@ -48,25 +48,21 @@ class Node:
 
     @property
     def canonical_link(self) -> str:
-        """Конфигурация без названия и порядка query-полей для дедупликации."""
-        if self.scheme == "vmess" and self.vmess is not None:
-            payload = {
+        """Фактически используемая конфигурация без названия и порядка полей."""
+        # VMess-источники часто представляют port/aid строкой или числом и добавляют
+        # произвольные рекламные поля. Дедупликация должна опираться на уже
+        # нормализованные значения, с которыми запускается Xray, а не на исходный JSON.
+        payload = {
+            "scheme": self.scheme,
+            "host": self.host.lower(),
+            "port": self.port,
+            "user": self.user,
+            "options": {
                 key: value
-                for key, value in self.vmess.items()
+                for key, value in self.options.items()
                 if key.casefold() not in _NON_CONFIG_METADATA_KEYS
-            }
-        else:
-            payload = {
-                "scheme": self.scheme,
-                "host": self.host.lower(),
-                "port": self.port,
-                "user": self.user,
-                "options": {
-                    key: value
-                    for key, value in self.options.items()
-                    if key.casefold() not in _NON_CONFIG_METADATA_KEYS
-                },
-            }
+            },
+        }
         return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     @property
