@@ -12,7 +12,13 @@ from .models import CheckResult, Node
 from .parser import ParseError, deduplicate, parse_source
 from .probe import probe_all
 from .publisher import atomic_publish, build_payloads, load_country_names
-from .selector import infer_country, sample_candidates, select_final, shortlist
+from .selector import (
+    infer_country,
+    is_historically_unreliable,
+    sample_candidates,
+    select_final,
+    shortlist,
+)
 from .xray import resolve_xray, verify_all
 
 LOGGER = logging.getLogger(__name__)
@@ -137,8 +143,14 @@ def build_subscription(
             record_success(history, result)
         for node in [*tcp_failed, *failed]:
             record_failure(history, node, checked_at)
+    reliable = [item for item in checked if not is_historically_unreliable(item, history)]
+    LOGGER.info(
+        "После отсева нестабильных узлов: %d из %d прошли порог надёжности",
+        len(reliable),
+        len(checked),
+    )
     selected = select_final(
-        checked,
+        reliable,
         history=history,
         preferred_countries=config.preferred_countries,
         category_quotas=config.category_quotas,
@@ -146,6 +158,20 @@ def build_subscription(
         max_per_endpoint=config.max_per_endpoint,
         country_limits=config.country_limits,
     )
+    if len(selected) < config.min_publish_count:
+        LOGGER.warning(
+            "Надёжных узлов мало (%d), добавляем только что подтверждённые через Xray",
+            len(selected),
+        )
+        selected = select_final(
+            checked,
+            history=history,
+            preferred_countries=config.preferred_countries,
+            category_quotas=config.category_quotas,
+            target_count=config.target_count,
+            max_per_endpoint=config.max_per_endpoint,
+            country_limits=config.country_limits,
+        )
     if len(selected) < config.min_publish_count:
         raise BuildError(
             f"работают только {len(selected)} узлов (минимум {config.min_publish_count}); последняя подписка сохранена без изменений"

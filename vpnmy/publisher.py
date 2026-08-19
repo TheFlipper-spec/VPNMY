@@ -14,6 +14,9 @@ from .models import CheckResult
 
 MOSCOW = ZoneInfo("Europe/Moscow")
 _CATEGORY_NAMES = {"universal": "Обычный интернет", "whitelist": "Белые списки"}
+_CATEGORY_SHORT = {"universal": "Интернет", "whitelist": "Белые списки"}
+DEFAULT_PROFILE_TITLE = "FL1P VPN"
+DEFAULT_PROFILE_URL = "https://theflipper-spec.github.io/VPNMY/"
 
 
 def country_flag(code: str) -> str:
@@ -37,14 +40,28 @@ def load_country_names(path: Path) -> dict[str, str]:
     return names
 
 
-def display_name(result: CheckResult, countries: dict[str, str]) -> str:
+def display_name(
+    result: CheckResult, countries: dict[str, str], *, profile_title: str = DEFAULT_PROFILE_TITLE
+) -> str:
     country = countries.get(result.country, "Локация не определена")
-    category = "Белые списки" if result.node.category == "whitelist" else "Интернет"
-    node_id = result.node.node_id[:4].upper()
-    return (
-        f"{country_flag(result.country)} FL1P • {country} • {category} • "
-        f"{result.http_ms} мс • {node_id}"
-    )
+    category = _CATEGORY_SHORT.get(result.node.category, "Интернет")
+    title = " ".join(profile_title.split()) or DEFAULT_PROFILE_TITLE
+    return f"{country_flag(result.country)} {title} · {country} · {category} · {result.http_ms} мс"
+
+
+def subscription_metadata(
+    *,
+    title: str = DEFAULT_PROFILE_TITLE,
+    update_interval_minutes: int = 10,
+    web_page_url: str = DEFAULT_PROFILE_URL,
+) -> list[str]:
+    clean_title = " ".join(title.replace("#", " ").split()) or DEFAULT_PROFILE_TITLE
+    clean_url = web_page_url.strip() or DEFAULT_PROFILE_URL
+    return [
+        f"#profile-title: {clean_title}",
+        f"#profile-update-interval: {max(1, int(update_interval_minutes))}",
+        f"#profile-web-page-url: {clean_url}",
+    ]
 
 
 def build_payloads(
@@ -57,10 +74,12 @@ def build_payloads(
     generated_at: datetime,
     check_mode: str,
 ) -> dict[Path, bytes]:
-    links = [item.node.link_with_name(display_name(item, countries)) for item in results]
-    # Только URI: production workflow на main сравнивает число строк с stats["total"].
-    # Служебные #profile-* ломали публикацию. Метаданные — в stats.json и на странице статуса.
-    raw_subscription = "\n".join(links) + "\n"
+    title = config.profile_title or DEFAULT_PROFILE_TITLE
+    web_page_url = config.profile_web_page_url or DEFAULT_PROFILE_URL
+    names = [display_name(item, countries, profile_title=title) for item in results]
+    links = [item.node.link_with_name(name) for item, name in zip(results, names, strict=True)]
+    header = subscription_metadata(title=title, web_page_url=web_page_url)
+    raw_subscription = "\n".join([*header, *links]) + "\n"
     encoded_subscription = base64.b64encode(raw_subscription.encode()).decode("ascii") + "\n"
     utc_label = generated_at.isoformat(timespec="seconds").replace("+00:00", "Z")
     stats = {
@@ -72,10 +91,12 @@ def build_payloads(
         "updated_at": utc_label,
         "updated_msk": generated_at.astimezone(MOSCOW).isoformat(timespec="seconds"),
         "update_interval_minutes": 10,
+        "profile_title": title,
+        "subscription_url_fragment": title,
         "total": len(results),
         "subscription_file": config.paths.subscription_base64.name,
         "subscription_raw_file": config.paths.subscription_raw.name,
-        "subscription_metadata_lines": 0,
+        "subscription_metadata_lines": len(header),
         "verification": {
             "method": "xray_https" if check_mode == "xray" else "tcp_only",
             "required_https_requests": 2 if check_mode == "xray" else 0,
@@ -84,7 +105,7 @@ def build_payloads(
         "servers": [
             {
                 "id": item.node.node_id,
-                "name": display_name(item, countries),
+                "name": display_name(item, countries, profile_title=title),
                 "country": item.country,
                 "country_name": countries.get(item.country, "Локация не определена"),
                 "country_flag": country_flag(item.country),

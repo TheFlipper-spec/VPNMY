@@ -1,6 +1,14 @@
+from datetime import UTC, datetime
+
 from vpnmy.models import CheckResult, Source
 from vpnmy.parser import parse_link
-from vpnmy.selector import infer_country, select_final
+from vpnmy.selector import (
+    infer_country,
+    is_historically_unreliable,
+    is_likely_dead,
+    sample_candidates,
+    select_final,
+)
 
 U = "123e4567-e89b-12d3-a456-42661417400{}"
 
@@ -63,3 +71,18 @@ def test_same_physical_endpoint_is_not_published_twice():
         max_per_endpoint=1,
     )
     assert len(out) == 1
+
+
+def test_likely_dead_and_unreliable_nodes_are_filtered():
+    dead = node(0, "1.1.1.1", "universal")
+    history = {
+        "nodes": {
+            dead.node_id: {"successes": 0, "failures": 8, "streak": 0},
+        }
+    }
+    assert is_likely_dead(dead, history)
+    sampled = sample_candidates([dead], history, limit=10, now=datetime(2026, 1, 1, tzinfo=UTC))
+    assert dead in sampled or sampled == []
+    checked = CheckResult(dead, 10, 20, 10, "DE", "x")
+    history["nodes"][dead.node_id] = {"successes": 1, "failures": 8, "streak": 1}
+    assert is_historically_unreliable(checked, history)

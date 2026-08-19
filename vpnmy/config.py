@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -45,9 +46,15 @@ class BuildConfig:
     # Верхние границы по странам позволяют держать российские узлы резервом,
     # не отдавая им большую часть подписки.
     country_limits: dict[str, int] = field(default_factory=dict)
+    profile_title: str = "FL1P VPN"
+    profile_web_page_url: str = "https://theflipper-spec.github.io/VPNMY/"
 
 
-_REQUIRED_CATEGORIES = {"universal", "whitelist"}
+REQUIRED_CATEGORIES = {"universal", "whitelist"}
+_REQUIRED_CATEGORIES = REQUIRED_CATEGORIES
+DEFAULT_PROFILE_TITLE = "FL1P VPN"
+DEFAULT_PROFILE_URL = "https://theflipper-spec.github.io/VPNMY/"
+_SOURCE_ID_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$")
 
 
 def _integer(data: dict[str, Any], key: str, minimum: int, maximum: int) -> int:
@@ -79,9 +86,8 @@ def _path(root: Path, value: Any, key: str) -> Path:
     return candidate
 
 
-def load_config(path: str | Path) -> BuildConfig:
+def load_raw_config(path: str | Path) -> tuple[Path, dict[str, Any]]:
     config_path = Path(path).resolve()
-    root = config_path.parent.parent if config_path.parent.name == "config" else config_path.parent
     try:
         raw = json.loads(config_path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
@@ -90,43 +96,87 @@ def load_config(path: str | Path) -> BuildConfig:
         raise ConfigError(f"некорректный JSON в {config_path}: {exc}") from exc
     if not isinstance(raw, dict) or raw.get("schema_version") != 1:
         raise ConfigError("поддерживается только schema_version=1")
-    source_rows = raw.get("sources")
+    return config_path, raw
+
+
+def save_raw_config(path: str | Path, raw: dict[str, Any]) -> None:
+    config_path = Path(path).resolve()
+    config_path.write_text(
+        json.dumps(raw, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def suggest_source_id(url: str, existing: set[str]) -> str:
+    host = (urlsplit(url).hostname or "source").removeprefix("www.")
+    base = re.sub(r"[^a-z0-9]+", "-", host.lower()).strip("-") or "source"
+    if not base[0].isalpha():
+        base = f"src-{base}"
+    if base not in existing:
+        return base
+    for index in range(2, 100):
+        candidate = f"{base}-{index}"
+        if candidate not in existing:
+            return candidate
+    raise ConfigError("не удалось подобрать уникальный id источника")
+
+
+def parse_source_row(row: Any, index: int, seen_ids: set[str]) -> Source:
+    if not isinstance(row, dict):
+        raise ConfigError(f"sources[{index}] должен быть объектом")
+    try:
+        source_id = str(row["id"]).strip().lower()
+        name = str(row["name"]).strip()
+        url = str(row["url"]).strip()
+        category = str(row["category"]).strip().lower()
+    except KeyError as exc:
+        raise ConfigError(f"в sources[{index}] отсутствует поле {exc.args[0]}") from exc
+    if not source_id or not _SOURCE_ID_RE.fullmatch(source_id) or source_id in seen_ids:
+        raise ConfigError(f"некорректный или повторяющийся id источника: {source_id!r}")
+    if not name:
+        raise ConfigError(f"у источника {source_id} пустое название")
+    parsed_url = urlsplit(url)
+    if parsed_url.scheme != "https" or not parsed_url.hostname:
+        raise ConfigError(f"источник {source_id} должен использовать публичный HTTPS URL")
+    if parsed_url.username or parsed_url.password:
+        raise ConfigError(f"источник {source_id} не должен содержать логин или токен в URL")
+    try:
+        source_address = ipaddress.ip_address(parsed_url.hostname)
+    except ValueError:
+        source_address = None
+    if source_address is not None and not source_address.is_global:
+        raise ConfigError(f"источник {source_id} не должен указывать на локальный IP-адрес")
+    if category not in _REQUIRED_CATEGORIES:
+        raise ConfigError(f"неизвестная категория источника {source_id}: {category}")
+    enabled = row.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise ConfigError(f"enabled источника {source_id} должен быть true или false")
+    return Source(source_id, name, url, category, enabled)
+
+
+def parse_sources(source_rows: Any) -> list[Source]:
     if not isinstance(source_rows, list) or not source_rows:
         raise ConfigError("sources должен быть непустым списком")
-    source_ids: set[str] = set()
+    seen_ids: set[str] = set()
+    seen_urls: set[str] = set()
     sources: list[Source] = []
     for index, row in enumerate(source_rows):
-        if not isinstance(row, dict):
-            raise ConfigError(f"sources[{index}] должен быть объектом")
-        try:
-            source_id = str(row["id"]).strip()
-            name = str(row["name"]).strip()
-            url = str(row["url"]).strip()
-            category = str(row["category"]).strip().lower()
-        except KeyError as exc:
-            raise ConfigError(f"в sources[{index}] отсутствует поле {exc.args[0]}") from exc
-        if not source_id or not name or source_id in source_ids:
-            raise ConfigError(f"некорректный или повторяющийся id источника: {source_id!r}")
-        parsed_url = urlsplit(url)
-        if parsed_url.scheme != "https" or not parsed_url.hostname:
-            raise ConfigError(f"источник {source_id} должен использовать публичный HTTPS URL")
-        if parsed_url.username or parsed_url.password:
-            raise ConfigError(f"источник {source_id} не должен содержать логин или токен в URL")
-        try:
-            source_address = ipaddress.ip_address(parsed_url.hostname)
-        except ValueError:
-            source_address = None
-        if source_address is not None and not source_address.is_global:
-            raise ConfigError(f"источник {source_id} не должен указывать на локальный IP-адрес")
-        if category not in _REQUIRED_CATEGORIES:
-            raise ConfigError(f"неизвестная категория источника {source_id}: {category}")
-        enabled = row.get("enabled", True)
-        if not isinstance(enabled, bool):
-            raise ConfigError(f"enabled источника {source_id} должен быть true или false")
-        source_ids.add(source_id)
-        sources.append(Source(source_id, name, url, category, enabled))
+        source = parse_source_row(row, index, seen_ids)
+        normalized_url = source.url.rstrip("/")
+        if normalized_url in seen_urls:
+            raise ConfigError(f"повторяющийся URL источника: {source.url}")
+        seen_ids.add(source.source_id)
+        seen_urls.add(normalized_url)
+        sources.append(source)
     if not any(source.enabled for source in sources):
         raise ConfigError("должен быть включён хотя бы один источник")
+    return sources
+
+
+def load_config(path: str | Path) -> BuildConfig:
+    config_path, raw = load_raw_config(path)
+    root = config_path.parent.parent if config_path.parent.name == "config" else config_path.parent
+    sources = parse_sources(raw.get("sources"))
     paths_data = raw.get("paths")
     if not isinstance(paths_data, dict):
         raise ConfigError("paths должен быть объектом")
@@ -185,6 +235,16 @@ def load_config(path: str | Path) -> BuildConfig:
     xray_bin = os.environ.get("VPNMY_XRAY_BIN", raw.get("xray_bin", "xray"))
     if not isinstance(xray_bin, str) or not xray_bin.strip():
         raise ConfigError("xray_bin должен быть непустой строкой")
+    profile_raw = raw.get("profile") or {}
+    if not isinstance(profile_raw, dict):
+        raise ConfigError("profile должен быть объектом")
+    profile_title = str(profile_raw.get("title") or DEFAULT_PROFILE_TITLE).strip()
+    profile_url = str(profile_raw.get("web_page_url") or DEFAULT_PROFILE_URL).strip()
+    if not profile_title:
+        raise ConfigError("profile.title не должен быть пустым")
+    parsed_profile = urlsplit(profile_url)
+    if parsed_profile.scheme != "https" or not parsed_profile.hostname:
+        raise ConfigError("profile.web_page_url должен быть публичным HTTPS URL")
     return BuildConfig(
         tuple(sources),
         paths,
@@ -203,4 +263,6 @@ def load_config(path: str | Path) -> BuildConfig:
         _integer(raw, "speed_test_bytes", 0, 5_000_000),
         xray_bin,
         country_limits,
+        profile_title,
+        profile_url,
     )

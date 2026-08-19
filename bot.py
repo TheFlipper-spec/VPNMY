@@ -11,6 +11,9 @@ from telebot import types
 LOGGER = logging.getLogger("vpnmy.bot")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 WEB_APP_URL = os.environ.get("WEB_APP_URL", "https://theflipper-spec.github.io/VPNMY/")
+SUBSCRIPTION_URL = os.environ.get(
+    "SUBSCRIPTION_URL", "https://theflipper-spec.github.io/VPNMY/FL1PVPN#FL1P VPN"
+)
 
 
 def create_bot(token: str) -> telebot.TeleBot:

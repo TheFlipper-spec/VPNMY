@@ -349,7 +349,8 @@
   <script>
     "use strict";
 
-    const subscriptionUrl = new URL("./FL1PVPN", document.baseURI).href;
+    const subscriptionBase = new URL("./FL1PVPN", document.baseURI).href;
+    const subscriptionUrl = `${subscriptionBase}#FL1P VPN`;
     const rawUrl = new URL("./subscription.txt", document.baseURI).href;
     const elements = {
       copy: document.getElementById("copy"),

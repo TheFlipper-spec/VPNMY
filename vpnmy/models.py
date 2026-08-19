@@ -19,6 +19,14 @@ _NON_CONFIG_METADATA_KEYS = {
 }
 
 
+def encode_remark(name: str) -> str:
+    """Человекочитаемое имя узла для фрагмента URI и поля ps."""
+    cleaned = " ".join(str(name).replace("#", " ").split())
+    return "".join(
+        char if char.isprintable() and char != "#" else quote(char, safe="") for char in cleaned
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class Source:
     """Доверенный публичный источник конфигураций."""
@@ -91,15 +99,14 @@ class Node:
         return value
 
     def link_with_name(self, name: str) -> str:
+        remark = encode_remark(name)
         if self.scheme == "vmess" and self.vmess is not None:
             payload = dict(self.vmess)
-            payload["ps"] = name
+            payload["ps"] = remark
             raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-            return "vmess://" + base64.b64encode(raw).decode("ascii")
+            return "vmess://" + base64.b64encode(raw).decode("ascii") + "#" + remark
         parts = urlsplit(self.original_link)
-        return urlunsplit(
-            (parts.scheme.lower(), parts.netloc, parts.path, parts.query, quote(name, safe=""))
-        )
+        return urlunsplit((parts.scheme.lower(), parts.netloc, parts.path, parts.query, remark))
 
 
 @dataclass(frozen=True, slots=True)

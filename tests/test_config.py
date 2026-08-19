@@ -64,6 +64,17 @@ def test_escape_rejected(tmp_path):
 
 def test_project_config_contains_requested_sources():
     root = Path(__file__).resolve().parents[1]
-    sources = {source.source_id: source.url for source in load_config(root / "config/subscription.json").sources}
+    config = load_config(root / "config/subscription.json")
+    sources = {source.source_id: source.url for source in config.sources}
     assert sources["vlessforu"] == "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
     assert sources["vedalink"] == "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr"
+    assert config.profile_title == "FL1P VPN"
+
+
+def test_duplicate_source_url_rejected(tmp_path):
+    d = data()
+    d["sources"].append(
+        {"id": "y", "name": "Y", "url": "https://example.com/s", "category": "whitelist"}
+    )
+    with pytest.raises(ConfigError):
+        load_config(write(tmp_path, d))

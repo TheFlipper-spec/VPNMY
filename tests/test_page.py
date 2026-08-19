@@ -22,4 +22,5 @@ def test_status_page_has_unique_ids_and_subscription_actions():
     assert len(parser.ids) == len(set(parser.ids))
     assert {"subscription-url", "copy", "nodes", "source-list", "status"} <= set(parser.ids)
     assert 'new URL("./FL1PVPN", document.baseURI)' in page
+    assert "#FL1P VPN" in page
     assert "Date.now() - updatedTime" in page
