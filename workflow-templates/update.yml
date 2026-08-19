@@ -69,7 +69,7 @@ jobs:
           assert stats["verification"]["required_https_requests"] >= 2
           assert stats["total"] == len(stats["servers"]) == len(links) >= 3
           assert len(links) == len(set(links))
-          assert lines[0].startswith("#profile-title: base64:")
+          assert len(lines) == len(links)
           assert all(server["verified"] and server["checks_passed"] >= 2 for server in stats["servers"])
           PY
       - name: Опубликовать изменения

@@ -58,14 +58,9 @@ def build_payloads(
     check_mode: str,
 ) -> dict[Path, bytes]:
     links = [item.node.link_with_name(display_name(item, countries)) for item in results]
-    profile_title = base64.b64encode("🛡️ FL1P VPN · проверенные узлы".encode()).decode("ascii")
-    metadata = [
-        f"#profile-title: base64:{profile_title}",
-        "#profile-update-interval: 1",
-        "#support-url: https://github.com/TheFlipper-spec/VPNMY/issues",
-        "#profile-web-page-url: https://theflipper-spec.github.io/VPNMY/",
-    ]
-    raw_subscription = "\n".join([*metadata, *links]) + "\n"
+    # Только URI: production workflow на main сравнивает число строк с stats["total"].
+    # Служебные #profile-* ломали публикацию. Метаданные — в stats.json и на странице статуса.
+    raw_subscription = "\n".join(links) + "\n"
     encoded_subscription = base64.b64encode(raw_subscription.encode()).decode("ascii") + "\n"
     utc_label = generated_at.isoformat(timespec="seconds").replace("+00:00", "Z")
     stats = {
@@ -80,7 +75,7 @@ def build_payloads(
         "total": len(results),
         "subscription_file": config.paths.subscription_base64.name,
         "subscription_raw_file": config.paths.subscription_raw.name,
-        "subscription_metadata_lines": len(metadata),
+        "subscription_metadata_lines": 0,
         "verification": {
             "method": "xray_https" if check_mode == "xray" else "tcp_only",
             "required_https_requests": 2 if check_mode == "xray" else 0,
