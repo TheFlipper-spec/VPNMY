@@ -45,12 +45,13 @@ def test_payload(tmp_path, countries_file):
         base64.b64decode(paths.subscription_base64.read_text()).decode()
         == paths.subscription_raw.read_text()
     )
-    first_line = paths.subscription_raw.read_text().splitlines()[0]
-    assert first_line.startswith("#profile-title: base64:")
-    assert "FL1P VPN" in base64.b64decode(first_line.rsplit(":", 1)[1]).decode()
+    lines = paths.subscription_raw.read_text().splitlines()
+    assert len(lines) == 1
+    assert lines[0].startswith("vless://")
     stats = json.loads(paths.stats.read_text())
     assert stats["schema_version"] == 3
     assert stats["total"] == 1
+    assert stats["total"] == len(stats["servers"]) == len(lines)
     assert stats["servers"][0]["verified"] is True
     assert stats["servers"][0]["ip"] == "1.1.1.1"
     assert "🇩🇪 FL1P" in stats["servers"][0]["name"]
