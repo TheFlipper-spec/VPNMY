@@ -44,8 +44,11 @@ def test_vmess(source):
         "tls": "tls",
     }
     n = parse_link("vmess://" + base64.b64encode(json.dumps(d).encode()).decode(), source)
-    out = json.loads(base64.b64decode(n.link_with_name("Новый").removeprefix("vmess://")))
+    named = n.link_with_name("Новый")
+    payload, fragment = named.removeprefix("vmess://").split("#", 1)
+    out = json.loads(base64.b64decode(payload))
     assert out["ps"] == "Новый"
+    assert fragment == "Новый"
 
 
 def test_dedup(source):

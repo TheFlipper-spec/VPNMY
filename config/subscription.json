@@ -1,21 +1,85 @@
 {
   "schema_version": 1,
+  "profile": {
+    "title": "FL1P VPN",
+    "web_page_url": "https://theflipper-spec.github.io/VPNMY/"
+  },
   "sources": [
-    {"id": "ru-universal", "name": "VPN-конфигурации для России — обычный интернет", "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt", "category": "universal", "enabled": true},
-    {"id": "ru-whitelist-checked", "name": "VPN-конфигурации для России — проверенные белые списки", "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-checked.txt", "category": "whitelist", "enabled": true},
-    {"id": "ru-whitelist-sni", "name": "VPN-конфигурации для России — SNI белых списков", "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-SNI-RU-all.txt", "category": "whitelist", "enabled": true},
-    {"id": "ru-whitelist-pool", "name": "VPN-конфигурации для России — резерв белых списков", "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-all.txt", "category": "whitelist", "enabled": true},
-    {"id": "vlessforu", "name": "VlessForU — проверенные конфигурации", "url": "https://sub.vlessfo.ru/vlessforu/working_configs.txt", "category": "universal", "enabled": true},
-    {"id": "vedalink", "name": "VEDA VPN — публичная подписка", "url": "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr", "category": "universal", "enabled": true}
+    {
+      "id": "ru-universal",
+      "name": "VPN-конфигурации для России — обычный интернет",
+      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
+      "category": "universal",
+      "enabled": true
+    },
+    {
+      "id": "ru-whitelist-checked",
+      "name": "VPN-конфигурации для России — проверенные белые списки",
+      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-checked.txt",
+      "category": "whitelist",
+      "enabled": true
+    },
+    {
+      "id": "ru-whitelist-sni",
+      "name": "VPN-конфигурации для России — SNI белых списков",
+      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-SNI-RU-all.txt",
+      "category": "whitelist",
+      "enabled": true
+    },
+    {
+      "id": "ru-whitelist-pool",
+      "name": "VPN-конфигурации для России — резерв белых списков",
+      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-all.txt",
+      "category": "whitelist",
+      "enabled": true
+    },
+    {
+      "id": "vlessforu",
+      "name": "VlessForU — проверенные конфигурации",
+      "url": "https://sub.vlessfo.ru/vlessforu/working_configs.txt",
+      "category": "universal",
+      "enabled": true
+    },
+    {
+      "id": "vedalink",
+      "name": "VEDA VPN — публичная подписка",
+      "url": "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr",
+      "category": "universal",
+      "enabled": true
+    }
   ],
-  "paths": {"subscription_base64": "FL1PVPN", "subscription_raw": "subscription.txt", "stats": "stats.json", "history": "data/health_history.json", "countries": "config/countries.ru.json"},
+  "paths": {
+    "subscription_base64": "FL1PVPN",
+    "subscription_raw": "subscription.txt",
+    "stats": "stats.json",
+    "history": "data/health_history.json",
+    "countries": "config/countries.ru.json"
+  },
   "target_count": 12,
   "min_publish_count": 3,
   "max_candidates": 480,
   "max_per_endpoint": 1,
-  "category_quotas": {"universal": 7, "whitelist": 5},
-  "country_limits": {"RU": 4},
-  "preferred_countries": ["FI", "EE", "LV", "LT", "PL", "DE", "NL", "SE", "NO", "AT", "CZ", "RU"],
+  "category_quotas": {
+    "universal": 7,
+    "whitelist": 5
+  },
+  "country_limits": {
+    "RU": 4
+  },
+  "preferred_countries": [
+    "FI",
+    "EE",
+    "LV",
+    "LT",
+    "PL",
+    "DE",
+    "NL",
+    "SE",
+    "NO",
+    "AT",
+    "CZ",
+    "RU"
+  ],
   "fetch_workers": 6,
   "probe_workers": 64,
   "verify_workers": 6,

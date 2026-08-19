@@ -33,7 +33,12 @@ jobs:
           encoded = Path("FL1PVPN").read_text(encoding="ascii").strip()
           assert base64.b64decode(encoded, validate=True).decode("utf-8") == raw
           stats = json.loads(Path("stats.json").read_text(encoding="utf-8"))
-          links = [line for line in raw.splitlines() if line.startswith(("vless://", "vmess://", "trojan://"))]
+          lines = raw.splitlines()
+          links = [line for line in lines if line.startswith(("vless://", "vmess://", "trojan://"))]
+          comments = [line for line in lines if line.startswith("#")]
           assert stats["total"] == len(stats["servers"]) == len(links)
+          assert stats.get("subscription_metadata_lines", 0) == len(comments)
           assert len(links) == len(set(links))
+          assert any(line.startswith("#profile-title:") for line in comments)
+          assert all("#" in link for link in links)
           PY

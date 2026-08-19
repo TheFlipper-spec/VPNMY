@@ -65,14 +65,43 @@ def infer_country(node: Node) -> str:
     return match.group(1) if match else "XX"
 
 
+def history_row(history: dict[str, Any], node_id: str) -> dict[str, Any]:
+    row = history.get("nodes", {}).get(node_id, {})
+    return row if isinstance(row, dict) else {}
+
+
+def is_likely_dead(node: Node, history: dict[str, Any]) -> bool:
+    """Узел много раз не отвечал и почти не имел успешных проверок."""
+    row = history_row(history, node.node_id)
+    successes = int(row.get("successes", 0) or 0)
+    failures = int(row.get("failures", 0) or 0)
+    streak = int(row.get("streak", 0) or 0)
+    return streak <= 0 and failures >= 4 and successes <= 1
+
+
+def is_historically_unreliable(result: CheckResult, history: dict[str, Any]) -> bool:
+    """Одноразовый «оживший» узел после серии отказов не сразу попадает в подписку."""
+    row = history_row(history, result.node.node_id)
+    successes = int(row.get("successes", 0) or 0)
+    failures = int(row.get("failures", 0) or 0)
+    streak = int(row.get("streak", 0) or 0)
+    if failures >= 3 and streak < 2:
+        return True
+    total = successes + failures
+    return total >= 6 and successes / total < 0.35
+
+
 def sample_candidates(
     nodes: list[Node], history: dict[str, Any], *, limit: int, now: datetime
 ) -> list[Node]:
     if len(nodes) <= limit:
-        return nodes
+        return [node for node in nodes if not is_likely_dead(node, history)] or nodes[:limit]
     rows = history.get("nodes", {})
+    alive = [node for node in nodes if not is_likely_dead(node, history)]
+    dead = [node for node in nodes if is_likely_dead(node, history)]
+    pool = alive or nodes
     stable_limit = int(limit * 0.6)
-    known = [node for node in nodes if rows.get(node.node_id, {}).get("streak", 0) > 0]
+    known = [node for node in pool if rows.get(node.node_id, {}).get("streak", 0) > 0]
     known.sort(
         key=lambda node: (
             -int(rows[node.node_id].get("streak", 0)),
@@ -83,9 +112,13 @@ def sample_candidates(
     selected = known[:stable_limit]
     selected_ids = {node.node_id for node in selected}
     slot = int(now.astimezone(UTC).timestamp() // 3600)
-    exploration = [node for node in nodes if node.node_id not in selected_ids]
+    exploration = [node for node in pool if node.node_id not in selected_ids]
     exploration.sort(key=lambda node: hashlib.sha256(f"{slot}:{node.node_id}".encode()).digest())
     selected.extend(exploration[: limit - len(selected)])
+    if dead and len(selected) < limit:
+        recover = max(1, min(len(dead), limit // 10 or 1, limit - len(selected)))
+        dead.sort(key=lambda node: hashlib.sha256(f"{slot}:dead:{node.node_id}".encode()).digest())
+        selected.extend(dead[:recover])
     return selected
 
 
@@ -199,7 +232,14 @@ def select_final(
         )
         for item in results
     ]
-    scored.sort(key=lambda item: (-item.score, item.http_ms, item.node.node_id))
+    scored.sort(
+        key=lambda item: (
+            is_historically_unreliable(item, history),
+            -item.score,
+            item.http_ms,
+            item.node.node_id,
+        )
+    )
     selected: list[CheckResult] = []
     selected_ids: set[str] = set()
     endpoint_counts: Counter[str] = Counter()
