@@ -15,6 +15,13 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+VERSION_MARKERS = ("version:", "aperture", "apernet", "quic-go")
+
+
+def output_looks_valid(combined: str) -> bool:
+    """Распознаёт официальный вывод version, даже если в нём нет слова Hysteria."""
+    return any(marker in combined.lower() for marker in VERSION_MARKERS)
+
 
 class InstallError(RuntimeError):
     pass
@@ -97,10 +104,13 @@ def install(version: str, expected_sha256: str, output: Path) -> None:
         [str(output), "version"], capture_output=True, text=True, timeout=10
     )
     combined = (check.stdout or "") + (check.stderr or "")
-    if check.returncode != 0 or "hysteria" not in combined.lower():
+    if check.returncode != 0 or not output_looks_valid(combined):
         output.unlink(missing_ok=True)
         raise InstallError("установленный клиент Hysteria не запускается")
-    print(combined.splitlines()[0] if combined.strip() else "Hysteria installed")
+    print(next(
+        (line.strip() for line in combined.splitlines() if line.strip().startswith("Version")),
+        "Hysteria installed",
+    ))
 
 
 def main() -> int:

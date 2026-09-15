@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import socket
 import threading
@@ -422,3 +423,44 @@ def test_dead_core_returns_none(tmp_path):
     node = parse_link(HY, S)
     probe = ProbeResult(node, 10)
     assert verify_node(probe, hysteria_bin=str(broken), timeout=3, speed_test_bytes=0) is None
+
+
+OFFICIAL_VERSION_OUTPUT = """
+ / / / /_  __
+/_/ /_/ /_/ /
+Aperture Internet Laboratory
+Version: 2.12.2
+BuildType: release
+Toolchain: go1.26.1
+Dependency: quic-go=v0.59.0
+"""
+
+
+def test_resolve_official_version_output(tmp_path):
+    binary = tmp_path / "hysteria"
+    binary.write_text("#!/bin/sh\ncat <<'EOF'\n" + OFFICIAL_VERSION_OUTPUT + "EOF\n")
+    binary.chmod(0o755)
+    assert "hysteria" not in OFFICIAL_VERSION_OUTPUT.lower()
+    assert resolve_hysteria(str(binary)) == str(binary)
+
+
+def test_resolve_rejects_name_only(tmp_path):
+    binary = tmp_path / "hysteria"
+    binary.write_text("#!/bin/sh\necho hysteria\n")
+    binary.chmod(0o755)
+    assert resolve_hysteria(str(binary)) is None
+
+
+def test_installer_output_looks_valid():
+    from vpnmy.hysteria import VERSION_MARKERS
+
+    path = Path(__file__).resolve().parents[1] / "scripts" / "install_hysteria.py"
+    spec = importlib.util.spec_from_file_location("install_hysteria", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.VERSION_MARKERS == VERSION_MARKERS
+    assert module.output_looks_valid(OFFICIAL_VERSION_OUTPUT)
+    for marker in VERSION_MARKERS:
+        assert module.output_looks_valid(marker.upper())
+    for invalid in ("", "hysteria", "not a client", "unknown command version"):
+        assert not module.output_looks_valid(invalid)
