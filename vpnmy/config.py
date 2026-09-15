@@ -45,7 +45,8 @@ class BuildConfig:
     speed_test_bytes: int
     xray_bin: str
     # Верхние границы по странам позволяют держать российские узлы резервом,
-    # не отдавая им большую часть подписки.
+    # не отдавая им большую часть подписки. Совместимость: если max_per_country
+    # не задан, country_limits применяется как раньше.
     country_limits: dict[str, int] = field(default_factory=dict)
     profile_title: str = "FL1P VPN"
     profile_web_page_url: str = "https://theflipper-spec.github.io/VPNMY/"
@@ -60,6 +61,22 @@ class BuildConfig:
     stable_streak_required: int = 2
     # Разнообразие физических сетей: не больше N узлов из одной /24 (или /48).
     max_per_subnet: int = 2
+    # --- Новые лимиты разнообразия (стартовые для target_count=12) ---
+    # Максимум узлов одной страны (универсальный лимит, если country_limits пуст).
+    max_per_country: int = 3
+    # Максимум узлов одного ASN (провайдера).
+    max_per_asn: int = 2
+    # Максимум узлов на один IP сервера (без учёта порта — один физический сервер).
+    max_per_ip: int = 1
+    # Подсети: размеры учитываемых подсетей документированы в selector.network_key:
+    # IPv4 /24, IPv6 /48.
+    # --- Измерение качества ---
+    # Количество независимых измерений задержки через туннель на узел.
+    verify_measurements: int = 3
+    # Порог медианы задержки (мс) — узел с медианой выше считается слишком медленным.
+    verify_median_threshold_ms: int = 1500
+    # Размер скользящего окна для оценки надёжности (последних N циклов).
+    history_recent_window: int = 10
 
 
 REQUIRED_CATEGORIES = {"universal", "whitelist"}
@@ -243,6 +260,8 @@ def load_config(path: str | Path) -> BuildConfig:
         raise ConfigError("country_limits содержит некорректные значения")
     country_limits = {code.upper(): int(value) for code, value in country_limits_raw.items()}
     preferred = raw.get("preferred_countries")
+    if preferred is None:
+        preferred = []
     if not isinstance(preferred, list) or any(
         not isinstance(code, str) or len(code) != 2 for code in preferred
     ):
@@ -299,4 +318,10 @@ def load_config(path: str | Path) -> BuildConfig:
         _optional_int("source_fail_threshold", 6, 1, 500),
         _optional_int("stable_streak_required", 2, 1, 20),
         _optional_int("max_per_subnet", 2, 0, 20),
+        _optional_int("max_per_country", 3, 1, 100),
+        _optional_int("max_per_asn", 2, 1, 100),
+        _optional_int("max_per_ip", 1, 1, 10),
+        _optional_int("verify_measurements", 3, 1, 5),
+        _optional_int("verify_median_threshold_ms", 1500, 200, 5000),
+        _optional_int("history_recent_window", 10, 5, 50),
     )

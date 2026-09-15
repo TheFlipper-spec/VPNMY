@@ -84,6 +84,21 @@ jobs:
           assert stats["schema_version"] >= 4
           assert stats["check_mode"] == "xray"
           assert stats["verification"]["required_https_requests"] >= 2
+          # Новые гарантии: 3 измерения, порог медианы, свежий Session на попытку
+          assert stats["verification"]["measurements_per_node"] == 3, "ожидается 3 измерения на узел"
+          assert stats["verification"]["median_threshold_ms"] == 1500
+          assert "measurements_per_node" in stats["verification"]
+          # Разнообразие: лимиты и подсети
+          div = stats.get("diversity", {})
+          limits = div.get("limits", {})
+          assert limits.get("max_per_country") == 3
+          assert limits.get("max_per_asn") == 2
+          assert limits.get("max_per_ip") == 1
+          assert limits.get("max_per_subnet") == 2
+          assert limits.get("ipv4_subnet") == "/24"
+          assert limits.get("ipv6_subnet") == "/48"
+          # Качество без географии
+          assert "preferred_countries_ignored" in stats.get("quality", {}), "quality должен фиксировать игнорирование preferred_countries"
           comments = [line for line in lines if line.startswith("#")]
           assert stats["total"] == len(stats["servers"]) == len(links) >= 3
           assert stats.get("subscription_metadata_lines", 0) == len(comments)
@@ -93,9 +108,13 @@ jobs:
           assert all("#" in link for link in links)
           assert all(server["verified"] and server["checks_passed"] >= 2 for server in stats["servers"])
           assert isinstance(stats.get("protocols"), dict) and stats["protocols"]
+          # Убедиться что лимиты не ослаблялись молча: если узлов меньше target, это отражено в diversity/excluded
+          assert "excluded_by_limits" in div or "after_selection" in div
           health = json.loads(Path("data/source_health.json").read_text(encoding="utf-8"))
           assert health["schema_version"] == 1 and isinstance(health["sources"], dict)
           print("Протоколы в подписке:", stats["protocols"])
+          print(f"diversity limits OK: {limits}")
+          print(f"verification: {stats['verification']}")
           PY
       - name: Опубликовать изменения
         if: github.ref == 'refs/heads/main'

@@ -15,8 +15,7 @@ import requests
 from .models import CheckResult, Node, ProbeResult
 from .tunnel import (
     free_port,
-    http_checks,
-    make_session,
+    http_checks_multi,
     parse_trace,
     stop_process,
     wait_for_inbound,
@@ -187,7 +186,12 @@ def build_xray_config(node: Node, local_port: int) -> dict[str, Any]:
 
 
 def verify_node(
-    probe: ProbeResult, *, xray_bin: str, timeout: float, speed_test_bytes: int
+    probe: ProbeResult,
+    *,
+    xray_bin: str,
+    timeout: float,
+    speed_test_bytes: int,
+    attempts: int = 3,
 ) -> CheckResult | None:
     local_port = free_port()
     process: subprocess.Popen[bytes] | None = None
@@ -209,29 +213,34 @@ def verify_node(
                 "http": f"socks5h://127.0.0.1:{local_port}",
                 "https": f"socks5h://127.0.0.1:{local_port}",
             }
-            with make_session("FL1P-VPN-Healthcheck/2.3") as session:
-                outcome = http_checks(
-                    session,
-                    proxies,
-                    timeout=timeout,
-                    speed_test_bytes=speed_test_bytes,
-                    logger=LOGGER,
-                    node_id=probe.node.node_id,
-                )
-                if outcome is None:
-                    return None
-                http_ms, country, speed_mbps = outcome
-                checked_at = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
-                return CheckResult(
-                    probe.node,
-                    probe.tcp_ms,
-                    http_ms,
-                    speed_mbps,
-                    country,
-                    checked_at,
-                    resolved_ip=probe.resolved_ip,
-                    checks_passed=2,
-                )
+            outcome = http_checks_multi(
+                proxies,
+                timeout=timeout,
+                speed_test_bytes=speed_test_bytes,
+                attempts=attempts,
+                logger=LOGGER,
+                node_id=probe.node.node_id,
+            )
+            if outcome is None:
+                return None
+            median_ms, max_ms, jitter_ms, country, egress_ip, speed_mbps, success_count, samples = outcome
+            checked_at = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+            return CheckResult(
+                probe.node,
+                probe.tcp_ms,
+                median_ms,
+                speed_mbps,
+                country,
+                checked_at,
+                resolved_ip=probe.resolved_ip,
+                checks_passed=2,
+                egress_ip=egress_ip,
+                asn="",  # обогащается позже в builder
+                http_max_ms=max_ms,
+                jitter_ms=jitter_ms,
+                attempts=attempts,
+                samples=samples,
+            )
     except (OSError, requests.RequestException, subprocess.SubprocessError, ValueError, XrayError):
         return None
     finally:

@@ -87,6 +87,8 @@ def build_payloads(
     for item in results:
         label = "HYSTERIA2" if item.node.is_hysteria else item.node.scheme.upper()
         protocol_counts[label] = protocol_counts.get(label, 0) + 1
+    # Диагностика разнообразия и ASN — берётся из временного ключа history["_diagnostics"] если есть
+    diagnostics = history.get("_diagnostics", {}) if isinstance(history.get("_diagnostics"), dict) else {}
     stats = {
         "schema_version": 4,
         "status": "diagnostic"
@@ -110,6 +112,47 @@ def build_payloads(
             "method": "tunnel_https_xray_hysteria" if check_mode == "xray" else "tcp_udp_only",
             "cores": ["Xray", "Hysteria"] if check_mode == "xray" else [],
             "required_https_requests": 2 if check_mode == "xray" else 0,
+            "measurements_per_node": config.verify_measurements if check_mode == "xray" else 0,
+            "median_threshold_ms": config.verify_median_threshold_ms,
+            "description": (
+                "Задержка — медиана N независимых TRACE-запросов через SOCKS-туннель ядра "
+                "(свежий Session на попытку, без переиспользования соединения между попытками; "
+                "внутри попытки trace и подтверждение могут переиспользовать соединение, "
+                "но измеряется только trace). Подтверждение — второй независимый HTTPS-запрос "
+                "(generate_204/success.txt). Неудачи кодируются как timeout и входят в медиану; "
+                "считаются max и jitter (разброс)."
+            ),
+        },
+        "diversity": {
+            "limits": {
+                "max_per_country": config.max_per_country,
+                "max_per_asn": config.max_per_asn,
+                "max_per_ip": config.max_per_ip,
+                "max_per_subnet": config.max_per_subnet,
+                "max_per_endpoint": config.max_per_endpoint,
+                "ipv4_subnet": "/24",
+                "ipv6_subnet": "/48",
+                "notes": (
+                    "Страна используется только для разнообразия, не для оценки качества. "
+                    "Для доменных endpoint используется разрешённый IP (DNS), корректно "
+                    "обрабатываются IPv4 и IPv6. Выходной IP (egress) дедуплицируется отдельно от IP сервера. "
+                    "ASN определяется по IP сервера через bgpview.io (только IP, без секретов), "
+                    "таймаут 3с, кэш, параллельность 5; ошибка ASN не ломает сборку, неизвестный ASN "
+                    "не объединяется в один провайдер — лимит ASN его пропускает, остальные лимиты остаются."
+                ),
+            },
+            "before_selection": diagnostics.get("diversity_before", {}),
+            "after_selection": diagnostics.get("diversity_after", {}),
+            "excluded_by_limits": diagnostics.get("excluded_count", 0),
+        },
+        "asn": diagnostics.get("asn", {"status": "unknown"}),
+        "quality": {
+            "scoring": (
+                "Без географического бонуса: качество = реальные проверки, надёжность в скользящем окне "
+                f"(последние {config.history_recent_window} циклов), задержка (медиана, худший, разброс), "
+                "стабильность (streak), скорость, защита, протокол. Старая preferred_countries читается, но не влияет."
+            ),
+            "preferred_countries_ignored": list(config.preferred_countries),
         },
         "sources": source_stats,
         "servers": [
@@ -126,10 +169,15 @@ def build_payloads(
                 "security": item.node.security,
                 "host": item.node.host,
                 "ip": item.resolved_ip or None,
+                "egress_ip": getattr(item, "egress_ip", "") or None,
+                "asn": getattr(item, "asn", "") or None,
                 "port": item.node.port,
                 "ping": item.tcp_ms,
                 "tcp_ms": item.tcp_ms,
                 "http_ms": item.http_ms,
+                "http_max_ms": getattr(item, "http_max_ms", item.http_ms),
+                "jitter_ms": getattr(item, "jitter_ms", 0),
+                "attempts": getattr(item, "attempts", 1),
                 "speed_mbps": item.speed_mbps,
                 "score": item.score,
                 "verified": check_mode == "xray" and item.checks_passed >= 2,
@@ -148,7 +196,7 @@ def build_payloads(
         config.paths.subscription_base64: encoded_subscription.encode("ascii"),
         config.paths.stats: (json.dumps(stats, ensure_ascii=False, indent=2) + "\n").encode(),
         config.paths.history: (
-            json.dumps(history, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+            json.dumps({k: v for k, v in history.items() if k != "_diagnostics"}, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
         ).encode(),
     }
     if config.paths.source_health is not None and source_health is not None:
