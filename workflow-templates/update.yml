@@ -65,7 +65,8 @@ jobs:
             rm -f -- "$VPNMY_HYSTERIA_BIN"
             python scripts/install_hysteria.py --version "$HYSTERIA_VERSION" --sha256 "$HYSTERIA_SHA256_LINUX_64" --output "$VPNMY_HYSTERIA_BIN"
           fi
-          "$VPNMY_HYSTERIA_BIN" version | head -n 2
+          # sed читает весь вывод, не вызывая SIGPIPE при включённом pipefail.
+          "$VPNMY_HYSTERIA_BIN" version 2>&1 | sed -n '/^[[:space:]]*Version/p'
       - name: Собрать подписку
         run: python main.py
       - name: Проверить артефакты

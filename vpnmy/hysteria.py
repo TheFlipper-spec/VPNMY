@@ -23,6 +23,7 @@ from .models import CheckResult, ProbeResult
 from .tunnel import free_port, http_checks, make_session, stop_process, wait_for_inbound
 
 LOGGER = logging.getLogger(__name__)
+VERSION_MARKERS = ("version:", "aperture", "apernet", "quic-go")
 
 
 class HysteriaError(RuntimeError):
@@ -47,7 +48,9 @@ def resolve_hysteria(binary: str) -> str | None:
     except (OSError, subprocess.SubprocessError):
         return None
     output = (completed.stdout or "") + (completed.stderr or "")
-    if completed.returncode != 0 or "hysteria" not in output.lower():
+    if completed.returncode != 0 or not any(
+        marker in output.lower() for marker in VERSION_MARKERS
+    ):
         return None
     return candidate
 
