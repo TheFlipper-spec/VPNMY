@@ -57,4 +57,15 @@ jobs:
           assert len(links) == len(set(links))
           assert any(line.startswith("#profile-title:") for line in comments)
           assert all("#" in link for link in links)
+          # Новые поля: проверяем наличие верификации/разнообразия если они уже в ветке
+          if "verification" in stats:
+              v = stats["verification"]
+              if "measurements_per_node" in v:
+                  assert v["measurements_per_node"] in (0, 3)
+              if "median_threshold_ms" in v:
+                  assert v["median_threshold_ms"] == 1500
+          if "diversity" in stats and "limits" in stats["diversity"]:
+              lim = stats["diversity"]["limits"]
+              assert lim.get("ipv4_subnet") in (None, "/24")
+              assert lim.get("ipv6_subnet") in (None, "/48")
           PY
