@@ -1,10 +1,11 @@
 name: Проверка кода
 on:
+  workflow_dispatch:
   pull_request:
-    paths: ["**.py", "config/**", "tests/**", "index.html", "requirements*.txt", "pyproject.toml", ".github/workflows/**"]
+    paths: ["**.py", "config/**", "tests/**", "index.html", "requirements*.txt", "pyproject.toml", ".github/workflows/**", "workflow-templates/**"]
   push:
     branches: [main]
-    paths: ["**.py", "config/**", "tests/**", "index.html", "requirements*.txt", "pyproject.toml", ".github/workflows/**"]
+    paths: ["**.py", "config/**", "tests/**", "index.html", "requirements*.txt", "pyproject.toml", ".github/workflows/**", "workflow-templates/**"]
 permissions:
   contents: read
 concurrency:
@@ -24,6 +25,21 @@ jobs:
       - run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
       - run: ruff check .
       - run: pytest
+      - name: Установить и проверить Hysteria
+        env:
+          HYSTERIA_VERSION: "app/v2.12.2"
+          HYSTERIA_SHA256_LINUX_64: "6493dfffd55b5883f64c76c63880ecc32988f0c568c9ca9014907877b4d55f94"
+          VPNMY_HYSTERIA_BIN: "${{ github.workspace }}/.cache/hysteria/hysteria"
+        run: |
+          # Без кэша: проверяем именно установщик, а не только готовый бинарник.
+          python scripts/install_hysteria.py --version "$HYSTERIA_VERSION" --sha256 "$HYSTERIA_SHA256_LINUX_64" --output "$VPNMY_HYSTERIA_BIN"
+          python - <<'PYCODE'
+          import os
+          from vpnmy.hysteria import resolve_hysteria
+          binary = resolve_hysteria(os.environ["VPNMY_HYSTERIA_BIN"])
+          assert binary is not None, "resolve_hysteria отверг официальный клиент"
+          print("resolve_hysteria: OK")
+          PYCODE
       - name: Проверить опубликованные артефакты
         run: |
           python - <<'PY'
