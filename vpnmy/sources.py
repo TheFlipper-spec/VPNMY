@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -128,6 +129,55 @@ def set_source_enabled(path: str | Path, identifier: str, enabled: bool) -> Sour
     ]
     parsed = _write_sources(config_path, raw, updated)
     return next(item for item in parsed if item.source_id == target.source_id)
+
+
+def _health_path(config_path: str | Path, raw: dict) -> Path:
+    config_file = Path(config_path).resolve()
+    root = config_file.parent.parent if config_file.parent.name == "config" else config_file.parent
+    paths = raw.get("paths") if isinstance(raw.get("paths"), dict) else {}
+    value = (paths or {}).get("source_health") or "data/source_health.json"
+    return root / value
+
+
+def find_dead_sources(
+    config_path: str | Path, *, fail_streak: int
+) -> tuple[list[Source], list[Source]]:
+    """Делит источники на (живые, мёртвые) по истории здоровья."""
+    _, raw = load_raw_config(config_path)
+    sources = parse_sources(raw.get("sources"))
+    health_file = _health_path(config_path, raw)
+    rows: dict = {}
+    if health_file.exists():
+        try:
+            data = json.loads(health_file.read_text(encoding="utf-8"))
+            rows = data.get("sources", {}) if isinstance(data, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            rows = {}
+    dead = [
+        source
+        for source in sources
+        if source.enabled
+        and int(rows.get(source.source_id, {}).get("fail_streak", 0)) >= fail_streak
+    ]
+    alive = [source for source in sources if source not in dead]
+    return alive, dead
+
+
+def prune_dead_sources(
+    config_path: str | Path, *, fail_streak: int, apply: bool = False
+) -> tuple[list[Source], list[Source]]:
+    """Удаляет источники, мёртвые fail_streak запусков подряд (по умолчанию только показ)."""
+    config_file, raw = load_raw_config(config_path)
+    alive, dead = find_dead_sources(config_path, fail_streak=fail_streak)
+    if not dead:
+        return alive, dead
+    if not alive:
+        raise ConfigError("нельзя удалить все источники — список оказался бы пустым")
+    if not any(source.enabled for source in alive):
+        raise ConfigError("нельзя удалить последние включённые источники")
+    if apply:
+        _write_sources(config_file, raw, alive)
+    return alive, dead
 
 
 def format_sources(sources: Sequence[Source]) -> str:

@@ -15,6 +15,7 @@ from .sources import (
     add_source,
     format_sources,
     list_sources,
+    prune_dead_sources,
     remove_source,
     set_source_enabled,
 )
@@ -82,6 +83,13 @@ def _sources_parser() -> argparse.ArgumentParser:
     enable.add_argument("identifier", help="id, название или URL")
     disable = sub.add_parser("off", aliases=["disable"], help="выключить источник")
     disable.add_argument("identifier", help="id, название или URL")
+    prune = sub.add_parser(
+        "prune", help="показать или удалить источники, мёртвые много запусков подряд"
+    )
+    prune.add_argument(
+        "--runs", type=int, default=36, help="порог подряд идущих неудач (по умолчанию 36 ≈ 6 ч)"
+    )
+    prune.add_argument("--apply", action="store_true", help="удалить источники из конфигурации")
     return parser
 
 
@@ -117,6 +125,21 @@ def _run_sources(argv: Sequence[str]) -> int:
             source = set_source_enabled(args.config, args.identifier, False)
             print(f"Источник {source.source_id} выключен")
             return 0
+        if action == "prune":
+            if args.runs < 1:
+                raise ConfigError("--runs должен быть положительным числом")
+            alive, dead = prune_dead_sources(
+                args.config, fail_streak=args.runs, apply=args.apply
+            )
+            if not dead:
+                print("Мёртвых источников не найдено.")
+                return 0
+            verb = "Удалены" if args.apply else "Будут удалены"
+            for source in dead:
+                print(f"{verb}: {source.source_id} ({source.name}) — {source.url}")
+            if not args.apply:
+                print("\nЭто режим показа; повторите с флагом --apply, чтобы удалить.")
+            return 0
     except (ConfigError, OSError) as exc:
         logging.getLogger(__name__).error("%s", exc)
         return 1
@@ -142,8 +165,11 @@ def _run_build(argv: Sequence[str] | None) -> int:
         logging.getLogger(__name__).error("Сборка остановлена: %s", exc)
         return 1
     summary = (
-        f"Источники: {report.sources_ok}/{report.sources_total}; конфигурации: {report.parsed}; "
-        f"TCP: {report.probed}; Xray/проверено: {report.verified}; опубликовано: {report.published}; статус: {report.status}."
+        f"Источники: {report.sources_ok}/{report.sources_total} "
+        f"(в карантине: {report.quarantined}); конфигурации: {report.parsed}; "
+        f"сетевая предпроверка: {report.probed}; глубокая проверка: {report.verified}; "
+        f"пропущено (нет ядра): {report.skipped}; "
+        f"опубликовано: {report.published}; статус: {report.status}."
     )
     logging.getLogger(__name__).info(summary)
     github_summary = os.environ.get("GITHUB_STEP_SUMMARY")

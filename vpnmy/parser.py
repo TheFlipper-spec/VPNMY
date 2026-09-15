@@ -12,7 +12,8 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 
 from .models import Node, Source
 
-SUPPORTED_SCHEMES = ("vless", "vmess", "trojan")
+HYSTERIA_SCHEMES = ("hysteria2", "hy2")
+SUPPORTED_SCHEMES = ("vless", "vmess", "trojan", *HYSTERIA_SCHEMES)
 SUPPORTED_TRANSPORTS = {
     "tcp",
     "raw",
@@ -25,8 +26,10 @@ SUPPORTED_TRANSPORTS = {
     "splithttp",
     "kcp",
     "quic",
+    "hysteria2",
 }
-_LINK_RE = re.compile(r"(?i)(?:vless|vmess|trojan)://[^\s<>\"']+")
+_LINK_RE = re.compile(r"(?i)(?:vless|vmess|trojan|hysteria2|hy2)://[^\s<>\"']+")
+_HOPPORT_RE = re.compile(r"^\d{1,5}(?:\s*[-_,]\s*\d{1,5})*$")
 _BASE64_RE = re.compile(r"^[A-Za-z0-9_+/=\s-]+$")
 
 
@@ -128,6 +131,16 @@ def _options(query: str) -> dict[str, str]:
 
 
 def _validate_common(node: Node) -> Node:
+    if node.is_hysteria:
+        obfs = node.options.get("obfs", "")
+        if obfs and obfs != "salamander":
+            raise ParseError(f"неподдерживаемый obfs Hysteria2: {obfs}")
+        if obfs == "salamander" and not node.options.get("obfs-password"):
+            raise ParseError("obfs=salamander без obfs-password")
+        hopping = node.options.get("mport", "")
+        if hopping and not _HOPPORT_RE.fullmatch(hopping.replace(" ", "")):
+            raise ParseError("некорректный mport (port hopping)")
+        return node
     if node.transport not in SUPPORTED_TRANSPORTS:
         raise ParseError(f"неподдерживаемый транспорт: {node.transport}")
     if node.security not in {"none", "tls", "reality"}:
@@ -185,6 +198,67 @@ def _parse_vmess(link: str, source: Source) -> Node:
     return _validate_common(node)
 
 
+def _parse_hysteria(link: str, source: Source) -> Node:
+    parts = urlsplit(link)
+    if not parts.hostname:
+        raise ParseError("URI не содержит адрес сервера")
+    host = _validate_host(parts.hostname)
+    try:
+        port = _validate_port(parts.port)
+    except ValueError as exc:
+        raise ParseError("некорректный порт") from exc
+    raw_options = _options(parts.query)
+    folded = {key.casefold(): value for key, value in raw_options.items()}
+
+    def pick(*names: str) -> str:
+        for name in names:
+            if name in folded:
+                return folded[name].strip()
+        return ""
+
+    insecure = pick("insecure", "allowinsecure").lower() in {"1", "true", "yes"}
+    obfs_password = pick("obfs-password", "obfspassword", "obfspass")
+    pin = pick("pinsha256")
+    if pin.lower().startswith("sha256/"):
+        pin = pin[len("sha256/") :]
+    alpn = ",".join(item.strip() for item in pick("alpn").split(",") if item.strip())
+    options: dict[str, str] = {}
+    sni = pick("sni", "peer")
+    if sni:
+        options["sni"] = sni
+    if insecure:
+        options["insecure"] = "1"
+    if pin:
+        options["pinSHA256"] = pin
+    if alpn:
+        options["alpn"] = alpn
+    mport = pick("mport")
+    if mport:
+        options["mport"] = mport.replace(" ", "")
+    obfs = pick("obfs").lower()
+    if obfs:
+        options["obfs"] = obfs
+        if obfs_password:
+            options["obfs-password"] = obfs_password
+    authority = parts.netloc.rsplit("@", 1)
+    user = unquote(authority[0]) if len(authority) == 2 and authority[0] else ""
+    if len(user) > 512:
+        raise ParseError("слишком длинная Hysteria2 auth-строка")
+    node = Node(
+        "hysteria2",
+        host,
+        port,
+        link,
+        source.source_id,
+        source.name,
+        source.category,
+        user,
+        options,
+        unquote(parts.fragment),
+    )
+    return _validate_common(node)
+
+
 def parse_link(link: str, source: Source) -> Node:
     link = link.replace("\x00", "").strip()
     scheme = link.split(":", 1)[0].lower()
@@ -192,6 +266,8 @@ def parse_link(link: str, source: Source) -> Node:
         raise ParseError("неподдерживаемый протокол")
     if scheme == "vmess":
         return _parse_vmess(link, source)
+    if scheme in HYSTERIA_SCHEMES:
+        return _parse_hysteria(link, source)
     parts = urlsplit(link)
     if not parts.hostname:
         raise ParseError("URI не содержит адрес сервера")

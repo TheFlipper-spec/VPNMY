@@ -52,6 +52,7 @@ def test_build(tmp_path, countries_file, monkeypatch):
     c = cfg(tmp_path, countries_file)
     ls = links()
     monkeypatch.setattr(builder, "resolve_xray", lambda _: "x")
+    monkeypatch.setattr(builder, "resolve_hysteria", lambda _: "hy")
     monkeypatch.setattr(
         builder,
         "fetch_all",
@@ -60,7 +61,9 @@ def test_build(tmp_path, countries_file, monkeypatch):
             for s in sources
         ],
     )
-    monkeypatch.setattr(builder, "probe_all", lambda ns, t, w: [ProbeResult(n, 20) for n in ns])
+    monkeypatch.setattr(
+        builder, "probe_all", lambda ns, tcp, udp, w: [ProbeResult(n, 20) for n in ns]
+    )
     monkeypatch.setattr(
         builder,
         "verify_all",
@@ -77,6 +80,7 @@ def test_build(tmp_path, countries_file, monkeypatch):
                 )
                 for p in ps
             ],
+            [],
             [],
         ),
     )
@@ -96,3 +100,51 @@ def test_fail_safe(tmp_path, countries_file, monkeypatch):
     with pytest.raises(BuildError):
         build_subscription(c)
     assert c.paths.subscription_base64.read_text() == "old"
+
+
+def test_quarantine_excludes_dead_source(tmp_path, countries_file, monkeypatch):
+    import dataclasses
+
+    c = cfg(tmp_path, countries_file)
+    c = dataclasses.replace(c, source_fail_threshold=1, max_per_subnet=5)
+    monkeypatch.setattr(builder, "resolve_xray", lambda _: "x")
+    monkeypatch.setattr(builder, "resolve_hysteria", lambda _: "hy")
+    good = [
+        "vless://123e4567-e89b-12d3-a456-426614174001@1.1.1.1:443?encryption=none&security=tls&type=ws&sni=x.com#A",
+        "vless://123e4567-e89b-12d3-a456-426614174002@2.2.2.2:443?encryption=none&security=tls&type=ws&sni=x.com#B",
+        "vless://123e4567-e89b-12d3-a456-426614174003@3.3.3.3:443?encryption=none&security=tls&type=ws&sni=x.com#C",
+    ]
+    def fake_fetch(sources, t, w):
+        out = []
+        for s in sources:
+            out.append(
+                FetchResult(s, None, 1, "fetch_error")
+                if s.category == "whitelist"
+                else FetchResult(s, "\n".join(good), 1)
+            )
+        return out
+
+    monkeypatch.setattr(builder, "fetch_all", fake_fetch)
+    monkeypatch.setattr(builder, "probe_all", lambda ns, tcp, udp, w: [ProbeResult(n, 20) for n in ns])
+    monkeypatch.setattr(
+        builder,
+        "verify_all",
+        lambda ps, **kw: (
+            [
+                CheckResult(p.node, 20, 50, 10, "DE", "2026-01-01T00:00:00Z", checks_passed=2)
+                for p in ps
+            ],
+            [],
+            [],
+        ),
+    )
+    r = build_subscription(c, now=datetime(2026, 1, 1, tzinfo=UTC))
+    stats = json.loads(c.paths.stats.read_text())
+    whitelist_row = next(s for s in stats["sources"] if s["category"] == "whitelist")
+    assert whitelist_row["quarantined"] is True
+    universal_row = next(s for s in stats["sources"] if s["category"] == "universal")
+    assert universal_row["available"] is True and universal_row["quarantined"] is False
+    assert r.quarantined == 1
+    raw = c.paths.subscription_raw.read_text()
+    assert raw.count("vless://") == 3
+    assert all(server["category"] == "universal" for server in stats["servers"])

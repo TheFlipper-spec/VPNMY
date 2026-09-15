@@ -13,13 +13,6 @@
       "enabled": true
     },
     {
-      "id": "ru-whitelist-checked",
-      "name": "VPN-конфигурации для России — проверенные белые списки",
-      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-checked.txt",
-      "category": "whitelist",
-      "enabled": true
-    },
-    {
       "id": "ru-whitelist-sni",
       "name": "VPN-конфигурации для России — SNI белых списков",
       "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-SNI-RU-all.txt",
@@ -46,6 +39,27 @@
       "url": "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr",
       "category": "universal",
       "enabled": true
+    },
+    {
+      "id": "fastnodes-verified",
+      "name": "FastNodes — узлы, прошедшие независимую проверку",
+      "url": "https://raw.githubusercontent.com/rtwo2/FastNodes/main/state/verified_last.txt",
+      "category": "universal",
+      "enabled": true
+    },
+    {
+      "id": "fastnodes-hysteria2",
+      "name": "FastNodes — Hysteria2 (предфильтрованные)",
+      "url": "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/protocols/hysteria2.txt",
+      "category": "universal",
+      "enabled": true
+    },
+    {
+      "id": "radikal-hysteria2",
+      "name": "0xRadikal — Hysteria2",
+      "url": "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/protocols/hysteria2.txt",
+      "category": "universal",
+      "enabled": true
     }
   ],
   "paths": {
@@ -53,12 +67,17 @@
     "subscription_raw": "subscription.txt",
     "stats": "stats.json",
     "history": "data/health_history.json",
+    "source_health": "data/source_health.json",
     "countries": "config/countries.ru.json"
   },
   "target_count": 12,
   "min_publish_count": 3,
   "max_candidates": 480,
+  "max_nodes_per_source": 150,
   "max_per_endpoint": 1,
+  "max_per_subnet": 2,
+  "stable_streak_required": 2,
+  "source_fail_threshold": 6,
   "category_quotas": {
     "universal": 7,
     "whitelist": 5
@@ -85,7 +104,9 @@
   "verify_workers": 6,
   "source_timeout_seconds": 20,
   "tcp_timeout_seconds": 1.5,
+  "udp_timeout_seconds": 1.5,
   "verify_timeout_seconds": 8,
   "speed_test_bytes": 262144,
-  "xray_bin": "xray"
+  "xray_bin": "xray",
+  "hysteria_bin": "hysteria"
 }

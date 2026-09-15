@@ -40,7 +40,7 @@ def _session() -> requests.Session:
     session = requests.Session()
     session.headers.update(
         {
-            "User-Agent": "FL1P-VPN-Subscription/2.1 (+https://github.com/TheFlipper-spec/VPNMY)",
+            "User-Agent": "FL1P-VPN-Subscription/2.3 (+https://github.com/TheFlipper-spec/VPNMY)",
             "Accept": "text/plain, application/octet-stream;q=0.9, */*;q=0.1",
         }
     )

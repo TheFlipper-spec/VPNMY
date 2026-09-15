@@ -47,14 +47,19 @@ def test_payload(tmp_path, countries_file):
     )
     lines = paths.subscription_raw.read_text().splitlines()
     header = [line for line in lines if line.startswith("#")]
-    links = [line for line in lines if line.startswith(("vless://", "vmess://", "trojan://"))]
+    links = [
+        line
+        for line in lines
+        if line.startswith(("vless://", "vmess://", "trojan://", "hysteria2://", "hy2://"))
+    ]
     assert header[0] == "#profile-title: FL1P VPN"
     assert any(line.startswith("#profile-update-interval:") for line in header)
     assert len(links) == 1
     assert links[0].startswith("vless://")
     assert links[0].endswith("#🇩🇪 FL1P VPN · Германия · Интернет · 50 мс")
     stats = json.loads(paths.stats.read_text())
-    assert stats["schema_version"] == 3
+    assert stats["schema_version"] == 4
+    assert stats["protocols"] == {"VLESS": 1}
     assert stats["total"] == 1
     assert stats["subscription_metadata_lines"] == len(header)
     assert stats["total"] == len(stats["servers"]) == len(links)

@@ -73,6 +73,7 @@ def build_payloads(
     source_stats: list[dict[str, Any]],
     generated_at: datetime,
     check_mode: str,
+    source_health: dict[str, Any] | None = None,
 ) -> dict[Path, bytes]:
     title = config.profile_title or DEFAULT_PROFILE_TITLE
     web_page_url = config.profile_web_page_url or DEFAULT_PROFILE_URL
@@ -82,8 +83,12 @@ def build_payloads(
     raw_subscription = "\n".join([*header, *links]) + "\n"
     encoded_subscription = base64.b64encode(raw_subscription.encode()).decode("ascii") + "\n"
     utc_label = generated_at.isoformat(timespec="seconds").replace("+00:00", "Z")
+    protocol_counts: dict[str, int] = {}
+    for item in results:
+        label = "HYSTERIA2" if item.node.is_hysteria else item.node.scheme.upper()
+        protocol_counts[label] = protocol_counts.get(label, 0) + 1
     stats = {
-        "schema_version": 3,
+        "schema_version": 4,
         "status": "diagnostic"
         if check_mode != "xray"
         else ("healthy" if len(results) >= config.target_count else "degraded"),
@@ -94,11 +99,16 @@ def build_payloads(
         "profile_title": title,
         "subscription_url_fragment": title,
         "total": len(results),
+        "protocols": protocol_counts,
+        "quarantined_sources": sum(
+            1 for row in source_stats if row.get("quarantined") and row.get("enabled")
+        ),
         "subscription_file": config.paths.subscription_base64.name,
         "subscription_raw_file": config.paths.subscription_raw.name,
         "subscription_metadata_lines": len(header),
         "verification": {
-            "method": "xray_https" if check_mode == "xray" else "tcp_only",
+            "method": "tunnel_https_xray_hysteria" if check_mode == "xray" else "tcp_udp_only",
+            "cores": ["Xray", "Hysteria"] if check_mode == "xray" else [],
             "required_https_requests": 2 if check_mode == "xray" else 0,
         },
         "sources": source_stats,
@@ -133,7 +143,7 @@ def build_payloads(
             for item in results
         ],
     }
-    return {
+    payloads: dict[Path, bytes] = {
         config.paths.subscription_raw: raw_subscription.encode(),
         config.paths.subscription_base64: encoded_subscription.encode("ascii"),
         config.paths.stats: (json.dumps(stats, ensure_ascii=False, indent=2) + "\n").encode(),
@@ -141,6 +151,11 @@ def build_payloads(
             json.dumps(history, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
         ).encode(),
     }
+    if config.paths.source_health is not None and source_health is not None:
+        payloads[config.paths.source_health] = (
+            json.dumps(source_health, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        ).encode()
+    return payloads
 
 
 def atomic_publish(payloads: dict[Path, bytes]) -> None:

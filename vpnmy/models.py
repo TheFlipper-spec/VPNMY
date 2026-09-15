@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import quote, urlsplit, urlunsplit
@@ -86,17 +87,37 @@ class Node:
         return f"{self.host.lower()}:{self.port}"
 
     @property
+    def is_hysteria(self) -> bool:
+        return self.scheme in {"hysteria2", "hy2"}
+
+    @property
     def transport(self) -> str:
+        if self.is_hysteria:
+            return "hysteria2"
         value = self.options.get("type", "tcp").lower()
         return value if value else "tcp"
 
     @property
     def security(self) -> str:
+        if self.is_hysteria:
+            return "tls"
         default = "tls" if self.scheme == "trojan" else "none"
         value = self.options.get("security", default).lower()
         if value in {"", "false", "0"}:
             return "none"
         return value
+
+    @property
+    def probe_port(self) -> int:
+        """Порт для сетевой предпроверки (у port-hopping это первый порт диапазона)."""
+        hopping = self.options.get("mport", "")
+        if self.is_hysteria and hopping:
+            match = re.search(r"\d+", hopping)
+            if match:
+                port = int(match.group())
+                if 1 <= port <= 65535:
+                    return port
+        return self.port
 
     def link_with_name(self, name: str) -> str:
         remark = encode_remark(name)

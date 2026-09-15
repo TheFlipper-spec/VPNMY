@@ -23,6 +23,7 @@ class Paths:
     stats: Path
     history: Path
     countries: Path
+    source_health: Path | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +49,17 @@ class BuildConfig:
     country_limits: dict[str, int] = field(default_factory=dict)
     profile_title: str = "FL1P VPN"
     profile_web_page_url: str = "https://theflipper-spec.github.io/VPNMY/"
+    # --- Умный отбор и Hysteria2 ---
+    hysteria_bin: str = "hysteria"
+    udp_timeout_seconds: float = 1.5
+    # Сколько конфигураций максимум брать от одного источника за запуск.
+    max_nodes_per_source: int = 160
+    # Сколько неудачных запусков подряд переводят источник в карантин.
+    source_fail_threshold: int = 6
+    # Сколько успешных глубоких проверок подряд нужны новому узлу до публикации.
+    stable_streak_required: int = 2
+    # Разнообразие физических сетей: не больше N узлов из одной /24 (или /48).
+    max_per_subnet: int = 2
 
 
 REQUIRED_CATEGORIES = {"universal", "whitelist"}
@@ -180,12 +192,14 @@ def load_config(path: str | Path) -> BuildConfig:
     paths_data = raw.get("paths")
     if not isinstance(paths_data, dict):
         raise ConfigError("paths должен быть объектом")
+    source_health_value = paths_data.get("source_health", "data/source_health.json")
     paths = Paths(
         _path(root, paths_data.get("subscription_base64"), "subscription_base64"),
         _path(root, paths_data.get("subscription_raw"), "subscription_raw"),
         _path(root, paths_data.get("stats"), "stats"),
         _path(root, paths_data.get("history"), "history"),
         _path(root, paths_data.get("countries"), "countries"),
+        _path(root, source_health_value, "source_health"),
     )
     if (
         len(
@@ -195,9 +209,10 @@ def load_config(path: str | Path) -> BuildConfig:
                 paths.stats,
                 paths.history,
                 paths.countries,
+                paths.source_health,
             }
         )
-        != 5
+        != 6
     ):
         raise ConfigError("пути входных и выходных файлов не должны совпадать")
     target = _integer(raw, "target_count", 1, 100)
@@ -235,6 +250,19 @@ def load_config(path: str | Path) -> BuildConfig:
     xray_bin = os.environ.get("VPNMY_XRAY_BIN", raw.get("xray_bin", "xray"))
     if not isinstance(xray_bin, str) or not xray_bin.strip():
         raise ConfigError("xray_bin должен быть непустой строкой")
+    hysteria_bin = os.environ.get("VPNMY_HYSTERIA_BIN", raw.get("hysteria_bin", "hysteria"))
+    if not isinstance(hysteria_bin, str) or not hysteria_bin.strip():
+        raise ConfigError("hysteria_bin должен быть непустой строкой")
+
+    def _optional_int(key: str, default: int, minimum: int, maximum: int) -> int:
+        if key not in raw or raw[key] is None:
+            return default
+        return _integer(raw, key, minimum, maximum)
+
+    def _optional_number(key: str, default: float, minimum: float, maximum: float) -> float:
+        if key not in raw or raw[key] is None:
+            return default
+        return _number(raw, key, minimum, maximum)
     profile_raw = raw.get("profile") or {}
     if not isinstance(profile_raw, dict):
         raise ConfigError("profile должен быть объектом")
@@ -265,4 +293,10 @@ def load_config(path: str | Path) -> BuildConfig:
         country_limits,
         profile_title,
         profile_url,
+        hysteria_bin,
+        _optional_number("udp_timeout_seconds", 1.5, 0.1, 30),
+        _optional_int("max_nodes_per_source", 160, 1, 100_000),
+        _optional_int("source_fail_threshold", 6, 1, 500),
+        _optional_int("stable_streak_required", 2, 1, 20),
+        _optional_int("max_per_subnet", 2, 0, 20),
     )
