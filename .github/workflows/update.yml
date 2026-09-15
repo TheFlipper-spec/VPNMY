@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["main.py", "vpnmy/**", "config/**", "scripts/install_xray.py", "requirements*.txt", "pyproject.toml", "tests/**", ".github/workflows/update.yml"]
+    paths: ["main.py", "vpnmy/**", "config/**", "scripts/install_*.py", "requirements*.txt", "pyproject.toml", "tests/**", ".github/workflows/update.yml"]
 concurrency:
   group: vpn-subscription-update
   cancel-in-progress: true
@@ -15,12 +15,15 @@ jobs:
   update:
     name: Проверить узлы и опубликовать подписку
     runs-on: ubuntu-24.04
-    timeout-minutes: 9
+    timeout-minutes: 12
     env:
       PYTHONUNBUFFERED: "1"
       XRAY_VERSION: "v26.3.27"
       XRAY_SHA256_LINUX_64: "23cd9af937744d97776ee35ecad4972cf4b2109d1e0fe6be9930467608f7c8ae"
+      HYSTERIA_VERSION: "app/v2.12.2"
+      HYSTERIA_SHA256_LINUX_64: "6493dfffd55b5883f64c76c63880ecc32988f0c568c9ca9014907877b4d55f94"
       VPNMY_XRAY_BIN: "${{ github.workspace }}/.cache/xray/xray"
+      VPNMY_HYSTERIA_BIN: "${{ github.workspace }}/.cache/hysteria/hysteria"
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -44,6 +47,11 @@ jobs:
         with:
           path: .cache/xray/xray
           key: xray-${{ runner.os }}-${{ runner.arch }}-${{ env.XRAY_VERSION }}
+      - name: Восстановить Hysteria из кэша
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .cache/hysteria/hysteria
+          key: hysteria-${{ runner.os }}-${{ runner.arch }}-${{ env.HYSTERIA_VERSION }}
       - name: Установить и проверить Xray
         run: |
           if [[ ! -x "$VPNMY_XRAY_BIN" ]] || ! "$VPNMY_XRAY_BIN" version >/dev/null 2>&1; then
@@ -51,6 +59,13 @@ jobs:
             python scripts/install_xray.py --version "$XRAY_VERSION" --sha256 "$XRAY_SHA256_LINUX_64" --output "$VPNMY_XRAY_BIN"
           fi
           "$VPNMY_XRAY_BIN" version | head -n 1
+      - name: Установить и проверить Hysteria
+        run: |
+          if [[ ! -x "$VPNMY_HYSTERIA_BIN" ]] || ! "$VPNMY_HYSTERIA_BIN" version >/dev/null 2>&1; then
+            rm -f -- "$VPNMY_HYSTERIA_BIN"
+            python scripts/install_hysteria.py --version "$HYSTERIA_VERSION" --sha256 "$HYSTERIA_SHA256_LINUX_64" --output "$VPNMY_HYSTERIA_BIN"
+          fi
+          "$VPNMY_HYSTERIA_BIN" version | head -n 2
       - name: Собрать подписку
         run: python main.py
       - name: Проверить артефакты
@@ -62,9 +77,10 @@ jobs:
           raw = Path("subscription.txt").read_text(encoding="utf-8")
           stats = json.loads(Path("stats.json").read_text(encoding="utf-8"))
           lines = raw.splitlines()
-          links = [line for line in lines if line.startswith(("vless://", "vmess://", "trojan://"))]
+          prefixes = ("vless://", "vmess://", "trojan://", "hysteria2://", "hy2://")
+          links = [line for line in lines if line.startswith(prefixes)]
           assert base64.b64decode(encoded, validate=True).decode("utf-8") == raw
-          assert stats["schema_version"] >= 3
+          assert stats["schema_version"] >= 4
           assert stats["check_mode"] == "xray"
           assert stats["verification"]["required_https_requests"] >= 2
           comments = [line for line in lines if line.startswith("#")]
@@ -75,13 +91,17 @@ jobs:
           assert any(line.startswith("#profile-title:") for line in comments)
           assert all("#" in link for link in links)
           assert all(server["verified"] and server["checks_passed"] >= 2 for server in stats["servers"])
+          assert isinstance(stats.get("protocols"), dict) and stats["protocols"]
+          health = json.loads(Path("data/source_health.json").read_text(encoding="utf-8"))
+          assert health["schema_version"] == 1 and isinstance(health["sources"], dict)
+          print("Протоколы в подписке:", stats["protocols"])
           PY
       - name: Опубликовать изменения
         if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- FL1PVPN subscription.txt stats.json data/health_history.json
+          git add -- FL1PVPN subscription.txt stats.json data/health_history.json data/source_health.json
           if git diff --cached --quiet; then exit 0; fi
           COUNT="$(python -c 'import json; print(json.load(open("stats.json", encoding="utf-8"))["total"])')"
           git commit -m "chore(subscription): обновить ${COUNT} узлов"
