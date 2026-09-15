@@ -146,15 +146,47 @@ class ProbeResult:
 class CheckResult:
     node: Node
     tcp_ms: int
-    http_ms: int
+    http_ms: int  # медиана задержки (мс) из серии измерений через туннель
     speed_mbps: float
     country: str
     checked_at: str
     score: float = 0.0
     resolved_ip: str = ""
     checks_passed: int = 1
+    # --- Новые поля для измерения качества и разнообразия (совместимы со старыми данными) ---
+    # Выходной IP, полученный через туннель (Cloudflare trace ip). Может совпадать у разных входов.
+    egress_ip: str = ""
+    # ASN сервера (определяется по resolved_ip). Пустая строка = неизвестен.
+    asn: str = ""
+    # Наихудшая задержка среди попыток (мс). Если измерение одно — равна http_ms.
+    http_max_ms: int = 0
+    # Разброс (max - min) среди попыток, показывает нестабильность.
+    jitter_ms: int = 0
+    # Сколько попыток измерения выполнено и сколько из них успешно прошли двойную проверку.
+    attempts: int = 1
+    # Исходные выборки задержки (мс); неудачные попытки кодируются как таймаут.
+    samples: tuple[int, ...] = ()
+    # Скорость измерена только на одной из попыток, чтобы не утраивать трафик.
+    # По умолчанию уже задаётся speed_mbps — совместимость сохраняется.
 
     @property
     def endpoint_key(self) -> str:
         """Физический адрес узла, используемый для защиты от дублей."""
         return f"{self.resolved_ip or self.node.host.lower()}:{self.node.port}"
+
+    @property
+    def server_ip(self) -> str:
+        """Нормализованный IP сервера (resolved_ip или хост, если IP неизвестен)."""
+        return self.resolved_ip or ""
+
+    @property
+    def median_ms(self) -> int:
+        return self.http_ms
+
+    @property
+    def max_ms(self) -> int:
+        return self.http_max_ms or self.http_ms
+
+    @property
+    def jitter(self) -> int:
+        return self.jitter_ms

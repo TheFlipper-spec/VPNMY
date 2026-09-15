@@ -22,12 +22,16 @@ def verify_all(
     timeout: float,
     speed_test_bytes: int,
     workers: int,
+    attempts: int = 3,
 ) -> tuple[list[CheckResult], list[Node], list[Node]]:
     """Проверяет узлы подходящим ядром.
 
     Возвращает (успешные, провалившиеся, пропущенные). Пропущенные — это
     Hysteria2-узлы при отсутствии клиента Hysteria: они не засчитываются
     как отказ в истории.
+
+    Каждый узел проверяется *attempts* раз (медиана) через реальное ядро и туннель,
+    а не обычным TCP ping. Скорость меряется один раз, чтобы не утраивать трафик.
     """
     verified: list[CheckResult] = []
     failed: list[Node] = []
@@ -51,6 +55,7 @@ def verify_all(
                     xray_bin=xray_bin,
                     timeout=timeout,
                     speed_test_bytes=speed_test_bytes,
+                    attempts=attempts,
                 ),
             )
             for probe in classic_probes
@@ -64,6 +69,7 @@ def verify_all(
                     hysteria_bin=hysteria_bin or "",
                     timeout=timeout,
                     speed_test_bytes=speed_test_bytes,
+                    attempts=attempts,
                 ),
             )
             for probe in hy_probes

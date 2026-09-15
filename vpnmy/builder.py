@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from . import asn as asn_module
 from .config import BuildConfig
 from .fetcher import fetch_all
-from .history import load_history, prune_history, record_failure, record_success
+from .history import load_history, prune_history, record_failure, record_skip, record_success
 from .hysteria import resolve_hysteria
 from .models import CheckResult, Node
 from .parser import ParseError, deduplicate, parse_source
@@ -15,6 +16,7 @@ from .probe import probe_all
 from .publisher import atomic_publish, build_payloads, load_country_names
 from .selector import (
     cap_per_source,
+    compute_diversity_stats,
     infer_country,
     is_historically_unreliable,
     is_publication_stable,
@@ -67,7 +69,68 @@ def _select(
         max_per_endpoint=config.max_per_endpoint,
         country_limits=config.country_limits,
         max_per_subnet=config.max_per_subnet,
+        max_per_country=config.max_per_country,
+        max_per_asn=config.max_per_asn,
+        max_per_ip=config.max_per_ip,
+        verify_median_threshold_ms=config.verify_median_threshold_ms,
     )
+
+
+def _enrich_asn(results: list[CheckResult]) -> tuple[list[CheckResult], dict[str, Any]]:
+    """Обогащает результаты ASN по IP сервера.
+
+    Возвращает (обогащённые результаты, статистика). Не отправляет секреты,
+    только IP. Ошибка обогащения не ломает сборку; неизвестные ASN остаются пустыми
+    и не объединяются в один провайдер (лимит ASN их пропускает).
+    """
+    if not results:
+        return results, {"enriched": 0, "failed": 0, "total": 0, "status": "skipped"}
+    ip_to_asn: dict[str, str] = {}
+    # Собираем уникальные IP серверов
+    for r in results:
+        ip = (r.resolved_ip or "").strip()
+        if ip and ip not in ip_to_asn:
+            ip_to_asn[ip] = (r.asn or "").strip()
+    total = len(ip_to_asn)
+    # Обогащаем только пустые
+    enriched_before = sum(1 for v in ip_to_asn.values() if v)
+    try:
+        ip_to_asn = asn_module.enrich_asns(ip_to_asn)
+    except Exception as exc:  # pragma: no cover
+        LOGGER.warning("ASN обогащение недоступно: %s", exc)
+        return results, {"enriched": enriched_before, "failed": total - enriched_before, "total": total, "status": "error"}
+    enriched_after = sum(1 for v in ip_to_asn.values() if v)
+    failed = total - enriched_after
+    # Создаём новые CheckResult с ASN (frozen требует пересоздания)
+    enriched_results: list[CheckResult] = []
+    for r in results:
+        ip = (r.resolved_ip or "").strip()
+        asn = ip_to_asn.get(ip, "")
+        if asn and asn != (r.asn or ""):
+            enriched_results.append(
+                CheckResult(
+                    r.node,
+                    r.tcp_ms,
+                    r.http_ms,
+                    r.speed_mbps,
+                    r.country,
+                    r.checked_at,
+                    r.score,
+                    r.resolved_ip,
+                    r.checks_passed,
+                    r.egress_ip,
+                    asn,
+                    r.http_max_ms,
+                    r.jitter_ms,
+                    r.attempts,
+                    r.samples,
+                )
+            )
+        else:
+            enriched_results.append(r)
+    status = "ok" if failed == 0 else ("partial" if enriched_after > enriched_before else "unavailable")
+    stats = {"enriched": enriched_after - enriched_before, "cached": enriched_before, "failed": failed, "total": total, "status": status}
+    return enriched_results, stats
 
 
 def build_subscription(
@@ -185,6 +248,11 @@ def build_subscription(
         len(parsed_raw),
         len(nodes),
     )
+    # Оценка времени: 12 минут лимит. Посчитаем верхнюю оценку.
+    # Probe: candidates до max_candidates (480) * (tcp 1.5 + udp 1.5) / workers 64 ~ 11 сек.
+    # Verify: shortlist до target*3 (36-40) * attempts 3 * timeout 8 сек / workers 6 ~ 3 мин + speed 0.5 мин.
+    # ASN: до 40 IP * 3 сек /5 workers ~ 24 сек.
+    # Итого <5 мин с запасом.
     candidates = sample_candidates(nodes, history, limit=config.max_candidates, now=now)
     probes = probe_all(
         candidates,
@@ -225,6 +293,7 @@ def build_subscription(
         LOGGER.warning(
             "Глубокая проверка отключена: результат нельзя считать проверенным через VPN-туннель"
         )
+        asn_stats = {"status": "skipped", "total": 0}
     else:
         assert xray_bin is not None
         checked, failed, skipped = verify_all(
@@ -234,6 +303,7 @@ def build_subscription(
             timeout=config.verify_timeout_seconds,
             speed_test_bytes=config.speed_test_bytes,
             workers=config.verify_workers,
+            attempts=config.verify_measurements,
         )
         unconfirmed = [result for result in checked if result.checks_passed < 2]
         if unconfirmed:
@@ -241,11 +311,34 @@ def build_subscription(
             failed.extend(result.node for result in unconfirmed)
             checked = [result for result in checked if result.checks_passed >= 2]
         check_mode = "xray"
+        # ASN обогащение после проверки, до фильтрации качества
+        checked, asn_stats = _enrich_asn(checked)
+        LOGGER.info(
+            "ASN обогащение: %s (всего IP: %d, обогащено: %d, неудач: %d)",
+            asn_stats.get("status"),
+            asn_stats.get("total", 0),
+            asn_stats.get("enriched", 0),
+            asn_stats.get("failed", 0),
+        )
     if check_mode == "xray":
         for result in checked:
             record_success(history, result)
         for node in [*tcp_failed, *failed]:
             record_failure(history, node, checked_at)
+        # Пропущенные из-за отсутствия ядра или бюджета — не считаются отказом
+        for node in skipped:
+            record_skip(history, node, checked_at)
+        # Также узлы, которые были в capped/nodes но не попали в candidates/probes_for_check
+        # из-за бюджета, не должны считаться проваленными — они просто не проверялись.
+        # Но tcp_failed уже включает только кандидатов, не все. Узлы вне candidates — скип.
+        not_checked_ids = {n.node_id for n in nodes} - {n.node_id for n in candidates} - {p.node.node_id for p in probes}
+        # Для этих узлов фиксируем skip, чтобы не рос fail streak
+        for nid in not_checked_ids:
+            # найти узел
+            node = next((n for n in nodes if n.node_id == nid), None)
+            if node is not None:
+                record_skip(history, node, checked_at)
+    # Надёжные узлы: отсекаем хронически нестабильные (скользящее окно)
     reliable = [item for item in checked if not is_historically_unreliable(item, history)]
     LOGGER.info(
         "После отсева нестабильных узлов: %d из %d прошли порог надёжности",
@@ -272,12 +365,19 @@ def build_subscription(
             )
     else:
         pool = reliable
+
+    # Диагностика разнообразия до финального отбора
+    before_stats = compute_diversity_stats(pool) if pool else {}
     selected = _select(pool, config, history)
+    excluded_by_filters = len(pool) - len(selected)
+    # Более детальная диагностика: считаем, сколько отсеяно по каждой причине (приблизительно)
+    # Для этого пробуем добавить узлы по одному и смотреть причину отказа — но проще логировать счётчики разнообразия.
     if len(selected) < config.min_publish_count and len(pool) != len(checked):
         LOGGER.warning(
             "Стабильных/надёжных узлов мало (%d), добавляем все подтверждённые ядром узлы",
             len(selected),
         )
+        # Повторный отбор из всех проверенных с теми же лимитами, но без требования стабильности
         selected = _select(checked, config, history)
     if len(selected) < config.min_publish_count:
         raise BuildError(
@@ -285,6 +385,21 @@ def build_subscription(
             "последняя подписка сохранена без изменений"
         )
     prune_history(history, now)
+    # Дополнительная диагностика для publisher
+    diversity_before = before_stats
+    diversity_after = compute_diversity_stats(selected) if selected else {}
+    # Сохраняем диагностику в историю комментов для stats.json через publisher
+    # Передаём через source_stats extra?
+    # Добавим в history временный ключ для publisher (не сохраняется на диск в stats, но используется)
+    # Вместо этого вернём через глобальную переменную? Проще добавить в history["_diagnostics"]
+    history["_diagnostics"] = {
+        "diversity_before": diversity_before,
+        "diversity_after": diversity_after,
+        "excluded_count": excluded_by_filters,
+        "asn": asn_stats if check_mode == "xray" else {"status": "skipped"},
+        "median_threshold_ms": config.verify_median_threshold_ms,
+        "verify_measurements": config.verify_measurements,
+    }
     payloads = build_payloads(
         selected,
         config=config,
@@ -295,6 +410,8 @@ def build_subscription(
         check_mode=check_mode,
         source_health=health,
     )
+    # Убираем временную диагностику из истории, чтобы не раздувать файл, но оставляем в stats через publisher
+    history.pop("_diagnostics", None)
     if not dry_run:
         atomic_publish(payloads)
         LOGGER.info("Подписка атомарно обновлена: %d узлов", len(selected))
