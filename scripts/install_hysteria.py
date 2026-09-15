@@ -11,6 +11,7 @@ import stat
 import subprocess
 import tempfile
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -76,7 +77,8 @@ def install(version: str, expected_sha256: str, output: Path) -> None:
         raise InstallError("SHA-256 имеет некорректный формат")
     tag = normalize_tag(version)
     asset = asset_name()
-    url = f"https://github.com/apernet/hysteria/releases/download/{tag}/{asset}"
+    tag_segment = urllib.parse.quote(tag, safe="")
+    url = f"https://github.com/apernet/hysteria/releases/download/{tag_segment}/{asset}"
     output = output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="hysteria-install-") as directory:
