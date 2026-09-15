@@ -196,6 +196,7 @@
     .source-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 15px 17px; border-radius: 15px; box-shadow: none; }
     .source-state { width: 9px; height: 9px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 5px rgba(255, 126, 135, .08); }
     .source-state.ok { background: var(--lime); box-shadow: 0 0 0 5px rgba(153, 237, 114, .08); }
+    .source-state.quarantine { background: var(--amber, #f0b35e); box-shadow: 0 0 0 5px rgba(240, 179, 94, .1); }
     .source-name { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
     .source-meta { color: var(--muted); font-size: 11px; }
 
@@ -282,7 +283,7 @@
         </div>
         <div class="privacy">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.9 8.1 7 10 4.1-1.9 7-5.3 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8"/><path d="m9.2 12 1.8 1.8 3.9-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>Без регистрации. В подписку попадают только узлы, прошедшие проверку через отдельный Xray-туннель.</span>
+          <span>Без регистрации. В подписку попадают только узлы, прошедшие двойную HTTPS-проверку через отдельный туннель Xray или Hysteria.</span>
         </div>
         <span class="sr-only" id="copy-feedback" aria-live="polite"></span>
       </aside>
@@ -325,7 +326,7 @@
       <div class="section-head">
         <div>
           <h2 id="connect-title">Подключение за минуту</h2>
-          <p>Подойдут актуальные клиенты с поддержкой VLESS, VMess и Trojan.</p>
+          <p>Подойдут актуальные клиенты с поддержкой VLESS, VMess, Trojan и Hysteria2 (v2rayNG, Hiddify, Streisand, NekoBox).</p>
         </div>
       </div>
       <div class="steps">
@@ -466,11 +467,21 @@
       sources.forEach(source => {
         const row = textElement("div", "source-row", "");
         row.title = source.name || source.id || "Источник";
-        row.append(textElement("span", `source-state${source.available ? " ok" : ""}`, ""));
+        const stateClass = source.available ? " ok" : (source.quarantined ? " quarantine" : "");
+        row.append(textElement("span", `source-state${stateClass}`, ""));
+        const streak = Number(source.fail_streak) || 0;
+        let meta;
+        if (source.available) {
+          meta = `${Number(source.accepted) || 0} принято · ${Number(source.fetch_ms) || 0} мс`;
+        } else if (source.quarantined) {
+          meta = `в карантине: нет конфигураций ${streak} запусков подряд`;
+        } else {
+          meta = streak > 1 ? `временно недоступен · сбоев подряд: ${streak}` : "временно недоступен";
+        }
         const copy = textElement("div", "", "");
         copy.append(
           textElement("div", "source-name", source.name || source.id || "Источник"),
-          textElement("div", "source-meta", source.available ? `${Number(source.accepted) || 0} принято · ${Number(source.fetch_ms) || 0} мс` : "временно недоступен")
+          textElement("div", "source-meta", meta)
         );
         row.append(copy, textElement("span", "source-meta", source.category === "whitelist" ? "Белый список" : "Интернет"));
         fragment.append(row);
@@ -554,8 +565,8 @@
         const requiredRequests = Number(data.verification && data.verification.required_https_requests) || 0;
         document.getElementById("verification-note").textContent = deepCheck
           ? requiredRequests >= 2
-            ? "Каждый опубликованный узел подтвердил доступ двумя HTTPS-запросами через отдельный Xray-туннель."
-            : "Каждый опубликованный узел провёл HTTPS-запрос через отдельный Xray-туннель."
+            ? "Каждый опубликованный узел подтвердил доступ двумя HTTPS-запросами через отдельный туннель Xray или Hysteria."
+            : "Каждый опубликованный узел провёл HTTPS-запрос через отдельный туннель Xray или Hysteria."
           : "Диагностический набор ещё не прошёл глубокую проверку и не считается production-подпиской.";
 
         document.getElementById("count").textContent = String(servers.length);
@@ -564,7 +575,10 @@
         updated.textContent = formatAge(data.updated_at);
         updated.title = `${formatMoscow(data.updated_at)} МСК`;
         document.getElementById("interval").textContent = `${interval} минут`;
-        document.getElementById("server-summary").textContent = `${servers.length} конфигураций · проверка ${formatMoscow(data.updated_at)} МСК`;
+        const protocols = data.protocols && typeof data.protocols === "object"
+          ? " · " + Object.entries(data.protocols).map(([name, count]) => `${name}: ${count}`).join(", ")
+          : "";
+        document.getElementById("server-summary").textContent = `${servers.length} конфигураций${protocols} · проверка ${formatMoscow(data.updated_at)} МСК`;
 
         renderServers(deepCheck);
         renderSources(sources);

@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-import ipaddress
 import json
 import logging
 import os
-import re
 import shutil
-import socket
 import subprocess
 import tempfile
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -18,14 +13,18 @@ from typing import Any
 import requests
 
 from .models import CheckResult, Node, ProbeResult
+from .tunnel import (
+    free_port,
+    http_checks,
+    make_session,
+    parse_trace,
+    stop_process,
+    wait_for_inbound,
+)
 
 LOGGER = logging.getLogger(__name__)
-_TRACE_URL = "https://www.cloudflare.com/cdn-cgi/trace"
-_SPEED_URL = "https://speed.cloudflare.com/__down?bytes={bytes_count}"
-_CONFIRMATION_TARGETS = (
-    ("https://www.gstatic.com/generate_204", frozenset({204}), None),
-    ("https://detectportal.firefox.com/success.txt", frozenset({200}), "success"),
-)
+# Обратная совместимость: тесты и внешний код импортируют _parse_trace отсюда.
+_parse_trace = parse_trace
 
 
 class XrayError(RuntimeError):
@@ -187,82 +186,10 @@ def build_xray_config(node: Node, local_port: int) -> dict[str, Any]:
     }
 
 
-def _free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return int(sock.getsockname()[1])
-
-
-def _wait_for_inbound(process: subprocess.Popen[bytes], port: int, timeout: float = 2.5) -> bool:
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        if process.poll() is not None:
-            return False
-        try:
-            with socket.create_connection(("127.0.0.1", port), timeout=0.1):
-                return True
-        except OSError:
-            time.sleep(0.05)
-    return False
-
-
-def _stop(process: subprocess.Popen[bytes]) -> None:
-    if process.poll() is not None:
-        return
-    process.terminate()
-    try:
-        process.wait(timeout=1)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait(timeout=1)
-
-
-def _parse_trace(body: str) -> tuple[str, str] | None:
-    fields: dict[str, str] = {}
-    for line in body.splitlines():
-        key, separator, value = line.partition("=")
-        if separator and key and key not in fields:
-            fields[key] = value.strip()
-    try:
-        exit_ip = ipaddress.ip_address(fields.get("ip", ""))
-    except ValueError:
-        return None
-    country = fields.get("loc", "").upper()
-    if not exit_ip.is_global or not re.fullmatch(r"[A-Z]{2}", country):
-        return None
-    return exit_ip.compressed, country
-
-
-def _confirm_open_internet(
-    session: requests.Session, proxies: dict[str, str], timeout: float
-) -> bool:
-    """Подтверждает доступ вторым HTTPS-запросом, независимым от Cloudflare trace."""
-    request_timeout = (3.0, min(timeout, 6.0))
-    for url, expected_statuses, expected_body in _CONFIRMATION_TARGETS:
-        try:
-            with session.get(
-                url,
-                proxies=proxies,
-                timeout=request_timeout,
-                allow_redirects=False,
-                stream=True,
-            ) as response:
-                if response.status_code not in expected_statuses:
-                    continue
-                if expected_body is None:
-                    return True
-                body = next(response.iter_content(chunk_size=64), b"")
-                if body.decode("utf-8", errors="replace").strip() == expected_body:
-                    return True
-        except requests.RequestException:
-            continue
-    return False
-
-
 def verify_node(
     probe: ProbeResult, *, xray_bin: str, timeout: float, speed_test_bytes: int
 ) -> CheckResult | None:
-    local_port = _free_port()
+    local_port = free_port()
     process: subprocess.Popen[bytes] | None = None
     try:
         config = build_xray_config(probe.node, local_port)
@@ -276,43 +203,24 @@ def verify_node(
                 stderr=subprocess.DEVNULL,
                 start_new_session=True,
             )
-            if not _wait_for_inbound(process, local_port):
+            if not wait_for_inbound(process, local_port):
                 return None
             proxies = {
                 "http": f"socks5h://127.0.0.1:{local_port}",
                 "https": f"socks5h://127.0.0.1:{local_port}",
             }
-            with requests.Session() as session:
-                session.trust_env = False
-                session.headers["User-Agent"] = "FL1P-VPN-Healthcheck/2.1"
-                started = time.perf_counter()
-                response = session.get(_TRACE_URL, proxies=proxies, timeout=(3.0, timeout))
-                response.raise_for_status()
-                body = response.text[:16_384]
-                http_ms = max(1, round((time.perf_counter() - started) * 1000))
-                trace = _parse_trace(body)
-                if trace is None or not _confirm_open_internet(session, proxies, timeout):
+            with make_session("FL1P-VPN-Healthcheck/2.3") as session:
+                outcome = http_checks(
+                    session,
+                    proxies,
+                    timeout=timeout,
+                    speed_test_bytes=speed_test_bytes,
+                    logger=LOGGER,
+                    node_id=probe.node.node_id,
+                )
+                if outcome is None:
                     return None
-                _exit_ip, country = trace
-                speed_mbps = 0.0
-                if speed_test_bytes > 0:
-                    try:
-                        speed_started = time.perf_counter()
-                        downloaded = 0
-                        with session.get(
-                            _SPEED_URL.format(bytes_count=speed_test_bytes),
-                            proxies=proxies,
-                            timeout=(3.0, timeout),
-                            stream=True,
-                        ) as speed_response:
-                            speed_response.raise_for_status()
-                            for chunk in speed_response.iter_content(chunk_size=64 * 1024):
-                                downloaded += len(chunk)
-                        elapsed = time.perf_counter() - speed_started
-                        if downloaded and elapsed > 0:
-                            speed_mbps = round(downloaded * 8 / 1_000_000 / elapsed, 2)
-                    except requests.RequestException:
-                        LOGGER.debug("Замер скорости недоступен для узла %s", probe.node.node_id)
+                http_ms, country, speed_mbps = outcome
                 checked_at = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
                 return CheckResult(
                     probe.node,
@@ -327,39 +235,4 @@ def verify_node(
     except (OSError, requests.RequestException, subprocess.SubprocessError, ValueError, XrayError):
         return None
     finally:
-        if process is not None:
-            _stop(process)
-
-
-def verify_all(
-    probes: list[ProbeResult], *, xray_bin: str, timeout: float, speed_test_bytes: int, workers: int
-) -> tuple[list[CheckResult], list[Node]]:
-    verified: list[CheckResult] = []
-    failed: list[Node] = []
-    with ThreadPoolExecutor(
-        max_workers=min(workers, max(1, len(probes))), thread_name_prefix="xray"
-    ) as executor:
-        futures = {
-            executor.submit(
-                verify_node,
-                probe,
-                xray_bin=xray_bin,
-                timeout=timeout,
-                speed_test_bytes=speed_test_bytes,
-            ): probe.node
-            for probe in probes
-        }
-        for future in as_completed(futures):
-            node = futures[future]
-            try:
-                result = future.result()
-            except Exception:  # pragma: no cover - страховка от сбоя отдельного worker
-                LOGGER.exception("Непредвиденная ошибка проверки узла %s", node.node_id)
-                result = None
-            if result is None:
-                failed.append(node)
-            else:
-                verified.append(result)
-    verified.sort(key=lambda item: (item.http_ms, item.node.node_id))
-    LOGGER.info("Проверка через Xray: работают %d из %d узлов", len(verified), len(probes))
-    return verified, failed
+        stop_process(process)

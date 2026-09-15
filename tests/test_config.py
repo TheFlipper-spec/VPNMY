@@ -62,13 +62,29 @@ def test_escape_rejected(tmp_path):
         load_config(write(tmp_path, d))
 
 
+def test_new_smart_defaults(tmp_path):
+    c = load_config(write(tmp_path, data()))
+    assert c.max_nodes_per_source == 160
+    assert c.source_fail_threshold == 6
+    assert c.stable_streak_required == 2
+    assert c.max_per_subnet == 2
+    assert c.hysteria_bin
+    assert c.paths.source_health is not None
+    assert c.udp_timeout_seconds == 1.5
+
+
 def test_project_config_contains_requested_sources():
     root = Path(__file__).resolve().parents[1]
     config = load_config(root / "config/subscription.json")
     sources = {source.source_id: source.url for source in config.sources}
     assert sources["vlessforu"] == "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
     assert sources["vedalink"] == "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr"
+    assert "ru-whitelist-checked" not in sources  # пустой мёртвый файл удалён
+    assert sources["fastnodes-verified"].endswith("state/verified_last.txt")
+    assert sources["fastnodes-hysteria2"].endswith("hysteria2.txt")
+    assert sources["radikal-hysteria2"].endswith("protocols/hysteria2.txt")
     assert config.profile_title == "FL1P VPN"
+    assert config.max_nodes_per_source > 0 and config.stable_streak_required >= 1
 
 
 def test_duplicate_source_url_rejected(tmp_path):
