@@ -7,12 +7,12 @@
     },
     "003f6fbf9e0dc1d0": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "0040033ebd70f7f5": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "004f36713119cc5e": {
@@ -42,7 +42,12 @@
     },
     "00c762c7d9c4feb1": {
       "category": "universal",
-      "last_seen": "2026-09-17T20:25:34Z",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "00cdb9ecb5c28a76": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "00dbe0e75fd4a821": {
@@ -144,16 +149,6 @@
       "last_seen": "2026-09-17T22:58:52Z",
       "recent": []
     },
-    "01a922c9149d1ce3": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "01e1aef2706f6b8b": {
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
@@ -161,7 +156,7 @@
     },
     "01e5b4c8abe5d4b5": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "01f666bb39f96f4d": {
@@ -348,7 +343,7 @@
     },
     "03b2f2cfc90efb3a": {
       "category": "universal",
-      "last_seen": "2026-09-18T11:04:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "03cf8623db18b329": {
@@ -371,14 +366,9 @@
       "last_seen": "2026-09-17T17:21:20Z",
       "recent": []
     },
-    "043ac63a5cac93c7": {
+    "043842a2b5e27611": {
       "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
-    "04407c465aa60b44": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "0453dec881bd5cf7": {
@@ -399,6 +389,11 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
+    "04df82d8502d0bd0": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "04ef3ee4c7aa1b36": {
       "asn": "",
       "category": "universal",
@@ -406,23 +401,25 @@
       "country": "US",
       "egress_ip": "163.192.14.135",
       "failures": 0,
-      "http_max_ms": 53,
-      "http_ms": 40,
-      "jitter_ms": 16,
-      "last_seen": "2026-09-18T11:05:52Z",
-      "last_success": "2026-09-18T11:05:52Z",
+      "http_max_ms": 360,
+      "http_ms": 222,
+      "jitter_ms": 141,
+      "last_seen": "2026-09-19T09:40:46Z",
+      "last_success": "2026-09-19T09:40:46Z",
       "latency_medians": [
-        40
+        40,
+        222
       ],
-      "median_ms": 40,
+      "median_ms": 222,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "163.192.14.135",
-      "speed_mbps": 13.9,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 1
+      "speed_mbps": 4.43,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 64
     },
     "04f09501eebf7af4": {
       "category": "universal",
@@ -495,23 +492,25 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "FR",
-      "egress_ip": "51.159.162.83",
+      "egress_ip": "51.159.178.70",
       "failures": 0,
-      "http_max_ms": 682,
-      "http_ms": 661,
-      "jitter_ms": 31,
-      "last_seen": "2026-09-19T05:26:00Z",
-      "last_success": "2026-09-19T05:26:00Z",
+      "http_max_ms": 2493,
+      "http_ms": 425,
+      "jitter_ms": 2084,
+      "last_seen": "2026-09-19T09:40:21Z",
+      "last_success": "2026-09-19T09:40:21Z",
       "latency_medians": [
         617,
         394,
         722,
         8000,
         377,
-        661
+        661,
+        425
       ],
-      "median_ms": 661,
+      "median_ms": 425,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -520,9 +519,9 @@
         1
       ],
       "resolved_ip": "185.18.250.252",
-      "speed_mbps": 1.54,
-      "streak": 6,
-      "successes": 6,
+      "speed_mbps": 2.46,
+      "streak": 7,
+      "successes": 7,
       "tcp_ms": 2
     },
     "058dc1684cfbb427": {
@@ -574,37 +573,6 @@
       "category": "universal",
       "last_seen": "2026-09-17T12:47:59Z",
       "recent": []
-    },
-    "068489be096ec13f": {
-      "asn": "",
-      "category": "universal",
-      "checks_passed": 2,
-      "country": "FI",
-      "egress_ip": "87.239.249.137",
-      "failures": 0,
-      "http_max_ms": 1593,
-      "http_ms": 1587,
-      "jitter_ms": 46,
-      "last_seen": "2026-09-16T21:29:25Z",
-      "last_success": "2026-09-16T21:29:25Z",
-      "latency_medians": [
-        1791,
-        1587
-      ],
-      "median_ms": 1587,
-      "recent": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
-      ],
-      "resolved_ip": "87.239.249.137",
-      "speed_mbps": 0.94,
-      "streak": 6,
-      "successes": 6,
-      "tcp_ms": 115
     },
     "06a01e1bbe2e0a6f": {
       "category": "universal",
@@ -671,14 +639,14 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
+    "07a9254e548a1982": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "07b37ba07f4a8f99": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
-      "recent": []
-    },
-    "07eacc457131583c": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "0807617967c5f68c": {
@@ -780,6 +748,11 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
+    "08bdc5f226041d64": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "09105814824a0245": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
@@ -817,7 +790,7 @@
     },
     "09414808cce5e7c1": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "09541fa8f39138e6": {
@@ -872,11 +845,6 @@
     "098013c6c6810f2f": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
-      "recent": []
-    },
-    "09ee0cfeca37d49d": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "0a1e4e48c0e063db": {
@@ -974,33 +942,6 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
-    "0b589e399b702935": {
-      "asn": "",
-      "category": "whitelist",
-      "checks_passed": 2,
-      "country": "RU",
-      "egress_ip": "185.16.213.71",
-      "failures": 0,
-      "http_max_ms": 720,
-      "http_ms": 471,
-      "jitter_ms": 251,
-      "last_seen": "2026-09-16T21:29:50Z",
-      "last_success": "2026-09-16T21:29:50Z",
-      "latency_medians": [
-        738,
-        471
-      ],
-      "median_ms": 471,
-      "recent": [
-        1,
-        1
-      ],
-      "resolved_ip": "91.240.86.70",
-      "speed_mbps": 1.73,
-      "streak": 2,
-      "successes": 2,
-      "tcp_ms": 123
-    },
     "0b70c66449c1c63c": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
@@ -1071,11 +1012,6 @@
       "last_seen": "2026-09-18T05:57:36Z",
       "recent": []
     },
-    "0c2fcaed477256de": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "0c33d967f0723406": {
       "category": "universal",
       "failures": 1,
@@ -1136,9 +1072,9 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
-    "0d9f27453de8ce8a": {
+    "0d8d0d8468ced1ee": {
       "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "0da331c4c3ee3972": {
@@ -1188,13 +1124,12 @@
       "country": "US",
       "egress_ip": "155.248.209.237",
       "failures": 0,
-      "http_max_ms": 158,
-      "http_ms": 41,
-      "jitter_ms": 127,
-      "last_seen": "2026-09-19T05:26:16Z",
-      "last_success": "2026-09-19T05:26:16Z",
+      "http_max_ms": 364,
+      "http_ms": 231,
+      "jitter_ms": 135,
+      "last_seen": "2026-09-19T09:40:39Z",
+      "last_success": "2026-09-19T09:40:39Z",
       "latency_medians": [
-        246,
         251,
         101,
         211,
@@ -1213,9 +1148,10 @@
         189,
         135,
         230,
-        41
+        41,
+        231
       ],
-      "median_ms": 41,
+      "median_ms": 231,
       "recent": [
         1,
         1,
@@ -1229,10 +1165,10 @@
         1
       ],
       "resolved_ip": "155.248.209.237",
-      "speed_mbps": 27.38,
-      "streak": 23,
-      "successes": 23,
-      "tcp_ms": 2
+      "speed_mbps": 3.34,
+      "streak": 24,
+      "successes": 24,
+      "tcp_ms": 69
     },
     "0e229b02d5963cbe": {
       "category": "universal",
@@ -1263,11 +1199,6 @@
       ],
       "streak": 0,
       "successes": 0
-    },
-    "0e7d954155857c8e": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
     },
     "0e8bc570a9906d97": {
       "category": "universal",
@@ -1307,6 +1238,11 @@
     "0ed7c89711cf4583": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
+      "recent": []
+    },
+    "0ee4f80c2a63c3a8": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "0eeaddaae35b2e42": {
@@ -1445,9 +1381,9 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "NL",
-      "failures": 15,
+      "failures": 16,
       "http_ms": 389,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "last_success": "2026-09-14T18:59:43Z",
       "recent": [
         0,
@@ -1474,11 +1410,11 @@
       "country": "US",
       "egress_ip": "142.249.37.90",
       "failures": 0,
-      "http_max_ms": 124,
-      "http_ms": 70,
-      "jitter_ms": 54,
-      "last_seen": "2026-09-19T05:26:17Z",
-      "last_success": "2026-09-19T05:26:17Z",
+      "http_max_ms": 361,
+      "http_ms": 197,
+      "jitter_ms": 165,
+      "last_seen": "2026-09-19T09:40:40Z",
+      "last_success": "2026-09-19T09:40:40Z",
       "latency_medians": [
         62,
         218,
@@ -1497,9 +1433,10 @@
         172,
         160,
         207,
-        70
+        70,
+        197
       ],
-      "median_ms": 70,
+      "median_ms": 197,
       "recent": [
         1,
         1,
@@ -1513,10 +1450,10 @@
         1
       ],
       "resolved_ip": "142.249.37.90",
-      "speed_mbps": 16.17,
-      "streak": 18,
-      "successes": 18,
-      "tcp_ms": 11
+      "speed_mbps": 2.55,
+      "streak": 19,
+      "successes": 19,
+      "tcp_ms": 55
     },
     "110c27c082d7eece": {
       "category": "universal",
@@ -1534,6 +1471,11 @@
     "112d9415fe77bbbc": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
+      "recent": []
+    },
+    "11338f771bddd48a": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "11376d0fcb343a4a": {
@@ -1710,15 +1652,21 @@
     },
     "11ece68dec946ce9": {
       "category": "universal",
-      "failures": 3,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "failures": 4,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0,
         0,
         0
       ],
       "streak": 0,
       "successes": 0
+    },
+    "12032a787f547ba1": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "120ad8ed393737ac": {
       "category": "universal",
@@ -1733,11 +1681,6 @@
     "122051f8f461b1d4": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
-      "recent": []
-    },
-    "122c6416f37c1f64": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "125b1c64d5ce1f35": {
@@ -1779,11 +1722,11 @@
       "country": "LV",
       "egress_ip": "31.76.104.200",
       "failures": 1,
-      "http_max_ms": 933,
-      "http_ms": 562,
-      "jitter_ms": 372,
-      "last_seen": "2026-09-19T05:26:22Z",
-      "last_success": "2026-09-19T05:26:22Z",
+      "http_max_ms": 637,
+      "http_ms": 387,
+      "jitter_ms": 253,
+      "last_seen": "2026-09-19T09:40:42Z",
+      "last_success": "2026-09-19T09:40:42Z",
       "latency_medians": [
         420,
         547,
@@ -1801,9 +1744,10 @@
         431,
         438,
         366,
-        562
+        562,
+        387
       ],
-      "median_ms": 562,
+      "median_ms": 387,
       "recent": [
         1,
         1,
@@ -1817,33 +1761,45 @@
         1
       ],
       "resolved_ip": "104.165.205.42",
-      "speed_mbps": 1.82,
-      "streak": 11,
-      "successes": 18,
-      "tcp_ms": 177
+      "speed_mbps": 2.53,
+      "streak": 12,
+      "successes": 19,
+      "tcp_ms": 115
+    },
+    "12a5bdeaea7d7fb6": {
+      "asn": "",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "US",
+      "egress_ip": "104.28.167.1",
+      "failures": 0,
+      "http_max_ms": 449,
+      "http_ms": 428,
+      "jitter_ms": 41,
+      "last_seen": "2026-09-19T09:40:25Z",
+      "last_success": "2026-09-19T09:40:25Z",
+      "latency_medians": [
+        428
+      ],
+      "median_ms": 428,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "91.193.59.32",
+      "speed_mbps": 0.0,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 2
+    },
+    "12bcfc7cabb49bcb": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "12c3c3fb6aca1cbe": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
       "recent": []
-    },
-    "12db6e956c5f3bd7": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [],
-      "streak": 0,
-      "successes": 0
-    },
-    "131c7a362c4fc535": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "134915741a1622f0": {
       "category": "universal",
@@ -1858,7 +1814,7 @@
     },
     "134e51c269467fd9": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "1356e8efd2e4e621": {
@@ -1876,19 +1832,14 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
-    "1378c187fc943999": {
+    "1374a2fa09c5ac82": {
       "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "137e622e8aaaaf73": {
       "category": "universal",
       "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
-    "13830db5a41ce7cf": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "1393012010132f56": {
@@ -1989,6 +1940,11 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
+    "14b959040fa04c2b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "14c2c81c0eca7900": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -2014,6 +1970,11 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
+    "14e76f6f510c1546": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "14f5ccc83390d901": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -2029,6 +1990,11 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
+    "153679d058fc0808": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "153ca724ee0865a3": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
@@ -2036,7 +2002,7 @@
     },
     "15859c8fb24c725c": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "15af575394161841": {
@@ -2061,13 +2027,12 @@
       "country": "US",
       "egress_ip": "2604:a880:400:d1:0:4:8807:7001",
       "failures": 0,
-      "http_max_ms": 398,
-      "http_ms": 245,
-      "jitter_ms": 154,
-      "last_seen": "2026-09-19T05:26:17Z",
-      "last_success": "2026-09-19T05:26:17Z",
+      "http_max_ms": 85,
+      "http_ms": 55,
+      "jitter_ms": 32,
+      "last_seen": "2026-09-19T09:40:37Z",
+      "last_success": "2026-09-19T09:40:37Z",
       "latency_medians": [
-        71,
         96,
         223,
         76,
@@ -2086,9 +2051,10 @@
         343,
         197,
         82,
-        245
+        245,
+        55
       ],
-      "median_ms": 245,
+      "median_ms": 55,
       "recent": [
         1,
         1,
@@ -2102,10 +2068,10 @@
         1
       ],
       "resolved_ip": "159.223.157.129",
-      "speed_mbps": 3.43,
-      "streak": 24,
-      "successes": 24,
-      "tcp_ms": 72
+      "speed_mbps": 16.39,
+      "streak": 25,
+      "successes": 25,
+      "tcp_ms": 9
     },
     "1600f6a57990fa9c": {
       "category": "universal",
@@ -2184,7 +2150,7 @@
     },
     "16fb32882b54809f": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "1703b841fe660b3f": {
@@ -2309,28 +2275,30 @@
     },
     "1888411cbc1b6913": {
       "asn": "",
-      "category": "whitelist",
+      "category": "universal",
       "checks_passed": 2,
       "country": "NL",
       "egress_ip": "13.143.141.79",
       "failures": 0,
       "http_max_ms": 8000,
-      "http_ms": 1146,
-      "jitter_ms": 7080,
-      "last_seen": "2026-09-19T00:55:02Z",
-      "last_success": "2026-09-19T00:55:02Z",
+      "http_ms": 2868,
+      "jitter_ms": 5652,
+      "last_seen": "2026-09-19T09:40:39Z",
+      "last_success": "2026-09-19T09:40:39Z",
       "latency_medians": [
-        1146
+        1146,
+        2868
       ],
-      "median_ms": 1146,
+      "median_ms": 2868,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "37.18.15.103",
-      "speed_mbps": 1.27,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 120
+      "speed_mbps": 1.0,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 133
     },
     "18e6e48cd904feb0": {
       "category": "universal",
@@ -2602,12 +2570,7 @@
     },
     "1cae487814ee7044": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
-      "recent": []
-    },
-    "1cbe0e59f25ef254": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "1cc473c23cef1fc8": {
@@ -2658,9 +2621,10 @@
     },
     "1de3c2aacaa45e28": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "failures": 2,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -2723,7 +2687,7 @@
     },
     "1e89bda1f124ab24": {
       "category": "universal",
-      "last_seen": "2026-09-17T07:43:58Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "1e9b15b45f996ec2": {
@@ -2744,24 +2708,9 @@
       "streak": 0,
       "successes": 0
     },
-    "1eae9981a7bfe112": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
-    "1ec53dfe11c8ca15": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "1ecc66a6fca7c85a": {
       "category": "universal",
       "last_seen": "2026-09-17T22:58:52Z",
-      "recent": []
-    },
-    "1ed6a47d5bc619ae": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "1f0dcc42b2644b05": {
@@ -2835,6 +2784,11 @@
     "1ff4f1ef9f01ef2d": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
+      "recent": []
+    },
+    "201aba06cabc7356": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2042d4ad08b655c9": {
@@ -2948,11 +2902,11 @@
       "checks_passed": 2,
       "country": "FI",
       "egress_ip": "144.31.183.177",
-      "failures": 2,
+      "failures": 3,
       "http_max_ms": 832,
       "http_ms": 823,
       "jitter_ms": 74,
-      "last_seen": "2026-09-19T05:26:03Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "last_success": "2026-09-19T05:26:03Z",
       "latency_medians": [
         687,
@@ -2975,14 +2929,14 @@
         1,
         1,
         1,
-        1,
         0,
         1,
-        1
+        1,
+        0
       ],
       "resolved_ip": "144.31.183.177",
       "speed_mbps": 1.22,
-      "streak": 2,
+      "streak": 0,
       "successes": 30,
       "tcp_ms": 185
     },
@@ -2991,15 +2945,14 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "DE",
-      "egress_ip": "64.188.98.158",
+      "egress_ip": "64.188.98.171",
       "failures": 0,
-      "http_max_ms": 843,
-      "http_ms": 523,
-      "jitter_ms": 323,
-      "last_seen": "2026-09-19T05:26:16Z",
-      "last_success": "2026-09-19T05:26:16Z",
+      "http_max_ms": 571,
+      "http_ms": 354,
+      "jitter_ms": 219,
+      "last_seen": "2026-09-19T09:40:37Z",
+      "last_success": "2026-09-19T09:40:37Z",
       "latency_medians": [
-        334,
         412,
         589,
         346,
@@ -3018,9 +2971,10 @@
         392,
         393,
         333,
-        523
+        523,
+        354
       ],
-      "median_ms": 523,
+      "median_ms": 354,
       "recent": [
         1,
         1,
@@ -3034,10 +2988,10 @@
         1
       ],
       "resolved_ip": "91.196.32.163",
-      "speed_mbps": 1.87,
-      "streak": 28,
-      "successes": 28,
-      "tcp_ms": 161
+      "speed_mbps": 2.98,
+      "streak": 29,
+      "successes": 29,
+      "tcp_ms": 99
     },
     "2126bc45aabe12e7": {
       "category": "universal",
@@ -3105,9 +3059,19 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
+    "21e9ae44f38f12ac": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "21ebbf93d5d7563d": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "21ebe74509cb0ea0": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "21f18d11bacf1fc3": {
@@ -3120,9 +3084,19 @@
       "streak": 0,
       "successes": 0
     },
+    "220b8479e2ff86a8": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "222191b2227c4649": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
+      "recent": []
+    },
+    "22221f38d63eaaa5": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "22366fb527352cfe": {
@@ -3176,6 +3150,11 @@
     "22c37fa71412e47d": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
+      "recent": []
+    },
+    "22cb5195864b7273": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "22d9175d7ae7b35b": {
@@ -3235,7 +3214,7 @@
     },
     "2371b6bb16b86397": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "237ce7b819a03ae9": {
@@ -3250,7 +3229,7 @@
     },
     "237d743c307e16fd": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "237e8de0558f09af": {
@@ -3300,7 +3279,7 @@
     },
     "24477fed0cb93416": {
       "category": "universal",
-      "last_seen": "2026-09-18T05:57:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2499a083f42e6269": {
@@ -3411,6 +3390,11 @@
       "last_seen": "2026-09-17T22:58:52Z",
       "recent": []
     },
+    "251c8c844608da40": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "2544ce98d9f38bd0": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
@@ -3506,6 +3490,11 @@
       "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
+    "26e547764a5860ca": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "26f3b8162297d872": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -3527,11 +3516,6 @@
       "last_seen": "2026-09-17T17:21:20Z",
       "recent": []
     },
-    "271f28d2c123a5db": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "272c504e691d6c3e": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
@@ -3540,6 +3524,11 @@
     "274d481cf513c304": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
+      "recent": []
+    },
+    "27523069eb41713b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2775476bfd8f8b12": {
@@ -3566,6 +3555,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "27b77fa2c2e19d2e": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "27c61ebe52466452": {
       "asn": "",
@@ -3665,7 +3659,7 @@
     },
     "2877a5b6a1b74927": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "287b7b50f4095ce8": {
@@ -3701,6 +3695,11 @@
     "291628086f8f9b5c": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
+      "recent": []
+    },
+    "2920cec6bf7b814d": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "294177d4d13d4868": {
@@ -3779,11 +3778,6 @@
       "successes": 1,
       "tcp_ms": 168
     },
-    "2a21e927ed976819": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "2a2cd86acf6c0623": {
       "category": "universal",
       "last_seen": "2026-09-16T23:47:36Z",
@@ -3797,6 +3791,11 @@
     "2a3d9202d79581e6": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
+      "recent": []
+    },
+    "2a63727aaeebbb92": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2a6c23c850f29faf": {
@@ -3831,7 +3830,12 @@
     },
     "2af93a831722c50c": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "2afa1529db4078f5": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2b2e9e3582d8bd45": {
@@ -3895,6 +3899,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "2be4a6604c95db08": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "2bf11f54315120ba": {
       "category": "universal",
@@ -4009,7 +4018,7 @@
     },
     "2ce3ad5c9dad1fdf": {
       "category": "universal",
-      "last_seen": "2026-09-18T14:56:29Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2ced18343ea2bc81": {
@@ -4049,7 +4058,7 @@
     },
     "2d2cf2eccdeba4db": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2d34da5005e3e00e": {
@@ -4148,14 +4157,14 @@
       "last_seen": "2026-09-18T22:54:31Z",
       "recent": []
     },
-    "2e389948ade83c26": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "2e61845280b32113": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
+      "recent": []
+    },
+    "2e6764998eb6b3bf": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2ea012561396cca6": {
@@ -4281,12 +4290,17 @@
     },
     "2fa110ccecd7f375": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2fa81a16354721cc": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
+      "recent": []
+    },
+    "2fbd229d4c650b7b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "2fc07c53b8dcfb3a": {
@@ -4372,7 +4386,12 @@
     },
     "30900fab0cc4998d": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "30b401612544a9f0": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "30bb6a037537d30d": {
@@ -4410,11 +4429,6 @@
       "last_seen": "2026-09-18T18:05:45Z",
       "recent": []
     },
-    "31842f218336bd2c": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "31c3ee0e327765ad": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
@@ -4438,7 +4452,7 @@
     "320290a2213ba6c1": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
         0,
         0,
@@ -4466,6 +4480,11 @@
     "32135472d659c36e": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
+      "recent": []
+    },
+    "321368816edafbe9": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "323565e8b61fb2fa": {
@@ -4496,6 +4515,11 @@
     "329065320bb0be26": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
+      "recent": []
+    },
+    "329554936478823b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "32a909ccd47fc494": {
@@ -4545,17 +4569,12 @@
     },
     "33166e49c8c1e1e5": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "3328194a40689bc0": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
-      "recent": []
-    },
-    "33451e35938b1122": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "335290c8248057c4": {
@@ -4588,11 +4607,11 @@
       "country": "RU",
       "egress_ip": "2a06:dd00:20::51",
       "failures": 1,
-      "http_max_ms": 8000,
-      "http_ms": 1296,
-      "jitter_ms": 7288,
-      "last_seen": "2026-09-19T05:26:30Z",
-      "last_success": "2026-09-19T05:26:30Z",
+      "http_max_ms": 1020,
+      "http_ms": 554,
+      "jitter_ms": 485,
+      "last_seen": "2026-09-19T09:40:44Z",
+      "last_success": "2026-09-19T09:40:44Z",
       "latency_medians": [
         1161,
         1026,
@@ -4608,11 +4627,11 @@
         8000,
         584,
         8000,
-        1296
+        1296,
+        554
       ],
-      "median_ms": 1296,
+      "median_ms": 554,
       "recent": [
-        1,
         1,
         1,
         1,
@@ -4621,13 +4640,14 @@
         1,
         1,
         1,
+        1,
         1
       ],
       "resolved_ip": "94.198.54.132",
-      "speed_mbps": 1.37,
-      "streak": 4,
-      "successes": 15,
-      "tcp_ms": 192
+      "speed_mbps": 2.09,
+      "streak": 5,
+      "successes": 16,
+      "tcp_ms": 127
     },
     "33d10dc2614fd3c6": {
       "category": "universal",
@@ -4783,14 +4803,6 @@
       "last_seen": "2026-09-18T22:54:31Z",
       "recent": []
     },
-    "363d5ef43cc4cbe6": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [],
-      "streak": 0,
-      "successes": 0
-    },
     "364dee34887b200f": {
       "category": "universal",
       "last_seen": "2026-09-17T12:47:59Z",
@@ -4804,6 +4816,11 @@
     "367f5d08e7a3def6": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
+      "recent": []
+    },
+    "36909b15d3abd8fe": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "36936d4346d4119f": {
@@ -4941,7 +4958,7 @@
     },
     "3812ecf6335dd1a8": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "382b3a87b54ae22a": {
@@ -4991,12 +5008,7 @@
     },
     "38a63d28c0fdd2b6": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
-      "recent": []
-    },
-    "38a8676f18c2af72": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "38b6092815317d0c": {
@@ -5084,6 +5096,11 @@
       "last_seen": "2026-09-17T22:58:52Z",
       "recent": []
     },
+    "3999173aef4c0ef1": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "399c8a4bda52831f": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -5092,6 +5109,11 @@
     "39a072795e44be5b": {
       "category": "universal",
       "last_seen": "2026-09-16T23:47:36Z",
+      "recent": []
+    },
+    "39fe4502486791ed": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "3a098c6ceed666f8": {
@@ -5106,13 +5128,12 @@
       "country": "FI",
       "egress_ip": "2.26.97.21",
       "failures": 0,
-      "http_max_ms": 1163,
-      "http_ms": 773,
-      "jitter_ms": 620,
-      "last_seen": "2026-09-19T05:26:17Z",
-      "last_success": "2026-09-19T05:26:17Z",
+      "http_max_ms": 747,
+      "http_ms": 520,
+      "jitter_ms": 247,
+      "last_seen": "2026-09-19T09:40:36Z",
+      "last_success": "2026-09-19T09:40:36Z",
       "latency_medians": [
-        650,
         418,
         1536,
         956,
@@ -5131,9 +5152,10 @@
         595,
         435,
         698,
-        773
+        773,
+        520
       ],
-      "median_ms": 773,
+      "median_ms": 520,
       "recent": [
         1,
         1,
@@ -5147,9 +5169,9 @@
         1
       ],
       "resolved_ip": "2.26.97.21",
-      "speed_mbps": 1.01,
-      "streak": 29,
-      "successes": 29,
+      "speed_mbps": 0.93,
+      "streak": 30,
+      "successes": 30,
       "tcp_ms": 3000
     },
     "3a100710aa5ebb49": {
@@ -5172,15 +5194,10 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
-    "3a8b831c66659988": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
+    "3a75f60309ed4559": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "3a967094961ae015": {
       "category": "universal",
@@ -5211,6 +5228,11 @@
       "streak": 1,
       "successes": 1,
       "tcp_ms": 145
+    },
+    "3aecad934631599d": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "3afa7145ea9569df": {
       "category": "universal",
@@ -5387,7 +5409,7 @@
     },
     "3c980371a12f8a6b": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "3cc09159562b1b0a": {
@@ -5405,6 +5427,11 @@
       "last_seen": "2026-09-17T20:25:34Z",
       "recent": []
     },
+    "3cdea26af0b94e2b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "3d0746bb420a2f17": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -5412,7 +5439,7 @@
     },
     "3d5a91e9f6d1e2d1": {
       "category": "universal",
-      "last_seen": "2026-09-17T07:43:58Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "3d8488234e39c1ac": {
@@ -5488,6 +5515,11 @@
       "streak": 0,
       "successes": 0
     },
+    "3efc50ce6c607cf3": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "3efd789034b08176": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
@@ -5515,7 +5547,7 @@
     },
     "3fbca17fc411fc9e": {
       "category": "universal",
-      "last_seen": "2026-09-18T11:04:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "3fd736b8fe00f21f": {
@@ -5528,6 +5560,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "3fd99e7fa248bba6": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "3fde3f0cf68441d4": {
       "category": "universal",
@@ -5553,16 +5590,6 @@
       "category": "universal",
       "last_seen": "2026-09-18T14:56:29Z",
       "recent": []
-    },
-    "405d9f791d5b3096": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "4068ccaa1089684e": {
       "category": "universal",
@@ -5634,18 +5661,19 @@
       "category": "whitelist",
       "checks_passed": 2,
       "country": "RU",
-      "egress_ip": "2a00:b700::4:17d",
+      "egress_ip": "46.17.42.141",
       "failures": 0,
       "http_max_ms": 8000,
       "http_ms": 8000,
-      "jitter_ms": 2153,
-      "last_seen": "2026-09-19T05:26:48Z",
-      "last_success": "2026-09-19T05:26:48Z",
+      "jitter_ms": 2576,
+      "last_seen": "2026-09-19T09:41:17Z",
+      "last_success": "2026-09-19T09:41:17Z",
       "latency_medians": [
         2375,
         2793,
         4168,
         2689,
+        8000,
         8000
       ],
       "median_ms": 8000,
@@ -5654,17 +5682,23 @@
         1,
         1,
         1,
+        1,
         1
       ],
       "resolved_ip": "46.17.42.141",
-      "speed_mbps": 0.2,
-      "streak": 5,
-      "successes": 5,
-      "tcp_ms": 614
+      "speed_mbps": 0.27,
+      "streak": 6,
+      "successes": 6,
+      "tcp_ms": 498
     },
     "40dc2aefc8f3bf3e": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
+      "recent": []
+    },
+    "4140e7b6aeb9b602": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "415090d26c15fdfc": {
@@ -5682,9 +5716,9 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
-    "41911df9afaf0264": {
+    "41962a8b9a78d6fa": {
       "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "41b2939099f5f636": {
@@ -5782,6 +5816,11 @@
       "last_seen": "2026-09-18T05:57:36Z",
       "recent": []
     },
+    "42ab93c8d3bd8676": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "42af9a78332e6be6": {
       "category": "universal",
       "failures": 4,
@@ -5865,13 +5904,12 @@
       "country": "US",
       "egress_ip": "142.249.37.90",
       "failures": 0,
-      "http_max_ms": 112,
-      "http_ms": 70,
-      "jitter_ms": 51,
-      "last_seen": "2026-09-19T05:26:17Z",
-      "last_success": "2026-09-19T05:26:17Z",
+      "http_max_ms": 348,
+      "http_ms": 201,
+      "jitter_ms": 152,
+      "last_seen": "2026-09-19T09:40:39Z",
+      "last_success": "2026-09-19T09:40:39Z",
       "latency_medians": [
-        202,
         200,
         73,
         202,
@@ -5890,9 +5928,10 @@
         172,
         153,
         201,
-        70
+        70,
+        201
       ],
-      "median_ms": 70,
+      "median_ms": 201,
       "recent": [
         1,
         1,
@@ -5906,10 +5945,10 @@
         1
       ],
       "resolved_ip": "142.249.37.90",
-      "speed_mbps": 9.79,
-      "streak": 21,
-      "successes": 21,
-      "tcp_ms": 11
+      "speed_mbps": 5.0,
+      "streak": 22,
+      "successes": 22,
+      "tcp_ms": 57
     },
     "43af385e3cc3dbb8": {
       "category": "universal",
@@ -5976,7 +6015,7 @@
     },
     "44e34752ee89f0ce": {
       "category": "universal",
-      "last_seen": "2026-09-17T22:58:52Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "44e8809b5949eae9": {
@@ -6007,11 +6046,6 @@
     "452469409fa6bebf": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
-      "recent": []
-    },
-    "454f40552a5a3c92": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "45653158ff327a3e": {
@@ -6077,6 +6111,11 @@
       "streak": 0,
       "successes": 0
     },
+    "45df93d0e37f620d": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "45e10991a401a0d0": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -6095,11 +6134,6 @@
     "460dde773f3efe1e": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
-      "recent": []
-    },
-    "460f281c26de87bd": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "460fa97a3a58d57f": {
@@ -6176,9 +6210,9 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "FI",
-      "failures": 15,
+      "failures": 16,
       "http_ms": 737,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "last_success": "2026-09-14T18:59:49Z",
       "recent": [
         0,
@@ -6228,12 +6262,17 @@
     },
     "479a01c245e4dfae": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "47a14057445955db": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
+      "recent": []
+    },
+    "47b727a996d81de7": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "47cd1cf745ba2014": {
@@ -6265,16 +6304,6 @@
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
-    },
-    "48573af3d31f5672": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "489dc2bab436b3b0": {
       "category": "universal",
@@ -6433,13 +6462,12 @@
       "country": "FI",
       "egress_ip": "87.239.249.137",
       "failures": 0,
-      "http_max_ms": 1753,
-      "http_ms": 1734,
-      "jitter_ms": 46,
-      "last_seen": "2026-09-18T20:51:48Z",
-      "last_success": "2026-09-18T20:51:48Z",
+      "http_max_ms": 1793,
+      "http_ms": 1739,
+      "jitter_ms": 144,
+      "last_seen": "2026-09-19T09:40:26Z",
+      "last_success": "2026-09-19T09:40:26Z",
       "latency_medians": [
-        1826,
         2002,
         1748,
         1703,
@@ -6458,9 +6486,10 @@
         1992,
         1833,
         1805,
-        1734
+        1734,
+        1739
       ],
-      "median_ms": 1734,
+      "median_ms": 1739,
       "recent": [
         1,
         1,
@@ -6474,10 +6503,10 @@
         1
       ],
       "resolved_ip": "87.239.249.137",
-      "speed_mbps": 0.96,
-      "streak": 29,
-      "successes": 29,
-      "tcp_ms": 148
+      "speed_mbps": 0.92,
+      "streak": 30,
+      "successes": 30,
+      "tcp_ms": 113
     },
     "4bafc9a863bbe9d7": {
       "category": "universal",
@@ -6504,14 +6533,14 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
+    "4c10c0ca45d4c735": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "4c2c97c5c410a596": {
       "category": "universal",
       "last_seen": "2026-09-18T14:56:29Z",
-      "recent": []
-    },
-    "4c5788730bdf8822": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "4c90ac89e4b279f2": {
@@ -6557,6 +6586,11 @@
     "4d48455de3277825": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
+      "recent": []
+    },
+    "4d6f3cb2c15112d8": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "4d71b618d9c52b09": {
@@ -6616,24 +6650,13 @@
     },
     "4dfbcaf2e4ff3367": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "4dfecf5efcff6c6c": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
-    },
-    "4e01144fe4320799": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "4e0a25dbd7265d5e": {
       "asn": "",
@@ -6642,13 +6665,12 @@
       "country": "FI",
       "egress_ip": "31.77.199.147",
       "failures": 0,
-      "http_max_ms": 761,
-      "http_ms": 735,
-      "jitter_ms": 157,
-      "last_seen": "2026-09-18T22:54:46Z",
-      "last_success": "2026-09-18T22:54:46Z",
+      "http_max_ms": 550,
+      "http_ms": 505,
+      "jitter_ms": 49,
+      "last_seen": "2026-09-19T09:40:18Z",
+      "last_success": "2026-09-19T09:40:18Z",
       "latency_medians": [
-        568,
         497,
         483,
         657,
@@ -6667,9 +6689,10 @@
         624,
         553,
         795,
-        735
+        735,
+        505
       ],
-      "median_ms": 735,
+      "median_ms": 505,
       "recent": [
         1,
         1,
@@ -6683,15 +6706,10 @@
         1
       ],
       "resolved_ip": "31.77.199.147",
-      "speed_mbps": 1.43,
-      "streak": 31,
-      "successes": 31,
-      "tcp_ms": 144
-    },
-    "4e1474a601a2cb60": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
+      "speed_mbps": 1.61,
+      "streak": 32,
+      "successes": 32,
+      "tcp_ms": 119
     },
     "4e244d0b8fd42b76": {
       "category": "universal",
@@ -6818,9 +6836,10 @@
     },
     "4f7d3c21d2d73320": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-17T20:25:34Z",
+      "failures": 2,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -6838,7 +6857,7 @@
     },
     "4fa4f574333aa092": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "4fad7e6ca19ce01c": {
@@ -6973,7 +6992,7 @@
     },
     "515bf5e8bbcf1716": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "51638214bd8cd1e0": {
@@ -7056,6 +7075,11 @@
       "streak": 0,
       "successes": 0
     },
+    "51fccf3b4cea6c96": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "520858ccfa8f6f1d": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
@@ -7096,7 +7120,7 @@
       "http_max_ms": 643,
       "http_ms": 384,
       "jitter_ms": 272,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "last_success": "2026-09-18T14:57:18Z",
       "latency_medians": [
         384
@@ -7127,6 +7151,11 @@
     "52532ca3f78a6e23": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
+      "recent": []
+    },
+    "527a2b0684e32e80": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "527cdece439a846a": {
@@ -7261,6 +7290,11 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
+    "5429990b79c01e4a": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "544c30db1a713a0e": {
       "category": "universal",
       "last_seen": "2026-09-18T14:56:29Z",
@@ -7386,6 +7420,11 @@
       "successes": 1,
       "tcp_ms": 120
     },
+    "55e7d0d9c6323570": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "5614abc673662685": {
       "category": "universal",
       "failures": 1,
@@ -7464,7 +7503,7 @@
     },
     "56ac14116124e321": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "56b6ff93f5ae710e": {
@@ -7476,17 +7515,6 @@
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
-    },
-    "56f4ca56db0a90ea": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "56fb6ee98384fbdf": {
       "category": "universal",
@@ -7501,6 +7529,11 @@
     "57282734a19978f8": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
+      "recent": []
+    },
+    "572b2acafce1e028": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "572c4f661a32cc8e": {
@@ -7563,6 +7596,11 @@
     "57d27559970671cb": {
       "category": "universal",
       "last_seen": "2026-09-18T11:04:59Z",
+      "recent": []
+    },
+    "57de2e861233065a": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "57eee1c0bf0de174": {
@@ -7670,6 +7708,11 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
+    "59e09935c075f74e": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "59ed580fce2ba16b": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
@@ -7761,11 +7804,6 @@
       "last_seen": "2026-09-17T20:25:34Z",
       "recent": []
     },
-    "5b8b0739cd3475f7": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "5ba7232b76daf906": {
       "category": "universal",
       "last_seen": "2026-09-18T11:04:59Z",
@@ -7823,7 +7861,7 @@
     },
     "5c654e15b42410a6": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "5c6c9f7c04038c22": {
@@ -7847,11 +7885,6 @@
     "5cc7a6dacf654471": {
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
-      "recent": []
-    },
-    "5ccdb613d1597983": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "5cdcd12d39735326": {
@@ -8054,7 +8087,7 @@
     },
     "5f108b49f78508a1": {
       "category": "universal",
-      "last_seen": "2026-09-17T17:21:20Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "5f13c565d33b728e": {
@@ -8065,6 +8098,11 @@
     "5f29c0bc6bf6190e": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
+      "recent": []
+    },
+    "5f38478e2e4abd4b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "5f3d8cbf68a98ad3": {
@@ -8153,11 +8191,6 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
-    "60834e0b5a4f67e7": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "60a6358ddb2da95c": {
       "category": "universal",
       "last_seen": "2026-09-17T12:47:59Z",
@@ -8240,12 +8273,12 @@
     },
     "61c508b15fb8fede": {
       "category": "universal",
-      "last_seen": "2026-09-18T14:56:29Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "61d300d8ca4aa00f": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "61e2b5f52939da22": {
@@ -8323,7 +8356,7 @@
     },
     "638744e4917bcdec": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "6397a14f38982f6c": {
@@ -8346,9 +8379,19 @@
       "last_seen": "2026-09-18T20:51:23Z",
       "recent": []
     },
+    "63e6c8a253f646f2": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "63e8b0f29acb57d3": {
       "category": "universal",
       "last_seen": "2026-09-16T23:47:36Z",
+      "recent": []
+    },
+    "640339fd31b16223": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "6419af088c92f1de": {
@@ -8390,24 +8433,6 @@
       "streak": 1,
       "successes": 1,
       "tcp_ms": 118
-    },
-    "645989ae3127836d": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
-    "645b7f97507f80fc": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": [],
-      "streak": 0,
-      "successes": 0
     },
     "646923ec4326ea0c": {
       "category": "universal",
@@ -8482,9 +8507,10 @@
     },
     "652c22874cc355d5": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "failures": 2,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -8553,7 +8579,7 @@
     },
     "659c059d1a49728b": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "65a05e64093326ef": {
@@ -8569,6 +8595,11 @@
     "65c5fc204873f98d": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
+      "recent": []
+    },
+    "65ddf1862115a399": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "65f800338c5bc878": {
@@ -8651,7 +8682,7 @@
     },
     "6726ef141aa54f0f": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "673c8fc1edf9e2b6": {
@@ -8725,7 +8756,7 @@
     },
     "67dff0e86541ccf4": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "67e2d4850799d736": {
@@ -8818,11 +8849,6 @@
       "last_seen": "2026-09-18T20:51:23Z",
       "recent": []
     },
-    "68c9be96d750303f": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "68d5e9f8916fc220": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
@@ -8853,21 +8879,6 @@
       "last_seen": "2026-09-18T05:57:36Z",
       "recent": []
     },
-    "69382af61d125bcc": {
-      "category": "universal",
-      "checks_passed": 2,
-      "country": "DE",
-      "failures": 2,
-      "http_ms": 3294,
-      "last_seen": "2026-09-16T23:47:36Z",
-      "last_success": "2026-09-13T21:39:24Z",
-      "recent": [],
-      "resolved_ip": "172.98.207.58",
-      "speed_mbps": 0.24,
-      "streak": 0,
-      "successes": 2,
-      "tcp_ms": 22
-    },
     "694c5b35aeba015b": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
@@ -8892,6 +8903,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "69daa532a924191b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "69dce5f6e5cc9ad3": {
       "asn": "",
@@ -8921,6 +8937,11 @@
       "streak": 3,
       "successes": 3,
       "tcp_ms": 105
+    },
+    "6a076553c3b8c199": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "6a337d6e8287ab21": {
       "category": "universal",
@@ -8952,11 +8973,6 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
-    "6ab7a1a48c7c9649": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "6af2a26472aae6c7": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -8979,7 +8995,7 @@
     },
     "6b6c9b9ff831cc54": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "6b72f0e5380f86c0": {
@@ -9017,9 +9033,9 @@
       "last_seen": "2026-09-17T20:25:34Z",
       "recent": []
     },
-    "6c05161f9a062512": {
+    "6c1f1b26d0c54039": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "6c37fcb5758c99e6": {
@@ -9030,7 +9046,7 @@
     "6c6927b785bcb8dd": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
         0
       ],
@@ -9067,20 +9083,14 @@
       "last_seen": "2026-09-18T20:51:23Z",
       "recent": []
     },
-    "6d42ad7a7e55a822": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "6d49f575605422f8": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
+      "recent": []
+    },
+    "6d595285e305fe04": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "6d7703caba4ceb69": {
@@ -9093,6 +9103,11 @@
       "last_seen": "2026-09-17T22:58:52Z",
       "recent": []
     },
+    "6d99c19ca856d813": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "6d9abc1cbf1ecfe1": {
       "category": "universal",
       "last_seen": "2026-09-17T17:21:20Z",
@@ -9101,7 +9116,7 @@
     "6da384aa92072625": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
         0
       ],
@@ -9148,11 +9163,6 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
-    "6e7b6f00ae414443": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "6ed764fcb7e8d815": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
@@ -9174,11 +9184,6 @@
     "6f52556f5c6b6923": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
-      "recent": []
-    },
-    "6f6c0040f5dae922": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "6f7e1baa97cea3bf": {
@@ -9209,7 +9214,7 @@
     "6f96e79a174fd283": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
         0,
         0,
@@ -9294,9 +9299,19 @@
       "last_seen": "2026-09-17T17:21:20Z",
       "recent": []
     },
+    "70de2223e2cbb982": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "70ee656c9c82d444": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
+      "recent": []
+    },
+    "714d74ad0ee5b103": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "7153b19123aab701": {
@@ -9307,6 +9322,11 @@
     "716292291196afbb": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
+      "recent": []
+    },
+    "71642f180f14e202": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "7166782ad1775fd8": {
@@ -9349,11 +9369,6 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
-    "724029228bc3a2bd": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "724597cbc3f261a6": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
@@ -9373,16 +9388,6 @@
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
-    },
-    "72c72069e4372648": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "72cea783c66a6c3e": {
       "category": "universal",
@@ -9456,7 +9461,7 @@
     },
     "7380f7ea08f787df": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "738a65e08ca96a14": {
@@ -9495,7 +9500,7 @@
     "73fe154a354840af": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-18T14:56:29Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [],
       "streak": 0,
       "successes": 0
@@ -9547,7 +9552,7 @@
     },
     "7522aaa54cdc5016": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "7552f1e53c8d9154": {
@@ -9567,7 +9572,7 @@
     },
     "756c98b99e696c22": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "756e3cbdf734f002": {
@@ -9632,7 +9637,7 @@
     },
     "76135b009e569162": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "762a325ae4ba3765": {
@@ -9645,36 +9650,14 @@
       "last_seen": "2026-09-17T17:21:20Z",
       "recent": []
     },
-    "7638a56cb03ed47b": {
-      "asn": "",
-      "category": "whitelist",
-      "checks_passed": 2,
-      "country": "NL",
-      "egress_ip": "147.45.50.241",
-      "failures": 2,
-      "http_max_ms": 8000,
-      "http_ms": 8000,
-      "jitter_ms": 4308,
-      "last_seen": "2026-09-16T23:47:36Z",
-      "last_success": "2026-09-16T14:27:25Z",
-      "latency_medians": [
-        8000
-      ],
-      "median_ms": 8000,
-      "recent": [
-        1,
-        0,
-        0
-      ],
-      "resolved_ip": "89.23.113.175",
-      "speed_mbps": 0.79,
-      "streak": 0,
-      "successes": 1,
-      "tcp_ms": 122
-    },
     "7672b142f44d5224": {
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
+      "recent": []
+    },
+    "767d1726d855dbc9": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "76821de9aa758736": {
@@ -9695,6 +9678,11 @@
     "76a3b5a64758e9bc": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
+      "recent": []
+    },
+    "76a7c45f6c4592d9": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "76be38d025c051b7": {
@@ -9759,13 +9747,12 @@
       "country": "LV",
       "egress_ip": "31.76.104.202",
       "failures": 1,
-      "http_max_ms": 962,
-      "http_ms": 580,
-      "jitter_ms": 388,
-      "last_seen": "2026-09-19T05:26:23Z",
-      "last_success": "2026-09-19T05:26:23Z",
+      "http_max_ms": 620,
+      "http_ms": 383,
+      "jitter_ms": 241,
+      "last_seen": "2026-09-19T09:40:41Z",
+      "last_success": "2026-09-19T09:40:41Z",
       "latency_medians": [
-        394,
         369,
         518,
         382,
@@ -9784,9 +9771,10 @@
         428,
         436,
         372,
-        580
+        580,
+        383
       ],
-      "median_ms": 580,
+      "median_ms": 383,
       "recent": [
         1,
         1,
@@ -9800,14 +9788,19 @@
         1
       ],
       "resolved_ip": "104.165.205.40",
-      "speed_mbps": 1.38,
-      "streak": 17,
-      "successes": 24,
-      "tcp_ms": 177
+      "speed_mbps": 2.76,
+      "streak": 18,
+      "successes": 25,
+      "tcp_ms": 108
     },
     "7724328db88e2f04": {
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
+      "recent": []
+    },
+    "774caba702a9d3e6": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "775cbed4dedd3aef": {
@@ -9827,7 +9820,7 @@
     },
     "77796c7c8f1694fd": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "7782545f0676490a": {
@@ -9853,11 +9846,6 @@
     "77ae0f860b8b26e8": {
       "category": "universal",
       "last_seen": "2026-09-18T11:04:59Z",
-      "recent": []
-    },
-    "77d48a591bc557f1": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "77f356e983218ae7": {
@@ -9889,16 +9877,6 @@
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
-    },
-    "7854375da4b04e5d": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "785fe7a93243ec9e": {
       "category": "universal",
@@ -9976,26 +9954,10 @@
       "last_seen": "2026-09-17T12:47:59Z",
       "recent": []
     },
-    "795e14c63036ba72": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "79963886d178af51": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
-    },
-    "79a2d68a41da83ab": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "79ab05fb35c92615": {
       "category": "universal",
@@ -10005,6 +9967,11 @@
     "79b1560d5fe49374": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
+      "recent": []
+    },
+    "79b4ffd17049f01c": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "79c0b54568099610": {
@@ -10062,6 +10029,11 @@
       "last_seen": "2026-09-17T07:43:58Z",
       "recent": []
     },
+    "7a6e6be06a96c920": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "7a7917748f307d3d": {
       "category": "universal",
       "last_seen": "2026-09-18T14:56:29Z",
@@ -10069,7 +10041,7 @@
     },
     "7a803cb979c254d1": {
       "category": "universal",
-      "last_seen": "2026-09-17T12:47:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "7a83fadcb0740925": {
@@ -10127,11 +10099,6 @@
       "last_seen": "2026-09-17T07:43:58Z",
       "recent": []
     },
-    "7afd9886df71a7be": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "7afe1ae5fb7180c6": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -10183,11 +10150,6 @@
     "7b7e826fc82f8114": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
-      "recent": []
-    },
-    "7b87dac617d48c3c": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "7ba19f8c0a826cab": {
@@ -10315,7 +10277,7 @@
     },
     "7da38973b90202f7": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "7db4e4dabe372549": {
@@ -10512,7 +10474,7 @@
     "80aeb614d6f52a7b": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [],
       "streak": 0,
       "successes": 0
@@ -10648,6 +10610,11 @@
       "last_seen": "2026-09-18T20:51:23Z",
       "recent": []
     },
+    "826536a13a19c837": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "826e22ca6b51e283": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -10698,6 +10665,11 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
+    "82f9a81b148677b8": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "82feda7c8e06138a": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -10711,11 +10683,6 @@
     "8317190fe2a48992": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
-      "recent": []
-    },
-    "8317304e1eaadf36": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "832301acbbd78e90": {
@@ -10758,16 +10725,6 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
-    "83610fa8bb757539": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
-    "836e61a80d863883": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "836eb78a7e51cbd7": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
@@ -10787,21 +10744,6 @@
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
-    },
-    "83dae35d39ffa569": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
-    "83f674623ec75a9a": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "841f892bda32701b": {
       "category": "universal",
@@ -10833,6 +10775,11 @@
       "last_seen": "2026-09-18T22:54:31Z",
       "recent": []
     },
+    "8496ea5e7fb1687d": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "849ae130304fb7bf": {
       "category": "whitelist",
       "failures": 1,
@@ -10856,6 +10803,11 @@
     "8507932c9d07b7e3": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
+      "recent": []
+    },
+    "850d690b9cc1caec": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "851bbf890b9f2f51": {
@@ -10910,11 +10862,11 @@
       "country": "LT",
       "egress_ip": "84.32.214.77",
       "failures": 1,
-      "http_max_ms": 808,
-      "http_ms": 803,
-      "jitter_ms": 22,
-      "last_seen": "2026-09-19T05:25:56Z",
-      "last_success": "2026-09-19T05:25:56Z",
+      "http_max_ms": 1170,
+      "http_ms": 1031,
+      "jitter_ms": 506,
+      "last_seen": "2026-09-19T09:40:25Z",
+      "last_success": "2026-09-19T09:40:25Z",
       "latency_medians": [
         8000,
         958,
@@ -10924,10 +10876,12 @@
         693,
         992,
         559,
-        803
+        803,
+        1031
       ],
-      "median_ms": 803,
+      "median_ms": 1031,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -10939,10 +10893,10 @@
         1
       ],
       "resolved_ip": "84.32.214.77",
-      "speed_mbps": 1.42,
-      "streak": 9,
-      "successes": 18,
-      "tcp_ms": 172
+      "speed_mbps": 0.33,
+      "streak": 10,
+      "successes": 19,
+      "tcp_ms": 130
     },
     "85e420707440ae9e": {
       "category": "universal",
@@ -10971,7 +10925,12 @@
     },
     "862641770347b821": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "86352d03a2a4bca4": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "86440b501684f4e9": {
@@ -11003,6 +10962,11 @@
       "streak": 1,
       "successes": 1,
       "tcp_ms": 2
+    },
+    "866e486d3cf64a48": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "86979aabf645e72e": {
       "category": "whitelist",
@@ -11082,11 +11046,6 @@
       "last_seen": "2026-09-17T07:43:58Z",
       "recent": []
     },
-    "879eac325492102c": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "87bbf9619c9fd7d2": {
       "asn": "",
       "category": "universal",
@@ -11162,11 +11121,6 @@
     "881e814dc7d4362a": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
-      "recent": []
-    },
-    "882de8ec16c1f03f": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "88744389af1878b9": {
@@ -11284,14 +11238,14 @@
       "last_seen": "2026-09-18T11:04:59Z",
       "recent": []
     },
+    "89de26dc05d1155a": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "89ec589b5cc592ea": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
-      "recent": []
-    },
-    "8a6f47c8bb1c1a32": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "8a770036ace43172": {
@@ -11318,16 +11272,6 @@
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
-    },
-    "8aa47e41b218566d": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "8b07a6c52af39471": {
       "category": "whitelist",
@@ -11422,7 +11366,7 @@
     },
     "8c611b320b353034": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "8c881d31200d41ca": {
@@ -11449,6 +11393,31 @@
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
+    },
+    "8d68a92f06e36701": {
+      "asn": "",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "JP",
+      "egress_ip": "158.101.158.101",
+      "failures": 0,
+      "http_max_ms": 2378,
+      "http_ms": 1639,
+      "jitter_ms": 1462,
+      "last_seen": "2026-09-19T09:40:38Z",
+      "last_success": "2026-09-19T09:40:38Z",
+      "latency_medians": [
+        1639
+      ],
+      "median_ms": 1639,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "162.159.254.3",
+      "speed_mbps": 0.56,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 2
     },
     "8d73165561ca895a": {
       "category": "universal",
@@ -11487,23 +11456,25 @@
       "country": "US",
       "egress_ip": "163.192.14.135",
       "failures": 0,
-      "http_max_ms": 402,
+      "http_max_ms": 380,
       "http_ms": 237,
-      "jitter_ms": 168,
-      "last_seen": "2026-09-18T18:06:21Z",
-      "last_success": "2026-09-18T18:06:21Z",
+      "jitter_ms": 148,
+      "last_seen": "2026-09-19T09:40:48Z",
+      "last_success": "2026-09-19T09:40:48Z",
       "latency_medians": [
+        237,
         237
       ],
       "median_ms": 237,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "163.192.14.135",
-      "speed_mbps": 4.01,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 71
+      "speed_mbps": 4.4,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 65
     },
     "8e19a19bb6922635": {
       "category": "universal",
@@ -11528,12 +11499,11 @@
       "egress_ip": "2a06:dd00:20::51",
       "failures": 2,
       "http_max_ms": 8000,
-      "http_ms": 8000,
-      "jitter_ms": 7278,
-      "last_seen": "2026-09-19T05:26:27Z",
-      "last_success": "2026-09-19T05:26:27Z",
+      "http_ms": 892,
+      "jitter_ms": 7440,
+      "last_seen": "2026-09-19T09:40:47Z",
+      "last_success": "2026-09-19T09:40:47Z",
       "latency_medians": [
-        8000,
         523,
         8000,
         559,
@@ -11552,11 +11522,11 @@
         597,
         1149,
         535,
-        8000
+        8000,
+        892
       ],
-      "median_ms": 8000,
+      "median_ms": 892,
       "recent": [
-        1,
         1,
         1,
         1,
@@ -11565,13 +11535,14 @@
         1,
         1,
         1,
+        1,
         1
       ],
       "resolved_ip": "94.198.54.132",
-      "speed_mbps": 1.6,
-      "streak": 4,
-      "successes": 25,
-      "tcp_ms": 191
+      "speed_mbps": 1.89,
+      "streak": 5,
+      "successes": 26,
+      "tcp_ms": 134
     },
     "8e7f95421448794c": {
       "category": "universal",
@@ -11614,9 +11585,9 @@
       "successes": 1,
       "tcp_ms": 6
     },
-    "8ed2ceb79c02b2d2": {
+    "8ed9bc5507e5e1d7": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "8edddd3f9ca243ce": {
@@ -11686,9 +11657,10 @@
     },
     "8f547417203bcc70": {
       "category": "universal",
-      "failures": 2,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "failures": 3,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0,
         0
       ],
@@ -11729,6 +11701,16 @@
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
+    },
+    "8fa5074885ce8a98": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "8fc6c4eea599f10f": {
       "asn": "",
@@ -11772,13 +11754,12 @@
       "country": "RU",
       "egress_ip": "185.16.213.71",
       "failures": 0,
-      "http_max_ms": 1053,
-      "http_ms": 654,
-      "jitter_ms": 413,
-      "last_seen": "2026-09-19T05:26:23Z",
-      "last_success": "2026-09-19T05:26:23Z",
+      "http_max_ms": 760,
+      "http_ms": 509,
+      "jitter_ms": 288,
+      "last_seen": "2026-09-19T09:40:43Z",
+      "last_success": "2026-09-19T09:40:43Z",
       "latency_medians": [
-        500,
         456,
         439,
         572,
@@ -11797,9 +11778,10 @@
         558,
         528,
         456,
-        654
+        654,
+        509
       ],
-      "median_ms": 654,
+      "median_ms": 509,
       "recent": [
         1,
         1,
@@ -11813,20 +11795,10 @@
         1
       ],
       "resolved_ip": "91.240.86.70",
-      "speed_mbps": 1.21,
-      "streak": 24,
-      "successes": 24,
-      "tcp_ms": 197
-    },
-    "90108da4b2b6b368": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
-    "90359c4682a14a02": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
+      "speed_mbps": 1.59,
+      "streak": 25,
+      "successes": 25,
+      "tcp_ms": 144
     },
     "90387010ea1385f5": {
       "category": "universal",
@@ -11841,6 +11813,11 @@
     "90450c652bf454f8": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
+      "recent": []
+    },
+    "906472975eac58b5": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "907738d017fb329e": {
@@ -11993,19 +11970,14 @@
       "last_seen": "2026-09-18T05:57:36Z",
       "recent": []
     },
-    "927c772e65b307d2": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "9285477c0e249306": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
+      "recent": []
+    },
+    "928d4caf4aa8a900": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "9293cf03d5ee1b4a": {
@@ -12066,6 +12038,11 @@
       "last_seen": "2026-09-18T18:05:45Z",
       "recent": []
     },
+    "92fe0ff902a8f909": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "93100e9fef170f8d": {
       "asn": "",
       "category": "whitelist",
@@ -12101,7 +12078,7 @@
     "9312dc610ab43455": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [],
       "streak": 0,
       "successes": 0
@@ -12202,11 +12179,6 @@
       "streak": 0,
       "successes": 0
     },
-    "943cf1bf49d428b4": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "9478607e8a82675b": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
@@ -12269,11 +12241,6 @@
       "successes": 9,
       "tcp_ms": 520
     },
-    "94a21c75554e724a": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "94d8f75455e8fe5f": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
@@ -12284,9 +12251,14 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
-    "9631161187c44867": {
+    "95e637aec47afab5": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "9629125dde515a2e": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "96452ac3f10b8afe": {
@@ -12343,6 +12315,11 @@
       "last_seen": "2026-09-17T12:47:59Z",
       "recent": []
     },
+    "9678328e84c369d7": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "9687e43bdee4f378": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
@@ -12350,7 +12327,7 @@
     },
     "969358a159962c42": {
       "category": "universal",
-      "last_seen": "2026-09-17T20:25:34Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "96b1e2f68d841f04": {
@@ -12376,7 +12353,7 @@
     },
     "96baf92185bf5faa": {
       "category": "universal",
-      "last_seen": "2026-09-17T17:21:20Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "96c38a0098340b96": {
@@ -12458,11 +12435,11 @@
       "country": "DE",
       "egress_ip": "159.195.151.100",
       "failures": 1,
-      "http_max_ms": 508,
-      "http_ms": 503,
-      "jitter_ms": 22,
-      "last_seen": "2026-09-18T22:54:44Z",
-      "last_success": "2026-09-18T22:54:44Z",
+      "http_max_ms": 398,
+      "http_ms": 398,
+      "jitter_ms": 3,
+      "last_seen": "2026-09-19T09:40:16Z",
+      "last_success": "2026-09-19T09:40:16Z",
       "latency_medians": [
         716,
         401,
@@ -12473,9 +12450,10 @@
         635,
         393,
         463,
-        503
+        503,
+        398
       ],
-      "median_ms": 503,
+      "median_ms": 398,
       "recent": [
         1,
         1,
@@ -12489,27 +12467,16 @@
         1
       ],
       "resolved_ip": "159.195.151.100",
-      "speed_mbps": 2.13,
-      "streak": 10,
-      "successes": 15,
-      "tcp_ms": 120
+      "speed_mbps": 2.67,
+      "streak": 11,
+      "successes": 16,
+      "tcp_ms": 94
     },
     "983555fd2f8a118f": {
       "category": "universal",
       "failures": 2,
       "last_seen": "2026-09-17T22:58:52Z",
       "recent": [],
-      "streak": 0,
-      "successes": 0
-    },
-    "9844f8b57e6e32ab": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0,
-        0
-      ],
       "streak": 0,
       "successes": 0
     },
@@ -12603,14 +12570,6 @@
       "last_seen": "2026-09-18T05:57:36Z",
       "recent": []
     },
-    "9999812ac96d86d1": {
-      "category": "universal",
-      "failures": 2,
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": [],
-      "streak": 0,
-      "successes": 0
-    },
     "99a0859175468e0f": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -12628,12 +12587,7 @@
     },
     "99fe0c2071ed4db2": {
       "category": "universal",
-      "last_seen": "2026-09-17T17:21:20Z",
-      "recent": []
-    },
-    "9a293109d9f48c96": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "9a3d2f399e55aecd": {
@@ -12771,7 +12725,7 @@
     "9bec3ab9a951fa58": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-09-18T14:56:29Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
         0
       ],
@@ -12817,11 +12771,6 @@
       ],
       "streak": 0,
       "successes": 0
-    },
-    "9c7ac7ef18db5063": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
     },
     "9c86709c3212e4a2": {
       "category": "universal",
@@ -12878,11 +12827,6 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
-    "9d73225caacff628": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "9d7a9b7b62bec54a": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -12890,7 +12834,7 @@
     },
     "9d7aa418f813c5a4": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "9d9375c635b223bb": {
@@ -12918,14 +12862,9 @@
       "last_seen": "2026-09-17T20:25:34Z",
       "recent": []
     },
-    "9de5e82a8e6c3fbb": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "9df78a0d673c2245": {
       "category": "universal",
-      "last_seen": "2026-09-17T12:47:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "9dfe8d2c635dfc16": {
@@ -12937,19 +12876,6 @@
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
       "recent": []
-    },
-    "9e098890175c3685": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
-    "9e18a8ece184032a": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": [],
-      "streak": 0,
-      "successes": 0
     },
     "9e4ea0abb86a2bad": {
       "category": "universal",
@@ -12974,11 +12900,6 @@
     "9e7136a0ce9024b1": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
-      "recent": []
-    },
-    "9e7af640cfe3b1f5": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "9e7b0e8e9775f498": {
@@ -13044,11 +12965,6 @@
       "successes": 37,
       "tcp_ms": 117
     },
-    "9e9df799b467cb9d": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "9e9f37d51c4be549": {
       "category": "universal",
       "last_seen": "2026-09-17T17:21:20Z",
@@ -13110,11 +13026,6 @@
       "streak": 0,
       "successes": 0
     },
-    "a0028d6bf7951952": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "a032914c79a95391": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
@@ -13123,11 +13034,6 @@
     "a058ea353312e515": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
-      "recent": []
-    },
-    "a06edc52dced5cc1": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "a077d48368925ea4": {
@@ -13148,6 +13054,11 @@
     "a09d730490e163f0": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
+      "recent": []
+    },
+    "a0ba42d30fa62c7b": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a0bf221c8b582191": {
@@ -13213,11 +13124,6 @@
       "last_seen": "2026-09-18T18:05:45Z",
       "recent": []
     },
-    "a1187494da7f38ec": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
     "a11b0d028c12c2e3": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -13269,6 +13175,11 @@
     "a1b4a9bf0aa84059": {
       "category": "universal",
       "last_seen": "2026-09-17T22:58:52Z",
+      "recent": []
+    },
+    "a1bd4f45d2b96196": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a1e6aefef8e2fe6c": {
@@ -13419,7 +13330,7 @@
     },
     "a4067a5322d2f1fc": {
       "category": "universal",
-      "last_seen": "2026-09-17T02:14:00Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a4073dbed46f5bf9": {
@@ -13450,7 +13361,7 @@
     },
     "a458b30f51b0e904": {
       "category": "universal",
-      "last_seen": "2026-09-17T22:58:52Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a45d28801e7a9db0": {
@@ -13618,9 +13529,9 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
-    "a71e6c8b5aabac4d": {
+    "a726eb90be9c3747": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a729da410bc59a7f": {
@@ -13755,12 +13666,12 @@
     },
     "a8e23dd46f5b1d86": {
       "category": "universal",
-      "last_seen": "2026-09-18T11:04:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a94adc25d757d080": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a95976026b12c9c1": {
@@ -13778,14 +13689,9 @@
       "last_seen": "2026-09-17T22:58:52Z",
       "recent": []
     },
-    "a9b24ae1213f1b96": {
+    "a99b3671e4a8532c": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
-    "a9ba6d9e5ef9e404": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a9d997642f962449": {
@@ -13795,7 +13701,7 @@
     },
     "a9da2c6d4060c824": {
       "category": "universal",
-      "last_seen": "2026-09-18T11:04:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "a9ea1117ef651def": {
@@ -13940,7 +13846,7 @@
     },
     "aaadbfc7141fce43": {
       "category": "universal",
-      "last_seen": "2026-09-17T22:58:52Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "aac114afdb05c171": {
@@ -13990,7 +13896,7 @@
     },
     "ac1be639a47d963c": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ac1eb6da0600a0d4": {
@@ -14006,6 +13912,11 @@
     "ac62941b298f6670": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
+      "recent": []
+    },
+    "ac816a03e8935fa1": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ac8c08a04a6c1206": {
@@ -14028,9 +13939,9 @@
       "last_seen": "2026-09-17T17:21:20Z",
       "recent": []
     },
-    "acbb935ac2af6257": {
+    "acca15df54ac6b16": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ace0a8e57516da8d": {
@@ -14063,11 +13974,6 @@
       "last_seen": "2026-09-18T05:57:36Z",
       "recent": []
     },
-    "ad4846041f37bd67": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "ad4e81dc256f126a": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -14090,7 +13996,7 @@
     },
     "adc8a2230dd1abfe": {
       "category": "universal",
-      "last_seen": "2026-09-17T02:14:00Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ae3d2d39a3c24fea": {
@@ -14130,7 +14036,7 @@
     },
     "ae6cf4b04e151ff6": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ae7afd4dd0f389e7": {
@@ -14145,11 +14051,11 @@
       "country": "DE",
       "egress_ip": "159.195.150.69",
       "failures": 0,
-      "http_max_ms": 651,
-      "http_ms": 634,
-      "jitter_ms": 23,
-      "last_seen": "2026-09-19T05:25:55Z",
-      "last_success": "2026-09-19T05:25:55Z",
+      "http_max_ms": 399,
+      "http_ms": 398,
+      "jitter_ms": 13,
+      "last_seen": "2026-09-19T09:40:16Z",
+      "last_success": "2026-09-19T09:40:16Z",
       "latency_medians": [
         575,
         1485,
@@ -14166,9 +14072,10 @@
         395,
         504,
         390,
-        634
+        634,
+        398
       ],
-      "median_ms": 634,
+      "median_ms": 398,
       "recent": [
         1,
         1,
@@ -14182,10 +14089,10 @@
         1
       ],
       "resolved_ip": "159.195.150.69",
-      "speed_mbps": 1.66,
-      "streak": 22,
-      "successes": 22,
-      "tcp_ms": 152
+      "speed_mbps": 2.74,
+      "streak": 23,
+      "successes": 23,
+      "tcp_ms": 91
     },
     "aeca30f6fe6bdeed": {
       "category": "whitelist",
@@ -14200,11 +14107,6 @@
     "aed25df1e0424981": {
       "category": "universal",
       "last_seen": "2026-09-17T12:47:59Z",
-      "recent": []
-    },
-    "aeed691efafc329b": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "af062b8ebc252686": {
@@ -14237,6 +14139,11 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
+    "af8cc448b0ef186f": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "af9f1d2c9e238eea": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
@@ -14252,19 +14159,9 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
-    "afaf03193287287b": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "afc02decfc179e3b": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
-      "recent": []
-    },
-    "afc605e45b5227d5": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "afca07b2568a9b8e": {
@@ -14381,11 +14278,6 @@
     "b0baddc84524c4fd": {
       "category": "universal",
       "last_seen": "2026-09-17T12:47:59Z",
-      "recent": []
-    },
-    "b0c9dbe982ebb7b6": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "b0e8752388542120": {
@@ -14571,7 +14463,12 @@
     },
     "b381e893a586307c": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "b3ad261d008abc89": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "b3b6065fe1a9927d": {
@@ -14591,13 +14488,23 @@
     },
     "b447b38ef95b3000": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "b46d792f644525d2": {
       "category": "whitelist",
       "failures": 1,
       "last_seen": "2026-09-17T22:58:52Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
+    },
+    "b47f7739c4c73fd9": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
         0
       ],
@@ -14611,7 +14518,7 @@
     },
     "b4c62b3bd4648cff": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "b4d3e753cd6363e7": {
@@ -14843,16 +14750,6 @@
       "last_seen": "2026-09-18T05:57:36Z",
       "recent": []
     },
-    "b7e20ed5f3709541": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": []
-    },
-    "b7f0ffc375ac3fd4": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "b7fdd2419783ba1a": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
@@ -14863,20 +14760,9 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
-    "b80941c12c5fd3fd": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T21:28:59Z",
-      "recent": [
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "b82c9f9ef5dd9cc3": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "b8616f024cd047dc": {
@@ -14886,6 +14772,11 @@
       "recent": [],
       "streak": 0,
       "successes": 0
+    },
+    "b890e3ddadb89dd7": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "b899b5c1e0408071": {
       "category": "universal",
@@ -14910,6 +14801,11 @@
     "b8dd592e5d408c24": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
+      "recent": []
+    },
+    "b8fc07a72ec5eee5": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "b900bdfb2d41b5bc": {
@@ -15003,24 +14899,30 @@
       "checks_passed": 2,
       "country": "NL",
       "egress_ip": "51.158.240.82",
-      "failures": 0,
+      "failures": 1,
       "http_max_ms": 2144,
       "http_ms": 1393,
       "jitter_ms": 1097,
-      "last_seen": "2026-09-18T22:55:07Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "last_success": "2026-09-18T22:55:07Z",
       "latency_medians": [
         1393
       ],
       "median_ms": 1393,
       "recent": [
-        1
+        1,
+        0
       ],
       "resolved_ip": "188.42.145.180",
       "speed_mbps": 0.0,
-      "streak": 1,
+      "streak": 0,
       "successes": 1,
       "tcp_ms": 8
+    },
+    "ba42b6e85817196f": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "ba5049c35d7919c1": {
       "category": "universal",
@@ -15030,7 +14932,7 @@
     "ba58f2f9af28b442": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [],
       "streak": 0,
       "successes": 0
@@ -15100,10 +15002,15 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
+    "bb379ff1dc5ebfdc": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "bb4628e88f47ae78": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [],
       "streak": 0,
       "successes": 0
@@ -15116,11 +15023,6 @@
     "bb49e67a9f55677d": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
-      "recent": []
-    },
-    "bb59e18a12567265": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "bb7d9f7fc40f813e": {
@@ -15156,27 +15058,42 @@
     },
     "bba07237f0b76449": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "bbbb0a57e444d25a": {
+      "asn": "",
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
-      "recent": []
+      "checks_passed": 2,
+      "country": "US",
+      "egress_ip": "107.173.250.159",
+      "failures": 0,
+      "http_max_ms": 377,
+      "http_ms": 355,
+      "jitter_ms": 172,
+      "last_seen": "2026-09-19T09:40:30Z",
+      "last_success": "2026-09-19T09:40:30Z",
+      "latency_medians": [
+        355
+      ],
+      "median_ms": 355,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "212.104.128.27",
+      "speed_mbps": 0.0,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 2
     },
     "bbc94f1374d42b1e": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
-      "recent": []
-    },
-    "bbca0a22e1d0fe41": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "bbd1003e2d6425f1": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "bbd1f6aac6dc314d": {
@@ -15199,19 +15116,19 @@
       "last_seen": "2026-09-18T18:05:45Z",
       "recent": []
     },
+    "bc0c0c3ebedb0ca6": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
+    },
     "bc0c4cc25ffe2084": {
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
-      "recent": []
-    },
-    "bc2da8ef907ea274": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
-    "bc31321d1a7bef2a": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "bc3cebf2666e108e": {
@@ -15227,11 +15144,6 @@
     "bc563ef1adcd7b04": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
-      "recent": []
-    },
-    "bc5ac9ac169f0269": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "bca0f81f7bedd990": {
@@ -15292,11 +15204,6 @@
     "bd8e92c14a85e817": {
       "category": "universal",
       "last_seen": "2026-09-18T11:04:59Z",
-      "recent": []
-    },
-    "bd8ee6c42c9f05e4": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "bd936cd45d24e4c5": {
@@ -15387,13 +15294,10 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
-    "be0cc3135a2c60a0": {
+    "bdf8f9973cfeedfb": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": [],
-      "streak": 0,
-      "successes": 0
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "be8738b11cb767cf": {
       "category": "universal",
@@ -15408,11 +15312,6 @@
     "bec1617ddf71777e": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
-      "recent": []
-    },
-    "bec491ac718cbca2": {
-      "category": "universal",
-      "last_seen": "2026-09-16T21:28:59Z",
       "recent": []
     },
     "bed31c2b60be974b": {
@@ -15446,6 +15345,11 @@
     "befa2916cd1080e1": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
+      "recent": []
+    },
+    "bf02be32764f65ec": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "bf266e8e0f255ed8": {
@@ -15493,11 +15397,6 @@
       "last_seen": "2026-09-17T07:43:58Z",
       "recent": []
     },
-    "bfb9ba8c402fd32a": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "bfe285a0d5812f3a": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -15520,7 +15419,7 @@
     },
     "c0181bd48ba2d1c8": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c01e58af6faccaa5": {
@@ -15538,19 +15437,9 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
-    "c037f806336ebf92": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "c03aa6a99e3ad4f9": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
-      "recent": []
-    },
-    "c03e13f94533f973": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "c053cf3694e480aa": {
@@ -15583,16 +15472,6 @@
       "last_seen": "2026-09-19T00:54:27Z",
       "recent": []
     },
-    "c0c5b38fee55761f": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
-    "c0d34eaee607f520": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "c0d901b8db31d0f7": {
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
@@ -15600,7 +15479,7 @@
     },
     "c0deeb4686522266": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c0eff2a695f43c9a": {
@@ -15622,6 +15501,16 @@
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
+    },
+    "c11fb7b1f200bf76": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "c14b7982293a3bf4": {
       "category": "universal",
@@ -15665,7 +15554,7 @@
     },
     "c1fbde26bb4e845c": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c257402d31ebd3f2": {
@@ -15686,6 +15575,11 @@
     "c29ae8471c59cf6b": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
+      "recent": []
+    },
+    "c2c59dd9407a6abb": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c2dccaeadd0a5181": {
@@ -15773,6 +15667,11 @@
       "last_seen": "2026-09-18T18:05:45Z",
       "recent": []
     },
+    "c44fcf64645ff9e7": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "c4664a82cc79df6e": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
@@ -15801,11 +15700,6 @@
     "c4ca92dd78d1c12e": {
       "category": "universal",
       "last_seen": "2026-09-18T22:54:31Z",
-      "recent": []
-    },
-    "c4cd8c595d5620e2": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "c4f44acb64ee1f05": {
@@ -15866,7 +15760,7 @@
     },
     "c5a73a0d219133eb": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c5ad85c0851a4801": {
@@ -15919,9 +15813,9 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
-    "c5f95f278f524f47": {
+    "c610efaacb9d1bd8": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c615d380e6322fc9": {
@@ -15932,6 +15826,11 @@
     "c619550de66cdfce": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
+      "recent": []
+    },
+    "c6211a90c7d092a5": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c62389fc43b06503": {
@@ -15946,7 +15845,17 @@
     },
     "c6266b4522559001": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "failures": 1,
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
+    },
+    "c62de97505d996ca": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c645636a67640e1d": {
@@ -16001,19 +15910,6 @@
       ],
       "streak": 0,
       "successes": 0
-    },
-    "c73d67ce32f1a03b": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": [],
-      "streak": 0,
-      "successes": 0
-    },
-    "c7559588857c8313": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
     },
     "c758ee76253d77df": {
       "category": "universal",
@@ -16136,9 +16032,9 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
-    "c90e92a1192ad6e0": {
+    "c941a1a88bfa2f96": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "c96bfef186dbb156": {
@@ -16182,6 +16078,31 @@
       "streak": 0,
       "successes": 0
     },
+    "c9b07745e4fce8a3": {
+      "asn": "",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "SG",
+      "egress_ip": "2400:8901::2000:80ff:fefe:c330",
+      "failures": 0,
+      "http_max_ms": 1293,
+      "http_ms": 1276,
+      "jitter_ms": 545,
+      "last_seen": "2026-09-19T09:40:38Z",
+      "last_success": "2026-09-19T09:40:38Z",
+      "latency_medians": [
+        1276
+      ],
+      "median_ms": 1276,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "91.193.58.61",
+      "speed_mbps": 1.16,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 2
+    },
     "c9c2b7b6b483a60b": {
       "category": "universal",
       "last_seen": "2026-09-19T05:25:40Z",
@@ -16200,6 +16121,11 @@
     "ca10d5f74229eed0": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
+      "recent": []
+    },
+    "ca3739dd69d8090d": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ca3b65c098421a52": {
@@ -16455,7 +16381,7 @@
     },
     "cdcd7992347e62bf": {
       "category": "universal",
-      "last_seen": "2026-09-18T11:04:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "cdcd9e72799db5b3": {
@@ -16480,7 +16406,7 @@
     },
     "ce53b0e7220748fe": {
       "category": "universal",
-      "last_seen": "2026-09-17T20:25:34Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ce5f905d68fed15e": {
@@ -16535,7 +16461,7 @@
     },
     "ceefd66aba3a3442": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "cf143095fef8fb66": {
@@ -16603,14 +16529,9 @@
       "last_seen": "2026-09-17T22:58:52Z",
       "recent": []
     },
-    "cfc5e39f90ddd8ee": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "cfd1b1c847f40a16": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "cfd93c1cdcf06e84": {
@@ -16635,7 +16556,7 @@
     },
     "cfefd75ec4910de2": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d01ddc043e6fa498": {
@@ -16660,7 +16581,7 @@
     },
     "d02a083035342855": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d05a5bfe6b529a72": {
@@ -16726,7 +16647,7 @@
     },
     "d0f7ebb2af902867": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d0fbbdd6461a5017": {
@@ -16789,7 +16710,7 @@
     },
     "d180f8bf4eb030cb": {
       "category": "universal",
-      "last_seen": "2026-09-17T22:58:52Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d191d684e4b9f34f": {
@@ -16804,7 +16725,7 @@
     },
     "d1e729dcc4fc7937": {
       "category": "universal",
-      "last_seen": "2026-09-17T22:58:52Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d1f6159ea6e73aea": {
@@ -16814,7 +16735,12 @@
     },
     "d1f729c7df7bc211": {
       "category": "universal",
-      "last_seen": "2026-09-18T18:05:45Z",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "d222972a6a351ea3": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d229c18c030c89e2": {
@@ -16952,7 +16878,7 @@
     },
     "d4323fe7c8db173c": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d434a8cc1cd85083": {
@@ -17150,7 +17076,7 @@
     },
     "d5cc005eeb6df92d": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d605fa5aa58261e5": {
@@ -17214,11 +17140,6 @@
     "d67529c6ecad0232": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
-      "recent": []
-    },
-    "d67f10650aeb03a3": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "d687fcd3ef632359": {
@@ -17308,7 +17229,7 @@
     },
     "d78e85bf33efed37": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d7a9b93ff2bcb9e6": {
@@ -17361,11 +17282,6 @@
       "streak": 0,
       "successes": 0
     },
-    "d84b5b43a354a01c": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "d8603d471c1f035f": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
@@ -17401,31 +17317,38 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "NL",
-      "egress_ip": "51.15.126.204",
+      "egress_ip": "51.158.180.25",
       "failures": 0,
-      "http_max_ms": 2094,
-      "http_ms": 775,
-      "jitter_ms": 1329,
-      "last_seen": "2026-09-18T05:58:04Z",
-      "last_success": "2026-09-18T05:58:04Z",
+      "http_max_ms": 8000,
+      "http_ms": 1033,
+      "jitter_ms": 7580,
+      "last_seen": "2026-09-19T09:40:24Z",
+      "last_success": "2026-09-19T09:40:24Z",
       "latency_medians": [
         781,
-        775
+        775,
+        1033
       ],
-      "median_ms": 775,
+      "median_ms": 1033,
       "recent": [
+        1,
         1,
         1
       ],
       "resolved_ip": "8.47.69.0",
-      "speed_mbps": 0.9,
-      "streak": 2,
-      "successes": 2,
-      "tcp_ms": 6
+      "speed_mbps": 1.14,
+      "streak": 3,
+      "successes": 3,
+      "tcp_ms": 2
     },
     "d95961069c91fee3": {
       "category": "universal",
       "last_seen": "2026-09-18T01:13:37Z",
+      "recent": []
+    },
+    "d96b9dbe4688229e": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "d96eb6356f7ff06e": {
@@ -17481,16 +17404,6 @@
     "da0849f28938a746": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
-      "recent": []
-    },
-    "da08fb77aef6e9e5": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
-    "da2cdc6abf6475c0": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "da31255aa3d34d0f": {
@@ -17555,6 +17468,11 @@
       "streak": 0,
       "successes": 34,
       "tcp_ms": 137
+    },
+    "db71eee1af3331c2": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "db883ad22c751253": {
       "category": "whitelist",
@@ -17621,6 +17539,11 @@
       "last_seen": "2026-09-19T05:25:40Z",
       "recent": []
     },
+    "dbdd2c8f99f8755c": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "dbedb6f72aa982ec": {
       "category": "universal",
       "failures": 1,
@@ -17634,6 +17557,16 @@
     "dbf4b56ddc9e104b": {
       "category": "universal",
       "last_seen": "2026-09-17T20:25:34Z",
+      "recent": []
+    },
+    "dbfdb0808cb7c892": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
+    "dc17e62c4c3539c4": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "dc197d1650d20d70": {
@@ -17854,11 +17787,6 @@
       "last_seen": "2026-09-18T11:04:59Z",
       "recent": []
     },
-    "dfae384455295a06": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "dfb24544d5a6315a": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
@@ -17939,11 +17867,6 @@
       "last_seen": "2026-09-18T11:04:59Z",
       "recent": []
     },
-    "e0cf7708fc8b1967": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "e0d0070e25780371": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
@@ -17976,9 +17899,10 @@
     },
     "e166ec94bf3932aa": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "failures": 2,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -18047,7 +17971,7 @@
     "e1f65b2dd87090c5": {
       "category": "universal",
       "failures": 2,
-      "last_seen": "2026-09-18T14:56:29Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
         0,
         0
@@ -18057,7 +17981,7 @@
     },
     "e22703731f9d3814": {
       "category": "universal",
-      "last_seen": "2026-09-17T17:21:20Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e2795450d6bbfc24": {
@@ -18065,14 +17989,14 @@
       "last_seen": "2026-09-18T22:54:31Z",
       "recent": []
     },
-    "e28bbb3201957e6f": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "e28e36e41e154339": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
+      "recent": []
+    },
+    "e28f88e7022b1cff": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e2ad5ec2cb22ee16": {
@@ -18080,19 +18004,19 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
-    "e2bb42afe74c0094": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "e2cd44b5edf1eb7b": {
       "category": "universal",
-      "last_seen": "2026-09-18T05:57:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e2e05afab5f40669": {
       "category": "universal",
       "last_seen": "2026-09-18T14:56:29Z",
+      "recent": []
+    },
+    "e30855a999630aab": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e308e2e3b3773b80": {
@@ -18125,6 +18049,11 @@
       "last_seen": "2026-09-18T18:05:45Z",
       "recent": []
     },
+    "e3512c34315b5051": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "e35941adea28b79e": {
       "category": "universal",
       "last_seen": "2026-09-17T22:58:52Z",
@@ -18148,6 +18077,11 @@
     "e3bd754a725ae6a3": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
+      "recent": []
+    },
+    "e3c97802a31d5702": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e3c9b8c077c8846f": {
@@ -18177,9 +18111,10 @@
     },
     "e452666bcb7604e8": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "failures": 2,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -18383,7 +18318,7 @@
     },
     "e6903e503619bec5": {
       "category": "universal",
-      "last_seen": "2026-09-18T20:51:23Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e6b500457d6b0a16": {
@@ -18486,11 +18421,6 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
-    "e7e026e715a43519": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "e7eca567d2e8bed9": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
@@ -18500,9 +18430,9 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "LT",
-      "failures": 25,
+      "failures": 26,
       "http_ms": 1795,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "last_success": "2026-09-15T10:23:55Z",
       "recent": [
         0,
@@ -18529,13 +18459,12 @@
       "country": "US",
       "egress_ip": "155.248.209.237",
       "failures": 0,
-      "http_max_ms": 126,
-      "http_ms": 109,
-      "jitter_ms": 94,
-      "last_seen": "2026-09-19T05:26:13Z",
-      "last_success": "2026-09-19T05:26:13Z",
+      "http_max_ms": 351,
+      "http_ms": 224,
+      "jitter_ms": 130,
+      "last_seen": "2026-09-19T09:40:38Z",
+      "last_success": "2026-09-19T09:40:38Z",
       "latency_medians": [
-        212,
         253,
         73,
         251,
@@ -18554,9 +18483,10 @@
         172,
         130,
         238,
-        109
+        109,
+        224
       ],
-      "median_ms": 109,
+      "median_ms": 224,
       "recent": [
         1,
         1,
@@ -18570,10 +18500,10 @@
         1
       ],
       "resolved_ip": "155.248.209.237",
-      "speed_mbps": 9.49,
-      "streak": 26,
-      "successes": 26,
-      "tcp_ms": 2
+      "speed_mbps": 3.37,
+      "streak": 27,
+      "successes": 27,
+      "tcp_ms": 68
     },
     "e834534a757f8e8e": {
       "category": "whitelist",
@@ -18584,6 +18514,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "e86da092bd5a3441": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "e8718881df338971": {
       "category": "universal",
@@ -18610,9 +18545,14 @@
       "streak": 0,
       "successes": 0
     },
+    "e9010359098bf9c0": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "e92c4358051f2b52": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e94835c786773c42": {
@@ -18642,7 +18582,7 @@
     },
     "e9e42e61d3c3f9cc": {
       "category": "universal",
-      "last_seen": "2026-09-18T14:56:29Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "e9f4082cd9c9e688": {
@@ -18711,7 +18651,7 @@
     },
     "ea4a09615969fbda": {
       "category": "universal",
-      "last_seen": "2026-09-18T11:04:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "ea628a6bc21dfe14": {
@@ -18821,11 +18761,6 @@
       "successes": 1,
       "tcp_ms": 43
     },
-    "eb35ff57c690c516": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "eb3beabed7bc0f66": {
       "category": "universal",
       "last_seen": "2026-09-18T05:57:36Z",
@@ -18868,17 +18803,12 @@
     },
     "eb79ab005e7682a7": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "eb8c3b9ea6a8a49f": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
-      "recent": []
-    },
-    "eb9850671e4de739": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "eba49a2b93b37a4b": {
@@ -18951,15 +18881,10 @@
       "last_seen": "2026-09-18T11:04:59Z",
       "recent": []
     },
-    "ec31d61b339d7a76": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "ec3fb23abe4fec4f": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-09-18T11:04:59Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [],
       "streak": 0,
       "successes": 0
@@ -19062,9 +18987,10 @@
     },
     "ee2561149eb0dffd": {
       "category": "universal",
-      "failures": 2,
-      "last_seen": "2026-09-19T05:25:40Z",
+      "failures": 3,
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": [
+        0,
         0,
         0
       ],
@@ -19118,7 +19044,7 @@
     },
     "eee1abb3a6452fcb": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "eeee8128ccafb6fd": {
@@ -19148,29 +19074,31 @@
       "country": "RU",
       "egress_ip": "185.16.213.71",
       "failures": 0,
-      "http_max_ms": 995,
-      "http_ms": 634,
-      "jitter_ms": 366,
-      "last_seen": "2026-09-19T05:26:28Z",
-      "last_success": "2026-09-19T05:26:28Z",
+      "http_max_ms": 2565,
+      "http_ms": 864,
+      "jitter_ms": 2072,
+      "last_seen": "2026-09-19T09:40:49Z",
+      "last_success": "2026-09-19T09:40:49Z",
       "latency_medians": [
         521,
         643,
         1238,
-        634
+        634,
+        864
       ],
-      "median_ms": 634,
+      "median_ms": 864,
       "recent": [
+        1,
         1,
         1,
         1,
         1
       ],
       "resolved_ip": "91.240.86.70",
-      "speed_mbps": 1.27,
-      "streak": 4,
-      "successes": 4,
-      "tcp_ms": 189
+      "speed_mbps": 1.07,
+      "streak": 5,
+      "successes": 5,
+      "tcp_ms": 137
     },
     "ef98a8164120ef10": {
       "category": "universal",
@@ -19219,12 +19147,7 @@
     },
     "f0405e02486a81bb": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
-      "recent": []
-    },
-    "f0539d91b78e5f69": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "f057d33aa1de088f": {
@@ -19489,9 +19412,9 @@
       "last_seen": "2026-09-17T07:43:58Z",
       "recent": []
     },
-    "f3b8b48ee4bda7c2": {
+    "f3ba6dcba2f828ee": {
       "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "f3d05fe9ebf28008": {
@@ -19581,11 +19504,6 @@
       "last_seen": "2026-09-17T02:14:00Z",
       "recent": []
     },
-    "f5320d577036a96f": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
-      "recent": []
-    },
     "f5374a8a1c80251d": {
       "category": "universal",
       "last_seen": "2026-09-19T00:54:27Z",
@@ -19645,6 +19563,11 @@
       "streak": 1,
       "successes": 1,
       "tcp_ms": 114
+    },
+    "f5ab924a90604799": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "f5ceed1a7d452313": {
       "category": "whitelist",
@@ -19722,6 +19645,11 @@
       "last_seen": "2026-09-17T12:47:59Z",
       "recent": []
     },
+    "f684aa394fad6a7a": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "f68fecf33fa094a4": {
       "category": "universal",
       "last_seen": "2026-09-18T18:05:45Z",
@@ -19746,6 +19674,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "f7511d9c3e8cd9ed": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
     },
     "f76cf2fdb8e4270c": {
       "category": "universal",
@@ -19799,7 +19732,7 @@
     },
     "f8148112b71a8aa6": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "f8328b2f72ac118f": {
@@ -19869,7 +19802,7 @@
     },
     "f9d8644149ad6d7c": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "f9e61c1ecb88fbe5": {
@@ -19909,7 +19842,7 @@
     },
     "f9f52057ed8e8538": {
       "category": "universal",
-      "last_seen": "2026-09-18T22:54:31Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "fa0aebe23c8bdcdf": {
@@ -20024,7 +19957,7 @@
     },
     "fbd981558eddb716": {
       "category": "universal",
-      "last_seen": "2026-09-19T00:54:27Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "fbe8d3c9e7f4ad4c": {
@@ -20057,6 +19990,11 @@
       "last_seen": "2026-09-18T01:13:37Z",
       "recent": []
     },
+    "fc673fcb62255e9c": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
+      "recent": []
+    },
     "fca28f79edeb4340": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
@@ -20079,12 +20017,17 @@
     },
     "fcdb8eda5383ea48": {
       "category": "universal",
-      "last_seen": "2026-09-18T01:13:37Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "fce68ae89e4bc77d": {
       "category": "universal",
       "last_seen": "2026-09-18T20:51:23Z",
+      "recent": []
+    },
+    "fd061bff5147ca0e": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "fd069f408f572791": {
@@ -20124,17 +20067,12 @@
     },
     "fd485f50283503e3": {
       "category": "universal",
-      "last_seen": "2026-09-19T05:25:40Z",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "fd50d7de41538744": {
       "category": "universal",
       "last_seen": "2026-09-17T07:43:58Z",
-      "recent": []
-    },
-    "fd5e8741a2e99993": {
-      "category": "universal",
-      "last_seen": "2026-09-16T23:47:36Z",
       "recent": []
     },
     "fd9ab70cdf89d5ba": {
@@ -20160,6 +20098,11 @@
     "fdbdba1bebc0e577": {
       "category": "universal",
       "last_seen": "2026-09-17T02:14:00Z",
+      "recent": []
+    },
+    "fdc517b1a6a42dda": {
+      "category": "universal",
+      "last_seen": "2026-09-19T09:40:03Z",
       "recent": []
     },
     "fddb55803a47480b": {
@@ -20299,15 +20242,14 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "US",
-      "egress_ip": "159.223.157.129",
+      "egress_ip": "2604:a880:400:d1:0:4:8807:7001",
       "failures": 0,
-      "http_max_ms": 400,
-      "http_ms": 247,
-      "jitter_ms": 155,
-      "last_seen": "2026-09-19T05:26:15Z",
-      "last_success": "2026-09-19T05:26:15Z",
+      "http_max_ms": 91,
+      "http_ms": 71,
+      "jitter_ms": 38,
+      "last_seen": "2026-09-19T09:40:35Z",
+      "last_success": "2026-09-19T09:40:35Z",
       "latency_medians": [
-        70,
         69,
         212,
         69,
@@ -20326,9 +20268,10 @@
         572,
         240,
         64,
-        247
+        247,
+        71
       ],
-      "median_ms": 247,
+      "median_ms": 71,
       "recent": [
         1,
         1,
@@ -20342,10 +20285,10 @@
         1
       ],
       "resolved_ip": "159.223.157.129",
-      "speed_mbps": 4.1,
-      "streak": 26,
-      "successes": 26,
-      "tcp_ms": 72
+      "speed_mbps": 19.64,
+      "streak": 27,
+      "successes": 27,
+      "tcp_ms": 9
     },
     "ff78057da5f0428a": {
       "category": "universal",
