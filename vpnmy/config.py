@@ -77,6 +77,22 @@ class BuildConfig:
     verify_median_threshold_ms: int = 1500
     # Размер скользящего окна для оценки надёжности (последних N циклов).
     history_recent_window: int = 10
+    # --- Российская проверка через Globalping (локация RU) ---
+    # None = автоматически: включена, если задан токен GLOBALPING_TOKEN.
+    ru_check_enabled: bool | None = None
+    # Бюджет измерений за прогон (потолок; фактическая квота API дополнительно
+    # урезает). 125 = два запуска в час укладываются в лимит 250/час аккаунта.
+    ru_check_budget: int = 125
+    # Одновременные обращения к API (Semaphore).
+    ru_check_concurrency: int = 12
+    # Сколько российских пробов замеряет один узел.
+    ru_check_probes: int = 3
+    # Пакетов (ICMP/TCP-подключений) на проб.
+    ru_check_packets: int = 2
+    # Интервал опроса статуса измерения, с (минимум 0.5 — требование API).
+    ru_check_poll_seconds: float = 0.7
+    # Общий дедлайн этапа российской проверки, с.
+    ru_check_deadline_seconds: float = 420.0
 
 
 REQUIRED_CATEGORIES = {"universal", "whitelist"}
@@ -282,6 +298,10 @@ def load_config(path: str | Path) -> BuildConfig:
         if key not in raw or raw[key] is None:
             return default
         return _number(raw, key, minimum, maximum)
+
+    ru_check_enabled_raw = raw.get("ru_check_enabled")
+    if ru_check_enabled_raw is not None and not isinstance(ru_check_enabled_raw, bool):
+        raise ConfigError("ru_check_enabled должно быть true или false")
     profile_raw = raw.get("profile") or {}
     if not isinstance(profile_raw, dict):
         raise ConfigError("profile должен быть объектом")
@@ -324,4 +344,11 @@ def load_config(path: str | Path) -> BuildConfig:
         _optional_int("verify_measurements", 3, 1, 5),
         _optional_int("verify_median_threshold_ms", 1500, 200, 5000),
         _optional_int("history_recent_window", 10, 5, 50),
+        ru_check_enabled_raw,
+        _optional_int("ru_check_budget", 125, 1, 5000),
+        _optional_int("ru_check_concurrency", 12, 1, 32),
+        _optional_int("ru_check_probes", 3, 1, 20),
+        _optional_int("ru_check_packets", 2, 1, 16),
+        _optional_number("ru_check_poll_seconds", 0.7, 0.5, 5.0),
+        _optional_number("ru_check_deadline_seconds", 420.0, 30.0, 1800.0),
     )

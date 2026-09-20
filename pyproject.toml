@@ -1,9 +1,12 @@
 [project]
 name = "vpnmy-subscription"
-version = "2.3.0"
+version = "2.4.0"
 description = "Проверяемая VPN-подписка (VLESS/VMess/Trojan/Hysteria2) для русскоязычной аудитории"
 requires-python = ">=3.11"
-dependencies = ["requests[socks]==2.34.2"]
+dependencies = [
+    "requests[socks]==2.34.2",
+    "aiohttp==3.14.3",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

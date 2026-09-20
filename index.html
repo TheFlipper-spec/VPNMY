@@ -563,11 +563,22 @@
               : "Доступна только предварительная TCP-проверка";
 
         const requiredRequests = Number(data.verification && data.verification.required_https_requests) || 0;
-        document.getElementById("verification-note").textContent = deepCheck
+        const baseNote = deepCheck
           ? requiredRequests >= 2
             ? "Каждый опубликованный узел подтвердил доступ двумя HTTPS-запросами через отдельный туннель Xray или Hysteria."
             : "Каждый опубликованный узел провёл HTTPS-запрос через отдельный туннель Xray или Hysteria."
           : "Диагностический набор ещё не прошёл глубокую проверку и не считается production-подпиской.";
+        // Честная строка о российской проверке (Globalping, локация RU):
+        // выполнена или пропущена — обе ситуации показываем без прикрас.
+        let ruNote = "";
+        if (data.ru_check && typeof data.ru_check === "object") {
+          const ru = data.ru_check;
+          ruNote = ru.enabled
+            ? ` Российская проверка (Globalping, RU): доступно ${ru.reachable}, заблокировано ${ru.blocked}, неизвестно ${ru.unknown}` +
+              (ru.median_latency_ms != null ? `, медиана RU-задержки ${ru.median_latency_ms} мс` : "") + "."
+            : ` Российская проверка (Globalping, RU) пропущена: ${ru.reason || "нет данных"}.`;
+        }
+        document.getElementById("verification-note").textContent = baseNote + ruNote;
 
         document.getElementById("count").textContent = String(servers.length);
         document.getElementById("sources-count").textContent = `${sources.filter(source => source.available).length} / ${sources.length}`;

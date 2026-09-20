@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from . import asn as asn_module
+from . import globalping
 from .config import BuildConfig
 from .fetcher import fetch_all
 from .history import load_history, prune_history, record_failure, record_skip, record_success
@@ -53,6 +54,7 @@ class BuildReport:
     check_mode: str
     quarantined: int = 0
     skipped: int = 0
+    ru_summary: str = ""
 
 
 def _select(
@@ -264,8 +266,59 @@ def build_subscription(
         raise BuildError("ни один сервер не прошёл сетевую предпроверку")
     reachable_ids = {probe.node.node_id for probe in probes}
     tcp_failed = [node for node in candidates if node.node_id not in reachable_ids]
-    probes_for_check = shortlist(
+
+    # --- Второй этап фильтрации: доступность из российской сети (Globalping, RU) ---
+    # Локальная предпроверка идёт с GitHub-раннера (США/Европа) и не видит блокировки
+    # ТСПУ. Перед дорогой глубокой проверкой отбрасываем узлы, подтверждённо недоступные
+    # из РФ: это экономит лимиты ядер и не публикует «рабочие из США, мёртвые из РФ».
+    # Приоритет российской проверки: опубликованные узлы → короткий список → остальные
+    # по локальному пингу; всё в пределах бюджета ru_check_budget и свободной квоты API.
+    prioritization = shortlist(
         probes,
+        history,
+        config.category_quotas,
+        config.target_count,
+        config.preferred_countries,
+        max_per_subnet=max(2, config.max_per_subnet),
+    )
+    ru_results, ru_stats = globalping.run_ru_check(
+        probes,
+        prioritization,
+        globalping.load_published_ids(config.paths.stats),
+        config,
+        checked_at=checked_at,
+    )
+    ru_blocked_ids: set[str] = set()
+    for probe in probes:
+        result = ru_results.get(probe.node.node_id)
+        if result is None:
+            continue
+        if result.ok is not None or result.reason not in globalping.NOT_CHECKED_REASONS:
+            globalping.record_ru_result(history, probe.node.node_id, result, checked_at)
+        if result.ok is False:
+            ru_blocked_ids.add(probe.node.node_id)
+    if ru_blocked_ids:
+        blocked_nodes = [p.node for p in probes if p.node.node_id in ru_blocked_ids]
+        for node in blocked_nodes:
+            record_failure(history, node, checked_at)
+        LOGGER.warning(
+            "Российская проверка (Globalping): %d узлов недоступны из РФ и исключены из проверки",
+            len(blocked_nodes),
+        )
+    LOGGER.info(
+        "Российская проверка (Globalping, RU): %s",
+        globalping.format_summary(ru_stats),
+    )
+    probes_ru = [p for p in probes if p.node.node_id not in ru_blocked_ids]
+    if not probes_ru:
+        raise BuildError(
+            "ни один сервер не доступен из российской сети; "
+            "последняя подписка сохранена без изменений"
+        )
+    # Короткий список пересчитываем после RU-отсева, чтобы лимиты подсетей/эндпоинтов
+    # заняли свободные места заменами, а не заблокированными узлами.
+    probes_for_check = shortlist(
+        probes_ru,
         history,
         config.category_quotas,
         config.target_count,
@@ -409,6 +462,8 @@ def build_subscription(
         generated_at=now,
         check_mode=check_mode,
         source_health=health,
+        ru_stats=ru_stats,
+        ru_results=ru_results,
     )
     # Убираем временную диагностику из истории, чтобы не раздувать файл, но оставляем в stats через publisher
     history.pop("_diagnostics", None)
@@ -433,4 +488,5 @@ def build_subscription(
         check_mode,
         quarantined=quarantined_count,
         skipped=len(skipped),
+        ru_summary=globalping.format_summary(ru_stats),
     )
