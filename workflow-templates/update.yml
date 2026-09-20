@@ -24,9 +24,6 @@ jobs:
       HYSTERIA_SHA256_LINUX_64: "6493dfffd55b5883f64c76c63880ecc32988f0c568c9ca9014907877b4d55f94"
       VPNMY_XRAY_BIN: "${{ github.workspace }}/.cache/xray/xray"
       VPNMY_HYSTERIA_BIN: "${{ github.workspace }}/.cache/hysteria/hysteria"
-      # Российская проверка узлов через Globalping (локация RU). Без секрета
-      # этап корректно пропускается и не ломает публикацию.
-      GLOBALPING_TOKEN: ${{ secrets.GLOBALPING_TOKEN }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -71,6 +68,10 @@ jobs:
           # sed читает весь вывод, не вызывая SIGPIPE при включённом pipefail.
           "$VPNMY_HYSTERIA_BIN" version 2>&1 | sed -n '/^[[:space:]]*Version/p'
       - name: Собрать подписку
+        env:
+          # Только этот шаг обращается к Globalping; тесты и проверка
+          # артефактов токен не видят (защита от флейвого CI).
+          GLOBALPING_TOKEN: ${{ secrets.GLOBALPING_TOKEN }}
         run: python main.py
       - name: Проверить артефакты
         run: |

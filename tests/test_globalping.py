@@ -740,6 +740,50 @@ def test_builder_ru_disabled_without_token(tmp_path, countries_file, monkeypatch
     assert len(verified) == 4  # все узлы ушли на глубокую проверку
 
 
+def test_builder_with_token_uses_mocked_ru_layer(tmp_path, countries_file, monkeypatch):
+    """CI-сценарий из update.yml: токен в окружении — сборка должна пройти
+
+    RU-этап (is_enabled → run_ru_check → _run) без обращения к сети.
+    Регрессия: ранее тесты test_builder без этой изоляции ходили в
+    настоящий Globalping API по тестовым IP, и CI падал в зависимости
+    от того, какие порты на этих IP реально открыты.
+    """
+    monkeypatch.setenv("GLOBALPING_TOKEN", "ci-fake-token")  # перезаписывает delenv conftest
+    c = cfg(tmp_path, countries_file)
+    links = four_links()
+    wire_build(monkeypatch, links)
+    verified = []
+    fake_verify(monkeypatch, verified)
+
+    seen = {}
+
+    async def fake_run(ordered, **kwargs):
+        seen["token"] = kwargs.get("token")
+        seen["count"] = len(ordered)
+        results = {
+            p.node.node_id: gp.RuProbeResult(p.node.node_id, True, "tcp", 42, 3, 3)
+            for p in ordered
+        }
+        stats = gp.RuCheckStats(
+            enabled=True,
+            budget=len(ordered),
+            configured_budget=len(ordered),
+            checked=len(ordered),
+            reachable=len(ordered),
+        )
+        return results, stats
+
+    # gp._run — единственная точка, где мог бы начаться реальный сетевой прогон.
+    monkeypatch.setattr(builder.globalping, "_run", fake_run)
+    report = build_subscription(c, now=datetime(2026, 1, 1, tzinfo=UTC))
+    assert seen["token"] == "ci-fake-token"  # токен из env дошёл до прогона
+    assert seen["count"] == 4  # все кандидаты ушли на RU-проверку
+    assert len(verified) == 4  # и дальше — на глубокую проверку
+    stats = json.loads(c.paths.stats.read_text())
+    assert stats["ru_check"]["enabled"] is True
+    assert report.ru_summary.startswith("проверено")
+
+
 def test_config_ru_keys(tmp_path):
     base = json.loads(Path("config/subscription.json").read_text(encoding="utf-8"))
     raw_path = tmp_path / "subscription.json"
