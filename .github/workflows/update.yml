@@ -1,7 +1,7 @@
 name: Обновление VPN-подписки
 on:
   schedule:
-    - cron: "7,17,27,37,47,57 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
