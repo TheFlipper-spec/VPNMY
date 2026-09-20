@@ -179,6 +179,8 @@ def _run_build(argv: Sequence[str] | None) -> int:
                 handle.write("## Результат обновления FL1P VPN\n\n")
                 handle.write(f"- {summary}\n")
                 handle.write(f"- Режим проверки: `{report.check_mode}`\n")
+                if report.ru_summary:
+                    handle.write(f"- Российская проверка (Globalping, RU): {report.ru_summary}\n")
         except OSError as exc:
             logging.getLogger(__name__).warning("Не удалось записать Job Summary: %s", exc)
     return 0

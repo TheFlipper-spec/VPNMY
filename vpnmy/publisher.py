@@ -74,6 +74,8 @@ def build_payloads(
     generated_at: datetime,
     check_mode: str,
     source_health: dict[str, Any] | None = None,
+    ru_stats: Any = None,
+    ru_results: dict[str, Any] | None = None,
 ) -> dict[Path, bytes]:
     title = config.profile_title or DEFAULT_PROFILE_TITLE
     web_page_url = config.profile_web_page_url or DEFAULT_PROFILE_URL
@@ -89,6 +91,7 @@ def build_payloads(
         protocol_counts[label] = protocol_counts.get(label, 0) + 1
     # Диагностика разнообразия и ASN — берётся из временного ключа history["_diagnostics"] если есть
     diagnostics = history.get("_diagnostics", {}) if isinstance(history.get("_diagnostics"), dict) else {}
+    ru_results = ru_results or {}
     stats = {
         "schema_version": 4,
         "status": "diagnostic"
@@ -146,6 +149,7 @@ def build_payloads(
             "excluded_by_limits": diagnostics.get("excluded_count", 0),
         },
         "asn": diagnostics.get("asn", {"status": "unknown"}),
+        "ru_check": (ru_stats.as_stats_dict() if ru_stats is not None else {"enabled": False}),
         "quality": {
             "scoring": (
                 "Без географического бонуса: качество = реальные проверки, надёжность в скользящем окне "
@@ -180,6 +184,12 @@ def build_payloads(
                 "attempts": getattr(item, "attempts", 1),
                 "speed_mbps": item.speed_mbps,
                 "score": item.score,
+                "ru_ms": (
+                    ru_results[item.node.node_id].latency_ms
+                    if item.node.node_id in ru_results
+                    and getattr(ru_results[item.node.node_id], "ok", None) is True
+                    else None
+                ),
                 "verified": check_mode == "xray" and item.checks_passed >= 2,
                 "checks_passed": item.checks_passed,
                 "success_streak": int(
