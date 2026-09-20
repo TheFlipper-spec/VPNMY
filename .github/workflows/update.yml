@@ -24,6 +24,9 @@ jobs:
       HYSTERIA_SHA256_LINUX_64: "6493dfffd55b5883f64c76c63880ecc32988f0c568c9ca9014907877b4d55f94"
       VPNMY_XRAY_BIN: "${{ github.workspace }}/.cache/xray/xray"
       VPNMY_HYSTERIA_BIN: "${{ github.workspace }}/.cache/hysteria/hysteria"
+      # Российская проверка узлов через Globalping (локация RU). Без секрета
+      # этап корректно пропускается и не ломает публикацию.
+      GLOBALPING_TOKEN: ${{ secrets.GLOBALPING_TOKEN }}
     steps:
       - name: Получить репозиторий
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -87,6 +90,9 @@ jobs:
           # Новые гарантии: 3 измерения, порог медианы, свежий Session на попытку
           assert stats["verification"]["measurements_per_node"] == 3, "ожидается 3 измерения на узел"
           assert stats["verification"]["median_threshold_ms"] == 1500
+          # Российская проверка: секция всегда публикуется (enabled true/false),
+          # чтобы страница статуса честно показывала, что узел проверен из РФ.
+          assert "ru_check" in stats and "enabled" in stats["ru_check"], "stats должен содержать ru_check"
           assert "measurements_per_node" in stats["verification"]
           # Разнообразие: лимиты и подсети
           div = stats.get("diversity", {})
