@@ -52,7 +52,7 @@
     },
     "00be84e6d05b5946": {
       "category": "universal",
-      "last_seen": "2026-10-09T13:42:32Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_unknown_at": "2026-10-10T15:50:12Z"
     },
@@ -124,7 +124,7 @@
     "0167686b6e147675": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -186,7 +186,7 @@
     },
     "0216c8aa91b4894e": {
       "category": "universal",
-      "last_seen": "2026-10-09T23:26:45Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 41,
@@ -221,7 +221,7 @@
     },
     "0282396d3f846c35": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "0283cfdb55100cf9": {
@@ -416,7 +416,7 @@
     },
     "044ce4254be3cc9f": {
       "category": "universal",
-      "last_seen": "2026-10-10T15:50:12Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 191,
@@ -458,13 +458,12 @@
       "country": "US",
       "egress_ip": "163.192.14.135",
       "failures": 0,
-      "http_max_ms": 232,
-      "http_ms": 151,
-      "jitter_ms": 85,
-      "last_seen": "2026-10-11T23:55:53Z",
-      "last_success": "2026-10-11T23:55:53Z",
+      "http_max_ms": 456,
+      "http_ms": 357,
+      "jitter_ms": 239,
+      "last_seen": "2026-10-12T05:46:24Z",
+      "last_success": "2026-10-12T05:46:24Z",
       "latency_medians": [
-        223,
         181,
         215,
         76,
@@ -483,9 +482,10 @@
         73,
         143,
         38,
-        151
+        151,
+        357
       ],
-      "median_ms": 151,
+      "median_ms": 357,
       "recent": [
         1,
         1,
@@ -501,21 +501,26 @@
       "resolved_ip": "163.192.14.135",
       "ru_blocked_streak": 0,
       "ru_ms": 180,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "ru_unknown_at": "2026-10-11T15:55:48Z",
-      "speed_mbps": 6.97,
-      "streak": 58,
-      "successes": 58,
-      "tcp_ms": 42
+      "speed_mbps": 2.02,
+      "streak": 59,
+      "successes": 59,
+      "tcp_ms": 60
+    },
+    "050cec791f51c616": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "054ea1b4e8d6bd5f": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "055d12c066b2e28e": {
       "category": "universal",
-      "last_seen": "2026-10-10T15:50:12Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "056b98a19305b5e6": {
@@ -566,7 +571,7 @@
     "0597b38b242e1865": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -575,11 +580,6 @@
       ],
       "streak": 0,
       "successes": 0
-    },
-    "059ea7ad0b6439d9": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "05cc0c65b3f070d4": {
       "category": "universal",
@@ -746,7 +746,10 @@
     "07509bd3a30e2c61": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 44,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "07568c9e3c146187": {
       "category": "universal",
@@ -773,33 +776,35 @@
       "category": "whitelist",
       "checks_passed": 2,
       "country": "CH",
-      "egress_ip": "2001:1600:13:101::fe7",
+      "egress_ip": "2001:1600:13:101::1df6",
       "failures": 0,
-      "http_max_ms": 1168,
-      "http_ms": 452,
-      "jitter_ms": 717,
-      "last_seen": "2026-10-11T23:55:49Z",
-      "last_success": "2026-10-11T23:55:49Z",
+      "http_max_ms": 8000,
+      "http_ms": 8000,
+      "jitter_ms": 6743,
+      "last_seen": "2026-10-12T05:46:15Z",
+      "last_success": "2026-10-12T05:46:15Z",
       "latency_medians": [
-        452
+        452,
+        8000
       ],
-      "median_ms": 452,
+      "median_ms": 8000,
       "recent": [
+        1,
         1
       ],
-      "resolved_ip": "153.76.164.0",
+      "resolved_ip": "153.76.164.1",
       "ru_blocked_streak": 0,
-      "ru_ms": 5,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 1.6,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 139
+      "ru_ms": 2,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 1.06,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 121
     },
     "079027b7cc390474": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -850,7 +855,7 @@
     "0812c29c2c9ad75b": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -895,11 +900,6 @@
       "successes": 2,
       "tcp_ms": 183
     },
-    "08636d0c36d9559d": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "0872d52182bdc243": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
@@ -928,7 +928,7 @@
     },
     "08a847e08e2082aa": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "08c88259fdbd2abb": {
@@ -993,6 +993,11 @@
       "last_seen": "2026-10-10T19:59:35Z",
       "recent": []
     },
+    "09572ea531af9213": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "095f24d0b409857f": {
       "category": "whitelist",
       "last_seen": "2026-10-10T15:50:12Z",
@@ -1005,21 +1010,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 56,
       "ru_ok_at": "2026-10-11T20:10:49Z"
-    },
-    "097341f2961dc1a6": {
-      "category": "universal",
-      "failures": 2,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0,
-        0
-      ],
-      "ru_blocked": true,
-      "ru_blocked_at": "2026-10-08T13:57:55Z",
-      "ru_blocked_streak": 2,
-      "ru_ms": null,
-      "streak": 0,
-      "successes": 0
     },
     "09778c355064f273": {
       "category": "universal",
@@ -1135,6 +1125,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "09f0b54eda517a66": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "09fb1d500f3a0319": {
       "category": "universal",
@@ -1369,7 +1364,7 @@
     "0cb3a1e1a1d45226": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -1495,8 +1490,8 @@
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 52,
-      "ru_ok_at": "2026-10-11T15:55:48Z"
+      "ru_ms": 49,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "0d7d7c26da1a98b4": {
       "category": "universal",
@@ -1521,6 +1516,11 @@
     "0df06f639201f231": {
       "category": "whitelist",
       "last_seen": "2026-10-11T09:15:10Z",
+      "recent": []
+    },
+    "0df093d185a55821": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "0e0f5d62472e92f8": {
@@ -1732,7 +1732,7 @@
     },
     "0f2141b6cbe6c624": {
       "category": "universal",
-      "last_seen": "2026-10-10T19:59:35Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 45,
@@ -1746,6 +1746,11 @@
     "0f651d01b391dd18": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
+      "recent": []
+    },
+    "0f75953624813c19": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "0f7e150e8301bb3b": {
@@ -1844,14 +1849,6 @@
       "last_seen": "2026-10-09T23:26:45Z",
       "recent": []
     },
-    "104517e42a34945c": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 55,
-      "ru_ok_at": "2026-10-09T13:42:32Z"
-    },
     "105dccced0830a1a": {
       "asn": "",
       "category": "universal",
@@ -1919,6 +1916,11 @@
       "last_seen": "2026-10-09T23:26:45Z",
       "recent": []
     },
+    "108f0c0807b18c03": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "10c1babbe808c001": {
       "asn": "",
       "category": "universal",
@@ -1926,13 +1928,12 @@
       "country": "US",
       "egress_ip": "142.249.37.90",
       "failures": 0,
-      "http_max_ms": 317,
-      "http_ms": 183,
-      "jitter_ms": 149,
-      "last_seen": "2026-10-11T23:55:52Z",
-      "last_success": "2026-10-11T23:55:52Z",
+      "http_max_ms": 365,
+      "http_ms": 205,
+      "jitter_ms": 168,
+      "last_seen": "2026-10-12T05:46:22Z",
+      "last_success": "2026-10-12T05:46:22Z",
       "latency_medians": [
-        129,
         60,
         200,
         60,
@@ -1951,9 +1952,10 @@
         59,
         154,
         76,
-        183
+        183,
+        205
       ],
-      "median_ms": 183,
+      "median_ms": 205,
       "recent": [
         1,
         1,
@@ -1969,11 +1971,11 @@
       "resolved_ip": "142.249.37.90",
       "ru_blocked_streak": 0,
       "ru_ms": 166,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 6.01,
-      "streak": 137,
-      "successes": 137,
-      "tcp_ms": 42
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 4.6,
+      "streak": 138,
+      "successes": 138,
+      "tcp_ms": 54
     },
     "10cb05310daf5444": {
       "category": "universal",
@@ -2001,7 +2003,7 @@
     "10fd5e5a09fcbe61": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -2025,13 +2027,12 @@
       "country": "JP",
       "egress_ip": "46.250.250.149",
       "failures": 0,
-      "http_max_ms": 644,
-      "http_ms": 602,
-      "jitter_ms": 60,
-      "last_seen": "2026-10-11T23:55:32Z",
-      "last_success": "2026-10-11T23:55:32Z",
+      "http_max_ms": 668,
+      "http_ms": 666,
+      "jitter_ms": 15,
+      "last_seen": "2026-10-12T05:45:58Z",
+      "last_success": "2026-10-12T05:45:58Z",
       "latency_medians": [
-        414,
         475,
         706,
         482,
@@ -2050,9 +2051,10 @@
         475,
         589,
         448,
-        602
+        602,
+        666
       ],
-      "median_ms": 602,
+      "median_ms": 666,
       "recent": [
         1,
         1,
@@ -2067,12 +2069,12 @@
       ],
       "resolved_ip": "46.250.250.149",
       "ru_blocked_streak": 0,
-      "ru_ms": 251,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 1.75,
-      "streak": 95,
-      "successes": 95,
-      "tcp_ms": 138
+      "ru_ms": 250,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 1.49,
+      "streak": 96,
+      "successes": 96,
+      "tcp_ms": 162
     },
     "1120d6280860135f": {
       "category": "universal",
@@ -2107,6 +2109,20 @@
       "streak": 0,
       "successes": 0
     },
+    "112a0101a4f1a8e0": {
+      "category": "universal",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-10-12T05:44:59Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
+    },
     "11376d0fcb343a4a": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
@@ -2125,20 +2141,6 @@
       "ru_ms": 38,
       "ru_ok_at": "2026-10-11T15:55:48Z"
     },
-    "117c228f400e014d": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked": true,
-      "ru_blocked_at": "2026-10-09T00:15:29Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "streak": 0,
-      "successes": 0
-    },
     "11805150e4d2662f": {
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
@@ -2147,6 +2149,11 @@
     "118eed8452b73fb2": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
+      "recent": []
+    },
+    "11a06fc29c9c1af6": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "11ab47dc6fb2de4d": {
@@ -2186,11 +2193,16 @@
     },
     "12066b07adcc912d": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
-      "recent": [],
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
       "ru_blocked_streak": 0,
       "ru_ms": 44,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ok_at": "2026-10-11T20:10:49Z",
+      "streak": 0,
+      "successes": 0
     },
     "120ad8ed393737ac": {
       "category": "universal",
@@ -2265,11 +2277,6 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
-    "12ba43b350916e42": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "12cbe3b33d60006e": {
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
@@ -2336,7 +2343,7 @@
       "resolved_ip": "91.215.43.248",
       "ru_blocked_streak": 0,
       "ru_ms": 1,
-      "ru_ok_at": "2026-10-11T20:10:49Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "speed_mbps": 0.65,
       "streak": 4,
       "successes": 4,
@@ -2360,7 +2367,7 @@
     "13c1410c63afa9c8": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -2415,28 +2422,30 @@
       "country": "RU",
       "egress_ip": "159.194.244.247",
       "failures": 0,
-      "http_max_ms": 885,
-      "http_ms": 788,
-      "jitter_ms": 456,
-      "last_seen": "2026-10-11T23:55:51Z",
-      "last_success": "2026-10-11T23:55:51Z",
+      "http_max_ms": 848,
+      "http_ms": 401,
+      "jitter_ms": 469,
+      "last_seen": "2026-10-12T05:46:18Z",
+      "last_success": "2026-10-12T05:46:18Z",
       "latency_medians": [
         541,
-        788
+        788,
+        401
       ],
-      "median_ms": 788,
+      "median_ms": 401,
       "recent": [
+        1,
         1,
         1
       ],
       "resolved_ip": "159.194.244.247",
       "ru_blocked_streak": 0,
       "ru_ms": 11,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 1.11,
-      "streak": 2,
-      "successes": 2,
-      "tcp_ms": 157
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 0.0,
+      "streak": 3,
+      "successes": 3,
+      "tcp_ms": 129
     },
     "1489963572cd9688": {
       "category": "universal",
@@ -2456,32 +2465,17 @@
       "ru_ms": 38,
       "ru_ok_at": "2026-10-08T00:22:28Z"
     },
-    "1494a068f2524e6e": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "14980d75e4d3ca98": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 70,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ms": 64,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "14b959040fa04c2b": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
-      "recent": []
-    },
-    "14c33c170d22b594": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "14d9fefd42007c40": {
@@ -2515,7 +2509,7 @@
     "14fdb54fd50a7446": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -2534,6 +2528,16 @@
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
       "recent": []
+    },
+    "154510f0b4efdd6d": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "15470d47fc39a7ad": {
       "category": "universal",
@@ -2662,31 +2666,33 @@
     },
     "16758ba512aec95f": {
       "asn": "",
-      "category": "whitelist",
+      "category": "universal",
       "checks_passed": 2,
       "country": "DE",
       "egress_ip": "31.77.106.27",
       "failures": 0,
-      "http_max_ms": 1507,
-      "http_ms": 1491,
-      "jitter_ms": 338,
-      "last_seen": "2026-10-11T23:55:57Z",
-      "last_success": "2026-10-11T23:55:57Z",
+      "http_max_ms": 1354,
+      "http_ms": 1272,
+      "jitter_ms": 114,
+      "last_seen": "2026-10-12T05:46:07Z",
+      "last_success": "2026-10-12T05:46:07Z",
       "latency_medians": [
-        1491
+        1491,
+        1272
       ],
-      "median_ms": 1491,
+      "median_ms": 1272,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "31.76.227.58",
       "ru_blocked_streak": 0,
-      "ru_ms": 9,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 0.97,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 141
+      "ru_ms": 3,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 1.26,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 120
     },
     "167c8ab9af46d24b": {
       "category": "universal",
@@ -2695,11 +2701,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 42,
       "ru_ok_at": "2026-10-10T09:42:47Z"
-    },
-    "16884e23026a71a5": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "168c1e98b7cdadd3": {
       "category": "whitelist",
@@ -2783,7 +2784,7 @@
     "16f148d77f5bd11d": {
       "category": "universal",
       "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0
@@ -2888,14 +2889,6 @@
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
     },
-    "185b0dd59372f7da": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 37,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
-    },
     "18674c366dcaee7d": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -2999,11 +2992,6 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
-    "1960249ac5a88460": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "1964781ebfccad8b": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
@@ -3059,11 +3047,6 @@
       "ru_ms": 324,
       "ru_ok_at": "2026-09-24T18:37:51Z"
     },
-    "19d2bb3a4b821cab": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "19dd3b16eca743a0": {
       "category": "universal",
       "last_seen": "2026-10-10T09:42:47Z",
@@ -3089,7 +3072,7 @@
     },
     "1a5625f341c74618": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 50,
@@ -3196,7 +3179,7 @@
     "1ae3715cdbd2bdcd": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -3213,7 +3196,7 @@
     "1aea110fb97ad8c5": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -3232,11 +3215,6 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": []
     },
-    "1afbc4a24741b75c": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "1b07088b5e905a10": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
@@ -3244,12 +3222,7 @@
     },
     "1b0dcc23be077c9a": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
-      "recent": []
-    },
-    "1b1c767c059010d7": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "1b3e6b4441af5b28": {
@@ -3319,7 +3292,7 @@
     "1b82d8d47d3d9556": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -3361,28 +3334,30 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "FR",
-      "egress_ip": "62.210.124.146",
+      "egress_ip": "2001:bc8:32d7:17b::100",
       "failures": 0,
-      "http_max_ms": 641,
-      "http_ms": 396,
-      "jitter_ms": 246,
-      "last_seen": "2026-10-11T23:55:58Z",
-      "last_success": "2026-10-11T23:55:58Z",
+      "http_max_ms": 1733,
+      "http_ms": 516,
+      "jitter_ms": 1432,
+      "last_seen": "2026-10-12T05:46:27Z",
+      "last_success": "2026-10-12T05:46:27Z",
       "latency_medians": [
-        396
+        396,
+        516
       ],
-      "median_ms": 396,
+      "median_ms": 516,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "62.210.124.146",
       "ru_blocked_streak": 0,
       "ru_ms": 52,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 2.59,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 115
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 3.41,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 91
     },
     "1bf36f1b77ff34cc": {
       "category": "universal",
@@ -3453,7 +3428,7 @@
     },
     "1c85ec231a02fa37": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "1c979531ea44cac2": {
@@ -3478,11 +3453,11 @@
       "country": "RU",
       "egress_ip": "94.198.54.132",
       "failures": 0,
-      "http_max_ms": 1912,
-      "http_ms": 610,
-      "jitter_ms": 1313,
-      "last_seen": "2026-10-11T23:56:05Z",
-      "last_success": "2026-10-11T23:56:05Z",
+      "http_max_ms": 878,
+      "http_ms": 565,
+      "jitter_ms": 324,
+      "last_seen": "2026-10-12T05:46:32Z",
+      "last_success": "2026-10-12T05:46:32Z",
       "latency_medians": [
         586,
         595,
@@ -3496,9 +3471,10 @@
         674,
         1005,
         745,
-        610
+        610,
+        565
       ],
-      "median_ms": 610,
+      "median_ms": 565,
       "recent": [
         1,
         1,
@@ -3513,12 +3489,12 @@
       ],
       "resolved_ip": "94.198.54.132",
       "ru_blocked_streak": 0,
-      "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 2.04,
-      "streak": 13,
-      "successes": 13,
-      "tcp_ms": 153
+      "ru_ms": 12,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 2.18,
+      "streak": 14,
+      "successes": 14,
+      "tcp_ms": 135
     },
     "1d1a6bed07a60702": {
       "category": "universal",
@@ -3530,7 +3506,7 @@
     },
     "1d204398fd6e98b5": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "1d2882d8fbb7890a": {
@@ -3538,22 +3514,14 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
-    "1d311599938302bf": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 528,
-      "ru_ok_at": "2026-10-10T02:39:30Z"
-    },
     "1d395210f724ef0d": {
       "category": "universal",
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
-    "1d60625ec620218a": {
+    "1d7b3bc99c85abda": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "1d8d1538ea4745f0": {
@@ -3584,9 +3552,14 @@
       "streak": 0,
       "successes": 0
     },
-    "1dfcb6a72f0c7d2a": {
+    "1e00ba0b7d3d7960": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
+    "1e0eabe1a61b6124": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "1e46e4150a976519": {
@@ -3596,7 +3569,7 @@
     },
     "1e4c266d1a6d93a9": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "1e523abbd32b60ee": {
@@ -3611,9 +3584,10 @@
     },
     "1e713ba405455b22": {
       "category": "whitelist",
-      "failures": 3,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
@@ -3629,11 +3603,6 @@
     "1e89bda1f124ab24": {
       "category": "universal",
       "last_seen": "2026-10-09T13:42:32Z",
-      "recent": []
-    },
-    "1e8c93047c17b084": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "1e98097412634c98": {
@@ -3685,7 +3654,7 @@
     "1eb7711598218197": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -3727,6 +3696,11 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
+    "1f4bfc60a73882b2": {
+      "category": "whitelist",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "1f5272cb1cd38aec": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
@@ -3740,7 +3714,7 @@
     "1f60223b13f0e35f": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -3847,6 +3821,20 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
+    "20452ba240dcd6e3": {
+      "category": "universal",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-10-12T05:44:59Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
+    },
     "205130bfa64e881d": {
       "category": "universal",
       "failures": 4,
@@ -3867,7 +3855,7 @@
     "205299d7dcd84129": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -3899,13 +3887,12 @@
       "country": "DE",
       "egress_ip": "64.188.98.171",
       "failures": 2,
-      "http_max_ms": 708,
-      "http_ms": 446,
-      "jitter_ms": 267,
-      "last_seen": "2026-10-11T23:55:56Z",
-      "last_success": "2026-10-11T23:55:56Z",
+      "http_max_ms": 956,
+      "http_ms": 383,
+      "jitter_ms": 589,
+      "last_seen": "2026-10-12T05:46:25Z",
+      "last_success": "2026-10-12T05:46:25Z",
       "latency_medians": [
-        540,
         497,
         396,
         549,
@@ -3924,9 +3911,10 @@
         757,
         462,
         902,
-        446
+        446,
+        383
       ],
-      "median_ms": 446,
+      "median_ms": 383,
       "recent": [
         1,
         1,
@@ -3941,13 +3929,13 @@
       ],
       "resolved_ip": "91.196.32.163",
       "ru_blocked_streak": 0,
-      "ru_ms": 50,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ms": 47,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "ru_unknown_at": "2026-10-05T22:32:16Z",
-      "speed_mbps": 2.41,
-      "streak": 26,
-      "successes": 144,
-      "tcp_ms": 125
+      "speed_mbps": 2.87,
+      "streak": 27,
+      "successes": 145,
+      "tcp_ms": 103
     },
     "20f8d7e61b3b61c2": {
       "asn": "",
@@ -4001,35 +3989,6 @@
       "ru_ms": 57,
       "ru_ok_at": "2026-10-10T09:42:47Z"
     },
-    "21452f1727669291": {
-      "asn": "",
-      "category": "whitelist",
-      "checks_passed": 2,
-      "country": "RU",
-      "egress_ip": "103.88.243.142",
-      "failures": 1,
-      "http_max_ms": 829,
-      "http_ms": 551,
-      "jitter_ms": 286,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "last_success": "2026-10-08T19:51:39Z",
-      "latency_medians": [
-        551
-      ],
-      "median_ms": 551,
-      "recent": [
-        1,
-        0
-      ],
-      "resolved_ip": "103.88.243.142",
-      "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-09T00:15:29Z",
-      "speed_mbps": 1.93,
-      "streak": 0,
-      "successes": 1,
-      "tcp_ms": 132
-    },
     "215f70d881e5c6c6": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
@@ -4037,9 +3996,10 @@
     },
     "2170e47662d102b1": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -4078,8 +4038,8 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 42,
-      "ru_ok_at": "2026-10-11T02:07:52Z"
+      "ru_ms": 39,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "21e4015607dfc4e0": {
       "category": "universal",
@@ -4093,7 +4053,7 @@
     },
     "21ebe992b2be4911": {
       "category": "whitelist",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "21ee9cb1ede18f69": {
@@ -4118,7 +4078,7 @@
     },
     "224b71c422d0443c": {
       "category": "universal",
-      "last_seen": "2026-10-09T19:27:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "225f53d93aecdfdb": {
@@ -4129,6 +4089,24 @@
     "226b221cd0602d99": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": []
+    },
+    "227e3d1ad228f690": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 10,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "streak": 0,
+      "successes": 0
+    },
+    "22934488adf16c80": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "22b6660cbee86def": {
@@ -4148,6 +4126,11 @@
       "ru_blocked_streak": 0,
       "ru_ms": 272,
       "ru_ok_at": "2026-10-11T09:15:10Z"
+    },
+    "22c37fa71412e47d": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "22d34860f3cd3ac1": {
       "asn": "",
@@ -4189,12 +4172,15 @@
     "22d9175d7ae7b35b": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 55,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "22dfd27dfd066542": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -4214,11 +4200,18 @@
     },
     "22ed6a9582467b41": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 34,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-10-12T05:44:59Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "streak": 0,
+      "successes": 0
     },
     "232338aeb6504c88": {
       "category": "universal",
@@ -4404,19 +4397,6 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": []
     },
-    "2453da4e01bf166f": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked_streak": 0,
-      "ru_ms": 4,
-      "ru_ok_at": "2026-10-08T19:49:43Z",
-      "streak": 0,
-      "successes": 0
-    },
     "245647ef7e6a05d8": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
@@ -4437,8 +4417,8 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 65,
-      "ru_ok_at": "2026-10-10T23:26:15Z"
+      "ru_ms": 93,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "24bfe7988e61a59b": {
       "category": "universal",
@@ -4450,7 +4430,7 @@
     },
     "24c05689dbc65ca0": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "24cae3a7e74fe838": {
@@ -4468,11 +4448,11 @@
       "country": "US",
       "egress_ip": "162.120.69.83",
       "failures": 0,
-      "http_max_ms": 267,
-      "http_ms": 212,
-      "jitter_ms": 96,
-      "last_seen": "2026-10-11T23:55:29Z",
-      "last_success": "2026-10-11T23:55:29Z",
+      "http_max_ms": 339,
+      "http_ms": 107,
+      "jitter_ms": 247,
+      "last_seen": "2026-10-12T05:45:54Z",
+      "last_success": "2026-10-12T05:45:54Z",
       "latency_medians": [
         186,
         184,
@@ -4482,10 +4462,12 @@
         324,
         260,
         8000,
-        212
+        212,
+        107
       ],
-      "median_ms": 212,
+      "median_ms": 107,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -4498,12 +4480,12 @@
       ],
       "resolved_ip": "169.40.42.182",
       "ru_blocked_streak": 0,
-      "ru_ms": 108,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 4.02,
-      "streak": 9,
-      "successes": 9,
-      "tcp_ms": 28
+      "ru_ms": 109,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 12.18,
+      "streak": 10,
+      "successes": 10,
+      "tcp_ms": 13
     },
     "25021908c55eaa4b": {
       "category": "universal",
@@ -4520,7 +4502,7 @@
       "http_max_ms": 8000,
       "http_ms": 8000,
       "jitter_ms": 4841,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "last_success": "2026-09-30T06:37:51Z",
       "latency_medians": [
         8000
@@ -4565,6 +4547,11 @@
       "streak": 0,
       "successes": 0
     },
+    "25630716d3a0afbc": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "257121d7c1eed879": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -4573,6 +4560,11 @@
     "259ab1d95e9aa55f": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
+      "recent": []
+    },
+    "25cb278e712b25a5": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "25f2b300c008c59b": {
@@ -4671,11 +4663,16 @@
     },
     "26881be3134dd642": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-10T09:42:47Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-10-12T05:44:59Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
       "streak": 0,
       "successes": 0
     },
@@ -4696,9 +4693,10 @@
     },
     "26fa2f83f11bd295": {
       "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 3,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0
       ],
@@ -4772,12 +4770,7 @@
     },
     "27839e22f52aef5c": {
       "category": "universal",
-      "last_seen": "2026-10-10T19:59:35Z",
-      "recent": []
-    },
-    "278fc5dbacdf8956": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "27b2abe0f0dff81e": {
@@ -4957,7 +4950,7 @@
     },
     "28bc81f618004809": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 46,
@@ -4976,11 +4969,6 @@
     "28ea9af2c7ec8355": {
       "category": "whitelist",
       "last_seen": "2026-10-11T02:07:52Z",
-      "recent": []
-    },
-    "28ede803031ca8d6": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "28fabd70a0e53fc7": {
@@ -5016,8 +5004,8 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 48,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 44,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "2915591b9b3d711b": {
       "category": "universal",
@@ -5030,6 +5018,11 @@
     "2935ebd5246b12c1": {
       "category": "universal",
       "last_seen": "2026-10-09T19:27:10Z",
+      "recent": []
+    },
+    "2947f8f107ac78c9": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "2948455af3c90bed": {
@@ -5047,12 +5040,12 @@
     },
     "296fdeba3bc51505": {
       "category": "whitelist",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "297dd8328a18445c": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "297f874239cc3ab2": {
@@ -5089,7 +5082,7 @@
     "29f8cc25f6452834": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -5122,6 +5115,11 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "2a640d9aa45cffe6": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "2a802ef5d658b227": {
       "category": "universal",
       "failures": 4,
@@ -5139,6 +5137,11 @@
       "ru_ok_at": "2026-10-06T21:11:15Z",
       "streak": 0,
       "successes": 0
+    },
+    "2ab6c64b560c9b04": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "2ac8af71a57f9702": {
       "asn": "",
@@ -5166,8 +5169,8 @@
       ],
       "resolved_ip": "91.215.43.248",
       "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ms": 1,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "speed_mbps": 0.65,
       "streak": 0,
       "successes": 3,
@@ -5176,7 +5179,7 @@
     "2adb54b63d1a697c": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -5215,16 +5218,6 @@
     "2b0d35df3878c97a": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
-      "recent": []
-    },
-    "2b24ea3e3c762d43": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
-    "2b3592a9c619fd1d": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "2b373db913e8acea": {
@@ -5309,11 +5302,11 @@
       "country": "HK",
       "egress_ip": "47.239.203.111",
       "failures": 2,
-      "http_max_ms": 939,
-      "http_ms": 919,
-      "jitter_ms": 85,
-      "last_seen": "2026-10-09T00:16:38Z",
-      "last_success": "2026-10-09T00:16:38Z",
+      "http_max_ms": 1236,
+      "http_ms": 1235,
+      "jitter_ms": 8,
+      "last_seen": "2026-10-12T05:46:02Z",
+      "last_success": "2026-10-12T05:46:02Z",
       "latency_medians": [
         1104,
         1121,
@@ -5331,13 +5324,14 @@
         1197,
         1224,
         828,
-        919
+        919,
+        1235
       ],
-      "median_ms": 919,
+      "median_ms": 1235,
       "recent": [
-        0,
         1,
         0,
+        1,
         1,
         1,
         1,
@@ -5348,27 +5342,17 @@
       ],
       "resolved_ip": "104.26.4.60",
       "ru_blocked_streak": 0,
-      "ru_ms": 39,
-      "ru_ok_at": "2026-10-09T00:15:29Z",
-      "speed_mbps": 1.67,
-      "streak": 7,
-      "successes": 17,
-      "tcp_ms": 1
+      "ru_ms": 37,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 1.17,
+      "streak": 8,
+      "successes": 18,
+      "tcp_ms": 6
     },
     "2bd28727498525a8": {
       "category": "universal",
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
-    },
-    "2bdf91dc8d2be32e": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "2bf90238a9818ef5": {
       "category": "universal",
@@ -5410,9 +5394,10 @@
     },
     "2c9cf77705f3e668": {
       "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 3,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0
       ],
@@ -5421,7 +5406,7 @@
     },
     "2ceeda1d88ba83fd": {
       "category": "universal",
-      "last_seen": "2026-10-10T23:26:15Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "2cf0af090ac5c1eb": {
@@ -5496,11 +5481,6 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
-    "2d9492c9ec735b02": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "2d96be374a90586d": {
       "category": "universal",
       "failures": 1,
@@ -5532,17 +5512,35 @@
     "2dc2771df18a4c6e": {
       "category": "whitelist",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 11,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "2dc4dab1dd5fcbef": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": []
     },
+    "2dd4c8480a10449c": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "2e00cec6ea520c5e": {
       "category": "universal",
       "last_seen": "2026-10-10T09:42:47Z",
       "recent": []
+    },
+    "2e00d2358f00ad2b": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "2e1318d1ca4bae02": {
       "category": "universal",
@@ -5552,6 +5550,11 @@
     "2e361d9df7ebf646": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
+      "recent": []
+    },
+    "2e3f44ff99277050": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "2e4237df907ae88f": {
@@ -5636,6 +5639,11 @@
       "ru_ms": 10,
       "ru_ok_at": "2026-10-08T00:22:28Z"
     },
+    "2ef2bcd8be782c82": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "2efe1aa0f5e2d0ed": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
@@ -5656,11 +5664,6 @@
       "streak": 0,
       "successes": 0
     },
-    "2f11df2bffd8f1ad": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "2f1238c9b5dc22b1": {
       "category": "universal",
       "last_seen": "2026-10-09T19:27:10Z",
@@ -5669,7 +5672,7 @@
     "2f27917d4fb65b52": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-10T19:59:35Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -5696,7 +5699,7 @@
     },
     "2f34c2a0392e5647": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 123,
@@ -5715,7 +5718,7 @@
     "2f724829764b354b": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -5753,7 +5756,7 @@
     "2ffd6e4f258b4a9f": {
       "category": "universal",
       "failures": 3,
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -5770,11 +5773,6 @@
     "30255a8f65a54329": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
-      "recent": []
-    },
-    "3031cfbef55bb08f": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "3048799f132aded3": {
@@ -5856,16 +5854,6 @@
       "streak": 0,
       "successes": 0
     },
-    "30c833ba53dfa3d7": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "30c8c0a4d35d0460": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
@@ -5919,9 +5907,10 @@
     },
     "31e1f4230dac47e0": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -5952,8 +5941,8 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 42,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ms": 39,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "3263e5045b2ef861": {
       "category": "universal",
@@ -6002,7 +5991,7 @@
     },
     "32bdceb8652ac3aa": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "32c51b97ed6c8c08": {
@@ -6054,12 +6043,12 @@
     },
     "3328194a40689bc0": {
       "category": "universal",
-      "last_seen": "2026-10-10T15:50:12Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "332f7a3e0e4bf4f7": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "3345e80e2c5919ce": {
@@ -6075,25 +6064,19 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
-    "33778a2fa641713d": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "33ae9a84b5714417": {
       "asn": "",
       "category": "whitelist",
       "checks_passed": 2,
       "country": "RU",
-      "egress_ip": "94.198.54.132",
+      "egress_ip": "2a06:dd00:20::51",
       "failures": 34,
-      "http_max_ms": 2669,
-      "http_ms": 593,
-      "jitter_ms": 2079,
-      "last_seen": "2026-10-11T23:56:05Z",
-      "last_success": "2026-10-11T23:56:05Z",
+      "http_max_ms": 1031,
+      "http_ms": 547,
+      "jitter_ms": 486,
+      "last_seen": "2026-10-12T05:46:32Z",
+      "last_success": "2026-10-12T05:46:32Z",
       "latency_medians": [
-        8000,
         8000,
         8000,
         8000,
@@ -6112,9 +6095,10 @@
         1104,
         8000,
         725,
-        593
+        593,
+        547
       ],
-      "median_ms": 593,
+      "median_ms": 547,
       "recent": [
         1,
         1,
@@ -6129,20 +6113,20 @@
       ],
       "resolved_ip": "94.198.54.132",
       "ru_blocked_streak": 0,
-      "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 2.02,
-      "streak": 14,
-      "successes": 53,
-      "tcp_ms": 143
+      "ru_ms": 12,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 2.29,
+      "streak": 15,
+      "successes": 54,
+      "tcp_ms": 128
     },
     "33c803ae2a4af323": {
       "category": "whitelist",
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 17,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ms": 11,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "33d10dc2614fd3c6": {
       "category": "universal",
@@ -6192,14 +6176,6 @@
       "successes": 1,
       "tcp_ms": 5
     },
-    "34bc0ec2a12c097c": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 37,
-      "ru_ok_at": "2026-10-09T13:42:32Z"
-    },
     "34c4422d325a3d1a": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
@@ -6220,11 +6196,6 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
-    "34fff7afa30bb071": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "352dd16cd4a4d083": {
       "category": "universal",
       "last_seen": "2026-10-10T02:39:30Z",
@@ -6237,11 +6208,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 39,
       "ru_ok_at": "2026-10-11T20:10:49Z"
-    },
-    "357469245c65888c": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "35868684cdcfb41e": {
       "category": "universal",
@@ -6263,21 +6229,22 @@
       "category": "whitelist",
       "checks_passed": 2,
       "country": "CH",
-      "egress_ip": "2001:1600:13:101::fe7",
+      "egress_ip": "2001:1600:13:101::1df6",
       "failures": 2,
-      "http_max_ms": 1183,
-      "http_ms": 448,
-      "jitter_ms": 737,
-      "last_seen": "2026-10-11T23:55:45Z",
-      "last_success": "2026-10-11T23:55:45Z",
+      "http_max_ms": 1693,
+      "http_ms": 636,
+      "jitter_ms": 1089,
+      "last_seen": "2026-10-12T05:46:09Z",
+      "last_success": "2026-10-12T05:46:09Z",
       "latency_medians": [
         695,
         465,
         508,
         538,
-        448
+        448,
+        636
       ],
-      "median_ms": 448,
+      "median_ms": 636,
       "recent": [
         1,
         1,
@@ -6285,16 +6252,17 @@
         0,
         0,
         1,
+        1,
         1
       ],
-      "resolved_ip": "153.76.164.1",
+      "resolved_ip": "153.76.164.0",
       "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 1.58,
-      "streak": 2,
-      "successes": 5,
-      "tcp_ms": 138
+      "ru_ms": 8,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 0.99,
+      "streak": 3,
+      "successes": 6,
+      "tcp_ms": 122
     },
     "35cbabbf96f8c6ed": {
       "category": "universal",
@@ -6304,7 +6272,7 @@
     "35ce003941f13ec2": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -6326,7 +6294,7 @@
     },
     "35f53195c7c333a1": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 60,
@@ -6484,12 +6452,17 @@
     },
     "3763c83cfccd8739": {
       "category": "universal",
-      "last_seen": "2026-10-10T23:26:15Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "378a1ba59914b616": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
+      "recent": []
+    },
+    "37ad1104cbeb41f2": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "37b9a78e6543adb8": {
@@ -6535,7 +6508,7 @@
     "37e5db3bc5c1342e": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -6552,6 +6525,11 @@
     "37e9f50ede912806": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
+      "recent": []
+    },
+    "37ea99ed4dccef40": {
+      "category": "whitelist",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "3836be3f0f98e64a": {
@@ -6572,11 +6550,19 @@
     "38684d005f96e7de": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 23,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "389156cb4c639e21": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
+      "recent": []
+    },
+    "38a7b18917923a47": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "38a8676f18c2af72": {
@@ -6609,7 +6595,7 @@
     },
     "38d8e38a68041b9e": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "38e77cc8d303722c": {
@@ -6667,6 +6653,11 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "3988119c639da137": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "39a25cc0b706db19": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
@@ -6720,7 +6711,7 @@
     "3a752eada6260daf": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -6763,8 +6754,8 @@
       "last_seen": "2026-10-10T09:42:47Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 41,
-      "ru_ok_at": "2026-10-11T09:15:10Z"
+      "ru_ms": 39,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "3afcf3d54b632676": {
       "category": "universal",
@@ -6878,6 +6869,11 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": []
     },
+    "3bb3016560ab375e": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "3bb98d8c44e5e55e": {
       "category": "universal",
       "failures": 4,
@@ -6899,8 +6895,8 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 62,
-      "ru_ok_at": "2026-10-10T15:50:12Z"
+      "ru_ms": 42,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "3c06c301c4414632": {
       "category": "universal",
@@ -6978,7 +6974,7 @@
     "3c7eaac224f74141": {
       "category": "whitelist",
       "failures": 1,
-      "last_seen": "2026-10-10T15:50:12Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -7023,6 +7019,11 @@
       "ru_blocked_streak": 0,
       "ru_ms": 37,
       "ru_ok_at": "2026-10-09T13:42:32Z"
+    },
+    "3d183e16cfde384d": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "3d21446739d8b5c4": {
       "category": "universal",
@@ -7144,28 +7145,43 @@
       "ru_ms": 3,
       "ru_ok_at": "2026-10-10T02:39:30Z"
     },
-    "3ef6572ae5680d74": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 55,
-      "ru_ok_at": "2026-10-09T13:42:32Z"
-    },
     "3f0599aa88655afb": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": []
     },
-    "3f1e627049e8256a": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
+    "3f0b1b6914b98333": {
+      "asn": "",
+      "category": "whitelist",
+      "checks_passed": 2,
+      "country": "NL",
+      "egress_ip": "50.7.230.82",
+      "failures": 0,
+      "http_max_ms": 370,
+      "http_ms": 365,
+      "jitter_ms": 10,
+      "last_seen": "2026-10-12T05:46:12Z",
+      "last_success": "2026-10-12T05:46:12Z",
+      "latency_medians": [
+        365
+      ],
+      "median_ms": 365,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "189.74.114.155",
+      "ru_blocked_streak": 0,
+      "ru_ms": 41,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 2.85,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 86
     },
     "3f283b7b7e9320e3": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -7236,14 +7252,6 @@
       "streak": 0,
       "successes": 0
     },
-    "3fa800d15ca5215e": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 123,
-      "ru_ok_at": "2026-10-09T06:36:18Z"
-    },
     "3fb6f4471f252ed3": {
       "category": "whitelist",
       "failures": 1,
@@ -7264,11 +7272,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 53,
       "ru_ok_at": "2026-10-10T15:50:12Z"
-    },
-    "400f79b0943de597": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "40252763d4c013d5": {
       "category": "universal",
@@ -7329,7 +7332,7 @@
     "40d9dead05468885": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -7355,11 +7358,6 @@
     "410251822822d64f": {
       "category": "universal",
       "last_seen": "2026-10-10T09:42:47Z",
-      "recent": []
-    },
-    "4119fadab7d915e8": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "411ac3c40fe51d54": {
@@ -7452,6 +7450,11 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": []
     },
+    "4270a664dfcda1cf": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "427afe4cc90842ba": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
@@ -7508,14 +7511,6 @@
       "ru_ms": 68,
       "ru_ok_at": "2026-10-11T20:10:49Z"
     },
-    "42e84c6e9c10b817": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 12,
-      "ru_ok_at": "2026-10-09T06:36:18Z"
-    },
     "42ea1f8dbd1b2b10": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
@@ -7571,13 +7566,12 @@
       "country": "US",
       "egress_ip": "142.249.37.90",
       "failures": 0,
-      "http_max_ms": 256,
-      "http_ms": 156,
-      "jitter_ms": 102,
-      "last_seen": "2026-10-11T23:55:51Z",
-      "last_success": "2026-10-11T23:55:51Z",
+      "http_max_ms": 343,
+      "http_ms": 205,
+      "jitter_ms": 145,
+      "last_seen": "2026-10-12T05:46:21Z",
+      "last_success": "2026-10-12T05:46:21Z",
       "latency_medians": [
-        137,
         66,
         197,
         55,
@@ -7596,9 +7590,10 @@
         52,
         160,
         66,
-        156
+        156,
+        205
       ],
-      "median_ms": 156,
+      "median_ms": 205,
       "recent": [
         1,
         1,
@@ -7614,11 +7609,11 @@
       "resolved_ip": "142.249.37.90",
       "ru_blocked_streak": 0,
       "ru_ms": 166,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 6.55,
-      "streak": 140,
-      "successes": 140,
-      "tcp_ms": 41
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 4.8,
+      "streak": 141,
+      "successes": 141,
+      "tcp_ms": 54
     },
     "43c1687bfd6b8be5": {
       "category": "universal",
@@ -7634,17 +7629,6 @@
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
-    },
-    "43e988de3dcb44eb": {
-      "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "43fa4ea7fa48ef22": {
       "category": "universal",
@@ -7701,20 +7685,6 @@
       "successes": 3,
       "tcp_ms": 181
     },
-    "4447e319dec6bc01": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked": true,
-      "ru_blocked_at": "2026-10-09T00:15:29Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "streak": 0,
-      "successes": 0
-    },
     "446199452e363d03": {
       "category": "universal",
       "last_seen": "2026-10-09T19:27:10Z",
@@ -7735,6 +7705,11 @@
       "ru_blocked_streak": 0,
       "ru_ms": 56,
       "ru_ok_at": "2026-10-11T15:55:48Z"
+    },
+    "4487d17b72d7552e": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "4489a9540f355e81": {
       "category": "universal",
@@ -7871,19 +7846,9 @@
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": []
     },
-    "459d3aebbc7e1206": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
-    "45ab8658dda8e6f9": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "45ac6075de2ebc5f": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "45bffe93d164efa1": {
@@ -7944,6 +7909,16 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": []
     },
+    "464bb3bf31c50c79": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
+    "464c153f512df921": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "464e0822fbb058d7": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
@@ -7957,8 +7932,8 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 56,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ms": 48,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "467b843fa14f542f": {
       "category": "universal",
@@ -8001,6 +7976,11 @@
       "ru_ms": 110,
       "ru_ok_at": "2026-10-11T23:54:34Z"
     },
+    "469c8c285facad71": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "46ce265e08c69975": {
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
@@ -8033,7 +8013,7 @@
     },
     "46fcf9065f52af73": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 56,
@@ -8063,7 +8043,10 @@
     "47057bc270b7351c": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 38,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "47267ce5766a237c": {
       "category": "whitelist",
@@ -8085,13 +8068,13 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 46,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ms": 45,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "47bb4abe6a5bae35": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -8242,7 +8225,7 @@
     "490b55e1ce313c26": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -8294,16 +8277,35 @@
       "last_seen": "2026-10-09T23:26:45Z",
       "recent": []
     },
+    "49b0eeb9db37844d": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 10,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "streak": 0,
+      "successes": 0
+    },
     "49e2359e7f62a9c7": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "49e7a98cea3ceea8": {
       "category": "whitelist",
-      "failures": 3,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
@@ -8405,6 +8407,11 @@
       "successes": 2,
       "tcp_ms": 165
     },
+    "4ad7e3ebb2375b64": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "4adf1afa9f04d04d": {
       "category": "universal",
       "last_seen": "2026-10-09T13:42:32Z",
@@ -8414,20 +8421,6 @@
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
-    },
-    "4aeccdfa22574f7b": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked": true,
-      "ru_blocked_at": "2026-10-09T00:15:29Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "streak": 0,
-      "successes": 0
     },
     "4afd300353628a18": {
       "category": "universal",
@@ -8541,23 +8534,10 @@
       "streak": 0,
       "successes": 0
     },
-    "4bd71d06185f1186": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-09T00:15:29Z",
-      "streak": 0,
-      "successes": 0
-    },
     "4be23ca5b904c8f8": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -8580,7 +8560,10 @@
     "4c02b29de376a422": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 37,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "4c107d4155fbd9c6": {
       "category": "universal",
@@ -8597,6 +8580,16 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
+    "4c2e4decd75659d2": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
+    "4c3ff8e86de798a9": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "4c70c76476a55743": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
@@ -8610,7 +8603,7 @@
     "4c840b1d86f49daf": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -8681,9 +8674,10 @@
     },
     "4d5d7e5251885a53": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "ru_blocked_streak": 0,
@@ -8699,11 +8693,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 26,
       "ru_ok_at": "2026-10-10T23:26:15Z"
-    },
-    "4dbf977f7b75bd11": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "4dc051e27d9d12dc": {
       "category": "universal",
@@ -8726,7 +8715,7 @@
     "4dfbcaf2e4ff3367": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -8804,17 +8793,12 @@
     },
     "4eed58278a6302b6": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "4efd35183e06b6f1": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
-      "recent": []
-    },
-    "4f1615bcf41f6bf1": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "4f8cf0cf27c0ac4e": {
@@ -8832,7 +8816,7 @@
     },
     "4fa4f574333aa092": {
       "category": "universal",
-      "last_seen": "2026-10-09T06:36:18Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 61,
@@ -8855,9 +8839,10 @@
     },
     "4fde47f666261ae7": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -8898,9 +8883,10 @@
     },
     "505099d0879e3856": {
       "category": "whitelist",
-      "failures": 3,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
@@ -8915,7 +8901,7 @@
     },
     "5067184915e567d1": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "506e288af0c22ea5": {
@@ -8976,9 +8962,9 @@
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
     },
-    "517ff71701cf1c66": {
+    "5175488687ac0807": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "51a407fe4cebf52f": {
@@ -8994,7 +8980,7 @@
     "51c3d9d9c980a580": {
       "category": "whitelist",
       "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0
@@ -9041,9 +9027,10 @@
     },
     "51fd3e737284bd47": {
       "category": "universal",
-      "failures": 2,
-      "last_seen": "2026-10-10T09:42:47Z",
+      "failures": 3,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0
       ],
@@ -9127,6 +9114,11 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "52d4cb07479afc0d": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "52d6a58d79111cf8": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
@@ -9171,7 +9163,7 @@
     },
     "5344d848fbcda054": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "536d1d9033962d95": {
@@ -9187,7 +9179,7 @@
     "5383141d31593a8b": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -9289,23 +9281,10 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": []
     },
-    "54cf52854d6afcd6": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked_streak": 0,
-      "ru_ms": 35,
-      "ru_ok_at": "2026-10-10T02:39:30Z",
-      "streak": 0,
-      "successes": 0
-    },
     "54e3778daafa8a20": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -9345,7 +9324,7 @@
     "55608fc971e54b65": {
       "category": "universal",
       "failures": 2,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0
@@ -9403,6 +9382,11 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": []
     },
+    "5619d65d1516e339": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "56276bde4c874424": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
@@ -9410,13 +9394,27 @@
     },
     "5646a47c232134e1": {
       "category": "universal",
-      "failures": 3,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
       ],
+      "streak": 0,
+      "successes": 0
+    },
+    "564d616c3a6d383e": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 9,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -9555,9 +9553,10 @@
     },
     "57cdb77ade79c30f": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -9581,7 +9580,7 @@
     "57e1f727ba59c0f6": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -9675,23 +9674,10 @@
       "successes": 7,
       "tcp_ms": 893
     },
-    "587cdb67d9c9af49": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked_streak": 0,
-      "ru_ms": 64,
-      "ru_ok_at": "2026-10-09T13:42:32Z",
-      "streak": 0,
-      "successes": 0
-    },
     "58a744904d731ab4": {
       "category": "universal",
       "failures": 2,
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0
@@ -9714,9 +9700,14 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
+    "58e811a0378e5c70": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "5907d69fee616b28": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "593cc36ec866991a": {
@@ -9747,9 +9738,9 @@
       "ru_ms": 6,
       "ru_ok_at": "2026-10-10T02:39:30Z"
     },
-    "59cc7f387e2bf4b7": {
+    "59e3e38d2f2dc254": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "59e5ef73e04aa170": {
@@ -9767,31 +9758,33 @@
       "country": "PL",
       "egress_ip": "2a14:7580:b00b::a",
       "failures": 0,
-      "http_max_ms": 1081,
-      "http_ms": 993,
-      "jitter_ms": 184,
-      "last_seen": "2026-10-11T20:12:08Z",
-      "last_success": "2026-10-11T20:12:08Z",
+      "http_max_ms": 691,
+      "http_ms": 637,
+      "jitter_ms": 64,
+      "last_seen": "2026-10-12T05:46:02Z",
+      "last_success": "2026-10-12T05:46:02Z",
       "latency_medians": [
-        993
+        993,
+        637
       ],
-      "median_ms": 993,
+      "median_ms": 637,
       "recent": [
+        1,
         1
       ],
-      "resolved_ip": "162.159.130.36",
+      "resolved_ip": "162.159.133.36",
       "ru_blocked_streak": 0,
-      "ru_ms": 26,
-      "ru_ok_at": "2026-10-11T20:10:49Z",
-      "speed_mbps": 1.27,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 2
+      "ru_ms": 31,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 1.87,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 5
     },
     "5a329424012b8d85": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -9870,19 +9863,9 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
-    "5ac5ceed4bc44db1": {
+    "5ad578242e75ee33": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
-    "5b05d8520b2eaed7": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
-    "5b1abf3b61e10253": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "5b2871ca4c8047b6": {
@@ -9928,11 +9911,6 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
-    "5c0277d6f43e42e9": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "5c0d7a201626ef68": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
@@ -9954,6 +9932,11 @@
     "5c473e903c7be077": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
+      "recent": []
+    },
+    "5c5a1f4c16d46c83": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "5c5acaac69f723ba": {
@@ -10002,7 +9985,7 @@
     },
     "5cbb275e77924be4": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 59,
@@ -10072,6 +10055,11 @@
       "streak": 0,
       "successes": 0
     },
+    "5d83e560309675b4": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "5d9bc44a91d03f3b": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -10102,7 +10090,10 @@
     "5e0bd2df68241117": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 8,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "5e2b06bbc3fbedbd": {
       "category": "universal",
@@ -10117,7 +10108,10 @@
     "5e596c40073669e4": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 41,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "5e779818815ffc0c": {
       "category": "universal",
@@ -10144,16 +10138,12 @@
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": []
     },
-    "5ef9c0f4a8fe73bb": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "5f07e27ff5a3cc4c": {
       "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 3,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0
       ],
@@ -10250,6 +10240,34 @@
       "streak": 0,
       "successes": 0
     },
+    "5fc61bad4700cb54": {
+      "asn": "",
+      "category": "whitelist",
+      "checks_passed": 2,
+      "country": "NL",
+      "egress_ip": "50.7.230.82",
+      "failures": 0,
+      "http_max_ms": 8000,
+      "http_ms": 493,
+      "jitter_ms": 7510,
+      "last_seen": "2026-10-12T05:46:16Z",
+      "last_success": "2026-10-12T05:46:16Z",
+      "latency_medians": [
+        493
+      ],
+      "median_ms": 493,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "189.74.114.101",
+      "ru_blocked_streak": 0,
+      "ru_ms": 40,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 2.2,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 85
+    },
     "5fe4e5e79e1b20b8": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
@@ -10257,42 +10275,39 @@
     },
     "5fff74b725a37603": {
       "asn": "",
-      "category": "whitelist",
+      "category": "universal",
       "checks_passed": 2,
       "country": "PL",
       "egress_ip": "94.183.167.61",
       "failures": 0,
-      "http_max_ms": 822,
-      "http_ms": 434,
-      "jitter_ms": 391,
-      "last_seen": "2026-10-11T23:55:40Z",
-      "last_success": "2026-10-11T23:55:40Z",
+      "http_max_ms": 8000,
+      "http_ms": 8000,
+      "jitter_ms": 7012,
+      "last_seen": "2026-10-12T05:46:11Z",
+      "last_success": "2026-10-12T05:46:11Z",
       "latency_medians": [
         730,
-        434
+        434,
+        8000
       ],
-      "median_ms": 434,
+      "median_ms": 8000,
       "recent": [
+        1,
         1,
         1
       ],
       "resolved_ip": "31.59.210.32",
       "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 2.02,
-      "streak": 2,
-      "successes": 2,
-      "tcp_ms": 132
+      "ru_ms": 9,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 0.0,
+      "streak": 3,
+      "successes": 3,
+      "tcp_ms": 119
     },
     "60300a42dc49505f": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
-      "recent": []
-    },
-    "603755fbd51a7f75": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "6037f840a70e3c8c": {
@@ -10369,7 +10384,7 @@
     },
     "608a7bb01a7e74db": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "60bd2de4094e4373": {
@@ -10379,11 +10394,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 48,
       "ru_ok_at": "2026-10-08T06:34:42Z"
-    },
-    "60c10cbc8975ac7e": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "60d2bd1c981ef592": {
       "category": "universal",
@@ -10553,7 +10563,7 @@
     },
     "6299378abc18e0a4": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 44,
@@ -10563,14 +10573,6 @@
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
       "recent": []
-    },
-    "62afb15d2cc17608": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 25,
-      "ru_ok_at": "2026-10-06T21:11:15Z"
     },
     "62c4d06a7ea82c2b": {
       "category": "universal",
@@ -10607,7 +10609,7 @@
     },
     "637d3c3c5737b975": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "6380d903b0767514": {
@@ -10623,6 +10625,11 @@
     "6397a14f38982f6c": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
+      "recent": []
+    },
+    "640025a6e1c04efa": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "640dd68a744a6c40": {
@@ -10643,7 +10650,7 @@
     "6474b3961915b02e": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -10693,7 +10700,7 @@
     },
     "650f8a868fe8c370": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "654965bfa1ca26e6": {
@@ -10703,7 +10710,7 @@
     },
     "6550c0b5c1674d72": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "65532a8d76835abd": {
@@ -10714,7 +10721,7 @@
     "6572902da5ad058d": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -10723,11 +10730,6 @@
       ],
       "streak": 0,
       "successes": 0
-    },
-    "657a13a14a160c35": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "65c5fc204873f98d": {
       "category": "universal",
@@ -10743,18 +10745,6 @@
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
-    },
-    "65e7f4864eede1e0": {
-      "category": "whitelist",
-      "failures": 3,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0,
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "65e91175d98c825e": {
       "category": "universal",
@@ -10814,11 +10804,6 @@
       "last_seen": "2026-10-09T23:26:45Z",
       "recent": []
     },
-    "66e59ed1f2ff1736": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "66ee7a137be1ba21": {
       "category": "universal",
       "failures": 4,
@@ -10846,8 +10831,8 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 110,
-      "ru_ok_at": "2026-10-10T23:26:15Z"
+      "ru_ms": 115,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "6710448fe2ff9d56": {
       "category": "universal",
@@ -10904,12 +10889,17 @@
     },
     "6778badbd54e8d6d": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "6779794d6daadef1": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": []
+    },
+    "678179ff6d106496": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "679c57d09ba2a8e0": {
@@ -10966,7 +10956,7 @@
     "67f3a92b373bbcf4": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -10990,6 +10980,11 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "684f9445465bc162": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "6872b7ad0d5d68d1": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
@@ -11010,11 +11005,16 @@
     },
     "687cf39b58c92f58": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
-      "recent": [],
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
       "ru_blocked_streak": 0,
       "ru_ms": 544,
-      "ru_ok_at": "2026-10-11T09:15:10Z"
+      "ru_ok_at": "2026-10-11T09:15:10Z",
+      "streak": 0,
+      "successes": 0
     },
     "68894d03db40e147": {
       "category": "universal",
@@ -11194,6 +11194,11 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "6a1afabda10e0156": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "6a20ad4357d40c0f": {
       "category": "universal",
       "failures": 1,
@@ -11261,19 +11266,6 @@
       "ru_ms": 182,
       "ru_ok_at": "2026-10-10T19:59:35Z"
     },
-    "6ab9b5d341263e1b": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked_streak": 0,
-      "ru_ms": 39,
-      "ru_ok_at": "2026-10-08T19:49:43Z",
-      "streak": 0,
-      "successes": 0
-    },
     "6ac0dd311ece7147": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
@@ -11281,7 +11273,7 @@
     },
     "6ac23c57dbebdbeb": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "6ac5bccbfd2ce44f": {
@@ -11307,11 +11299,6 @@
     "6b3fc0434a47907c": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
-      "recent": []
-    },
-    "6b54f8c8f3fa2051": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "6b62192fa655fb08": {
@@ -11395,7 +11382,7 @@
     },
     "6c0f0b6bcfe126bb": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "6c108a17f7d9e188": {
@@ -11408,7 +11395,7 @@
     },
     "6c1ee3b91ade0a62": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "6c2deb027d2c8b06": {
@@ -11441,7 +11428,7 @@
     },
     "6c84f953a013e26b": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "6c9cc07f096376ac": {
@@ -11452,7 +11439,7 @@
     "6ca2e27b7eaa9413": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -11480,7 +11467,7 @@
     },
     "6cc2b85a7933417f": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 48,
@@ -11532,11 +11519,6 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
-    "6d64502d915b5d79": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "6d68eae9f2e182f4": {
       "category": "universal",
       "failures": 3,
@@ -11577,15 +11559,10 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": []
     },
-    "6d9a5622fba139a0": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "6da384aa92072625": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -11657,14 +11634,9 @@
       "last_seen": "2026-10-10T09:42:47Z",
       "recent": []
     },
-    "6e9e85875195bb6b": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "6e9ed51d766d3d56": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 135,
@@ -11690,6 +11662,11 @@
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
     },
+    "6f12b7e85acae4f0": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "6f257f679ecccaa1": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
@@ -11697,7 +11674,7 @@
     },
     "6f49be2f932e2e58": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "6f4cdebdb1514b3a": {
@@ -11791,15 +11768,10 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": []
     },
-    "70a909d2f9311c8d": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "70ac7fb525612788": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -11814,8 +11786,8 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 40,
-      "ru_ok_at": "2026-10-10T19:59:35Z"
+      "ru_ms": 39,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "70ba122ebdb3ed6d": {
       "category": "universal",
@@ -11904,6 +11876,11 @@
       "successes": 3,
       "tcp_ms": 420
     },
+    "71dcdbf423e8e92e": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "71f0d80606070b21": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
@@ -11982,13 +11959,10 @@
       "streak": 0,
       "successes": 0
     },
-    "732a3632cc0ca935": {
+    "72cf16ce724ecb10": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 39,
-      "ru_ok_at": "2026-10-09T13:42:32Z"
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "732d3880050dd42d": {
       "category": "universal",
@@ -12011,7 +11985,7 @@
     "737caddb7158588b": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -12057,15 +12031,10 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": []
     },
-    "73f96ff32663b548": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "740f070bedc9dfa8": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -12083,7 +12052,7 @@
     "743bcce465d3909c": {
       "category": "whitelist",
       "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0
@@ -12096,9 +12065,19 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "7463cb1eb72dcb3d": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "7475828910f6b299": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": []
+    },
+    "747a1a0ab1f4639c": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "749be0503a9aa023": {
@@ -12142,14 +12121,14 @@
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": []
     },
-    "753a241f08cec0fa": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "7550915c61279a8a": {
       "category": "universal",
       "last_seen": "2026-10-10T09:42:47Z",
+      "recent": []
+    },
+    "7562c28849f669fb": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "756d6216a30be0c4": {
@@ -12164,7 +12143,7 @@
     },
     "759f06c489dc0bba": {
       "category": "universal",
-      "last_seen": "2026-10-10T09:42:47Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "75ab4d0008d0b321": {
@@ -12225,8 +12204,8 @@
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 114,
-      "ru_ok_at": "2026-10-10T02:39:30Z"
+      "ru_ms": 112,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "75ff4b1abeea9be5": {
       "category": "universal",
@@ -12236,8 +12215,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 40,
-      "ru_ok_at": "2026-10-11T02:07:52Z",
+      "ru_ms": 41,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -12251,9 +12230,14 @@
       "last_seen": "2026-10-09T19:27:10Z",
       "recent": []
     },
-    "7675f0b50796bd9c": {
+    "762b2f838fd0c178": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
+    "76319c02dfa445ff": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "7697fdd965885d0a": {
@@ -12263,7 +12247,7 @@
     },
     "769fa17a1b246f5e": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 53,
@@ -12271,7 +12255,7 @@
     },
     "76aea8c2ee707418": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "76e10c4069890396": {
@@ -12353,13 +12337,18 @@
       "last_seen": "2026-10-10T19:59:35Z",
       "recent": []
     },
+    "77d48a591bc557f1": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "7811d58c12221c18": {
       "category": "universal",
       "last_seen": "2026-10-10T09:42:47Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 49,
-      "ru_ok_at": "2026-10-11T15:55:48Z"
+      "ru_ms": 50,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "782dd37d3c8370b6": {
       "category": "universal",
@@ -12381,7 +12370,7 @@
     },
     "7841c8356a37f350": {
       "category": "universal",
-      "last_seen": "2026-10-10T09:42:47Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "78807af175a4a829": {
@@ -12401,8 +12390,13 @@
     },
     "78e71aec1790546f": {
       "category": "whitelist",
-      "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "78e88e1cdb7772c5": {
       "category": "universal",
@@ -12435,7 +12429,7 @@
     "794154906b5e92a2": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -12517,9 +12511,10 @@
     },
     "79fb3dacce0031d3": {
       "category": "whitelist",
-      "failures": 3,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
@@ -12547,9 +12542,19 @@
       "streak": 0,
       "successes": 0
     },
+    "7a453ef0fb7a256c": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "7a614c7c3ae605cd": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
+      "recent": []
+    },
+    "7a9ba84682914ecf": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "7a9d06a3e78ca60e": {
@@ -12580,6 +12585,11 @@
       "streak": 0,
       "successes": 1,
       "tcp_ms": 1
+    },
+    "7acae878f9da040c": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "7ae29347839978cc": {
       "category": "universal",
@@ -12828,6 +12838,11 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": []
     },
+    "7e1f54437fb3e62b": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "7e34bf32c901c685": {
       "category": "universal",
       "failures": 1,
@@ -12849,6 +12864,16 @@
     "7e6318fe552fafdc": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
+      "recent": []
+    },
+    "7e645d87fec0e67f": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
+    "7e65edc1d6d14da4": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "7e7aaa4e19b05e8d": {
@@ -13060,7 +13085,7 @@
     "80aeb614d6f52a7b": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "streak": 0,
       "successes": 0
@@ -13068,7 +13093,10 @@
     "80b8691e2d147208": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 39,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "80c05de1e111134f": {
       "category": "universal",
@@ -13181,7 +13209,7 @@
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 52,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "821bf7c974a9e260": {
       "category": "universal",
@@ -13227,27 +13255,9 @@
       "ru_ms": 2,
       "ru_ok_at": "2026-10-11T15:55:48Z"
     },
-    "831e65259980d6cc": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked_streak": 0,
-      "ru_ms": 3,
-      "ru_ok_at": "2026-10-09T00:15:29Z",
-      "streak": 0,
-      "successes": 0
-    },
     "831ed90cede308ab": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
-    },
-    "83417dc81b0ec419": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "8347583414ae1f9d": {
@@ -13287,7 +13297,7 @@
     },
     "83e964fb9b9b5802": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 40,
@@ -13447,6 +13457,11 @@
       "successes": 1,
       "tcp_ms": 6
     },
+    "852d323b690dd24c": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "855aa4345e96a7fc": {
       "asn": "",
       "category": "whitelist",
@@ -13526,19 +13541,19 @@
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
     },
-    "85b675ec2884f5ad": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "85beef5ee8c9341a": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "863e5ab736fab972": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": []
+    },
+    "8655fd666b54098f": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "866dd382a635f2a2": {
@@ -13582,6 +13597,11 @@
       "ru_ms": 113,
       "ru_ok_at": "2026-10-11T02:07:52Z"
     },
+    "86f242fcad604216": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "87112c2a0f77654c": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
@@ -13604,7 +13624,7 @@
     },
     "874466d0140dc8ef": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "874f2c16b2329eff": {
@@ -13663,6 +13683,11 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": []
     },
+    "87e090306d72c6ba": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "87e8488b8e17a139": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
@@ -13692,7 +13717,7 @@
     "885c54e899df6e86": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -13745,6 +13770,11 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": []
     },
+    "894ce59ccc97c50b": {
+      "category": "whitelist",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "89713006a2341dbe": {
       "category": "universal",
       "failures": 1,
@@ -13758,11 +13788,6 @@
     "8984f26335c71601": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
-      "recent": []
-    },
-    "898992dabd0a7487": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "89d0b0ab61c6719a": {
@@ -13799,7 +13824,7 @@
     },
     "8a8aa393655e1cb9": {
       "category": "universal",
-      "last_seen": "2026-10-10T19:59:35Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "8aad963e44c0adec": {
@@ -13814,6 +13839,11 @@
       "ru_blocked_streak": 0,
       "ru_ms": 7,
       "ru_ok_at": "2026-10-09T00:15:29Z"
+    },
+    "8af0e84126e037fc": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "8af6507477d0a3bb": {
       "category": "whitelist",
@@ -13833,7 +13863,7 @@
     },
     "8b5e05d1d2a06e02": {
       "category": "universal",
-      "last_seen": "2026-10-09T13:42:32Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "8b702cd6dfd31758": {
@@ -13843,14 +13873,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 104,
       "ru_ok_at": "2026-10-11T15:55:48Z"
-    },
-    "8b704902a782d767": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 7,
-      "ru_ok_at": "2026-10-08T19:49:43Z"
     },
     "8b7dee0cdf29347d": {
       "category": "universal",
@@ -13867,9 +13889,19 @@
       "streak": 0,
       "successes": 0
     },
-    "8bb15dcb8a67d41c": {
+    "8bbc3c88f5f8a5a0": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
+    },
+    "8bbf259458efd99e": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "8bd6aefa3fbc0014": {
@@ -13882,10 +13914,18 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
-    "8beb2fc14a6e934e": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
+    "8bdde1a8d51246f9": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 9,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "streak": 0,
+      "successes": 0
     },
     "8bef87be2bb813c5": {
       "asn": "",
@@ -13915,9 +13955,14 @@
       "successes": 1,
       "tcp_ms": 6
     },
+    "8bfb949a2efe9fde": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "8c09a19e1abe1f62": {
       "category": "universal",
-      "last_seen": "2026-10-10T19:59:35Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "8c0e5970d0303c5f": {
@@ -13945,9 +13990,10 @@
     },
     "8c36fe8f37d71205": {
       "category": "whitelist",
-      "failures": 3,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
@@ -13986,9 +14032,14 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": []
     },
+    "8c6fb2838f6fbc7b": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "8c881d31200d41ca": {
       "category": "universal",
-      "last_seen": "2026-10-09T13:42:32Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "8cdc0a80a5ccb1ec": {
@@ -14011,11 +14062,6 @@
       "last_seen": "2026-10-09T19:27:10Z",
       "recent": []
     },
-    "8cf6851d29c35820": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "8d11a3bd1ca2f144": {
       "category": "universal",
       "last_seen": "2026-10-10T02:39:30Z",
@@ -14024,16 +14070,6 @@
     "8d4ae77284621c1c": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
-      "recent": []
-    },
-    "8d55122ddf936033": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
-    "8d752cc680c341d9": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "8d788ada30f5a8d8": {
@@ -14056,21 +14092,6 @@
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": []
     },
-    "8da936268437079b": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
-    "8da97f0f9bf47d68": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "8dc292603f22571b": {
       "category": "universal",
       "last_seen": "2026-10-09T19:27:10Z",
@@ -14083,13 +14104,12 @@
       "country": "US",
       "egress_ip": "163.192.14.135",
       "failures": 0,
-      "http_max_ms": 228,
-      "http_ms": 153,
-      "jitter_ms": 86,
-      "last_seen": "2026-10-11T23:55:52Z",
-      "last_success": "2026-10-11T23:55:52Z",
+      "http_max_ms": 339,
+      "http_ms": 213,
+      "jitter_ms": 128,
+      "last_seen": "2026-10-12T05:46:23Z",
+      "last_success": "2026-10-12T05:46:23Z",
       "latency_medians": [
-        212,
         141,
         94,
         104,
@@ -14108,9 +14128,10 @@
         71,
         144,
         46,
-        153
+        153,
+        213
       ],
-      "median_ms": 153,
+      "median_ms": 213,
       "recent": [
         1,
         1,
@@ -14126,12 +14147,12 @@
       "resolved_ip": "163.192.14.135",
       "ru_blocked_streak": 0,
       "ru_ms": 180,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "ru_unknown_at": "2026-10-11T15:55:48Z",
-      "speed_mbps": 6.75,
-      "streak": 78,
-      "successes": 78,
-      "tcp_ms": 43
+      "speed_mbps": 1.82,
+      "streak": 79,
+      "successes": 79,
+      "tcp_ms": 59
     },
     "8dee26dbc615af6e": {
       "category": "universal",
@@ -14151,13 +14172,13 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 61,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 63,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "8e504c86ed26f518": {
       "category": "whitelist",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -14169,6 +14190,11 @@
       "ru_ok_at": "2026-10-08T13:57:55Z",
       "streak": 0,
       "successes": 0
+    },
+    "8e5e395b1af2b00c": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "8e6602ee296989a8": {
       "category": "universal",
@@ -14248,9 +14274,10 @@
     },
     "8fa1ef7a9e716f2d": {
       "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 3,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0
       ],
@@ -14282,19 +14309,6 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": []
     },
-    "9042f901baa74ff1": {
-      "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked_streak": 0,
-      "ru_ms": 4,
-      "ru_ok_at": "2026-10-08T19:49:43Z",
-      "streak": 0,
-      "successes": 0
-    },
     "9044510338fe6c33": {
       "category": "universal",
       "failures": 1,
@@ -14304,7 +14318,7 @@
       ],
       "ru_blocked_streak": 0,
       "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T20:10:49Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -14346,14 +14360,14 @@
       "successes": 3,
       "tcp_ms": 211
     },
-    "9058a781dafd1d00": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "90778c1bd9d49f6f": {
       "category": "whitelist",
       "last_seen": "2026-10-11T02:07:52Z",
+      "recent": []
+    },
+    "908c7f37c0d679ef": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "9096bd49e6647f45": {
@@ -14364,7 +14378,7 @@
     "90b45ba629057251": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -14396,7 +14410,7 @@
     },
     "910be4020d815686": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "910e054957b72005": {
@@ -14427,11 +14441,6 @@
     "9164f1dad41457ee": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
-      "recent": []
-    },
-    "9177e58a6c9c0d3a": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "917ca9285f852389": {
@@ -14494,11 +14503,16 @@
     },
     "920bdecb0b5f94bc": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
-      "recent": [],
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
       "ru_blocked_streak": 0,
       "ru_ms": 47,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ok_at": "2026-10-11T20:10:49Z",
+      "streak": 0,
+      "successes": 0
     },
     "9219d836da686965": {
       "category": "universal",
@@ -14508,7 +14522,7 @@
     "922a948ba02a0c86": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -14557,11 +14571,6 @@
       "successes": 2,
       "tcp_ms": 165
     },
-    "924ad8fe6fc78164": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "926085bdaf8159ff": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
@@ -14609,7 +14618,7 @@
     },
     "93100d3bfa09181e": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 42,
@@ -14678,7 +14687,7 @@
     "939b487e77df348c": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -14699,7 +14708,7 @@
     "93ad7c27a24f961f": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -14708,6 +14717,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "93f2acf27391eb16": {
+      "category": "whitelist",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "941606ba12c35dde": {
       "category": "universal",
@@ -14729,9 +14743,10 @@
     },
     "947f6a6241773e8f": {
       "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -14801,7 +14816,7 @@
     "95ee372ecb1750f7": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -14945,7 +14960,7 @@
     "973c3ed31987d1a1": {
       "category": "whitelist",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -14981,10 +14996,15 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
+    "979e00cfbf42991a": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "97aaf5e8484e50bd": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -14997,6 +15017,11 @@
     "97c08cc9bddf5b3f": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
+      "recent": []
+    },
+    "97dacc121e3713e1": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "97daefcad70fed72": {
@@ -15026,7 +15051,7 @@
     },
     "97f1a6cbf4aa8656": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 39,
@@ -15045,7 +15070,7 @@
     "984c676871e19e4b": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -15070,10 +15095,15 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "9888ee15400a8ced": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "989d86d05a50d433": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-10T23:26:15Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -15141,11 +15171,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 56,
       "ru_ok_at": "2026-10-08T19:49:43Z"
-    },
-    "995b135545ee45a7": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "995ecd772e6773a9": {
       "category": "universal",
@@ -15253,9 +15278,10 @@
     },
     "9a71107d794086bb": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -15358,6 +15384,11 @@
       "streak": 0,
       "successes": 0
     },
+    "9bddc874242c89ea": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "9beec14fca9fbd05": {
       "category": "universal",
       "last_seen": "2026-10-09T19:27:10Z",
@@ -15424,11 +15455,6 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": []
     },
-    "9cada6201605012d": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "9cdba892bcbdf07c": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
@@ -15439,14 +15465,9 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": []
     },
-    "9d1f63f797e1b6d1": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "9d23fc354186688f": {
       "category": "universal",
-      "last_seen": "2026-10-09T06:36:18Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 42,
@@ -15480,8 +15501,8 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 47,
-      "ru_ok_at": "2026-10-11T02:07:52Z"
+      "ru_ms": 50,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "9e262ae657a846a8": {
       "category": "universal",
@@ -15490,9 +15511,10 @@
     },
     "9e52375c6d6b8ee9": {
       "category": "whitelist",
-      "failures": 3,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
@@ -15518,8 +15540,8 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 53,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 49,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "9e9dbebad9099636": {
       "category": "universal",
@@ -15535,14 +15557,6 @@
       "category": "universal",
       "last_seen": "2026-10-09T13:42:32Z",
       "recent": []
-    },
-    "9ec9abbcec7023c8": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 15,
-      "ru_ok_at": "2026-10-11T02:07:52Z"
     },
     "9edc25972657a4db": {
       "category": "universal",
@@ -15571,11 +15585,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 37,
       "ru_ok_at": "2026-10-07T20:33:30Z"
-    },
-    "9f54e88198200a6a": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "9f5b024a980d70c4": {
       "category": "universal",
@@ -15663,7 +15672,7 @@
     },
     "a028d27805ebe163": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "a032914c79a95391": {
@@ -15704,11 +15713,6 @@
       "streak": 0,
       "successes": 0
     },
-    "a06075b57c56edb4": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "a06edc52dced5cc1": {
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
@@ -15734,45 +15738,16 @@
     },
     "a0afaddb2c7cad81": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
-    },
-    "a0b45cf552c26b65": {
-      "asn": "",
-      "category": "whitelist",
-      "checks_passed": 2,
-      "country": "RU",
-      "egress_ip": "2a0f:1140:140:fe::6",
-      "failures": 1,
-      "http_max_ms": 8000,
-      "http_ms": 8000,
-      "jitter_ms": 7417,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "last_success": "2026-10-08T19:51:20Z",
-      "latency_medians": [
-        8000
-      ],
-      "median_ms": 8000,
-      "recent": [
-        1,
-        0
-      ],
-      "resolved_ip": "185.147.27.183",
-      "ru_blocked_streak": 0,
-      "ru_ms": 3,
-      "ru_ok_at": "2026-10-09T00:15:29Z",
-      "speed_mbps": 0.0,
-      "streak": 0,
-      "successes": 1,
-      "tcp_ms": 120
     },
     "a0bea17374999505": {
       "category": "universal",
       "last_seen": "2026-10-09T19:27:10Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 53,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ms": 42,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "a0f58cf5abadb08e": {
       "category": "universal",
@@ -15801,12 +15776,17 @@
     },
     "a132383d01e2b37f": {
       "category": "universal",
-      "last_seen": "2026-10-10T23:26:15Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "a15894b26e7de390": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
+      "recent": []
+    },
+    "a18a2e2e2c9d7237": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "a1b07eebc9dd38e1": {
@@ -15817,7 +15797,7 @@
     "a1b3383553d5b230": {
       "category": "whitelist",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -15837,30 +15817,32 @@
       "country": "US",
       "egress_ip": "45.144.112.55",
       "failures": 0,
-      "http_max_ms": 215,
-      "http_ms": 176,
-      "jitter_ms": 45,
-      "last_seen": "2026-10-11T23:55:29Z",
-      "last_success": "2026-10-11T23:55:29Z",
+      "http_max_ms": 171,
+      "http_ms": 158,
+      "jitter_ms": 75,
+      "last_seen": "2026-10-12T05:45:55Z",
+      "last_success": "2026-10-12T05:45:55Z",
       "latency_medians": [
         8000,
         322,
-        176
+        176,
+        158
       ],
-      "median_ms": 176,
+      "median_ms": 158,
       "recent": [
+        1,
         1,
         1,
         1
       ],
       "resolved_ip": "169.40.42.95",
       "ru_blocked_streak": 0,
-      "ru_ms": 112,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 5.91,
-      "streak": 3,
-      "successes": 3,
-      "tcp_ms": 42
+      "ru_ms": 110,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 7.52,
+      "streak": 4,
+      "successes": 4,
+      "tcp_ms": 15
     },
     "a1c92aa806cb0b56": {
       "category": "whitelist",
@@ -15879,7 +15861,7 @@
     },
     "a1fa1d94a8335f49": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 180,
@@ -15888,7 +15870,7 @@
     "a21dbfc67b4b409a": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -15935,9 +15917,10 @@
     },
     "a29b26908acda904": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -15976,15 +15959,10 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
-    "a3391ef635a94461": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "a3431a2b117b7725": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -16024,14 +16002,9 @@
       "streak": 0,
       "successes": 0
     },
-    "a3d3c767479ec18f": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "a3f64aa95da2508d": {
       "category": "universal",
-      "last_seen": "2026-10-10T19:59:35Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 41,
@@ -16095,11 +16068,6 @@
       "last_seen": "2026-10-10T09:42:47Z",
       "recent": []
     },
-    "a4c6b9a0edd3b82e": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "a4cb3e0dbf814989": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
@@ -16108,7 +16076,10 @@
     "a4cef2530dfb5c6d": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 44,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "a4efc366f14f2079": {
       "category": "universal",
@@ -16122,7 +16093,7 @@
     },
     "a504533cf7141fcd": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "a51a6eb5935ebf80": {
@@ -16164,7 +16135,10 @@
     "a564d8a0cc3860e0": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 44,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "a56cd1ca38eb16de": {
       "asn": "",
@@ -16172,11 +16146,11 @@
       "checks_passed": 2,
       "country": "NL",
       "egress_ip": "2a03:6f02::1:b69",
-      "failures": 41,
+      "failures": 42,
       "http_max_ms": 825,
       "http_ms": 548,
       "jitter_ms": 285,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "last_success": "2026-10-02T21:18:32Z",
       "latency_medians": [
         518,
@@ -16271,6 +16245,11 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
+    "a5fce6eebfc6e046": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "a60524cac12e43ae": {
       "category": "universal",
       "last_seen": "2026-10-10T02:39:30Z",
@@ -16278,22 +16257,8 @@
     },
     "a6095d6eb7f16c4b": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
-    },
-    "a610e7900de93081": {
-      "category": "universal",
-      "failures": 1,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [
-        0
-      ],
-      "ru_blocked": true,
-      "ru_blocked_at": "2026-10-09T00:15:29Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "streak": 0,
-      "successes": 0
     },
     "a614df0d9e76b129": {
       "category": "universal",
@@ -16315,7 +16280,7 @@
     },
     "a63bace011477663": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 20,
@@ -16328,7 +16293,7 @@
     },
     "a64a7179834ea5d0": {
       "category": "universal",
-      "last_seen": "2026-10-09T19:27:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 54,
@@ -16369,6 +16334,11 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
+    "a6f1cf5387ca3505": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "a6f8232c8e9b87e9": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -16388,14 +16358,6 @@
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": []
-    },
-    "a7187de2cdecfa36": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 27,
-      "ru_ok_at": "2026-10-10T19:59:35Z"
     },
     "a71c2210cb36c676": {
       "category": "whitelist",
@@ -16501,6 +16463,11 @@
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
     },
+    "a800ac1a78140bf9": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "a815ebab61833e82": {
       "category": "universal",
       "failures": 4,
@@ -16545,11 +16512,6 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": []
     },
-    "a854bcbe622223d8": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "a87d705dd7abdc7e": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
@@ -16584,6 +16546,11 @@
     "a95e0da6a853961e": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
+      "recent": []
+    },
+    "a96986a16124593d": {
+      "category": "whitelist",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "a97d6d4187dba7c8": {
@@ -16629,7 +16596,7 @@
     },
     "a9d997642f962449": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "a9fa48f01d55f19b": {
@@ -16640,7 +16607,7 @@
     "aa0c33dd8dcc554a": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -16657,7 +16624,7 @@
     "aa11f011e610ab1f": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -16695,7 +16662,7 @@
     },
     "aa45a6b024491d88": {
       "category": "universal",
-      "last_seen": "2026-10-10T09:42:47Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "aa9c3a63375b3a42": {
@@ -16726,8 +16693,8 @@
       ],
       "resolved_ip": "45.80.108.7",
       "ru_blocked_streak": 0,
-      "ru_ms": 11,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ms": 10,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "speed_mbps": 0.97,
       "streak": 0,
       "successes": 1,
@@ -16736,7 +16703,7 @@
     "aaadbfc7141fce43": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -16780,8 +16747,9 @@
       ],
       "ru_blocked": true,
       "ru_blocked_at": "2026-10-10T23:26:15Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
+      "ru_blocked_streak": 0,
+      "ru_ms": 46,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -16802,7 +16770,7 @@
     },
     "abaacc75b797a320": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "abb62bfb3d85b34f": {
@@ -16831,15 +16799,10 @@
       "streak": 0,
       "successes": 0
     },
-    "ac1a5484baa92cdf": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "ac1be639a47d963c": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -16859,16 +16822,12 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
-    "ac410b4183ae8405": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "ac500ff3c76a684f": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -16882,7 +16841,7 @@
     "ac563aec29cb0144": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -16932,12 +16891,7 @@
     },
     "ad215b1ddc684ed4": {
       "category": "universal",
-      "last_seen": "2026-10-09T13:42:32Z",
-      "recent": []
-    },
-    "ad477b565f03f348": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "adadf93fafd8696d": {
@@ -16988,7 +16942,7 @@
     },
     "ae3728ee2b2533fa": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "ae3cb8bd3f64db18": {
@@ -17035,7 +16989,7 @@
     "ae6c2ebc6384e78c": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -17059,7 +17013,7 @@
     },
     "ae9f0bcdbc911fcc": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "aead0845f484a3e4": {
@@ -17072,8 +17026,8 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-10-11T20:10:49Z"
+      "ru_ms": 45,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "aecf1b7700db5155": {
       "category": "universal",
@@ -17090,8 +17044,8 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 52,
-      "ru_ok_at": "2026-10-11T15:55:48Z"
+      "ru_ms": 49,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "af12cddf7cabda58": {
       "asn": "",
@@ -17139,7 +17093,10 @@
     "af81e8e61d699b10": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 41,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "af8977a815e077b4": {
       "category": "universal",
@@ -17192,14 +17149,33 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": []
     },
+    "b064e9e2a71c8e18": {
+      "category": "universal",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-10-12T05:44:59Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
+    },
     "b0735d8a9653b5c1": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
     },
+    "b0797f791ecbe141": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "b09ee3cd18c53f9c": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "b0b0509121d71f13": {
@@ -17268,6 +17244,9 @@
       "recent": [
         0
       ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 44,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -17294,45 +17273,9 @@
       "ru_ms": 120,
       "ru_ok_at": "2026-10-11T15:55:48Z"
     },
-    "b18e94c8bb48ce31": {
-      "asn": "",
-      "category": "whitelist",
-      "checks_passed": 2,
-      "country": "PL",
-      "egress_ip": "2.59.253.251",
-      "failures": 1,
-      "http_max_ms": 8000,
-      "http_ms": 8000,
-      "jitter_ms": 6312,
-      "last_seen": "2026-10-09T00:15:29Z",
-      "last_success": "2026-10-06T21:12:51Z",
-      "latency_medians": [
-        8000,
-        8000
-      ],
-      "median_ms": 8000,
-      "recent": [
-        1,
-        1,
-        0
-      ],
-      "resolved_ip": "90.156.218.163",
-      "ru_blocked_streak": 0,
-      "ru_ms": 528,
-      "ru_ok_at": "2026-10-10T02:39:30Z",
-      "speed_mbps": 0.0,
-      "streak": 0,
-      "successes": 2,
-      "tcp_ms": 184
-    },
     "b1da1d49faa704d0": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
-      "recent": []
-    },
-    "b204839f1c796edf": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "b20ef41f0df7ee18": {
@@ -17353,11 +17296,6 @@
     "b245bf3ddce558d3": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
-      "recent": []
-    },
-    "b26c47a2e25aca57": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "b2a13d89cb7c6bc1": {
@@ -17486,11 +17424,6 @@
       "last_seen": "2026-10-11T15:55:48Z",
       "recent": []
     },
-    "b3d91ab006e7baf2": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "b3dc77521209bf9a": {
       "category": "universal",
       "failures": 1,
@@ -17507,7 +17440,10 @@
     "b4654e1022cd2a77": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 52,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "b4857a983ea0390f": {
       "category": "whitelist",
@@ -17526,7 +17462,7 @@
     },
     "b4d1e673f627a93e": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 40,
@@ -17553,10 +17489,15 @@
       "ru_blocked": true,
       "ru_blocked_at": "2026-10-10T15:50:12Z",
       "ru_blocked_streak": 0,
-      "ru_ms": 63,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ms": 66,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
+    },
+    "b58607f62dbb43e7": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "b5a40272b0d3a931": {
       "category": "whitelist",
@@ -17571,19 +17512,9 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
-    "b5b884f2122d000d": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "b5ee090e704b6f76": {
       "category": "whitelist",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
-    },
-    "b5f542fe123fc227": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "b5fb51cef5ccf2b3": {
@@ -17616,11 +17547,6 @@
       "streak": 0,
       "successes": 0
     },
-    "b639f6526a4456f2": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "b63f202a2e70d900": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
@@ -17631,8 +17557,8 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 70,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 73,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "b64fd13a30a9c732": {
       "category": "universal",
@@ -17646,7 +17572,7 @@
     },
     "b65efcbc65abb08f": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "b669cbab2159a5ff": {
@@ -17713,11 +17639,6 @@
       "ru_ms": 288,
       "ru_ok_at": "2026-10-11T09:15:10Z"
     },
-    "b7300a3a2e754862": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "b77b59dcee5216e4": {
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
@@ -17758,7 +17679,7 @@
     },
     "b821cf1944127327": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 24,
@@ -17782,10 +17703,15 @@
       "last_seen": "2026-10-10T23:26:15Z",
       "recent": []
     },
+    "b8c0f6d3f575734e": {
+      "category": "whitelist",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "b8cac17e2a758c87": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -17799,11 +17725,6 @@
       "ru_ok_at": "2026-10-06T21:11:15Z",
       "streak": 0,
       "successes": 0
-    },
-    "b8cdaae7e1e82b0d": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "b8d461576262a6c8": {
       "category": "universal",
@@ -17825,14 +17746,15 @@
       "last_seen": "2026-10-10T19:59:35Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 61,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 63,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "b913c1c71084b638": {
       "category": "whitelist",
-      "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 2,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0
       ],
       "streak": 0,
@@ -17845,7 +17767,7 @@
     },
     "b9b2c2e4661305c6": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "b9f0d3ad0c8185e6": {
@@ -17881,15 +17803,14 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "NL",
-      "egress_ip": "51.158.236.230",
+      "egress_ip": "51.158.237.122",
       "failures": 7,
-      "http_max_ms": 548,
+      "http_max_ms": 638,
       "http_ms": 537,
-      "jitter_ms": 20,
-      "last_seen": "2026-10-11T23:55:31Z",
-      "last_success": "2026-10-11T23:55:31Z",
+      "jitter_ms": 145,
+      "last_seen": "2026-10-12T05:45:57Z",
+      "last_success": "2026-10-12T05:45:57Z",
       "latency_medians": [
-        476,
         1553,
         3891,
         1448,
@@ -17908,14 +17829,15 @@
         2341,
         3033,
         8000,
+        537,
         537
       ],
       "median_ms": 537,
       "recent": [
         1,
         1,
-        1,
         0,
+        1,
         1,
         1,
         1,
@@ -17926,10 +17848,10 @@
       "resolved_ip": "188.42.145.180",
       "ru_blocked_streak": 0,
       "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 2.0,
-      "streak": 6,
-      "successes": 82,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 1.77,
+      "streak": 7,
+      "successes": 83,
       "tcp_ms": 6
     },
     "ba689aa33aaec803": {
@@ -17949,7 +17871,7 @@
     },
     "ba8fb7698f0ada27": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "bad9791f98ed0b9c": {
@@ -18051,6 +17973,11 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": []
     },
+    "bbb300473f0106e9": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "bbbcf8b7f80c8fdd": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -18064,6 +17991,11 @@
     "bbd7ed72d6e3c0c3": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
+      "recent": []
+    },
+    "bbe3156e4d7d400d": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "bbf8eeb0c631c01b": {
@@ -18124,13 +18056,16 @@
     },
     "bcbf695922edb774": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "bcc2f1932f3b1028": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 9,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "bd0cf28f4b8472d5": {
       "category": "universal",
@@ -18150,7 +18085,7 @@
     "bd3a07730a434152": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -18197,7 +18132,7 @@
     },
     "bd6a95fd7d6b90e9": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "bd8ee6c42c9f05e4": {
@@ -18209,6 +18144,16 @@
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
+    },
+    "bdca1a61348e32b9": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "bdd2d4c8646444e5": {
       "category": "universal",
@@ -18264,25 +18209,19 @@
       "ru_ms": 168,
       "ru_ok_at": "2026-10-10T19:59:35Z"
     },
-    "be5e9ec86b61032d": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 36,
-      "ru_ok_at": "2026-10-08T00:22:28Z"
-    },
-    "be98dc52b028115c": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 46,
-      "ru_ok_at": "2026-10-10T19:59:35Z"
-    },
-    "bebf7b0cc407294a": {
+    "be47f5fd969a1bad": {
       "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
+    },
+    "be6b2ab4fce0cf13": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "beceea7f361ee4d8": {
@@ -18348,7 +18287,7 @@
     },
     "bfbda78f8a9d0af4": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "bfbe222159412fe7": {
@@ -18356,14 +18295,9 @@
       "last_seen": "2026-10-10T19:59:35Z",
       "recent": []
     },
-    "bfd9043e26eb8eb8": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "bfd932adeac60385": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "bff5f448039d0a0c": {
@@ -18373,7 +18307,7 @@
     },
     "bff7a36c39fcdeaa": {
       "category": "universal",
-      "last_seen": "2026-10-10T09:42:47Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "c004f39fb3e21002": {
@@ -18401,8 +18335,8 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 40,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 41,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "c06b02e981f3b095": {
       "category": "universal",
@@ -18419,27 +18353,20 @@
     },
     "c07d74d20ebde270": {
       "category": "whitelist",
-      "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 3,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0
       ],
       "streak": 0,
       "successes": 0
     },
-    "c0aa3b2dc81106a1": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
-    "c0c0126114116077": {
+    "c0c5b38fee55761f": {
       "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-10-09T19:27:10Z"
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "c0cd925ddc0722d5": {
       "category": "universal",
@@ -18488,6 +18415,11 @@
       "successes": 5,
       "tcp_ms": 64
     },
+    "c0eff2a695f43c9a": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "c0f51267ae599957": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
@@ -18526,6 +18458,11 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
     },
+    "c15d47f9d972f6ab": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "c15ee0d9ade5116d": {
       "category": "universal",
       "last_seen": "2026-10-09T23:26:45Z",
@@ -18557,6 +18494,11 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": []
     },
+    "c1adb0f18aa14e2a": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "c1b5a0c171a20be6": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
@@ -18565,7 +18507,7 @@
     "c1b778b2a55124bb": {
       "category": "whitelist",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -18622,7 +18564,7 @@
     "c211aa652c8e7f9e": {
       "category": "whitelist",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -18668,6 +18610,11 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": []
     },
+    "c27e7f20f11bade6": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "c2aa2e76155b87ff": {
       "category": "universal",
       "last_seen": "2026-10-09T13:42:32Z",
@@ -18677,19 +18624,6 @@
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
-    },
-    "c2e038f1db28ac44": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
-    "c2eb7f49bb455b8d": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 55,
-      "ru_ok_at": "2026-10-09T13:42:32Z"
     },
     "c2f19a5723ecf8b2": {
       "category": "universal",
@@ -18764,7 +18698,10 @@
     "c3dd3052defd45a8": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 39,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "c3e8daa31006759d": {
       "category": "universal",
@@ -18840,6 +18777,11 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": []
     },
+    "c49c8250abf2733e": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "c4b52a639d3d8e5f": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
@@ -18857,7 +18799,7 @@
     },
     "c4f44acb64ee1f05": {
       "category": "universal",
-      "last_seen": "2026-10-10T23:26:15Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "c5065d2248bbf9da": {
@@ -18881,7 +18823,10 @@
     "c51aec94a5337c7e": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 52,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "c51bd2a395f4eca2": {
       "category": "universal",
@@ -18894,11 +18839,6 @@
     "c528b749b76e7388": {
       "category": "universal",
       "last_seen": "2026-10-10T09:42:47Z",
-      "recent": []
-    },
-    "c52ea475b6375d8d": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "c53959f94246e360": {
@@ -18920,8 +18860,8 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 42,
-      "ru_ok_at": "2026-10-11T15:55:48Z"
+      "ru_ms": 35,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "c559da6129b7fad7": {
       "category": "universal",
@@ -18951,7 +18891,7 @@
     "c5d2ee8d61eb60ba": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -19043,6 +18983,11 @@
       "successes": 11,
       "tcp_ms": 181
     },
+    "c69756bedaf220ce": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "c6aa9c513bbab5e8": {
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
@@ -19056,11 +19001,6 @@
     "c6d7cfbd503d41cb": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
-      "recent": []
-    },
-    "c6f8415ef023b86c": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "c6fc990b2d581c82": {
@@ -19096,13 +19036,26 @@
     },
     "c72f2a3d79c23245": {
       "category": "universal",
-      "last_seen": "2026-10-09T06:36:18Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "c741afdbda86732e": {
       "category": "universal",
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": []
+    },
+    "c759974124ce42c0": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 1,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "streak": 0,
+      "successes": 0
     },
     "c75d6c00bb33e967": {
       "category": "whitelist",
@@ -19195,8 +19148,8 @@
       "last_seen": "2026-10-11T09:15:10Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 48,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 47,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "c811426689b86f6b": {
       "category": "universal",
@@ -19254,11 +19207,6 @@
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": []
     },
-    "c8a1f090762fd851": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "c8ab0f592aee0ff8": {
       "category": "whitelist",
       "last_seen": "2026-10-10T09:42:47Z",
@@ -19272,7 +19220,7 @@
     "c8f52338b353a9f6": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -19282,6 +19230,11 @@
     "c8fa31c191c83a6d": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
+      "recent": []
+    },
+    "c9577668f0019ce1": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "c99030ea16d2a374": {
@@ -19329,7 +19282,7 @@
     "ca4a8b7e5a7eec66": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -19348,8 +19301,8 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 47,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 48,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "ca7c0c863a6a7b37": {
       "category": "universal",
@@ -19366,11 +19319,6 @@
       "ru_blocked_streak": 0,
       "ru_ms": 38,
       "ru_ok_at": "2026-10-10T02:39:30Z"
-    },
-    "ca9f849b642af594": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "caa133aa25a01417": {
       "asn": "",
@@ -19404,17 +19352,12 @@
     },
     "cac73bab5d7c2174": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "cac9b9ba8d58b897": {
       "category": "universal",
       "last_seen": "2026-10-09T06:36:18Z",
-      "recent": []
-    },
-    "cacb816ce68d0e02": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "caff65ca22d7417e": {
@@ -19454,6 +19397,19 @@
       "streak": 0,
       "successes": 0
     },
+    "cb623d1c72089b7e": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 10,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "streak": 0,
+      "successes": 0
+    },
     "cb667b0680c99ef2": {
       "category": "whitelist",
       "last_seen": "2026-10-10T15:50:12Z",
@@ -19467,7 +19423,10 @@
     "cb950b84470e57ac": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 40,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "cba6cea1faff24a8": {
       "category": "universal",
@@ -19494,7 +19453,7 @@
     },
     "cc16a1d57896069e": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "cc4dbf5b69d5b4f2": {
@@ -19565,14 +19524,9 @@
       ],
       "ru_blocked_streak": 0,
       "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T20:10:49Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
-    },
-    "cd40508ed3d1cf48": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
     },
     "cd5a8f75962e98b7": {
       "category": "universal",
@@ -19602,6 +19556,11 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
+    "cd8c071ce54979c8": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "cdae5e1cc0de13c2": {
       "category": "universal",
       "last_seen": "2026-10-10T02:39:30Z",
@@ -19625,11 +19584,6 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": []
     },
-    "cdfacb4fd6b6cc5d": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": []
-    },
     "ce21ae23d1d64148": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -19637,7 +19591,7 @@
     },
     "ce231cfef8749ed4": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "ce53b0e7220748fe": {
@@ -19657,14 +19611,6 @@
       "category": "universal",
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": []
-    },
-    "ce7307c5df8e166a": {
-      "category": "whitelist",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 12,
-      "ru_ok_at": "2026-10-09T06:36:18Z"
     },
     "ce837b0dfeb97145": {
       "category": "universal",
@@ -19812,7 +19758,7 @@
     "cf530587eae08e85": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -19825,6 +19771,11 @@
     "cf5b75e7e137dc69": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
+      "recent": []
+    },
+    "cf9b61b0a07bcec0": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "cfa345586354730a": {
@@ -19840,6 +19791,11 @@
       "ru_ms": 63,
       "ru_ok_at": "2026-10-10T23:26:15Z"
     },
+    "cfd4e4e5dd2731a8": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "cfdaa7dcf682f270": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -19853,6 +19809,11 @@
     "d02a083035342855": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
+      "recent": []
+    },
+    "d0489b06b396dc08": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "d048a9e3df053825": {
@@ -19895,7 +19856,7 @@
       "resolved_ip": "159.194.244.247",
       "ru_blocked_streak": 0,
       "ru_ms": 11,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "speed_mbps": 0.0,
       "streak": 0,
       "successes": 1,
@@ -19904,7 +19865,7 @@
     "d05ba01bbefc2d62": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -19931,30 +19892,32 @@
       "country": "US",
       "egress_ip": "107.175.6.102",
       "failures": 0,
-      "http_max_ms": 191,
-      "http_ms": 184,
-      "jitter_ms": 33,
-      "last_seen": "2026-10-11T20:11:56Z",
-      "last_success": "2026-10-11T20:11:56Z",
+      "http_max_ms": 600,
+      "http_ms": 474,
+      "jitter_ms": 146,
+      "last_seen": "2026-10-12T05:45:57Z",
+      "last_success": "2026-10-12T05:45:57Z",
       "latency_medians": [
         454,
         211,
-        184
+        184,
+        474
       ],
-      "median_ms": 184,
+      "median_ms": 474,
       "recent": [
+        1,
         1,
         1,
         1
       ],
-      "resolved_ip": "104.18.1.22",
+      "resolved_ip": "104.18.0.22",
       "ru_blocked_streak": 0,
-      "ru_ms": 19,
-      "ru_ok_at": "2026-10-11T20:10:49Z",
-      "speed_mbps": 2.05,
-      "streak": 3,
-      "successes": 3,
-      "tcp_ms": 2
+      "ru_ms": 31,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 1.83,
+      "streak": 4,
+      "successes": 4,
+      "tcp_ms": 6
     },
     "d0ae4a4bf4608071": {
       "category": "universal",
@@ -20018,7 +19981,7 @@
     "d1148ec47cc840f1": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -20041,14 +20004,6 @@
       "category": "universal",
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": []
-    },
-    "d1437eeac6272014": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 38,
-      "ru_ok_at": "2026-10-09T23:26:45Z"
     },
     "d150770d5eee64aa": {
       "category": "whitelist",
@@ -20092,14 +20047,6 @@
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
       "recent": []
-    },
-    "d1c94411ef627a60": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 114,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
     },
     "d1e58a09ad268fdc": {
       "category": "whitelist",
@@ -20146,8 +20093,17 @@
     },
     "d22d271319862ac2": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
-      "recent": []
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-10-12T05:44:59Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
     },
     "d23c60aef1ecb885": {
       "category": "universal",
@@ -20157,11 +20113,6 @@
     "d2426c55a4424faa": {
       "category": "universal",
       "last_seen": "2026-10-11T15:55:48Z",
-      "recent": []
-    },
-    "d250c922c05d4c44": {
-      "category": "universal",
-      "last_seen": "2026-10-09T00:15:29Z",
       "recent": []
     },
     "d255cf3d5f710907": {
@@ -20294,7 +20245,7 @@
     },
     "d39b77a2209b1c74": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 45,
@@ -20351,7 +20302,10 @@
     "d40f375de8f894a1": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 52,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "d41eb40bda237a28": {
       "category": "universal",
@@ -20579,8 +20533,8 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 8,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "d6d9108bd98eb1ca": {
       "category": "universal",
@@ -20638,7 +20592,7 @@
     },
     "d7996dda791ebc1a": {
       "category": "universal",
-      "last_seen": "2026-10-10T09:42:47Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 59,
@@ -20732,7 +20686,7 @@
     },
     "d89983f0e410ee6a": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "d8c3dc43dae52a9c": {
@@ -20839,6 +20793,16 @@
     "da0fa73a239ea14c": {
       "category": "universal",
       "last_seen": "2026-10-11T02:07:52Z",
+      "recent": []
+    },
+    "da31255aa3d34d0f": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
+    "da38b8dc7391b5e7": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "da6143af86c8bf4e": {
@@ -20985,7 +20949,7 @@
     },
     "dc49aa940f5d3bc1": {
       "category": "universal",
-      "last_seen": "2026-10-11T02:07:52Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "dc58a0302ec213b3": {
@@ -21046,7 +21010,7 @@
     },
     "dd4cff38b43d5d21": {
       "category": "universal",
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 175,
@@ -21147,8 +21111,8 @@
       "last_seen": "2026-10-10T19:59:35Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 61,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 63,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "de3bdb0b03a06ab8": {
       "category": "universal",
@@ -21247,7 +21211,7 @@
     "df8a1b4c4f119a59": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -21358,9 +21322,10 @@
     },
     "e0d57a3cf8460a4c": {
       "category": "universal",
-      "failures": 3,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "failures": 4,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0,
         0
@@ -21391,8 +21356,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 44,
-      "ru_ok_at": "2026-10-10T15:50:12Z",
+      "ru_ms": 21,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -21438,6 +21403,11 @@
       "ru_ok_at": "2026-10-09T13:42:32Z",
       "streak": 0,
       "successes": 0
+    },
+    "e1d1bc6c67f7a589": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "e1d6fdf5a57b5317": {
       "category": "universal",
@@ -21486,11 +21456,11 @@
       "country": "US",
       "egress_ip": "144.24.46.175",
       "failures": 0,
-      "http_max_ms": 313,
-      "http_ms": 209,
+      "http_max_ms": 325,
+      "http_ms": 222,
       "jitter_ms": 107,
-      "last_seen": "2026-10-11T23:55:55Z",
-      "last_success": "2026-10-11T23:55:55Z",
+      "last_seen": "2026-10-12T05:46:24Z",
+      "last_success": "2026-10-12T05:46:24Z",
       "latency_medians": [
         67,
         231,
@@ -21508,9 +21478,10 @@
         66,
         229,
         139,
-        209
+        209,
+        222
       ],
-      "median_ms": 209,
+      "median_ms": 222,
       "recent": [
         1,
         1,
@@ -21524,11 +21495,16 @@
         1
       ],
       "resolved_ip": "144.24.46.175",
-      "ru_unknown_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 4.96,
-      "streak": 17,
-      "successes": 17,
-      "tcp_ms": 49
+      "ru_unknown_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 4.54,
+      "streak": 18,
+      "successes": 18,
+      "tcp_ms": 54
+    },
+    "e2987889750d70a1": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "e2b21929b6a407a4": {
       "category": "universal",
@@ -21538,7 +21514,7 @@
     "e2baad2f897020e5": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -21598,7 +21574,7 @@
       "resolved_ip": "163.192.14.135",
       "ru_blocked_streak": 0,
       "ru_ms": 180,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "ru_unknown_at": "2026-10-11T15:55:48Z",
       "speed_mbps": 4.37,
       "streak": 41,
@@ -21635,8 +21611,8 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 45,
-      "ru_ok_at": "2026-10-10T19:59:35Z"
+      "ru_ms": 84,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "e329ef9959bc702d": {
       "category": "universal",
@@ -21714,7 +21690,7 @@
     "e3d61e5e3330e162": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -21755,6 +21731,11 @@
     "e413d96b5ef00c77": {
       "category": "whitelist",
       "last_seen": "2026-10-10T15:50:12Z",
+      "recent": []
+    },
+    "e4159662070c45be": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "e4266245dc9bf9a0": {
@@ -21821,7 +21802,7 @@
       ],
       "ru_blocked_streak": 0,
       "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T20:10:49Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -21838,7 +21819,7 @@
     "e51be4967d46487b": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -21925,6 +21906,11 @@
       "last_seen": "2026-10-09T06:36:18Z",
       "recent": []
     },
+    "e630b897138228be": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "e63aa931ea23a533": {
       "category": "universal",
       "last_seen": "2026-10-10T23:26:15Z",
@@ -21936,7 +21922,7 @@
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 11,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "e66a379924e69fd9": {
       "category": "universal",
@@ -21980,7 +21966,7 @@
     "e6903e503619bec5": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22014,7 +22000,7 @@
     "e6aa4cf6eedc26f9": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22026,16 +22012,17 @@
     },
     "e6b4b913bc92ddd7": {
       "category": "universal",
-      "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "failures": 3,
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
+        0,
         0,
         0
       ],
       "ru_blocked": true,
-      "ru_blocked_at": "2026-10-10T02:39:30Z",
-      "ru_blocked_streak": 0,
-      "ru_ms": 54,
+      "ru_blocked_at": "2026-10-12T05:44:59Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
       "ru_ok_at": "2026-10-11T09:15:10Z",
       "streak": 0,
       "successes": 0
@@ -22048,6 +22035,11 @@
     "e700f85ced2d78c0": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": []
+    },
+    "e70ec1c5962f6586": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "e71168b2d10b76e2": {
@@ -22071,7 +22063,7 @@
     "e762e529ec8d8cfa": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22163,7 +22155,7 @@
     "e7c9880936b02e33": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22188,6 +22180,11 @@
     "e7d25d9712e44bdd": {
       "category": "universal",
       "last_seen": "2026-10-11T20:10:49Z",
+      "recent": []
+    },
+    "e7d7cc75e8f5a76d": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "e7de34d8b21c0959": {
@@ -22217,13 +22214,12 @@
       "country": "US",
       "egress_ip": "155.248.209.237",
       "failures": 0,
-      "http_max_ms": 217,
-      "http_ms": 141,
-      "jitter_ms": 78,
-      "last_seen": "2026-10-11T23:55:50Z",
-      "last_success": "2026-10-11T23:55:50Z",
+      "http_max_ms": 334,
+      "http_ms": 213,
+      "jitter_ms": 127,
+      "last_seen": "2026-10-12T05:46:20Z",
+      "last_success": "2026-10-12T05:46:20Z",
       "latency_medians": [
-        100,
         72,
         224,
         80,
@@ -22242,9 +22238,10 @@
         70,
         142,
         42,
-        141
+        141,
+        213
       ],
-      "median_ms": 141,
+      "median_ms": 213,
       "recent": [
         1,
         1,
@@ -22259,12 +22256,12 @@
       ],
       "resolved_ip": "155.248.209.237",
       "ru_blocked_streak": 0,
-      "ru_ms": 178,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 4.95,
-      "streak": 145,
-      "successes": 145,
-      "tcp_ms": 38
+      "ru_ms": 171,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 3.31,
+      "streak": 146,
+      "successes": 146,
+      "tcp_ms": 60
     },
     "e866f50b49323ee2": {
       "category": "universal",
@@ -22305,12 +22302,32 @@
       "successes": 0
     },
     "e88c3218ae49d8a3": {
+      "asn": "",
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
-      "recent": [],
+      "checks_passed": 2,
+      "country": "US",
+      "egress_ip": "155.248.209.237",
+      "failures": 0,
+      "http_max_ms": 374,
+      "http_ms": 218,
+      "jitter_ms": 167,
+      "last_seen": "2026-10-12T05:46:26Z",
+      "last_success": "2026-10-12T05:46:26Z",
+      "latency_medians": [
+        218
+      ],
+      "median_ms": 218,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "155.248.209.237",
       "ru_blocked_streak": 0,
-      "ru_ms": 178,
-      "ru_ok_at": "2026-10-11T23:54:34Z"
+      "ru_ms": 171,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 3.18,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 59
     },
     "e89234df3624d9e0": {
       "category": "universal",
@@ -22342,7 +22359,7 @@
     },
     "e8db7d466969543a": {
       "category": "universal",
-      "last_seen": "2026-10-10T23:26:15Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 38,
@@ -22359,7 +22376,7 @@
     "e8ecc8f25fdaedce": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22434,16 +22451,16 @@
     },
     "ea0402fb71dcc2de": {
       "asn": "",
-      "category": "whitelist",
+      "category": "universal",
       "checks_passed": 2,
       "country": "PL",
       "egress_ip": "57.128.229.65",
       "failures": 0,
-      "http_max_ms": 1209,
-      "http_ms": 1148,
-      "jitter_ms": 96,
-      "last_seen": "2026-10-11T23:55:40Z",
-      "last_success": "2026-10-11T23:55:40Z",
+      "http_max_ms": 8000,
+      "http_ms": 8000,
+      "jitter_ms": 5980,
+      "last_seen": "2026-10-12T05:46:05Z",
+      "last_success": "2026-10-12T05:46:05Z",
       "latency_medians": [
         8000,
         8000,
@@ -22453,10 +22470,12 @@
         1270,
         1243,
         2851,
-        1148
+        1148,
+        8000
       ],
-      "median_ms": 1148,
+      "median_ms": 8000,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -22469,16 +22488,21 @@
       ],
       "resolved_ip": "91.215.43.248",
       "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 1.06,
-      "streak": 9,
-      "successes": 9,
-      "tcp_ms": 114
+      "ru_ms": 1,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 0.7,
+      "streak": 10,
+      "successes": 10,
+      "tcp_ms": 87
     },
     "ea22837ce9c02b21": {
       "category": "universal",
       "last_seen": "2026-10-10T19:59:35Z",
+      "recent": []
+    },
+    "eaa04c84e8734d1f": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "eaa76c129ebda32a": {
@@ -22519,7 +22543,7 @@
     "eb03cda5327b3a7c": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22547,8 +22571,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 123,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
+      "ru_ms": 118,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -22565,7 +22589,7 @@
     "eb37ec924c297291": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22598,6 +22622,11 @@
     "eb94cc6ec135c111": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": []
+    },
+    "ebabf58667a57e3d": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "ebaf43892cec7ddb": {
@@ -22697,13 +22726,13 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 48,
-      "ru_ok_at": "2026-10-11T15:55:48Z"
+      "ru_ms": 44,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "ed1424f83ae20032": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22718,8 +22747,8 @@
       "last_seen": "2026-10-10T15:50:12Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 20,
-      "ru_ok_at": "2026-10-11T09:15:10Z"
+      "ru_ms": 19,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "ed33f9fd4fa7e571": {
       "category": "universal",
@@ -22743,7 +22772,7 @@
     },
     "eda828755cd6ac00": {
       "category": "universal",
-      "last_seen": "2026-10-11T09:15:10Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "ee0a40bac4ac45a6": {
@@ -22772,7 +22801,7 @@
     "ee23fa15c23f4b39": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T15:55:48Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22846,7 +22875,7 @@
     "eed327280a1d6527": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -22986,7 +23015,7 @@
     "f02754d1b23a3bc7": {
       "category": "whitelist",
       "failures": 2,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0
@@ -22997,6 +23026,11 @@
     "f0405e02486a81bb": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": []
+    },
+    "f052d3083db03ca6": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "f057d33aa1de088f": {
@@ -23054,7 +23088,7 @@
     },
     "f16a84a0f7950d10": {
       "category": "universal",
-      "last_seen": "2026-10-10T09:42:47Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "f16cca3a9e7abec2": {
@@ -23065,7 +23099,7 @@
     "f1726dff3825f9af": {
       "category": "whitelist",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -23138,6 +23172,11 @@
       "ru_ms": 10,
       "ru_ok_at": "2026-10-09T23:26:45Z"
     },
+    "f20c7753d3004929": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
+    },
     "f222fd7d85683ae9": {
       "category": "universal",
       "last_seen": "2026-10-09T19:27:10Z",
@@ -23181,21 +23220,22 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "FR",
-      "egress_ip": "212.47.240.106",
+      "egress_ip": "51.158.105.199",
       "failures": 3,
-      "http_max_ms": 597,
-      "http_ms": 575,
-      "jitter_ms": 92,
-      "last_seen": "2026-10-11T23:55:32Z",
-      "last_success": "2026-10-11T23:55:32Z",
+      "http_max_ms": 953,
+      "http_ms": 674,
+      "jitter_ms": 371,
+      "last_seen": "2026-10-12T05:46:02Z",
+      "last_success": "2026-10-12T05:46:02Z",
       "latency_medians": [
         424,
         450,
         648,
         695,
-        575
+        575,
+        674
       ],
-      "median_ms": 575,
+      "median_ms": 674,
       "recent": [
         1,
         0,
@@ -23204,15 +23244,16 @@
         0,
         0,
         1,
+        1,
         1
       ],
       "resolved_ip": "212.183.88.136",
       "ru_blocked_streak": 0,
       "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 1.84,
-      "streak": 2,
-      "successes": 5,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 2.04,
+      "streak": 3,
+      "successes": 6,
       "tcp_ms": 6
     },
     "f275f8acc36a82ca": {
@@ -23232,7 +23273,7 @@
     },
     "f2954901f3742873": {
       "category": "universal",
-      "last_seen": "2026-10-09T23:26:45Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 37,
@@ -23258,8 +23299,8 @@
       "last_seen": "2026-10-10T02:39:30Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 118,
-      "ru_ok_at": "2026-10-11T09:15:10Z"
+      "ru_ms": 114,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "f315f758058eb3b2": {
       "category": "universal",
@@ -23560,7 +23601,7 @@
     },
     "f5a97d4059a021a4": {
       "category": "universal",
-      "last_seen": "2026-10-10T15:50:12Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "f5a9bfeab420fdbe": {
@@ -23593,13 +23634,12 @@
       "country": "US",
       "egress_ip": "144.24.46.175",
       "failures": 0,
-      "http_max_ms": 316,
-      "http_ms": 212,
-      "jitter_ms": 106,
-      "last_seen": "2026-10-11T23:55:54Z",
-      "last_success": "2026-10-11T23:55:54Z",
+      "http_max_ms": 335,
+      "http_ms": 226,
+      "jitter_ms": 110,
+      "last_seen": "2026-10-12T05:46:24Z",
+      "last_success": "2026-10-12T05:46:24Z",
       "latency_medians": [
-        176,
         68,
         224,
         62,
@@ -23618,9 +23658,10 @@
         63,
         228,
         126,
-        212
+        212,
+        226
       ],
-      "median_ms": 212,
+      "median_ms": 226,
       "recent": [
         1,
         1,
@@ -23634,11 +23675,11 @@
         1
       ],
       "resolved_ip": "144.24.46.175",
-      "ru_unknown_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 4.63,
-      "streak": 53,
-      "successes": 53,
-      "tcp_ms": 50
+      "ru_unknown_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 3.35,
+      "streak": 54,
+      "successes": 54,
+      "tcp_ms": 52
     },
     "f610f3eee254a98f": {
       "category": "universal",
@@ -23708,7 +23749,7 @@
       ],
       "ru_blocked_streak": 0,
       "ru_ms": 10,
-      "ru_ok_at": "2026-10-11T20:10:49Z",
+      "ru_ok_at": "2026-10-12T05:44:59Z",
       "streak": 0,
       "successes": 0
     },
@@ -23730,17 +23771,20 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 40,
-      "ru_ok_at": "2026-10-10T19:59:35Z"
+      "ru_ms": 39,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "f7291c7969f427f5": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 56,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "f744d99471484c98": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "f74a1a1b148b92b4": {
@@ -23761,8 +23805,8 @@
       "last_seen": "2026-10-11T20:10:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 37,
-      "ru_ok_at": "2026-10-11T15:55:48Z"
+      "ru_ms": 2,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
     },
     "f794dc79772b2b99": {
       "category": "universal",
@@ -23796,11 +23840,11 @@
       "country": "PL",
       "egress_ip": "57.128.229.65",
       "failures": 0,
-      "http_max_ms": 1228,
-      "http_ms": 1184,
-      "jitter_ms": 79,
-      "last_seen": "2026-10-11T23:55:40Z",
-      "last_success": "2026-10-11T23:55:40Z",
+      "http_max_ms": 3415,
+      "http_ms": 2074,
+      "jitter_ms": 1461,
+      "last_seen": "2026-10-12T05:46:14Z",
+      "last_success": "2026-10-12T05:46:14Z",
       "latency_medians": [
         2501,
         1359,
@@ -23808,10 +23852,12 @@
         2619,
         2548,
         3049,
-        1184
+        1184,
+        2074
       ],
-      "median_ms": 1184,
+      "median_ms": 2074,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -23822,12 +23868,12 @@
       ],
       "resolved_ip": "91.215.43.248",
       "ru_blocked_streak": 0,
-      "ru_ms": 2,
-      "ru_ok_at": "2026-10-11T23:54:34Z",
-      "speed_mbps": 1.26,
-      "streak": 7,
-      "successes": 7,
-      "tcp_ms": 114
+      "ru_ms": 1,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "speed_mbps": 0.93,
+      "streak": 8,
+      "successes": 8,
+      "tcp_ms": 88
     },
     "f86368480c76413a": {
       "category": "universal",
@@ -23886,7 +23932,7 @@
     "f943789d7a62400d": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -23921,6 +23967,11 @@
       "ru_blocked_streak": 0,
       "ru_ms": 51,
       "ru_ok_at": "2026-10-11T20:10:49Z"
+    },
+    "f9d3d909d13c7de7": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": []
     },
     "f9eb8d75055ece80": {
       "category": "universal",
@@ -24047,6 +24098,19 @@
       "last_seen": "2026-10-11T23:54:34Z",
       "recent": []
     },
+    "fbed12f479a9b09e": {
+      "category": "whitelist",
+      "failures": 1,
+      "last_seen": "2026-10-12T05:44:59Z",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 1,
+      "ru_ok_at": "2026-10-12T05:44:59Z",
+      "streak": 0,
+      "successes": 0
+    },
     "fbef905ebdd379b7": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
@@ -24138,7 +24202,7 @@
     "fd4c0f0ffad8d1a3": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -24159,7 +24223,7 @@
     },
     "fd64e8c6ed73d940": {
       "category": "universal",
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "fdc517b1a6a42dda": {
@@ -24191,7 +24255,7 @@
     "fe337d5996131310": {
       "category": "universal",
       "failures": 1,
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0
       ],
@@ -24255,6 +24319,14 @@
     "fe8dc09aa8babaea": {
       "category": "universal",
       "last_seen": "2026-10-11T23:54:34Z",
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 50,
+      "ru_ok_at": "2026-10-12T05:44:59Z"
+    },
+    "fea5834acb086f34": {
+      "category": "universal",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "fed97cc59738ed0b": {
@@ -24282,7 +24354,7 @@
     },
     "ff26763aa12dcc00": {
       "category": "universal",
-      "last_seen": "2026-10-11T23:54:34Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "ff757146c8ccedad": {
@@ -24345,7 +24417,7 @@
     "ffa0a7c4c6a30c55": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-10-11T20:10:49Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": [
         0,
         0,
@@ -24382,7 +24454,7 @@
     },
     "ffee06d273de71d5": {
       "category": "universal",
-      "last_seen": "2026-10-10T23:26:15Z",
+      "last_seen": "2026-10-12T05:44:59Z",
       "recent": []
     },
     "fff8125b74fdf78a": {
