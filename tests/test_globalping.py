@@ -2,8 +2,10 @@
 
 import asyncio
 import json
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
@@ -799,3 +801,272 @@ def test_config_ru_keys(tmp_path):
     raw_path.write_text(json.dumps(base))
     loaded2 = load_config(raw_path)
     assert loaded2.ru_check_enabled is False and loaded2.ru_check_budget == 7
+
+
+# -------------------------------------------- общие дедлайны / регрессия Actions
+
+
+class BlockingResponse(FakeResponse):
+    """HTTP request that never completes unless its caller cancels it."""
+
+    def __init__(self):
+        super().__init__(200, {})
+        self.cancelled = False
+
+    async def text(self, errors=None):
+        try:
+            await asyncio.Future()
+        finally:
+            self.cancelled = True
+
+
+def run_guarded(coro):
+    async def guarded():
+        # An independent test guard makes a broken/missing deadline fail, not hang pytest.
+        value = await asyncio.wait_for(coro, timeout=2.0)
+        assert not [
+            task for task in asyncio.all_tasks()
+            if task is not asyncio.current_task() and not task.done()
+        ], "deadline must cancel and drain all queued/in-flight work"
+        return value
+
+    return asyncio.run(guarded())
+
+
+@pytest.mark.parametrize(
+    "phase", ["quota", "quota_retry_after", "create", "poll", "retry_after", "backoff", "network"],
+)
+def test_shared_deadline_cancels_quota_http_retries_and_queued_nodes(monkeypatch, phase):
+    blocking = BlockingResponse()
+
+    def handler(method, url, json=None):
+        if url.endswith("/v1/limits"):
+            if phase == "quota_retry_after":
+                return FakeResponse(429, {}, headers={"Retry-After": "60"})
+            return blocking if phase == "quota" else FakeResponse(200, LIMITS_OK)
+        if method == "POST":
+            if phase == "create":
+                return blocking
+            if phase == "retry_after":
+                return FakeResponse(429, {}, headers={"Retry-After": "60"})
+            if phase == "backoff":
+                return FakeResponse(503, {})
+            if phase == "network":
+                raise OSError("offline")
+            return FakeResponse(202, {"id": "m1"})
+        return blocking
+
+    sessions = install_fake_session(monkeypatch, handler)
+    probes = [probe(make_node(f"1.1.1.{i}")) for i in range(1, 4)]
+    results, stats = run_guarded(
+        gp._run(
+            probes, token="t", checked_at="T", budget=3, concurrency=1,
+            probes_per_target=3, packets=2, poll_interval=0.5, deadline_seconds=0.05,
+        )
+    )
+    assert set(results) == {p.node.node_id for p in probes}
+    assert all(r.ok is None and r.reason == "deadline" for r in results.values())
+    assert stats.deadline_exceeded and stats.as_stats_dict()["deadline_exceeded"]
+    assert stats.not_checked == 3 and stats.checked == stats.blocked == 0
+    assert stats.submitted == (1 if phase == "poll" else 0)
+    assert blocking.cancelled is (phase in {"quota", "create", "poll"})
+    assert stats.rate_limited == (1 if phase in {"retry_after", "quota_retry_after"} else 0)
+    # Workers waiting on the semaphore never started more requests after the deadline.
+    expected_calls = {
+        "quota": 1, "quota_retry_after": 1, "create": 2, "poll": 3,
+        "retry_after": 2, "backoff": 2, "network": 2,
+    }
+    assert len(sessions[0].calls) == expected_calls[phase]
+
+
+def test_deadline_keeps_completed_verdicts_and_budget_skips(monkeypatch):
+    blocking = BlockingResponse()
+
+    def handler(method, url, json=None):
+        if url.endswith("/v1/limits"):
+            return FakeResponse(200, LIMITS_OK)
+        if method == "POST":
+            if json["target"] == "1.1.1.3":
+                return blocking
+            return FakeResponse(202, {"id": json["target"]})
+        rtts = [[20]] if url.endswith("1.1.1.1") else [[], []]
+        return FakeResponse(200, finished_payload(rtts))
+
+    sessions = install_fake_session(monkeypatch, handler)
+    probes = [probe(make_node(f"1.1.1.{i}")) for i in range(1, 6)]
+    results, stats = run_guarded(
+        gp._run(
+            probes, token="t", checked_at="T", budget=4, concurrency=1,
+            probes_per_target=3, packets=2, poll_interval=0.5, deadline_seconds=0.05,
+        )
+    )
+    assert results[probes[0].node.node_id].ok is True
+    assert results[probes[1].node.node_id].ok is False
+    assert results[probes[2].node.node_id].reason == "deadline"
+    assert results[probes[3].node.node_id].reason == "deadline"
+    assert results[probes[4].node.node_id].reason == "budget"
+    assert stats.checked == 2 and stats.reachable == stats.blocked == 1
+    assert stats.not_checked == 3 and stats.deadline_exceeded
+    assert blocking.cancelled
+    assert len([call for call in sessions[0].calls if call[0] == "POST"]) == 3
+
+
+def fast_checkhost_polls(monkeypatch):
+    real_sleep = asyncio.sleep
+
+    async def yielding_sleep(_delay):
+        # No real one-second polling pauses, but do yield so deadlines can fire.
+        await real_sleep(0)
+
+    monkeypatch.setattr(asyncio, "sleep", yielding_sleep)
+
+
+def test_checkhost_success_endpoint_dedup_and_hysteria_skip(monkeypatch):
+    node = make_node("first.example")
+    alias = replace(node, user="123e4567-e89b-12d3-a456-426614174099")
+    probes = [
+        probe(node, resolved_ip="9.9.9.9"),
+        probe(alias, resolved_ip="9.9.9.9"),
+        probe(make_node("8.8.8.8", hy=True)),
+    ]
+
+    def handler(method, url, json=None):
+        if "/check-tcp?" in url:
+            return FakeResponse(200, {"request_id": "r1"})
+        return FakeResponse(200, {gp.CHECKHOST_RU_NODE: [[{"time": 0.025}]]})
+
+    sessions = install_fake_session(monkeypatch, handler)
+    fast_checkhost_polls(monkeypatch)
+    results = gp.run_checkhost_fallback(probes)
+    assert set(results) == {node.node_id, alias.node_id}
+    assert all(r.ok is True and r.probes_ok == 1 for r in results.values())
+    assert results[alias.node_id].node_id == alias.node_id
+    assert len(sessions[0].calls) == 2  # one creation + one poll per endpoint
+    query = parse_qs(urlsplit(sessions[0].calls[0][1]).query)
+    assert query == {"host": ["9.9.9.9:443"], "node": [gp.CHECKHOST_RU_NODE]}
+
+
+def test_checkhost_hysteria_only_does_not_open_session(monkeypatch):
+    sessions = install_fake_session(monkeypatch, lambda *_args, **_kwargs: pytest.fail("no HTTP"))
+    assert gp.run_checkhost_fallback([probe(make_node(hy=True))]) == {}
+    assert sessions == []
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {gp.CHECKHOST_RU_NODE: [[{"error": "Connection refused"}]]},
+        {gp.CHECKHOST_RU_NODE: [None]},
+        {"us1.node.check-host.net": [[{"time": 0.01}]]},
+        {},
+    ],
+)
+def test_checkhost_incomplete_failed_or_non_ru_result_is_not_a_block(monkeypatch, payload):
+    def handler(method, url, json=None):
+        if "/check-tcp?" in url:
+            return FakeResponse(200, {"request_id": "r1"})
+        return FakeResponse(200, payload)
+
+    install_fake_session(monkeypatch, handler)
+    fast_checkhost_polls(monkeypatch)
+    assert run_guarded(
+        gp._run_checkhost_fallback(
+            [probe(make_node())], timeout=1, deadline_seconds=0.05, concurrency=1,
+        )
+    ) == {}
+
+
+def test_checkhost_shared_deadline_bounds_concurrency_and_keeps_success(monkeypatch):
+    blocked_requests = []
+
+    def handler(method, url, json=None):
+        if "/check-tcp?" in url:
+            if parse_qs(urlsplit(url).query)["host"] == ["1.1.1.1:443"]:
+                return FakeResponse(200, {"request_id": "r1"})
+            response = BlockingResponse()
+            blocked_requests.append(response)
+            return response
+        return FakeResponse(200, {gp.CHECKHOST_RU_NODE: [[{"time": 0.01}]]})
+
+    install_fake_session(monkeypatch, handler)
+    fast_checkhost_polls(monkeypatch)
+    probes = [probe(make_node(f"1.1.1.{i}")) for i in range(1, 21)]
+    results = run_guarded(
+        gp._run_checkhost_fallback(probes, timeout=10, deadline_seconds=0.05, concurrency=3)
+    )
+    assert set(results) == {probes[0].node.node_id}
+    assert results[probes[0].node.node_id].ok is True
+    assert len(blocked_requests) == 3  # remaining 16 endpoints stayed queued
+    assert all(response.cancelled for response in blocked_requests)
+
+
+@pytest.mark.parametrize("phase", ["create", "poll"])
+def test_checkhost_node_timeout_includes_creation_and_polling(monkeypatch, phase):
+    responses = []
+
+    def handler(method, url, json=None):
+        if phase == "poll" and "/check-tcp?" in url:
+            return FakeResponse(200, {"request_id": "r1"})
+        response = BlockingResponse()
+        responses.append(response)
+        return response
+
+    install_fake_session(monkeypatch, handler)
+    fast_checkhost_polls(monkeypatch)
+    probes = [probe(make_node(f"1.1.1.{i}")) for i in range(1, 4)]
+    assert run_guarded(
+        gp._run_checkhost_fallback(probes, timeout=0.03, deadline_seconds=1, concurrency=1)
+    ) == {}
+    assert len(responses) == 3
+    assert all(response.cancelled for response in responses)
+
+
+@pytest.mark.parametrize("fallback_succeeds", [True, False])
+def test_builder_globalping_deadline_uses_fallback_without_bypassing_ru_gate(
+    tmp_path, countries_file, monkeypatch, fallback_succeeds,
+):
+    c = cfg(tmp_path, countries_file)
+    c = replace(c, paths=replace(c.paths, source_health=tmp_path / "source_health.json"))
+    wire_build(monkeypatch, four_links())
+    verified = []
+    fake_verify(monkeypatch, verified)
+    c.paths.subscription_base64.write_text("previous base64")
+    c.paths.subscription_raw.write_text("previous raw")
+    c.paths.stats.write_text('{"servers": []}')
+    previous = {
+        path: path.read_bytes()
+        for path in (c.paths.subscription_base64, c.paths.subscription_raw, c.paths.stats)
+    }
+
+    def expired_ru(probes, *_args, **_kwargs):
+        return {
+            p.node.node_id: gp.RuProbeResult(p.node.node_id, None, "tcp", reason="deadline")
+            for p in probes
+        }, gp.RuCheckStats(
+            enabled=True, budget=125, not_checked=len(probes), deadline_exceeded=True,
+        )
+
+    seen = []
+
+    def fallback(probes):
+        seen.extend(probes)
+        return {
+            p.node.node_id: gp.RuProbeResult(p.node.node_id, True, "tcp", probes_ok=1)
+            for p in probes[:3]
+        } if fallback_succeeds else {}
+
+    monkeypatch.setattr(gp, "run_ru_check", expired_ru)
+    monkeypatch.setattr(gp, "run_checkhost_fallback", fallback)
+    if fallback_succeeds:
+        report = build_subscription(c, now=datetime(2026, 1, 1, tzinfo=UTC))
+        assert report.published == 3 and len(verified) == 3
+        stats = json.loads(c.paths.stats.read_text())
+        assert stats["ru_check"]["enabled"] and stats["ru_check"]["deadline_exceeded"]
+    else:
+        with pytest.raises(BuildError, match="российской сети"):
+            build_subscription(c, now=datetime(2026, 1, 1, tzinfo=UTC))
+        assert verified == []
+        assert all(path.read_bytes() == content for path, content in previous.items())
+        assert isinstance(json.loads(c.paths.history.read_text()), dict)
+        assert isinstance(json.loads(c.paths.source_health.read_text()), dict)
+    assert len(seen) == 4
