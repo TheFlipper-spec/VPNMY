@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
 from . import asn as asn_module
-from . import globalping
+from . import globalping, rkn_filter
 from .config import BuildConfig
 from .fetcher import fetch_all
 from .history import load_history, prune_history, record_failure, record_skip, record_success
@@ -21,6 +22,7 @@ from .selector import (
     infer_country,
     is_historically_unreliable,
     is_publication_stable,
+    is_supported_node,
     sample_candidates,
     select_final,
     shortlist,
@@ -40,6 +42,17 @@ LOGGER = logging.getLogger(__name__)
 
 class BuildError(RuntimeError):
     """Сборка не может безопасно заменить последнюю рабочую подписку."""
+
+
+def _persist_state(history: dict[str, Any], health: dict[str, Any], config: BuildConfig) -> None:
+    """Persist quarantine/retirement decisions even when the subscription build fails."""
+    payloads: dict[Any, bytes] = {}
+    if config.paths.history:
+        payloads[config.paths.history] = (json.dumps(history, ensure_ascii=False, indent=2, sort_keys=True) + "\\n").encode()
+    if config.paths.source_health:
+        payloads[config.paths.source_health] = (json.dumps(health, ensure_ascii=False, indent=2, sort_keys=True) + "\\n").encode()
+    if payloads:
+        atomic_publish(payloads)
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,6 +157,13 @@ def build_subscription(
 ) -> BuildReport:
     now = (now or datetime.now(UTC)).astimezone(UTC)
     checked_at = now.isoformat(timespec="seconds").replace("+00:00", "Z")
+    LOGGER.info(
+        "Начало сборки: цель=%d серверов, включённых источников=%d, dry_run=%s, глубокая_проверка=%s",
+        config.target_count,
+        sum(source.enabled for source in config.sources),
+        dry_run,
+        not skip_deep_check,
+    )
     if skip_deep_check:
         xray_bin = None
         hysteria_bin = None
@@ -155,10 +175,23 @@ def build_subscription(
             LOGGER.warning(
                 "Клиент Hysteria не найден (%s); hysteria2-узлы будут пропущены", config.hysteria_bin
             )
+    # Refresh block lists once, then exclude known blocked endpoints before any probes.
+    rkn_filter.load_lists()
     history = load_history(config.paths.history)
     health = load_health(config.paths.source_health)
+    quarantined_sources = {
+        source.source_id
+        for source in config.sources
+        if source.enabled and is_quarantined(health, source.source_id, config.source_fail_threshold)
+    }
+    for source in config.sources:
+        if source.source_id in quarantined_sources:
+            LOGGER.warning("Источник «%s» в постоянном карантине; повторная загрузка пропущена", source.name)
+    fetchable_sources = [
+        source for source in config.sources if source.enabled and source.source_id not in quarantined_sources
+    ]
     fetch_results = fetch_all(
-        config.sources, config.source_timeout_seconds, config.fetch_workers
+        fetchable_sources, config.source_timeout_seconds, config.fetch_workers
     )
     source_stats: list[dict[str, Any]] = []
     all_nodes: list[Node] = []
@@ -184,6 +217,9 @@ def build_subscription(
         if fetched.ok and fetched.text is not None:
             try:
                 accepted_nodes, rejected = parse_source(fetched.text, source)
+                supported_nodes = [node for node in accepted_nodes if is_supported_node(node)]
+                rejected += len(accepted_nodes) - len(supported_nodes)
+                accepted_nodes = supported_nodes
             except ParseError as exc:
                 LOGGER.warning("Источник «%s» не разобран: %s", source.name, exc)
                 error = "parse_error"
@@ -224,26 +260,72 @@ def build_subscription(
             if error is None and accepted_nodes:
                 sources_ok += 1
                 row["available"] = True
-                LOGGER.info(
-                    "Источник «%s»: принято %d, отклонено %d",
-                    source.name,
-                    len(accepted_nodes),
-                    rejected,
-                )
-            elif error is None:
-                LOGGER.warning("Источник «%s» не отдал ни одной конфигурации", source.name)
+        if error:
+            LOGGER.warning(
+                "Источник «%s»: сбой (%s), получено=%d, принято=%d, отклонено=%d, подряд_ошибок=%d",
+                source.name,
+                error,
+                row["found"],
+                row["accepted"],
+                row["rejected"],
+                healthy.get("fail_streak", 0),
+            )
+        elif row["accepted"]:
+            LOGGER.info(
+                "Источник «%s»: fetch=%.0f мс, найдено=%d, принято=%d, отброшено=%d",
+                source.name,
+                fetched.elapsed_ms,
+                row["found"],
+                row["accepted"],
+                row["rejected"],
+            )
         source_stats.append(row)
+    for source in config.sources:
+        if source.source_id in quarantined_sources:
+            source_stats.append({
+                "id": source.source_id,
+                "name": source.name,
+                "category": source.category,
+                "enabled": True,
+                "available": False,
+                "found": 0,
+                "accepted": 0,
+                "rejected": 0,
+                "quarantined": True,
+                "error": "quarantined_no_retry",
+                **{key: value for key, value in public_row(health["sources"][source.source_id]).items()
+                   if key not in {"last_attempt", "last_accepted"}},
+            })
     prune_missing(health, list(config.sources))
     if sources_ok == 0:
+        prune_missing(health, list(config.sources))
+        _persist_state(history, health, config)
         raise BuildError(
             "ни один источник не доступен или пуст; последняя подписка сохранена без изменений"
         )
     parsed_raw = deduplicate(all_nodes)
+    deduplicated_count = len(parsed_raw)
+    prefiltered = []
+    for node in parsed_raw:
+        sni = node.options.get("sni", node.options.get("peer", ""))
+        if rkn_filter.is_ip_blocked(node.host) or (sni and rkn_filter.is_sni_blocked(sni)):
+            LOGGER.info("Узел исключён по спискам блокировок: %s", node.endpoint_key)
+            continue
+        prefiltered.append(node)
+    blocked_by_rkn = len(parsed_raw) - len(prefiltered)
+    parsed_raw = prefiltered
+    LOGGER.info(
+        "Локальная фильтрация: после дедупликации=%d, блок-листы исключили=%d, осталось=%d",
+        deduplicated_count,
+        blocked_by_rkn,
+        len(parsed_raw),
+    )
     capped = cap_per_source(
         parsed_raw, config.max_nodes_per_source, history, now
     )
     nodes = deduplicate(capped)
     if not nodes:
+        _persist_state(history, health, config)
         raise BuildError("источники не содержат валидных конфигураций")
     LOGGER.info(
         "После дедупликации: %d конфигураций; после лимита на источник: %d",
@@ -255,7 +337,18 @@ def build_subscription(
     # Verify: shortlist до target*3 (36-40) * attempts 3 * timeout 8 сек / workers 6 ~ 3 мин + speed 0.5 мин.
     # ASN: до 40 IP * 3 сек /5 workers ~ 24 сек.
     # Итого <5 мин с запасом.
+    retired_nodes = [
+        node for node in nodes
+        if history.get("nodes", {}).get(node.node_id, {}).get("retired") is True
+    ]
+    if retired_nodes:
+        LOGGER.warning("Узлы в постоянном карантине (повторно не проверяются): %d", len(retired_nodes))
     candidates = sample_candidates(nodes, history, limit=config.max_candidates, now=now)
+    LOGGER.info(
+        "Локальная проверка: кандидаты=%d, лимит=%d, workers=%d, таймауты TCP/UDP=%.1f/%.1f с",
+        len(candidates), config.max_candidates, config.probe_workers,
+        config.tcp_timeout_seconds, config.udp_timeout_seconds,
+    )
     probes = probe_all(
         candidates,
         config.tcp_timeout_seconds,
@@ -263,9 +356,18 @@ def build_subscription(
         config.probe_workers,
     )
     if not probes:
+        for node in candidates:
+            record_failure(history, node, checked_at)
+        _persist_state(history, health, config)
         raise BuildError("ни один сервер не прошёл сетевую предпроверку")
     reachable_ids = {probe.node.node_id for probe in probes}
     tcp_failed = [node for node in candidates if node.node_id not in reachable_ids]
+    LOGGER.info(
+        "Локальный TCP/UDP probe: прошли=%d, не прошли=%d",
+        len(probes), len(tcp_failed),
+    )
+    for node in tcp_failed[:20]:
+        LOGGER.debug("Probe отказ: node=%s endpoint=%s protocol=%s", node.node_id, node.endpoint_key, node.transport)
 
     # --- Второй этап фильтрации: доступность из российской сети (Globalping, RU) ---
     # Локальная предпроверка идёт с GitHub-раннера (США/Европа) и не видит блокировки
@@ -288,6 +390,30 @@ def build_subscription(
         config,
         checked_at=checked_at,
     )
+    # Check-Host is a TCP-only fallback; use it when Globalping has no RU probes
+    # or no available credits. It cannot certify Hysteria2/UDP nodes.
+    quota_or_api_limited = (
+        ru_stats.budget < len(prioritization)
+        or ru_stats.no_probes > 0
+        or ru_stats.rate_limited > 0
+        or ru_stats.api_errors > 0
+        or ru_stats.unknown > 0
+    )
+    if ru_stats.enabled and quota_or_api_limited:
+        unresolved = [
+            probe for probe in prioritization
+            if ru_results.get(probe.node.node_id) is None or ru_results[probe.node.node_id].ok is not True
+        ]
+        LOGGER.warning(
+            "Globalping quota/API ограничены: budget=%d, приоритетных=%d, no_probes=%d, 429=%d, api_errors=%d; Check-Host TCP fallback для %d узлов",
+            ru_stats.budget, len(prioritization), ru_stats.no_probes,
+            ru_stats.rate_limited, ru_stats.api_errors, len(unresolved),
+        )
+        fallback = globalping.run_checkhost_fallback(unresolved)
+        LOGGER.info("Check-Host fallback вернул подтверждённых TCP-результатов: %d/%d", len(fallback), len(unresolved))
+        for node_id, result in fallback.items():
+            if node_id not in ru_results or ru_results[node_id].ok is not True:
+                ru_results[node_id] = result
     ru_blocked_ids: set[str] = set()
     for probe in probes:
         result = ru_results.get(probe.node.node_id)
@@ -309,8 +435,23 @@ def build_subscription(
         "Российская проверка (Globalping, RU): %s",
         globalping.format_summary(ru_stats),
     )
-    probes_ru = [p for p in probes if p.node.node_id not in ru_blocked_ids]
+    probes_ru = [
+        p for p in probes
+        if p.node.node_id not in ru_blocked_ids
+        and (
+            not ru_stats.enabled
+            or (ru_results.get(p.node.node_id) is not None and ru_results[p.node.node_id].ok is True)
+        )
+    ]
+    LOGGER.info(
+        "RU gate: подтверждено=%d, исключено как недоступные=%d, не подтверждено=%d; пригодно к глубокой проверке=%d",
+        sum(result is not None and result.ok is True for result in ru_results.values()),
+        len(ru_blocked_ids),
+        max(0, len(probes) - len(ru_blocked_ids) - len(probes_ru)),
+        len(probes_ru),
+    )
     if not probes_ru:
+        _persist_state(history, health, config)
         raise BuildError(
             "ни один сервер не доступен из российской сети; "
             "последняя подписка сохранена без изменений"
@@ -357,6 +498,10 @@ def build_subscription(
             speed_test_bytes=config.speed_test_bytes,
             workers=config.verify_workers,
             attempts=config.verify_measurements,
+        )
+        LOGGER.info(
+            "Deep verify: отправлено=%d, подтверждено=%d, ошибок=%d, пропущено=%d",
+            len(probes_for_check), len(checked), len(failed), len(skipped),
         )
         unconfirmed = [result for result in checked if result.checks_passed < 2]
         if unconfirmed:
@@ -432,7 +577,21 @@ def build_subscription(
         )
         # Повторный отбор из всех проверенных с теми же лимитами, но без требования стабильности
         selected = _select(checked, config, history)
+    protocol_counts: dict[str, int] = {}
+    for result in selected:
+        protocol_counts[result.node.transport] = protocol_counts.get(result.node.transport, 0) + 1
+    LOGGER.info(
+        "Финальный отбор: проверено=%d, прошло reliability/stability=%d, выбрано=%d/%d, протоколы=%s",
+        len(checked), len(pool), len(selected), config.target_count, protocol_counts,
+    )
+    for result in selected:
+        LOGGER.info(
+            "Выбранный кандидат: id=%s endpoint=%s protocol=%s country=%s score=%.1f latency=%dms checks=%d",
+            result.node.node_id, result.endpoint_key, result.node.transport,
+            result.country, result.score, result.http_ms, result.checks_passed,
+        )
     if len(selected) < config.min_publish_count:
+        _persist_state(history, health, config)
         raise BuildError(
             f"работают только {len(selected)} узлов (минимум {config.min_publish_count}); "
             "последняя подписка сохранена без изменений"
@@ -452,6 +611,11 @@ def build_subscription(
         "asn": asn_stats if check_mode == "xray" else {"status": "skipped"},
         "median_threshold_ms": config.verify_median_threshold_ms,
         "verify_measurements": config.verify_measurements,
+        "retired_nodes": [
+            {"id": node_id, "endpoint": row.get("endpoint", ""), "protocol": row.get("protocol", ""), "status": "retired", "reason": row.get("retired_reason", "repeated failures")}
+            for node_id, row in history.get("nodes", {}).items()
+            if isinstance(row, dict) and row.get("retired") is True
+        ],
     }
     payloads = build_payloads(
         selected,

@@ -77,12 +77,15 @@ def test_project_config_contains_requested_sources():
     root = Path(__file__).resolve().parents[1]
     config = load_config(root / "config/subscription.json")
     sources = {source.source_id: source.url for source in config.sources}
-    assert sources["vlessforu"] == "https://sub.vlessfo.ru/vlessforu/working_configs.txt"
-    assert sources["vedalink"] == "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr"
-    assert "ru-whitelist-checked" not in sources  # пустой мёртвый файл удалён
-    assert sources["fastnodes-verified"].endswith("state/verified_last.txt")
-    assert sources["fastnodes-hysteria2"].endswith("hysteria2.txt")
-    assert sources["radikal-hysteria2"].endswith("protocols/hysteria2.txt")
+    assert len(sources) == 9
+    assert any("gitverse.ru/api/repos/SlavaKat/FreeProxyNova" in url for url in sources.values())
+    assert "https://sub.vlessfo.ru/vlessforu/working_configs.txt" in sources.values()
+    assert "https://abscloud.lol/connect.php?uid=1909141964" in sources.values()
+    assert all("WHITE-SNI-RU" not in url for url in sources.values())
+    assert any("V2RayAggregator" in url for url in sources.values())
+    assert any("TV2Ray" in url for url in sources.values())
+    assert any("v2ray-configs" in url for url in sources.values())
+    assert any(url.endswith("hysteria2.txt") for url in sources.values())
     assert config.profile_title == "FL1P VPN"
     assert config.max_nodes_per_source > 0 and config.stable_streak_required >= 1
 

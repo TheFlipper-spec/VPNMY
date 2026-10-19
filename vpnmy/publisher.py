@@ -159,6 +159,7 @@ def build_payloads(
             "preferred_countries_ignored": list(config.preferred_countries),
         },
         "sources": source_stats,
+        "retired_nodes": diagnostics.get("retired_nodes", []),
         "servers": [
             {
                 "id": item.node.node_id,

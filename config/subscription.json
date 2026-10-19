@@ -4,6 +4,7 @@
     "title": "FL1P VPN",
     "web_page_url": "https://theflipper-spec.github.io/VPNMY/"
   },
+  "sources_file": "config/sources.txt",
   "sources": [
     {
       "id": "ru-universal",
@@ -88,7 +89,7 @@
   "ru_check_packets": 2,
   "ru_check_deadline_seconds": 420,
   "stable_streak_required": 2,
-  "source_fail_threshold": 6,
+  "source_fail_threshold": 3,
   "category_quotas": {
     "universal": 7,
     "whitelist": 5

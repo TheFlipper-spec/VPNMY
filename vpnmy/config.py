@@ -221,7 +221,22 @@ def parse_sources(source_rows: Any) -> list[Source]:
 def load_config(path: str | Path) -> BuildConfig:
     config_path, raw = load_raw_config(path)
     root = config_path.parent.parent if config_path.parent.name == "config" else config_path.parent
-    sources = parse_sources(raw.get("sources"))
+    sources_file = raw.get("sources_file")
+    if sources_file:
+        source_path = _path(root, sources_file, "sources_file")
+        rows = []
+        if not source_path.is_file():
+            raise ConfigError(f"файл источников не найден: {source_path}")
+        for line in source_path.read_text(encoding="utf-8").splitlines():
+            clean = line.strip()
+            if not clean or clean.startswith("#"):
+                continue
+            url, _, metadata = clean.partition(" #")
+            attrs = dict(re.findall(r"([a-z_]+)=([^,\s]+)", metadata))
+            rows.append({"id": suggest_source_id(url.strip(), {r["id"] for r in rows}), "name": attrs.get("name", urlsplit(url.strip()).hostname or "source"), "url": url.strip(), "category": attrs.get("category", "universal"), "enabled": attrs.get("enabled", "true").lower() == "true"})
+        sources = parse_sources(rows)
+    else:
+        sources = parse_sources(raw.get("sources"))
     paths_data = raw.get("paths")
     if not isinstance(paths_data, dict):
         raise ConfigError("paths должен быть объектом")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Sequence
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -43,14 +44,34 @@ def source_to_row(source: Source) -> dict[str, object]:
 
 
 def _write_sources(path: Path, raw: dict, sources: Sequence[Source]) -> list[Source]:
-    raw["sources"] = [source_to_row(source) for source in sources]
-    parsed = parse_sources(raw["sources"])
-    save_raw_config(path, raw)
+    parsed = parse_sources([source_to_row(source) for source in sources])
+    if raw.get("sources_file"):
+        root = path.parent.parent if path.parent.name == "config" else path.parent
+        destination = (root / raw["sources_file"]).resolve()
+        destination.write_text(
+            "\\n".join(f"{item.url} # category={item.category}, name={item.name}, enabled={str(item.enabled).lower()}" for item in parsed) + "\\n",
+            encoding="utf-8",
+        )
+    else:
+        raw["sources"] = [source_to_row(source) for source in parsed]
+        save_raw_config(path, raw)
     return parsed
 
 
 def list_sources(path: str | Path) -> list[Source]:
-    _, raw = load_raw_config(path)
+    config_path, raw = load_raw_config(path)
+    if raw.get("sources_file"):
+        root = config_path.parent.parent if config_path.parent.name == "config" else config_path.parent
+        source_file = (root / raw["sources_file"]).resolve()
+        rows = []
+        for line in source_file.read_text(encoding="utf-8").splitlines():
+            clean = line.strip()
+            if not clean or clean.startswith("#"):
+                continue
+            url, _, metadata = clean.partition(" #")
+            attrs = dict(re.findall(r"([a-z_]+)=([^,\s]+)", metadata))
+            rows.append({"id": suggest_source_id(url.strip(), {r["id"] for r in rows}), "name": attrs.get("name", urlsplit(url.strip()).hostname or "source"), "url": url.strip(), "category": attrs.get("category", "universal"), "enabled": attrs.get("enabled", "true").lower() == "true"})
+        return parse_sources(rows)
     return parse_sources(raw.get("sources"))
 
 
@@ -64,7 +85,7 @@ def add_source(
     enabled: bool = True,
 ) -> Source:
     config_path, raw = load_raw_config(path)
-    sources = parse_sources(raw.get("sources"))
+    sources = list_sources(config_path)
     clean_url = url.strip()
     normalized = clean_url.rstrip("/")
     if any(item.url.rstrip("/") == normalized for item in sources):
@@ -106,7 +127,7 @@ def _match_source(sources: Sequence[Source], identifier: str) -> Source:
 
 def remove_source(path: str | Path, identifier: str) -> Source:
     config_path, raw = load_raw_config(path)
-    sources = parse_sources(raw.get("sources"))
+    sources = list_sources(config_path)
     target = _match_source(sources, identifier)
     remaining = [item for item in sources if item.source_id != target.source_id]
     if not remaining:
@@ -119,7 +140,7 @@ def remove_source(path: str | Path, identifier: str) -> Source:
 
 def set_source_enabled(path: str | Path, identifier: str, enabled: bool) -> Source:
     config_path, raw = load_raw_config(path)
-    sources = parse_sources(raw.get("sources"))
+    sources = list_sources(config_path)
     target = _match_source(sources, identifier)
     updated = [
         Source(item.source_id, item.name, item.url, item.category, enabled)
@@ -144,7 +165,7 @@ def find_dead_sources(
 ) -> tuple[list[Source], list[Source]]:
     """Делит источники на (живые, мёртвые) по истории здоровья."""
     _, raw = load_raw_config(config_path)
-    sources = parse_sources(raw.get("sources"))
+    sources = list_sources(config_path)
     health_file = _health_path(config_path, raw)
     rows: dict = {}
     if health_file.exists():
