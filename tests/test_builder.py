@@ -43,7 +43,7 @@ def links():
         "123e4567-e89b-12d3-a456-426614174002",
     ]
     return [
-        f"vless://{u}@{h}:443?encryption=none&security=tls&type=ws&sni=x.com#Germany"
+        f"vless://{u}@{h}:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#Germany"
         for u, h in zip(us, ["1.1.1.1", "8.8.8.8", "9.9.9.9"], strict=True)
     ]
 
@@ -110,9 +110,9 @@ def test_quarantine_excludes_dead_source(tmp_path, countries_file, monkeypatch):
     monkeypatch.setattr(builder, "resolve_xray", lambda _: "x")
     monkeypatch.setattr(builder, "resolve_hysteria", lambda _: "hy")
     good = [
-        "vless://123e4567-e89b-12d3-a456-426614174001@1.1.1.1:443?encryption=none&security=tls&type=ws&sni=x.com#A",
-        "vless://123e4567-e89b-12d3-a456-426614174002@2.2.2.2:443?encryption=none&security=tls&type=ws&sni=x.com#B",
-        "vless://123e4567-e89b-12d3-a456-426614174003@3.3.3.3:443?encryption=none&security=tls&type=ws&sni=x.com#C",
+        "vless://123e4567-e89b-12d3-a456-426614174001@1.1.1.1:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#A",
+        "vless://123e4567-e89b-12d3-a456-426614174002@2.2.2.2:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#B",
+        "vless://123e4567-e89b-12d3-a456-426614174003@3.3.3.3:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#C",
     ]
     def fake_fetch(sources, t, w):
         out = []

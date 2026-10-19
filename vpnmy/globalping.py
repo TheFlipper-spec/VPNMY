@@ -311,6 +311,44 @@ def record_ru_result(
         row["ru_unknown_at"] = checked_at
 
 
+def run_checkhost_fallback(probes: Sequence[ProbeResult], *, timeout: float = 18.0) -> dict[str, RuProbeResult]:
+    """Check TCP reachability from Check-Host's Russian node when Globalping has no RU probes/quota."""
+    import urllib.parse
+    import urllib.request
+
+    results: dict[str, RuProbeResult] = {}
+    for probe in probes:
+        node = probe.node
+        if node.is_hysteria:
+            # TCP-connect checks cannot establish UDP/Hysteria availability.
+            continue
+        query = urllib.parse.urlencode({"host": f"{node.host}:{node.port}", "node": "ru1.node.check-host.net"})
+        request = urllib.request.Request(f"https://check-host.net/check-tcp?{query}", headers={"Accept": "application/json", "User-Agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            request_id = payload.get("request_id")
+            if not request_id:
+                continue
+            result_url = "https://check-host.net/check-result/" + urllib.parse.quote(str(request_id))
+            deadline = time.monotonic() + timeout
+            value = None
+            while time.monotonic() < deadline:
+                time.sleep(1)
+                with urllib.request.urlopen(result_url, timeout=timeout) as response:
+                    result_payload = json.loads(response.read().decode("utf-8"))
+                rows = result_payload.get("ru1.node.check-host.net") or []
+                if rows and rows[0] is not None:
+                    value = rows[0]
+                    break
+            entry = value[0] if isinstance(value, list) and value else value
+            ok = bool(isinstance(entry, dict) and (entry.get("time") is not None or entry.get("status") in {"ok", "success"}))
+            results[node.node_id] = RuProbeResult(node.node_id, ok, "tcp", reason="" if ok else "checkhost_unreachable")
+        except Exception as exc:
+            LOGGER.debug("Check-Host fallback failed for %s: %s", node.endpoint_key, exc)
+    return results
+
+
 def run_async(coro: Any) -> Any:
     """Запускает корутину из синхронного кода; устойчива к уже работающему циклу."""
     try:
@@ -669,16 +707,20 @@ async def _run(
             deadline_seconds=deadline_seconds,
         )
         await client.update_quota()
-        effective = budget
-        if client.quota_remaining is not None:
-            effective = min(budget, max(0, client.quota_remaining - QUOTA_RESERVE))
-            if effective < budget:
-                LOGGER.info(
-                    "Globalping: свободная квота %d — бюджет снижен с %d до %d",
-                    client.quota_remaining,
-                    budget,
-                    effective,
-                )
+        # Fail closed: if the API cannot confirm remaining quota, do not spend an
+        # assumed allowance. The builder can use the independent Check-Host fallback.
+        effective = 0 if client.quota_remaining is None else min(
+            budget, max(0, client.quota_remaining - QUOTA_RESERVE)
+        )
+        if client.quota_remaining is None:
+            stats.reason = "квота Globalping неизвестна — измерения не создавались"
+        elif effective < budget:
+            LOGGER.info(
+                "Globalping: свободная квота %d — бюджет снижен с %d до %d",
+                client.quota_remaining,
+                budget,
+                effective,
+            )
         stats.budget = effective
         if effective <= 0:
             stats.reason = "свободная квота Globalping исчерпана (до резерва)"

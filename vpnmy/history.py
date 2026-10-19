@@ -122,15 +122,22 @@ def record_success(history: dict[str, Any], result: CheckResult) -> None:
 def record_failure(history: dict[str, Any], node: Node, checked_at: str) -> None:
     row = history["nodes"].setdefault(node.node_id, {})
     _ensure_row(row)
+    failures = int(row.get("failures", 0)) + 1
+    successes = int(row.get("successes", 0))
     row.update(
         {
-            "successes": int(row.get("successes", 0)),
-            "failures": int(row.get("failures", 0)) + 1,
+            "successes": successes,
+            "failures": failures,
             "streak": 0,
             "last_seen": checked_at,
             "category": node.category,
+            "endpoint": node.endpoint_key,
+            "protocol": node.transport,
         }
     )
+    if failures >= 4 and successes <= 1:
+        row["retired"] = True
+        row["retired_reason"] = "repeated failed checks without reliable success"
     recent = row.get("recent", [])
     recent.append(0)
     if len(recent) > DEFAULT_RECENT_WINDOW:

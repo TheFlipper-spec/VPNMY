@@ -29,7 +29,7 @@ def make_node(host="1.1.1.1", port=443, hy=False, name="node"):
     else:
         link = (
             f"vless://{uuid}@{host}:{port}"
-            f"?encryption=none&security=tls&type=ws&sni=x.com#{name}"
+            f"?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#{name}"
         )
     nodes, _rejected = parse_source(link, make_source())
     assert nodes, "парсер должен принять тестовый узел"
@@ -446,8 +446,8 @@ def test_client_quota_exhausted(monkeypatch):
 def test_endpoint_dedup_shares_measurement(monkeypatch):
     """Две конфигурации одного IP:port — одно измерение, вердикт у обоих узлов."""
     handler = limits_then_post_create_poll({"m1": [finished_payload([[10]])]})
-    link_a = "vless://123e4567-e89b-12d3-a456-426614174000@5.5.5.5:443?encryption=none&security=tls&type=ws&sni=x.com#A"
-    link_b = "vless://123e4567-e89b-12d3-a456-426614174099@5.5.5.5:443?encryption=none&security=tls&type=ws&sni=x.com#B"
+    link_a = "vless://123e4567-e89b-12d3-a456-426614174000@5.5.5.5:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#A"
+    link_b = "vless://123e4567-e89b-12d3-a456-426614174099@5.5.5.5:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#B"
     node_a = parse_source(link_a, make_source())[0][0]
     node_b = parse_source(link_b, make_source())[0][0]
     assert node_a.node_id != node_b.node_id  # разные креды — разные узлы
@@ -621,7 +621,7 @@ def four_links():
     hosts = ["1.1.1.1", "2.2.2.2", "3.3.3.3", "4.4.4.4"]
     return [
         f"vless://123e4567-e89b-12d3-a456-42661417400{i}@{hosts[i]}:443"
-        f"?encryption=none&security=tls&type=ws&sni=x.com#N{i}"
+        f"?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#N{i}"
         for i in range(4)
     ]
 
@@ -786,6 +786,7 @@ def test_builder_with_token_uses_mocked_ru_layer(tmp_path, countries_file, monke
 
 def test_config_ru_keys(tmp_path):
     base = json.loads(Path("config/subscription.json").read_text(encoding="utf-8"))
+    base.pop("sources_file", None)
     raw_path = tmp_path / "subscription.json"
     raw_path.write_text(json.dumps(base))
     loaded = load_config(raw_path)

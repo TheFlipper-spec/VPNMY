@@ -18,14 +18,14 @@ _TRANSPORT_SCORES = {
     "raw": 2.0,
     "http": 2.0,
     "h2": 2.0,
-    "hysteria2": 6.0,
+    "hysteria2": 2.0,
     "xhttp": 1.0,
     "splithttp": 1.0,
     "kcp": 0.5,
     "quic": 0.5,
 }
 # QUIC/маскировка особенно ценны для сложных сетей.
-_PROTOCOL_BONUS = {"hysteria2": 4.0}
+_PROTOCOL_BONUS: dict[str, float] = {}
 
 _COUNTRY_HINTS = {
     "russia": "RU",
@@ -79,6 +79,25 @@ def infer_country(node: Node) -> str:
     return match.group(1) if match else "XX"
 
 
+def is_supported_node(node: Node) -> bool:
+    """Modern publishable protocols only: credentialed Hysteria2 or valid VLESS Reality."""
+    if node.is_hysteria:
+        return bool(1 <= node.port <= 65535 and node.user.strip())
+    if node.scheme != "vless" or node.security != "reality":
+        return False
+    options = {str(k).lower(): str(v).strip() for k, v in node.options.items()}
+    pbk = options.get("pbk", "")
+    sid = options.get("sid", "")
+    valid_public_key = bool(re.fullmatch(r"[A-Za-z0-9_-]{43}", pbk))
+    valid_short_id = bool(re.fullmatch(r"[A-Fa-f0-9]{0,16}", sid))
+    return bool(
+        valid_public_key
+        and valid_short_id
+        and options.get("sni")
+        and options.get("fp", "").lower() in {"chrome", "firefox"}
+    )
+
+
 def history_row(history: dict[str, Any], node_id: str) -> dict[str, Any]:
     row = history.get("nodes", {}).get(node_id, {})
     return row if isinstance(row, dict) else {}
@@ -87,6 +106,8 @@ def history_row(history: dict[str, Any], node_id: str) -> dict[str, Any]:
 def is_likely_dead(node: Node, history: dict[str, Any]) -> bool:
     """Узел много раз не отвечал и почти не имел успешных проверок."""
     row = history_row(history, node.node_id)
+    if row.get("retired") is True:
+        return True
     successes = int(row.get("successes", 0) or 0)
     failures = int(row.get("failures", 0) or 0)
     streak = int(row.get("streak", 0) or 0)
@@ -230,11 +251,12 @@ def sample_candidates(
     - Узлы, близкие к мёртвым, добавляются ограниченно для восстановления.
     """
     if len(nodes) <= limit:
-        return [node for node in nodes if not is_likely_dead(node, history)] or nodes[:limit]
+        return [node for node in nodes if not is_likely_dead(node, history)]
     rows = history.get("nodes", {})
     alive = [node for node in nodes if not is_likely_dead(node, history)]
-    dead = [node for node in nodes if is_likely_dead(node, history)]
-    pool = alive or nodes
+    if not alive:
+        return []
+    pool = alive
 
     # Классификация
     known_pool: list[Node] = []
@@ -333,11 +355,6 @@ def sample_candidates(
     exploration_selected = exploration_balanced[:explore_budget]
 
     selected = selected_known + exploration_selected
-    # Перераспределение уже учтено; если всё ещё меньше limit (из-за фильтрации dead), добавим dead-узлы ограниченно
-    if dead and len(selected) < limit:
-        recover = max(1, min(len(dead), limit // 10 or 1, limit - len(selected)))
-        dead_sorted = _stratified_sample(dead, slot, "dead")
-        selected.extend(dead_sorted[:recover])
     # Финальная защита от голодания: если после всех шагов selected меньше limit, но остались необработанные
     # узлы из пула (из-за округлений), добираем хеш-ротацией оставшихся.
     if len(selected) < limit:
@@ -547,6 +564,7 @@ def select_final(
     Лимиты не ослабляются молча ради ``target_count``; если подходящих узлов меньше —
     возвращается меньшая подписка (проверка ``min_publish_count`` выполняется выше).
     """
+    results = [item for item in results if is_supported_node(item.node)]
     # Фильтр по порогу медианы: явно медленные узлы исключаем до скоринга.
     filtered: list[CheckResult] = []
     for item in results:
@@ -655,12 +673,15 @@ def select_final(
             egress_counts[egress] += 1
         return True
 
-    for category, quota in category_quotas.items():
+    # Enforce a 2:1 TCP/UDP composition (about 67% VLESS-Reality, 33% Hysteria2).
+    # If a protocol has too few eligible nodes, fill remaining slots from the other.
+    vless_quota = (target_count * 2 + 2) // 3
+    hy2_quota = target_count - vless_quota
+    for protocol, quota in (("vless", vless_quota), ("hysteria2", hy2_quota)):
         count = 0
         for item in scored:
-            if count >= quota:
-                break
-            if item.node.category == category and add(item):
+            matches = item.node.is_hysteria if protocol == "hysteria2" else not item.node.is_hysteria
+            if matches and count < quota and add(item):
                 count += 1
     for item in scored:
         if len(selected) >= target_count:

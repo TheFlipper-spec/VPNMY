@@ -35,7 +35,7 @@ def node(i, h, c, name="Germany", source_id="s"):
     # Генерируем валидный UUID: последние 4 hex символа — индекс
     uid = f"{U_BASE}{i:04x}"
     return parse_link(
-        f"vless://{uid}@{h}:443?encryption=none&security=tls&type=ws&sni=x.com#{name}",
+        f"vless://{uid}@{h}:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#{name}",
         Source(source_id, "S", "https://x", c),
     )
 
@@ -60,7 +60,7 @@ def make_node_direct(host, port=443, user=None, name="x", source_id="s", categor
         source_name="S",
         category=category,
         user=user,
-        options={"security": "tls", "type": "ws"},
+        options={"security": "reality", "type": "tcp", "sni": "x.com", "fp": "chrome", "pbk": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "sid": "abcd"},
         original_name=name,
     )
 
@@ -148,8 +148,8 @@ def test_asn_limit():
 
 
 def test_ip_limit():
-    n1 = parse_link(f"vless://{U_BASE}0000@one.example.com:443?encryption=none&security=tls&type=ws&sni=x.com#x", Source("s", "S", "https://x", "universal"))
-    n2 = parse_link(f"vless://{U_BASE}0001@two.example.com:443?encryption=none&security=tls&type=ws&sni=x.com#x", Source("s", "S", "https://x", "universal"))
+    n1 = parse_link(f"vless://{U_BASE}0000@one.example.com:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#x", Source("s", "S", "https://x", "universal"))
+    n2 = parse_link(f"vless://{U_BASE}0001@two.example.com:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#x", Source("s", "S", "https://x", "universal"))
     r1 = CheckResult(n1, 10, 100, 5, "DE", "x", resolved_ip="5.5.5.5")
     r2 = CheckResult(n2, 10, 101, 5, "DE", "x", resolved_ip="5.5.5.5")
     out = select_final([r1, r2], history={"nodes": {}}, preferred_countries=(), category_quotas={"universal": 2}, target_count=2, max_per_endpoint=1, max_per_subnet=10, max_per_ip=1)
@@ -195,8 +195,8 @@ def test_subnet_limits_ipv4_ipv6():
 
 
 def test_domain_endpoint_uses_resolved_ip():
-    n1 = parse_link(f"vless://{U_BASE}0000@a.example.com:443?encryption=none&security=tls#x", Source("s", "S", "https://x", "universal"))
-    n2 = parse_link(f"vless://{U_BASE}0001@b.example.com:443?encryption=none&security=tls#x", Source("s", "S", "https://x", "universal"))
+    n1 = parse_link(f"vless://{U_BASE}0000@a.example.com:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#x", Source("s", "S", "https://x", "universal"))
+    n2 = parse_link(f"vless://{U_BASE}0001@b.example.com:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#x", Source("s", "S", "https://x", "universal"))
     pr1 = ProbeResult(n1, 10, resolved_ip="9.9.9.9")
     pr2 = ProbeResult(n2, 12, resolved_ip="9.9.9.9")
     assert network_key(pr1.endpoint_key) == network_key(pr2.endpoint_key)

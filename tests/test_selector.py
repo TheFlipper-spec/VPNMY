@@ -15,7 +15,7 @@ U = "123e4567-e89b-12d3-a456-42661417400{}"
 
 def node(i, h, c, name="Germany"):
     return parse_link(
-        f"vless://{U.format(i)}@{h}:443?encryption=none&security=tls&type=ws&sni=x.com#{name}",
+        f"vless://{U.format(i)}@{h}:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#{name}",
         Source(str(i), "S", "https://x", c),
     )
 
@@ -101,7 +101,7 @@ def test_cap_per_source_limits_large_lists():
     nodes = [
         parse_link(
             f"vless://123e4567-e89b-12d3-a456-{i:012x}@8.{i // 256}.0.{i % 256 + 1}:443?"
-            "encryption=none&security=tls&type=ws&sni=x.com#DE",
+            "encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#DE",
             Source("0", "S", "https://x", "universal"),
         )
         for i in range(300)
@@ -122,7 +122,7 @@ def test_shortlist_includes_hysteria_share():
     classic = [
         parse_link(
             f"vless://123e4567-e89b-12d3-a456-{i:012x}@8.8.{i}.1:443?"
-            "encryption=none&security=tls&type=ws&sni=x.com#DE",
+            "encryption=none&security=reality&type=tcp&sni=x.com&fp=chrome&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#DE",
             Source(str(i), "S", "https://x", "universal"),
         )
         for i in range(20)
@@ -167,13 +167,10 @@ def test_subnet_diversity_limits_clones():
     assert len(out) == 2
 
 
-def test_hysteria_gets_protocol_bonus():
-    from vpnmy.selector import quality_score
+def test_hysteria_has_no_supra_protocol_bonus():
+    from vpnmy.selector import _PROTOCOL_BONUS
 
-    classic = CheckResult(node(0, "1.1.1.1", "universal"), 10, 100, 5, "DE", "x")
-    hy = CheckResult(hy_node(0, "2.2.2.2"), 10, 100, 5, "DE", "x")
-    history = {"nodes": {}}
-    assert quality_score(hy, history, ("DE",)) > quality_score(classic, history, ("DE",))
+    assert _PROTOCOL_BONUS == {}
 
 
 def test_publication_stable_streak():
@@ -192,3 +189,15 @@ def test_network_key_groups_subnets():
     assert network_key("10.20.30.5:443") == network_key("10.20.30.9:8443")
     assert network_key("10.20.31.5:443") != network_key("10.20.30.5:443")
     assert network_key("edge.example.com:443") == "edge.example.com"
+
+
+def test_reality_firefox_fingerprint_is_supported():
+    from vpnmy.selector import select_final
+
+    firefox = parse_link(
+        f"vless://{U.format(0)}@1.1.1.1:443?encryption=none&security=reality&type=tcp&sni=x.com&fp=firefox&pbk=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&sid=abcd#Firefox",
+        Source("firefox", "Firefox", "https://example.com", "universal"),
+    )
+    result = CheckResult(firefox, 10, 20, 10, "DE", "x")
+    selected = select_final([result], history={"nodes": {}}, preferred_countries=(), category_quotas={}, target_count=1)
+    assert len(selected) == 1 and selected[0].node.options["fp"] == "firefox"
