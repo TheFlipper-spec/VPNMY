@@ -98,9 +98,30 @@ def _minimal_config(tmp_path, countries_file):
     return cfg_file
 
 
-def test_cli_degraded_build_exit_codes(tmp_path, countries_file):
+def test_cli_degraded_build_exit_codes(tmp_path, countries_file, monkeypatch):
     cfg_file = _minimal_config(tmp_path, countries_file)
+    # Локально (не в CI) безопасный отказ — это код 1...
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     with patch("vpnmy.cli.build_subscription", side_effect=BuildError("мало узлов")):
         assert main(["--config", str(cfg_file)]) == 1
     with patch("vpnmy.cli.build_subscription", side_effect=BuildError("мало узлов")):
         assert main(["--config", str(cfg_file), "--allow-degraded"]) == 0
+
+
+def test_cli_degraded_build_is_not_red_in_github_actions(
+    tmp_path, countries_file, monkeypatch
+):
+    # ...а плановый job в Actions не красится: fail-safe сохранил подписку.
+    cfg_file = _minimal_config(tmp_path, countries_file)
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    with patch("vpnmy.cli.build_subscription", side_effect=BuildError("мало узлов")):
+        assert main(["--config", str(cfg_file)]) == 0
+    assert "Подписка не обновлена" in summary.read_text(encoding="utf-8")
+
+
+def test_cli_hard_errors_stay_red_in_github_actions(tmp_path, monkeypatch):
+    # Ошибка конфигурации — не деградация: job должен упасть и в CI.
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    assert main(["--config", str(tmp_path / "missing.json")]) == 1

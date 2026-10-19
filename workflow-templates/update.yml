@@ -8,9 +8,7 @@ on:
     paths: ["main.py", "vpnmy/**", "config/**", "scripts/install_*.py", "requirements*.txt", "pyproject.toml", "tests/**", ".github/workflows/update.yml"]
 concurrency:
   group: vpn-subscription-update
-  # Не отменяем уже начатую сборку: отмена после создания измерений
-  # Globalping тратит квоту, но не публикует результат.
-  cancel-in-progress: false
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
@@ -76,9 +74,7 @@ jobs:
           # Только этот шаг обращается к Globalping; тесты и проверка
           # артефактов токен не видят (защита от флейвого CI).
           GLOBALPING_TOKEN: ${{ secrets.GLOBALPING_TOKEN }}
-        # --allow-degraded: безопасный отказ (мало узлов/нет источников)
-        # сохраняет прошлую подписку и не красит плановый job в красный.
-        run: python main.py --allow-degraded
+        run: python main.py
       - name: Проверить артефакты
         run: |
           python - <<'PY'
