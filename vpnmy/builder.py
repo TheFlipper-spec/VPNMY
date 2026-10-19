@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -48,9 +49,13 @@ def _persist_state(history: dict[str, Any], health: dict[str, Any], config: Buil
     """Persist quarantine/retirement decisions even when the subscription build fails."""
     payloads: dict[Any, bytes] = {}
     if config.paths.history:
-        payloads[config.paths.history] = (json.dumps(history, ensure_ascii=False, indent=2, sort_keys=True) + "\\n").encode()
+        payloads[config.paths.history] = (
+            json.dumps(history, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        ).encode("utf-8")
     if config.paths.source_health:
-        payloads[config.paths.source_health] = (json.dumps(health, ensure_ascii=False, indent=2, sort_keys=True) + "\\n").encode()
+        payloads[config.paths.source_health] = (
+            json.dumps(health, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        ).encode("utf-8")
     if payloads:
         atomic_publish(payloads)
 
@@ -306,6 +311,7 @@ def build_subscription(
     parsed_raw = deduplicate(all_nodes)
     deduplicated_count = len(parsed_raw)
     prefiltered = []
+    filter_started = time.monotonic()
     for node in parsed_raw:
         sni = node.options.get("sni", node.options.get("peer", ""))
         if rkn_filter.is_ip_blocked(node.host) or (sni and rkn_filter.is_sni_blocked(sni)):
@@ -315,10 +321,11 @@ def build_subscription(
     blocked_by_rkn = len(parsed_raw) - len(prefiltered)
     parsed_raw = prefiltered
     LOGGER.info(
-        "Локальная фильтрация: после дедупликации=%d, блок-листы исключили=%d, осталось=%d",
+        "Локальная фильтрация: после дедупликации=%d, блок-листы исключили=%d, осталось=%d; %.2f с",
         deduplicated_count,
         blocked_by_rkn,
         len(parsed_raw),
+        time.monotonic() - filter_started,
     )
     capped = cap_per_source(
         parsed_raw, config.max_nodes_per_source, history, now
@@ -332,11 +339,9 @@ def build_subscription(
         len(parsed_raw),
         len(nodes),
     )
-    # Оценка времени: 12 минут лимит. Посчитаем верхнюю оценку.
-    # Probe: candidates до max_candidates (480) * (tcp 1.5 + udp 1.5) / workers 64 ~ 11 сек.
-    # Verify: shortlist до target*3 (36-40) * attempts 3 * timeout 8 сек / workers 6 ~ 3 мин + speed 0.5 мин.
-    # ASN: до 40 IP * 3 сек /5 workers ~ 24 сек.
-    # Итого <5 мин с запасом.
+    # The production workflow template reserves 20 minutes for setup, sources and probes,
+    # Globalping (a shared deadline including quota/retries), bounded Check-Host fallback,
+    # three tunnel measurements per shortlisted node, ASN lookup and publication.
     retired_nodes = [
         node for node in nodes
         if history.get("nodes", {}).get(node.node_id, {}).get("retired") is True
@@ -398,6 +403,7 @@ def build_subscription(
         or ru_stats.rate_limited > 0
         or ru_stats.api_errors > 0
         or ru_stats.unknown > 0
+        or ru_stats.deadline_exceeded
     )
     if ru_stats.enabled and quota_or_api_limited:
         unresolved = [
@@ -405,9 +411,10 @@ def build_subscription(
             if ru_results.get(probe.node.node_id) is None or ru_results[probe.node.node_id].ok is not True
         ]
         LOGGER.warning(
-            "Globalping quota/API ограничены: budget=%d, приоритетных=%d, no_probes=%d, 429=%d, api_errors=%d; Check-Host TCP fallback для %d узлов",
+            "Globalping quota/API/дедлайн ограничены: budget=%d, приоритетных=%d, no_probes=%d, 429=%d, api_errors=%d, deadline=%s; Check-Host TCP fallback для %d узлов (общий дедлайн %.0f с)",
             ru_stats.budget, len(prioritization), ru_stats.no_probes,
-            ru_stats.rate_limited, ru_stats.api_errors, len(unresolved),
+            ru_stats.rate_limited, ru_stats.api_errors, ru_stats.deadline_exceeded,
+            len(unresolved), globalping.CHECKHOST_DEADLINE_SECONDS,
         )
         fallback = globalping.run_checkhost_fallback(unresolved)
         LOGGER.info("Check-Host fallback вернул подтверждённых TCP-результатов: %d/%d", len(fallback), len(unresolved))

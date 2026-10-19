@@ -15,7 +15,9 @@ jobs:
   update:
     name: Проверить узлы и опубликовать подписку
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    # Includes setup, up to 420s Globalping, up to 60s Check-Host,
+    # three tunnel measurements per shortlisted node, ASN lookup and publication.
+    timeout-minutes: 20
     env:
       PYTHONUNBUFFERED: "1"
       XRAY_VERSION: "v26.3.27"

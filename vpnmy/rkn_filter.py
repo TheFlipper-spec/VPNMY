@@ -4,6 +4,8 @@ from __future__ import annotations
 import ipaddress
 import logging
 import threading
+import time
+from bisect import bisect_right
 from urllib.request import urlopen
 
 LOGGER = logging.getLogger(__name__)
@@ -11,17 +13,19 @@ IP_LIST_URL = "https://antifilter.download/list/ip.lst"
 DOMAIN_LIST_URL = "https://antifilter.download/list/domains.lst"
 _lock = threading.Lock()
 _loaded = False
-_networks: tuple[ipaddress._BaseNetwork, ...] = ()
+# Disjoint sorted intervals, indexed separately for IPv4 and IPv6: (starts, ends).
+_ip_ranges: dict[int, tuple[tuple[int, ...], tuple[int, ...]]] = {}
 _domains: frozenset[str] = frozenset()
 
 
 def load_lists(*, force: bool = False) -> None:
-    """Load and cache lists once per process. Network errors fail open, never the build."""
-    global _loaded, _networks, _domains
+    """Load and index lists once per process. Network errors never fail the build."""
+    global _loaded, _ip_ranges, _domains
     with _lock:
         if _loaded and not force:
             return
-        networks: list[ipaddress._BaseNetwork] = []
+        started = time.monotonic()
+        networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
         domains: set[str] = set()
         for url, target in ((IP_LIST_URL, networks), (DOMAIN_LIST_URL, domains)):
             try:
@@ -40,29 +44,50 @@ def load_lists(*, force: bool = False) -> None:
                         domains.add(item)
             except Exception as exc:
                 LOGGER.warning("Не удалось загрузить список блокировок %s: %s", url, exc)
-        compressed = tuple(ipaddress.collapse_addresses([n for n in networks if n.version == 4])) + tuple(
-            ipaddress.collapse_addresses([n for n in networks if n.version == 6])
+        indexed = {}
+        for version in (4, 6):
+            compressed = tuple(
+                ipaddress.collapse_addresses(n for n in networks if n.version == version)
+            )
+            indexed[version] = (
+                tuple(int(n.network_address) for n in compressed),
+                tuple(int(n.broadcast_address) for n in compressed),
+            )
+        _ip_ranges, _domains, _loaded = indexed, frozenset(domains), True
+        LOGGER.info(
+            "Списки блокировок: IP-диапазонов=%d, доменов=%d; загрузка и индексация=%.2f с",
+            sum(len(starts) for starts, _ends in indexed.values()),
+            len(domains),
+            time.monotonic() - started,
         )
-        _networks, _domains, _loaded = compressed, frozenset(domains), True
 
 
 def is_ip_blocked(ip: str) -> bool:
+    """O(log N) interval lookup instead of scanning every blocked network."""
     load_lists()
     try:
         address = ipaddress.ip_address(ip)
     except ValueError:
         return False
-    return any(address.version == network.version and address in network for network in _networks)
+    starts, ends = _ip_ranges.get(address.version, ((), ()))
+    value = int(address)
+    index = bisect_right(starts, value) - 1
+    return index >= 0 and value <= ends[index]
 
 
 def is_sni_blocked(sni: str) -> bool:
+    """Check exact domain and parent suffixes, independent of blocklist size."""
     load_lists()
     domain = sni.strip().lower().rstrip(".")
-    return any(domain == blocked or domain.endswith("." + blocked) for blocked in _domains)
+    while domain:
+        if domain in _domains:
+            return True
+        domain = domain.partition(".")[2]
+    return False
 
 
 def reset_cache() -> None:
     """Reset cache for tests and explicit refreshes."""
-    global _loaded, _networks, _domains
+    global _loaded, _ip_ranges, _domains
     with _lock:
-        _loaded, _networks, _domains = False, (), frozenset()
+        _loaded, _ip_ranges, _domains = False, {}, frozenset()

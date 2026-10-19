@@ -12,9 +12,11 @@
 - Одновременность ограничена ``asyncio.Semaphore`` (10–15 запросов).
 - Ошибки 429 обрабатываются экспоненциальным откатом (exponential backoff)
   с джиттером и учётом ``Retry-After`` / «retry in N seconds».
-- Общий дедлайн этапа (``ru_check_deadline_seconds``): при его истечении оставшиеся
-  узлы помечаются как «не проверены» и сборка продолжает работу без российской
-  точки — последняя рабочая подписка никогда не затирается из-за сбоя Globalping.
+- Общий дедлайн Globalping (``ru_check_deadline_seconds``) включает квоту, запросы,
+  повторы и ожидания. При его истечении готовые результаты сохраняются, остальные
+  узлы помечаются как «не проверены». TCP-fallback Check-Host имеет отдельный общий
+  дедлайн; без RU-подтверждения узлы не проходят gate включённой российской проверки.
+  Если подтверждённых узлов недостаточно, последняя рабочая подписка сохраняется.
 - Консервативные вердикты: «заблокировано в РФ» выносится только при подтверждении
   минимум двумя независимыми российскими проблами (TCP). Молчание ICMP для
   Hysteria2 — «неизвестно», а не «заблокировано» (ICMP часто гасят фаерволы).
@@ -34,6 +36,7 @@ from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import quote, urlencode
 
 from .models import Node, ProbeResult
 
@@ -50,6 +53,9 @@ QUOTA_RESERVE = 3
 # результат неоднозначен»).
 NOT_CHECKED_REASONS = {"budget", "deadline", "quota_exhausted", "skipped"}
 _RETRY_AFTER_RE = re.compile(r"retry in (\d+) seconds?", re.IGNORECASE)
+CHECKHOST_DEADLINE_SECONDS = 60.0
+CHECKHOST_CONCURRENCY = 4
+CHECKHOST_RU_NODE = "ru1.node.check-host.net"
 
 
 class GlobalpingError(RuntimeError):
@@ -96,6 +102,7 @@ class RuCheckStats:
     credits_seen: int = 0  # списанные кредиты (тревога: не должно быть > 0)
     started_at: str = ""
     elapsed_seconds: float = 0.0
+    deadline_exceeded: bool = False
     median_latency_ms: int | None = None
 
     def as_stats_dict(self) -> dict[str, Any]:
@@ -121,6 +128,7 @@ class RuCheckStats:
             "credits_consumed": self.credits_seen,
             "median_latency_ms": self.median_latency_ms,
             "elapsed_seconds": round(self.elapsed_seconds, 1),
+            "deadline_exceeded": self.deadline_exceeded,
             "checked_at": self.started_at or None,
             "description": (
                 "TCP-проверка порта (классические протоколы) и ICMP-пинг (Hysteria2) "
@@ -311,41 +319,95 @@ def record_ru_result(
         row["ru_unknown_at"] = checked_at
 
 
-def run_checkhost_fallback(probes: Sequence[ProbeResult], *, timeout: float = 18.0) -> dict[str, RuProbeResult]:
-    """Check TCP reachability from Check-Host's Russian node when Globalping has no RU probes/quota."""
-    import urllib.parse
-    import urllib.request
+def run_checkhost_fallback(
+    probes: Sequence[ProbeResult],
+    *,
+    timeout: float = 18.0,
+    deadline_seconds: float = CHECKHOST_DEADLINE_SECONDS,
+    concurrency: int = CHECKHOST_CONCURRENCY,
+) -> dict[str, RuProbeResult]:
+    """Bounded TCP-only fallback; return only confirmed successes, never API failures as blocks."""
+    tcp_probes = [probe for probe in probes if not probe.node.is_hysteria]
+    if not tcp_probes:
+        return {}
+    return run_async(
+        _run_checkhost_fallback(
+            tcp_probes, timeout=timeout, deadline_seconds=deadline_seconds, concurrency=concurrency
+        )
+    )
 
+
+async def _run_checkhost_fallback(
+    probes: Sequence[ProbeResult],
+    *,
+    timeout: float,
+    deadline_seconds: float,
+    concurrency: int,
+) -> dict[str, RuProbeResult]:
+    aiohttp = _import_aiohttp()
     results: dict[str, RuProbeResult] = {}
+    groups: dict[str, list[ProbeResult]] = {}
     for probe in probes:
-        node = probe.node
-        if node.is_hysteria:
-            # TCP-connect checks cannot establish UDP/Hysteria availability.
-            continue
-        query = urllib.parse.urlencode({"host": f"{node.host}:{node.port}", "node": "ru1.node.check-host.net"})
-        request = urllib.request.Request(f"https://check-host.net/check-tcp?{query}", headers={"Accept": "application/json", "User-Agent": USER_AGENT})
+        groups.setdefault(probe.endpoint_key, []).append(probe)
+    semaphore = asyncio.Semaphore(max(1, concurrency))
+    headers = {"Accept": "application/json", "User-Agent": USER_AGENT}
+    request_timeout = aiohttp.ClientTimeout(total=timeout, connect=min(8.0, timeout))
+
+    async with aiohttp.ClientSession(headers=headers, timeout=request_timeout) as session:
+        async def get_json(url: str) -> dict[str, Any]:
+            async with session.request("GET", url) as response:
+                if response.status != 200:
+                    raise GlobalpingError(f"Check-Host: HTTP {response.status}")
+                payload = json.loads(await response.text())
+                if not isinstance(payload, dict):
+                    raise GlobalpingError("Check-Host: некорректный ответ")
+                return payload
+
+        async def work(group: list[ProbeResult]) -> None:
+            representative = group[0]
+            node = representative.node
+            host = representative.resolved_ip or node.host
+            endpoint = f"[{host}]:{node.port}" if ":" in host else f"{host}:{node.port}"
+            query = urlencode({"host": endpoint, "node": CHECKHOST_RU_NODE})
+            async with semaphore:
+                try:
+                    # One timeout for creation + all polls, not a fresh timeout per HTTP request.
+                    async with asyncio.timeout(timeout):
+                        payload = await get_json(f"https://check-host.net/check-tcp?{query}")
+                        request_id = payload.get("request_id")
+                        if not request_id:
+                            return
+                        result_url = "https://check-host.net/check-result/" + quote(str(request_id), safe="")
+                        while True:
+                            await asyncio.sleep(1)
+                            result_payload = await get_json(result_url)
+                            rows = result_payload.get(CHECKHOST_RU_NODE)
+                            if not isinstance(rows, list) or not rows or rows[0] is None:
+                                continue
+                            entry = rows[0]
+                            if isinstance(entry, list):
+                                entry = entry[0] if entry else None
+                            if isinstance(entry, dict) and (
+                                entry.get("time") is not None or entry.get("status") in {"ok", "success"}
+                            ):
+                                for probe in group:
+                                    results[probe.node.node_id] = RuProbeResult(
+                                        probe.node.node_id, True, "tcp", probes_total=1, probes_ok=1
+                                    )
+                            # A single failed RU probe is not enough to declare a block.
+                            return
+                except Exception as exc:
+                    LOGGER.debug("Check-Host fallback failed for %s: %s", node.endpoint_key, exc)
+
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-            request_id = payload.get("request_id")
-            if not request_id:
-                continue
-            result_url = "https://check-host.net/check-result/" + urllib.parse.quote(str(request_id))
-            deadline = time.monotonic() + timeout
-            value = None
-            while time.monotonic() < deadline:
-                time.sleep(1)
-                with urllib.request.urlopen(result_url, timeout=timeout) as response:
-                    result_payload = json.loads(response.read().decode("utf-8"))
-                rows = result_payload.get("ru1.node.check-host.net") or []
-                if rows and rows[0] is not None:
-                    value = rows[0]
-                    break
-            entry = value[0] if isinstance(value, list) and value else value
-            ok = bool(isinstance(entry, dict) and (entry.get("time") is not None or entry.get("status") in {"ok", "success"}))
-            results[node.node_id] = RuProbeResult(node.node_id, ok, "tcp", reason="" if ok else "checkhost_unreachable")
-        except Exception as exc:
-            LOGGER.debug("Check-Host fallback failed for %s: %s", node.endpoint_key, exc)
+            # Includes queued workers, creation, polling, and any in-flight HTTP request.
+            async with asyncio.timeout(deadline_seconds):
+                await asyncio.gather(*(work(group) for group in groups.values()))
+        except TimeoutError:
+            LOGGER.warning(
+                "Check-Host: достигнут общий дедлайн %.1f с; подтверждено узлов=%d, остальные не проверены",
+                deadline_seconds, len(results),
+            )
     return results
 
 
@@ -396,11 +458,12 @@ def run_ru_check(
     token = os.environ.get(TOKEN_ENV, "").strip()
     started = time.monotonic()
     LOGGER.info(
-        "Российская проверка (Globalping, %s): кандидатов %d, бюджет %d, параллельность %d",
+        "Российская проверка (Globalping, %s): кандидатов %d, бюджет %d, параллельность %d, дедлайн %.1f с",
         RU_COUNTRY,
         len(ordered),
         config.ru_check_budget,
         config.ru_check_concurrency,
+        config.ru_check_deadline_seconds,
     )
     results, stats = run_async(
         _run(
@@ -543,7 +606,7 @@ class GlobalpingClient:
             )
         except GlobalpingError as exc:
             LOGGER.warning(
-                "Globalping: квота недоступна (%s); работаю по заданному бюджету", exc
+                "Globalping: квота недоступна (%s); измерения не будут созданы", exc
             )
             return
         if status != 200:
@@ -696,77 +759,93 @@ async def _run(
         "Accept": "application/json",
         "Accept-Encoding": "gzip",
     }
-    async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
-        client = GlobalpingClient(
-            token,
-            session,
-            stats,
-            probes_per_target=probes_per_target,
-            packets=packets,
-            poll_interval=poll_interval,
-            deadline_seconds=deadline_seconds,
-        )
-        await client.update_quota()
-        # Fail closed: if the API cannot confirm remaining quota, do not spend an
-        # assumed allowance. The builder can use the independent Check-Host fallback.
-        effective = 0 if client.quota_remaining is None else min(
-            budget, max(0, client.quota_remaining - QUOTA_RESERVE)
-        )
-        if client.quota_remaining is None:
-            stats.reason = "квота Globalping неизвестна — измерения не создавались"
-        elif effective < budget:
-            LOGGER.info(
-                "Globalping: свободная квота %d — бюджет снижен с %d до %d",
-                client.quota_remaining,
-                budget,
-                effective,
+    # Start before quota lookup: retries, Retry-After sleeps and in-flight requests
+    # must all fit the same wall-clock budget, not only the polling loop.
+    deadline = time.monotonic() + deadline_seconds
+    try:
+        async with (
+            asyncio.timeout(deadline_seconds),
+            aiohttp.ClientSession(timeout=timeout, headers=headers) as session,
+        ):
+            client = GlobalpingClient(
+                token,
+                session,
+                stats,
+                probes_per_target=probes_per_target,
+                packets=packets,
+                poll_interval=poll_interval,
+                deadline_seconds=deadline_seconds,
             )
-        stats.budget = effective
-        if effective <= 0:
-            stats.reason = "свободная квота Globalping исчерпана (до резерва)"
+            await client.update_quota()
+            # Fail closed: if the API cannot confirm remaining quota, do not spend an
+            # assumed allowance. The builder can use the independent Check-Host fallback.
+            effective = 0 if client.quota_remaining is None else min(
+                budget, max(0, client.quota_remaining - QUOTA_RESERVE)
+            )
+            if client.quota_remaining is None:
+                stats.reason = "квота Globalping неизвестна — измерения не создавались"
+            elif effective < budget:
+                LOGGER.info(
+                    "Globalping: свободная квота %d — бюджет снижен с %d до %d",
+                    client.quota_remaining,
+                    budget,
+                    effective,
+                )
+            stats.budget = effective
+            if effective <= 0 and client.quota_remaining is not None:
+                stats.reason = "свободная квота Globalping исчерпана (до резерва)"
 
-        # Дедупликация по физическому endpoint: разные конфигурации одного
-        # IP:port (и протокола) проверяются одним измерением, вердикт
-        # распространяется на все — экономим бюджет API.
-        groups: dict[str, list[ProbeResult]] = {}
+            # Дедупликация по физическому endpoint: разные конфигурации одного
+            # IP:port (и протокола) проверяются одним измерением, вердикт
+            # распространяется на все — экономим бюджет API.
+            groups: dict[str, list[ProbeResult]] = {}
+            for probe in ordered:
+                groups.setdefault(f"{_kind_of(probe)}:{probe.endpoint_key}", []).append(probe)
+            representatives = [group[0] for group in groups.values()]  # порядок = приоритет
+
+            semaphore = asyncio.Semaphore(max(1, concurrency))
+
+            async def work(representative: ProbeResult, group: list[ProbeResult]) -> None:
+                async with semaphore:
+                    try:
+                        if time.monotonic() >= deadline:
+                            result = not_checked(representative, "deadline")
+                        elif client.quota_remaining is not None and client.quota_remaining <= QUOTA_RESERVE:
+                            result = not_checked(representative, "quota_exhausted")
+                        else:
+                            result = await client.check_one(representative, deadline)
+                    except Exception as exc:  # отдельный сбой не роняет весь прогон
+                        LOGGER.warning(
+                            "Globalping: неожиданный сбой для узла %s: %s",
+                            representative.node.node_id,
+                            exc,
+                        )
+                        stats.api_errors += 1
+                        result = not_checked(representative, "unexpected")
+                    for probe in group:
+                        results[probe.node.node_id] = result
+
+            selected = representatives[:effective]
+            tasks = [
+                asyncio.create_task(work(rep, groups[f"{_kind_of(rep)}:{rep.endpoint_key}"]))
+                for rep in selected
+            ]
+            tail_reason = "quota_exhausted" if effective <= 0 else "budget"
+            for rep in representatives[effective:]:
+                for probe in groups[f"{_kind_of(rep)}:{rep.endpoint_key}"]:
+                    results[probe.node.node_id] = not_checked(probe, tail_reason)
+            if tasks:
+                await asyncio.gather(*tasks)
+
+    except TimeoutError:
+        stats.deadline_exceeded = True
+        stats.reason = "достигнут общий дедлайн Globalping"
+        LOGGER.warning(
+            "Globalping: достигнут общий дедлайн %.1f с; полученные результаты сохранены, остальные узлы не проверены",
+            deadline_seconds,
+        )
         for probe in ordered:
-            groups.setdefault(f"{_kind_of(probe)}:{probe.endpoint_key}", []).append(probe)
-        representatives = [group[0] for group in groups.values()]  # порядок = приоритет
-
-        semaphore = asyncio.Semaphore(max(1, concurrency))
-        deadline = time.monotonic() + deadline_seconds
-
-        async def work(representative: ProbeResult, group: list[ProbeResult]) -> None:
-            async with semaphore:
-                try:
-                    if time.monotonic() >= deadline:
-                        result = not_checked(representative, "deadline")
-                    elif client.quota_remaining is not None and client.quota_remaining <= QUOTA_RESERVE:
-                        result = not_checked(representative, "quota_exhausted")
-                    else:
-                        result = await client.check_one(representative, deadline)
-                except Exception as exc:  # отдельный сбой не роняет весь прогон
-                    LOGGER.warning(
-                        "Globalping: неожиданный сбой для узла %s: %s",
-                        representative.node.node_id,
-                        exc,
-                    )
-                    stats.api_errors += 1
-                    result = not_checked(representative, "unexpected")
-                for probe in group:
-                    results[probe.node.node_id] = result
-
-        selected = representatives[:effective]
-        tasks = [
-            asyncio.create_task(work(rep, groups[f"{_kind_of(rep)}:{rep.endpoint_key}"]))
-            for rep in selected
-        ]
-        tail_reason = "quota_exhausted" if effective <= 0 else "budget"
-        for rep in representatives[effective:]:
-            for probe in groups[f"{_kind_of(rep)}:{rep.endpoint_key}"]:
-                results[probe.node.node_id] = not_checked(probe, tail_reason)
-        if tasks:
-            await asyncio.gather(*tasks)
+            results.setdefault(probe.node.node_id, not_checked(probe, "deadline"))
 
     # Итоговые счётчики по фактическим вердиктам.
     # «Проверено» — только измерения, дошедшие до финального состояния;
@@ -786,8 +865,8 @@ async def _run(
         elif result.reason in finished_reasons:
             stats.unknown += 1
     stats.checked = stats.reachable + stats.blocked + stats.unknown
-    if stats.no_probes:
-        stats.reason = "нет доступных российских пробов Globalping"
-    elif stats.credits_seen:
+    if stats.credits_seen:
         stats.reason = f"остановлено: API списало {stats.credits_seen} кредит(ов)"
+    elif stats.no_probes and not stats.deadline_exceeded:
+        stats.reason = "нет доступных российских пробов Globalping"
     return results, stats
