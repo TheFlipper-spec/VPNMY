@@ -55,7 +55,15 @@ NOT_CHECKED_REASONS = {"budget", "deadline", "quota_exhausted", "skipped"}
 _RETRY_AFTER_RE = re.compile(r"retry in (\d+) seconds?", re.IGNORECASE)
 CHECKHOST_DEADLINE_SECONDS = 60.0
 CHECKHOST_CONCURRENCY = 4
-CHECKHOST_RU_NODE = "ru1.node.check-host.net"
+# Несколько российских узлов Check-Host: один узел часто перегружен или
+# недоступен, а подтверждение нужно только для успешных TCP-подключений.
+CHECKHOST_RU_NODES = (
+    "ru1.node.check-host.net",
+    "ru2.node.check-host.net",
+    "ru3.node.check-host.net",
+    "ru4.node.check-host.net",
+)
+CHECKHOST_RU_NODE = CHECKHOST_RU_NODES[0]  # совместимость со старыми вызовами
 
 
 class GlobalpingError(RuntimeError):
@@ -104,6 +112,12 @@ class RuCheckStats:
     elapsed_seconds: float = 0.0
     deadline_exceeded: bool = False
     median_latency_ms: int | None = None
+    # Насколько полным было покрытие RU-проверкой:
+    # confirmed — подтверждена как минимум половина кандидатов,
+    # partial — подтверждена только часть, degraded — ни одного.
+    # Неподтверждённые узлы допускаются к глубокой проверке, поэтому gate
+    # никогда не превращает исчерпанную квоту в отказ всей сборки.
+    gate: str = ""
 
     def as_stats_dict(self) -> dict[str, Any]:
         return {
@@ -129,6 +143,7 @@ class RuCheckStats:
             "median_latency_ms": self.median_latency_ms,
             "elapsed_seconds": round(self.elapsed_seconds, 1),
             "deadline_exceeded": self.deadline_exceeded,
+            "gate": self.gate or ("disabled" if not self.enabled else "unknown"),
             "checked_at": self.started_at or None,
             "description": (
                 "TCP-проверка порта (классические протоколы) и ICMP-пинг (Hysteria2) "
@@ -337,6 +352,44 @@ def run_checkhost_fallback(
     )
 
 
+def _checkhost_success(payload: Any) -> tuple[bool, int | None]:
+    """Разбирает ответ Check-Host в обоих встречающихся форматах.
+
+    API возвращает либо словарь ``{"time": 0.05}``, либо массив вида
+    ``[["OK", 0.05, "1.2.3.4"]]`` / ``[[1, 0.05, ...]]``. Старый парсер
+    понимал только словарь и поэтому терял почти все успешные проверки.
+    Отказ одного узла блокировкой не считается — важен любой успех.
+    """
+    latencies: list[int] = []
+
+    def success(value: Any) -> bool:
+        if isinstance(value, dict):
+            time_value = _as_float(value.get("time"))
+            if time_value is not None:
+                latencies.append(max(1, int(round(time_value * 1000))))
+                return True
+            return str(value.get("status", "")).strip().lower() in {"ok", "success"}
+        if isinstance(value, list):
+            if not value:
+                return False
+            head = value[0]
+            if isinstance(head, str) and head.strip().lower() in {"ok", "success"}:
+                time_value = _as_float(value[1]) if len(value) > 1 else None
+                if time_value is not None:
+                    latencies.append(max(1, int(round(time_value * 1000))))
+                return True
+            if _as_float(head) == 1.0:
+                time_value = _as_float(value[1]) if len(value) > 1 else None
+                if time_value is not None:
+                    latencies.append(max(1, int(round(time_value * 1000))))
+                return True
+            return any(success(item) for item in value)
+        return False
+
+    ok = success(payload)
+    return ok, (min(latencies) if latencies else None)
+
+
 async def _run_checkhost_fallback(
     probes: Sequence[ProbeResult],
     *,
@@ -368,7 +421,9 @@ async def _run_checkhost_fallback(
             node = representative.node
             host = representative.resolved_ip or node.host
             endpoint = f"[{host}]:{node.port}" if ":" in host else f"{host}:{node.port}"
-            query = urlencode({"host": endpoint, "node": CHECKHOST_RU_NODE})
+            query = urlencode(
+                [("host", endpoint), *[("node", ru_node) for ru_node in CHECKHOST_RU_NODES]]
+            )
             async with semaphore:
                 try:
                     # One timeout for creation + all polls, not a fresh timeout per HTTP request.
@@ -381,21 +436,30 @@ async def _run_checkhost_fallback(
                         while True:
                             await asyncio.sleep(1)
                             result_payload = await get_json(result_url)
-                            rows = result_payload.get(CHECKHOST_RU_NODE)
-                            if not isinstance(rows, list) or not rows or rows[0] is None:
-                                continue
-                            entry = rows[0]
-                            if isinstance(entry, list):
-                                entry = entry[0] if entry else None
-                            if isinstance(entry, dict) and (
-                                entry.get("time") is not None or entry.get("status") in {"ok", "success"}
-                            ):
-                                for probe in group:
-                                    results[probe.node.node_id] = RuProbeResult(
-                                        probe.node.node_id, True, "tcp", probes_total=1, probes_ok=1
-                                    )
-                            # A single failed RU probe is not enough to declare a block.
-                            return
+                            answered = False
+                            for ru_node in CHECKHOST_RU_NODES:
+                                rows = result_payload.get(ru_node)
+                                if not isinstance(rows, list) or not rows:
+                                    continue
+                                if all(row is None for row in rows):
+                                    continue  # узел ещё не отчитался
+                                answered = True
+                                ok, latency_ms = _checkhost_success(rows)
+                                if ok:
+                                    for probe in group:
+                                        results[probe.node.node_id] = RuProbeResult(
+                                            probe.node.node_id,
+                                            True,
+                                            "tcp",
+                                            latency_ms=latency_ms,
+                                            probes_total=1,
+                                            probes_ok=1,
+                                        )
+                                    return
+                            if answered:
+                                # Все ответившие узлы сообщили отказ. Отказ одного
+                                # проба (и тем более неудача API) — не блокировка.
+                                return
                 except Exception as exc:
                     LOGGER.debug("Check-Host fallback failed for %s: %s", node.endpoint_key, exc)
 
@@ -609,7 +673,14 @@ class GlobalpingClient:
                 "Globalping: квота недоступна (%s); измерения не будут созданы", exc
             )
             return
+        if status in {401, 403}:
+            LOGGER.warning(
+                "Globalping: токен отклонён (HTTP %s); RU-проверка продолжится в режиме degraded",
+                status,
+            )
+            return
         if status != 200:
+            LOGGER.warning("Globalping: /v1/limits вернул HTTP %s — квота неизвестна", status)
             return
         rate_limit = payload.get("rateLimit")
         measurements = rate_limit.get("measurements") if isinstance(rate_limit, dict) else None
@@ -777,20 +848,28 @@ async def _run(
                 deadline_seconds=deadline_seconds,
             )
             await client.update_quota()
-            # Fail closed: if the API cannot confirm remaining quota, do not spend an
-            # assumed allowance. The builder can use the independent Check-Host fallback.
-            effective = 0 if client.quota_remaining is None else min(
-                budget, max(0, client.quota_remaining - QUOTA_RESERVE)
-            )
+            # /v1/limits считает ТЕСТЫ (проб-запуски), а один measurement с
+            # limit=probes_per_target стоит probes_per_target тестов. Раньше
+            # бюджет сравнивался с тестами напрямую и мог перерасходовать квоту.
+            # Дополнительно оставляем половину остатка следующему запуску.
             if client.quota_remaining is None:
+                effective = 0
                 stats.reason = "квота Globalping неизвестна — измерения не создавались"
-            elif effective < budget:
-                LOGGER.info(
-                    "Globalping: свободная квота %d — бюджет снижен с %d до %d",
-                    client.quota_remaining,
-                    budget,
-                    effective,
+            else:
+                reserve = max(QUOTA_RESERVE, client.quota_remaining // 2)
+                affordable = max(0, client.quota_remaining - reserve) // max(
+                    1, probes_per_target
                 )
+                effective = min(budget, affordable)
+                if effective < budget:
+                    LOGGER.info(
+                        "Globalping: свободная квота %d тестов ≈ %d измерений — "
+                        "бюджет снижен с %d до %d",
+                        client.quota_remaining,
+                        affordable,
+                        budget,
+                        effective,
+                    )
             stats.budget = effective
             if effective <= 0 and client.quota_remaining is not None:
                 stats.reason = "свободная квота Globalping исчерпана (до резерва)"

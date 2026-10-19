@@ -41,6 +41,42 @@ def test_quotas():
     assert len(out) == 3 and {x.node.category for x in out} == {"universal", "whitelist"}
 
 
+def test_category_quota_reserves_whitelist_seat():
+    """Белая категория получает своё место даже при более высоких скорах universal."""
+    rs = [
+        CheckResult(node(i, f"1.1.1.{i}", "universal"), 10, 20 + i, 10, "DE", "x")
+        for i in range(4)
+    ]
+    rs.append(CheckResult(node(9, "9.9.9.9", "whitelist"), 10, 999, 10, "RU", "x"))
+    out = select_final(
+        rs,
+        history={"nodes": {}},
+        preferred_countries=(),
+        category_quotas={"universal": 2, "whitelist": 1},
+        target_count=3,
+        max_per_endpoint=1,
+    )
+    assert len(out) == 3
+    assert sum(item.node.category == "whitelist" for item in out) == 1
+    assert sum(item.node.category == "universal" for item in out) == 2
+
+
+def test_category_quota_reallocates_when_whitelist_is_empty():
+    rs = [
+        CheckResult(node(i, host, "universal"), 10, 20 + i, 10, "DE", "x")
+        for i, host in enumerate(("1.1.1.1", "8.8.8.8", "9.9.9.9"))
+    ]
+    out = select_final(
+        rs,
+        history={"nodes": {}},
+        preferred_countries=(),
+        category_quotas={"universal": 2, "whitelist": 1},
+        target_count=3,
+        max_per_endpoint=1,
+    )
+    assert len(out) == 3
+
+
 def test_same_physical_endpoint_is_not_published_twice():
     results = [
         CheckResult(

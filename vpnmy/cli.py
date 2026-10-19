@@ -22,6 +22,10 @@ from .sources import (
 from .xray import XrayError
 
 
+class ProcessLockError(RuntimeError):
+    """Сборщик уже запущен; это не «деградация», а аппаратный конфликт."""
+
+
 @contextmanager
 def process_lock(path: Path) -> Iterator[None]:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -29,7 +33,7 @@ def process_lock(path: Path) -> Iterator[None]:
         try:
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
-            raise BuildError("другой экземпляр сборщика уже работает") from exc
+            raise ProcessLockError("другой экземпляр сборщика уже работает") from exc
         yield
 
 
@@ -52,6 +56,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--dry-run", action="store_true", help="проверить всё, но не менять файлы")
     parser.add_argument(
         "--skip-deep-check", action="store_true", help="не запускать Xray (диагностический режим)"
+    )
+    parser.add_argument(
+        "--allow-degraded",
+        action="store_true",
+        help=(
+            "при безопасном отказе (мало проверенных узлов, источники недоступны) "
+            "сохранить прошлую подписку и завершиться с кодом 0"
+        ),
     )
     parser.add_argument("--verbose", action="store_true", help="подробный вывод")
     return parser
@@ -161,7 +173,26 @@ def _run_build(argv: Sequence[str] | None) -> int:
             report = build_subscription(
                 config, skip_deep_check=args.skip_deep_check, dry_run=args.dry_run
             )
-    except (ConfigError, BuildError, XrayError, OSError, ValueError) as exc:
+    except BuildError as exc:
+        # Штатный fail-safe: подписка не затёрта. Для планового GitHub Actions
+        # это предупреждение, а не красный job — иначе каждый временный дефицит
+        # (квота Globalping, сеть) выглядит как поломка кода.
+        logging.getLogger(__name__).error("Сборка не обновила подписку: %s", exc)
+        message = f"Подписка не обновлена, сохранена предыдущая: {exc}"
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print(f"::warning title=FL1P VPN::{message}")
+        github_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+        if github_summary:
+            try:
+                with Path(github_summary).open("a", encoding="utf-8") as handle:
+                    handle.write("## Обновление FL1P VPN\n\n")
+                    handle.write(f"- ⚠️ {message}\n")
+            except OSError as summary_exc:
+                logging.getLogger(__name__).warning(
+                    "Не удалось записать Job Summary: %s", summary_exc
+                )
+        return 0 if args.allow_degraded else 1
+    except (ConfigError, XrayError, ProcessLockError, OSError, ValueError) as exc:
         logging.getLogger(__name__).error("Сборка остановлена: %s", exc)
         return 1
     summary = (

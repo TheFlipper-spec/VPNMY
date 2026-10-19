@@ -1,10 +1,21 @@
-# Curated public subscription aggregators; availability and protocol quality vary.
-https://gitverse.ru/api/repos/SlavaKat/FreeProxyNova/raw/branch/master/🆓 # category=universal
-https://sub.vlessfo.ru/vlessforu/working_configs.txt # category=universal
-https://abscloud.lol/connect.php?uid=1909141964 # category=universal
-https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt # category=universal
-https://raw.githubusercontent.com/yebekhe/TV2Ray/main//subscriptions/vless # category=universal
-https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt # category=universal
-https://raw.githubusercontent.com/rtwo2/FastNodes/main/state/verified_last.txt # category=universal
-https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/protocols/hysteria2.txt # category=universal
-https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/protocols/hysteria2.txt # category=universal
+# Реестр источников. Формат строки:
+#   <HTTPS URL> # id=<короткий id>, category=<universal|whitelist>, enabled=<true|false>, name=<название>
+# id должен быть стабильным: он используется в data/source_health.json и в stats.json.
+# Параметр name пишется последним (может содержать пробелы и запятые).
+
+# --- Обычный интернет ---
+https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt # id=igareck-mobile, category=universal, enabled=true, name=igareck — VLESS для мобильных
+https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS.txt # id=igareck-vless, category=universal, enabled=true, name=igareck — VLESS для России
+https://sub.vlessfo.ru/vlessforu/working_configs.txt # id=vlessforu, category=universal, enabled=true, name=VlessForU — проверенные конфигурации
+https://abscloud.lol/connect.php?uid=1909141964 # id=abscloud, category=universal, enabled=true, name=abscloud — публичная подписка
+https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt # id=mahdibland-aggregator, category=universal, enabled=true, name=V2RayAggregator — сводная подписка
+https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt # id=epodonios-all, category=universal, enabled=true, name=Epodonios — все конфигурации
+https://raw.githubusercontent.com/rtwo2/FastNodes/main/state/verified_last.txt # id=fastnodes-verified, category=universal, enabled=true, name=FastNodes — проверенные узлы
+https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/protocols/vless.txt # id=fastnodes-vless, category=universal, enabled=true, name=FastNodes — VLESS
+https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/protocols/hysteria2.txt # id=fastnodes-hysteria2, category=universal, enabled=true, name=FastNodes — Hysteria2
+https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/protocols/hysteria2.txt # id=radikal-hysteria2, category=universal, enabled=true, name=0xRadikal — Hysteria2
+
+# --- Белые списки (РФ) ---
+https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/Vless-Reality-White-Lists-Rus-Mobile.txt # id=igareck-white-reality, category=whitelist, enabled=true, name=igareck — Reality для белых списков
+https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-SNI-RU-all.txt # id=igareck-white-sni, category=whitelist, enabled=true, name=igareck — SNI белых списков
+https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-all.txt # id=igareck-white-cidr, category=whitelist, enabled=true, name=igareck — CIDR белых списков

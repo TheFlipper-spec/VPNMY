@@ -76,17 +76,29 @@ def test_new_smart_defaults(tmp_path):
 def test_project_config_contains_requested_sources():
     root = Path(__file__).resolve().parents[1]
     config = load_config(root / "config/subscription.json")
-    sources = {source.source_id: source.url for source in config.sources}
-    assert len(sources) == 9
-    assert any("gitverse.ru/api/repos/SlavaKat/FreeProxyNova" in url for url in sources.values())
-    assert "https://sub.vlessfo.ru/vlessforu/working_configs.txt" in sources.values()
-    assert "https://abscloud.lol/connect.php?uid=1909141964" in sources.values()
-    assert all("WHITE-SNI-RU" not in url for url in sources.values())
-    assert any("V2RayAggregator" in url for url in sources.values())
-    assert any("TV2Ray" in url for url in sources.values())
-    assert any("v2ray-configs" in url for url in sources.values())
-    assert any(url.endswith("hysteria2.txt") for url in sources.values())
+    sources = {source.source_id: source for source in config.sources}
+    assert len(sources) == 13
+    # Мёртвые источники не должны возвращаться в конфигурацию.
+    assert all("gitverse.ru" not in source.url for source in sources.values())
+    assert all("TV2Ray" not in source.url for source in sources.values())
+    assert "https://sub.vlessfo.ru/vlessforu/working_configs.txt" in {
+        source.url for source in sources.values()
+    }
+    assert "https://abscloud.lol/connect.php?uid=1909141964" in {
+        source.url for source in sources.values()
+    }
+    assert any("V2RayAggregator" in source.url for source in sources.values())
+    assert any("v2ray-configs" in source.url for source in sources.values())
+    assert any(source.url.endswith("hysteria2.txt") for source in sources.values())
+    # Белые списки РФ обязательны: без них квота whitelist не может заполниться.
+    whitelist = [source for source in sources.values() if source.category == "whitelist"]
+    assert len(whitelist) == 3
+    assert all("igareck/vpn-configs-for-russia" in source.url for source in whitelist)
+    assert any("WHITE-SNI-RU" in source.url for source in whitelist)
+    # Стабильные id, а не автогенерированные из домена.
+    assert "igareck-white-sni" in sources
     assert config.profile_title == "FL1P VPN"
+    assert config.ru_check_budget == 60
     assert config.max_nodes_per_source > 0 and config.stable_streak_required >= 1
 
 

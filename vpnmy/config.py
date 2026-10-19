@@ -100,6 +100,13 @@ _REQUIRED_CATEGORIES = REQUIRED_CATEGORIES
 DEFAULT_PROFILE_TITLE = "FL1P VPN"
 DEFAULT_PROFILE_URL = "https://theflipper-spec.github.io/VPNMY/"
 _SOURCE_ID_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$")
+# Разбор метаданных строки sources.txt вида
+#   <url> # id=foo, category=whitelist, enabled=true, name=Мой список, с запятыми
+# Значение продолжается до следующего "ключ=" после запятой, поэтому name
+# (последний параметр) может содержать пробелы и запятые.
+_SOURCE_ATTR_RE = re.compile(r"([a-z_]+)=(.*?)(?:,\s*(?=[a-z_]+=)|$)")
+_TRUTHY = {"true", "1", "yes", "on"}
+_FALSY = {"false", "0", "no", "off"}
 
 
 def _integer(data: dict[str, Any], key: str, minimum: int, maximum: int) -> int:
@@ -199,6 +206,57 @@ def parse_source_row(row: Any, index: int, seen_ids: set[str]) -> Source:
     return Source(source_id, name, url, category, enabled)
 
 
+def format_source_line(source: Source) -> str:
+    """Сериализует источник в строку sources.txt.
+
+    ``name`` идёт последним: парсер сохраняет запятые и пробелы в названии.
+    """
+    enabled = "true" if source.enabled else "false"
+    return (
+        f"{source.url} # id={source.source_id}, category={source.category}, "
+        f"enabled={enabled}, name={source.name}"
+    )
+
+
+def parse_sources_text(text: str) -> list[Source]:
+    """Разбирает sources.txt: URL + необязательные id/category/enabled/name.
+
+    Явный ``id`` обязателен для стабильной истории здоровья источника. Если его
+    нет, id выводится из домена (совместимость со старыми файлами).
+    """
+    rows: list[dict[str, Any]] = []
+    for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        clean = raw_line.strip()
+        if not clean or clean.startswith("#"):
+            continue
+        url, separator, metadata = clean.partition(" #")
+        url = url.strip()
+        if not url:
+            continue
+        attrs = (
+            {key.lower(): value.strip() for key, value in _SOURCE_ATTR_RE.findall(metadata)}
+            if separator
+            else {}
+        )
+        enabled_raw = attrs.get("enabled", "true").strip().lower()
+        if enabled_raw not in _TRUTHY | _FALSY:
+            raise ConfigError(
+                f"sources.txt, строка {line_number}: enabled должен быть true или false"
+            )
+        rows.append(
+            {
+                "id": attrs.get("id") or suggest_source_id(url, {row["id"] for row in rows}),
+                "name": attrs.get("name") or (urlsplit(url).hostname or "source"),
+                "url": url,
+                "category": attrs.get("category", "universal"),
+                "enabled": enabled_raw in _TRUTHY,
+            }
+        )
+    if not rows:
+        raise ConfigError("файл источников пуст")
+    return parse_sources(rows)
+
+
 def parse_sources(source_rows: Any) -> list[Source]:
     if not isinstance(source_rows, list) or not source_rows:
         raise ConfigError("sources должен быть непустым списком")
@@ -224,17 +282,9 @@ def load_config(path: str | Path) -> BuildConfig:
     sources_file = raw.get("sources_file")
     if sources_file:
         source_path = _path(root, sources_file, "sources_file")
-        rows = []
         if not source_path.is_file():
             raise ConfigError(f"файл источников не найден: {source_path}")
-        for line in source_path.read_text(encoding="utf-8").splitlines():
-            clean = line.strip()
-            if not clean or clean.startswith("#"):
-                continue
-            url, _, metadata = clean.partition(" #")
-            attrs = dict(re.findall(r"([a-z_]+)=([^,\s]+)", metadata))
-            rows.append({"id": suggest_source_id(url.strip(), {r["id"] for r in rows}), "name": attrs.get("name", urlsplit(url.strip()).hostname or "source"), "url": url.strip(), "category": attrs.get("category", "universal"), "enabled": attrs.get("enabled", "true").lower() == "true"})
-        sources = parse_sources(rows)
+        sources = parse_sources_text(source_path.read_text(encoding="utf-8"))
     else:
         sources = parse_sources(raw.get("sources"))
     paths_data = raw.get("paths")

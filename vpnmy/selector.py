@@ -415,26 +415,40 @@ def shortlist(
     preferred_countries: tuple[str, ...] = (),
     *,
     max_per_subnet: int = 3,
+    max_per_country: int = 0,
 ) -> list[ProbeResult]:
     rows = history.get("nodes", {})
     chosen: list[ProbeResult] = []
     chosen_ids: set[str] = set()
     endpoint_counts: Counter[str] = Counter()
     network_counts: Counter[str] = Counter()
+    country_counts: Counter[str] = Counter()
 
     def add(item: ProbeResult) -> bool:
         network = network_key(item.endpoint_key)
+        country = infer_country(item.node)
         if item.node.node_id in chosen_ids or endpoint_counts[item.endpoint_key] >= 2:
             return False
         if network_counts[network] >= max_per_subnet:
+            return False
+        # Заранее ограничиваем концентрацию по стране, иначе финальный отбор
+        # с max_per_country может получить 36 узлов из 3 стран и не набрать 12.
+        if (
+            max_per_country
+            and country != "XX"
+            and country_counts[country] >= max_per_country
+        ):
             return False
         chosen.append(item)
         chosen_ids.add(item.node.node_id)
         endpoint_counts[item.endpoint_key] += 1
         network_counts[network] += 1
+        country_counts[country] += 1
         return True
 
     for category, quota in category_quotas.items():
+        if quota <= 0:
+            continue
         wanted = max(quota * 3, quota + 2)
         category_items = [item for item in probes if item.node.category == category]
         groups: dict[str, list[ProbeResult]] = {"classic": [], "hysteria2": []}
@@ -552,6 +566,8 @@ def select_final(
     """Финальный отбор с учётом качества и разнообразия.
 
     Ограничения (по умолчанию для 12 узлов):
+    - квоты категорий (7 «обычный интернет» / 5 «белые списки») — мягкие:
+      при дефиците одной категории свободные места добирает другая;
     - максимум 3 узла одной страны (``max_per_country`` + ``country_limits``);
     - максимум 2 узла одного ASN (``max_per_asn``; неизвестный ASN не объединяется);
     - максимум 1 узел на фактический IP сервера (``max_per_ip``);
@@ -673,15 +689,37 @@ def select_final(
             egress_counts[egress] += 1
         return True
 
-    # Enforce a 2:1 TCP/UDP composition (about 67% VLESS-Reality, 33% Hysteria2).
-    # If a protocol has too few eligible nodes, fill remaining slots from the other.
+    # Категорийные квоты (7 «обычный интернет» / 5 «белые списки»). Квота
+    # мягкая: если в категории не хватает проверенных узлов, свободные места
+    # добирает другая категория. Раньше квоты вообще не применялись при
+    # финальном отборе, хотя публиковались в README и коротком списке.
+    for category, quota in category_quotas.items():
+        if quota <= 0:
+            continue
+        count = 0
+        for item in scored:
+            if count >= quota or len(selected) >= target_count:
+                break
+            if item.node.category == category and add(item):
+                count += 1
+
+    # Оставшиеся места балансируем по протоколам (~2:1 VLESS : Hysteria2),
+    # но не в ущерб категорийным квотам. Считаем уже выбранные узлы.
     vless_quota = (target_count * 2 + 2) // 3
     hy2_quota = target_count - vless_quota
     for protocol, quota in (("vless", vless_quota), ("hysteria2", hy2_quota)):
-        count = 0
+        is_hy2 = protocol == "hysteria2"
+        count = sum(
+            1
+            for item in selected
+            if (item.node.is_hysteria if is_hy2 else not item.node.is_hysteria)
+        )
         for item in scored:
-            matches = item.node.is_hysteria if protocol == "hysteria2" else not item.node.is_hysteria
-            if matches and count < quota and add(item):
+            if count >= quota or len(selected) >= target_count:
+                break
+            if item.node.is_hysteria != is_hy2:
+                continue
+            if add(item):
                 count += 1
     for item in scored:
         if len(selected) >= target_count:

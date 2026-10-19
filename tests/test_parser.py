@@ -66,3 +66,14 @@ def test_marketing_query_does_not_create_duplicate(source):
 def test_duplicate_query_parameter_rejected(source):
     with pytest.raises(ParseError):
         parse_link(vless().replace("#", "&type=grpc#"), source)
+
+
+def test_dedup_prefers_whitelist_category():
+    from vpnmy.models import Source
+
+    universal = Source("u", "U", "https://x/u", "universal")
+    whitelist = Source("w", "W", "https://x/w", "whitelist")
+    a = parse_link(vless(), universal)
+    b = parse_link(vless(), whitelist)
+    out = deduplicate([a, b])
+    assert len(out) == 1 and out[0].category == "whitelist"
