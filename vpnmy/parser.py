@@ -316,7 +316,17 @@ def parse_source(text: str, source: Source) -> tuple[list[Node], int]:
 
 
 def deduplicate(nodes: Iterable[Node]) -> list[Node]:
+    """Убирает дубликаты канонических конфигураций.
+
+    Одинаковый узел может встречаться и в universal-, и в whitelist-источнике.
+    Предпочитаем whitelist-категорию: так квота «белых списков» заполняется
+    реальными кандидатами, а не остаётся пустой из-за порядка загрузки.
+    """
     unique: dict[str, Node] = {}
     for node in nodes:
-        unique.setdefault(node.canonical_link, node)
+        existing = unique.get(node.canonical_link)
+        if existing is None or (
+            existing.category != "whitelist" and node.category == "whitelist"
+        ):
+            unique[node.canonical_link] = node
     return list(unique.values())

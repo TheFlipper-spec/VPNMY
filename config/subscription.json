@@ -5,64 +5,6 @@
     "web_page_url": "https://theflipper-spec.github.io/VPNMY/"
   },
   "sources_file": "config/sources.txt",
-  "sources": [
-    {
-      "id": "ru-universal",
-      "name": "VPN-конфигурации для России — обычный интернет",
-      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/BLACK_VLESS_RUS_mobile.txt",
-      "category": "universal",
-      "enabled": true
-    },
-    {
-      "id": "ru-whitelist-sni",
-      "name": "VPN-конфигурации для России — SNI белых списков",
-      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-SNI-RU-all.txt",
-      "category": "whitelist",
-      "enabled": true
-    },
-    {
-      "id": "ru-whitelist-pool",
-      "name": "VPN-конфигурации для России — резерв белых списков",
-      "url": "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/main/WHITE-CIDR-RU-all.txt",
-      "category": "whitelist",
-      "enabled": true
-    },
-    {
-      "id": "vlessforu",
-      "name": "VlessForU — проверенные конфигурации",
-      "url": "https://sub.vlessfo.ru/vlessforu/working_configs.txt",
-      "category": "universal",
-      "enabled": true
-    },
-    {
-      "id": "vedalink",
-      "name": "VEDA VPN — публичная подписка",
-      "url": "https://vedalink.xyz/sub/fJXfBACAy_fPp8Hr",
-      "category": "universal",
-      "enabled": true
-    },
-    {
-      "id": "fastnodes-verified",
-      "name": "FastNodes — узлы, прошедшие независимую проверку",
-      "url": "https://raw.githubusercontent.com/rtwo2/FastNodes/main/state/verified_last.txt",
-      "category": "universal",
-      "enabled": true
-    },
-    {
-      "id": "fastnodes-hysteria2",
-      "name": "FastNodes — Hysteria2 (предфильтрованные)",
-      "url": "https://raw.githubusercontent.com/rtwo2/FastNodes/main/sub/protocols/hysteria2.txt",
-      "category": "universal",
-      "enabled": true
-    },
-    {
-      "id": "radikal-hysteria2",
-      "name": "0xRadikal — Hysteria2",
-      "url": "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/protocols/hysteria2.txt",
-      "category": "universal",
-      "enabled": true
-    }
-  ],
   "paths": {
     "subscription_base64": "FL1PVPN",
     "subscription_raw": "subscription.txt",
@@ -83,7 +25,7 @@
   "verify_measurements": 3,
   "verify_median_threshold_ms": 1500,
   "history_recent_window": 10,
-  "ru_check_budget": 125,
+  "ru_check_budget": 60,
   "ru_check_concurrency": 12,
   "ru_check_probes": 3,
   "ru_check_packets": 2,

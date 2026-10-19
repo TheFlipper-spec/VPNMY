@@ -573,9 +573,14 @@
         let ruNote = "";
         if (data.ru_check && typeof data.ru_check === "object") {
           const ru = data.ru_check;
+          const coverage = ru.gate === "degraded"
+            ? " Российские пробы не дали подтверждений: неподтверждённые узлы допущены к глубокой проверке."
+            : ru.gate === "partial"
+              ? " Подтверждена только часть узлов, остальные допущены к глубокой проверке."
+              : "";
           ruNote = ru.enabled
             ? ` Российская проверка (Globalping, RU): доступно ${ru.reachable}, заблокировано ${ru.blocked}, неизвестно ${ru.unknown}` +
-              (ru.median_latency_ms != null ? `, медиана RU-задержки ${ru.median_latency_ms} мс` : "") + "."
+              (ru.median_latency_ms != null ? `, медиана RU-задержки ${ru.median_latency_ms} мс` : "") + "." + coverage
             : ` Российская проверка (Globalping, RU) пропущена: ${ru.reason || "нет данных"}.`;
         }
         document.getElementById("verification-note").textContent = baseNote + ruNote;

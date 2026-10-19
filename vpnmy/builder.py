@@ -45,8 +45,19 @@ class BuildError(RuntimeError):
     """Сборка не может безопасно заменить последнюю рабочую подписку."""
 
 
-def _persist_state(history: dict[str, Any], health: dict[str, Any], config: BuildConfig) -> None:
-    """Persist quarantine/retirement decisions even when the subscription build fails."""
+def _persist_state(
+    history: dict[str, Any],
+    health: dict[str, Any],
+    config: BuildConfig,
+    *,
+    dry_run: bool = False,
+) -> None:
+    """Persist quarantine/retirement decisions even when the subscription build fails.
+
+    В dry-run не пишем ничего: режим обещает «проверить всё, но не менять файлы».
+    """
+    if dry_run:
+        return
     payloads: dict[Any, bytes] = {}
     if config.paths.history:
         payloads[config.paths.history] = (
@@ -304,7 +315,7 @@ def build_subscription(
     prune_missing(health, list(config.sources))
     if sources_ok == 0:
         prune_missing(health, list(config.sources))
-        _persist_state(history, health, config)
+        _persist_state(history, health, config, dry_run=dry_run)
         raise BuildError(
             "ни один источник не доступен или пуст; последняя подписка сохранена без изменений"
         )
@@ -332,7 +343,7 @@ def build_subscription(
     )
     nodes = deduplicate(capped)
     if not nodes:
-        _persist_state(history, health, config)
+        _persist_state(history, health, config, dry_run=dry_run)
         raise BuildError("источники не содержат валидных конфигураций")
     LOGGER.info(
         "После дедупликации: %d конфигураций; после лимита на источник: %d",
@@ -363,7 +374,7 @@ def build_subscription(
     if not probes:
         for node in candidates:
             record_failure(history, node, checked_at)
-        _persist_state(history, health, config)
+        _persist_state(history, health, config, dry_run=dry_run)
         raise BuildError("ни один сервер не прошёл сетевую предпроверку")
     reachable_ids = {probe.node.node_id for probe in probes}
     tcp_failed = [node for node in candidates if node.node_id not in reachable_ids]
@@ -387,6 +398,7 @@ def build_subscription(
         config.target_count,
         config.preferred_countries,
         max_per_subnet=max(2, config.max_per_subnet),
+        max_per_country=config.max_per_country,
     )
     ru_results, ru_stats = globalping.run_ru_check(
         probes,
@@ -406,9 +418,14 @@ def build_subscription(
         or ru_stats.deadline_exceeded
     )
     if ru_stats.enabled and quota_or_api_limited:
+        # Fallback нужен только для «неизвестно»/непроверенных. Подтверждённо
+        # заблокированные узлы повторно не проверяем и не «разблокируем»
+        # одним успешным TCP-подключением Check-Host.
         unresolved = [
-            probe for probe in prioritization
-            if ru_results.get(probe.node.node_id) is None or ru_results[probe.node.node_id].ok is not True
+            probe
+            for probe in prioritization
+            if ru_results.get(probe.node.node_id) is None
+            or ru_results[probe.node.node_id].ok is None
         ]
         LOGGER.warning(
             "Globalping quota/API/дедлайн ограничены: budget=%d, приоритетных=%d, no_probes=%d, 429=%d, api_errors=%d, deadline=%s; Check-Host TCP fallback для %d узлов (общий дедлайн %.0f с)",
@@ -422,12 +439,15 @@ def build_subscription(
             if node_id not in ru_results or ru_results[node_id].ok is not True:
                 ru_results[node_id] = result
     ru_blocked_ids: set[str] = set()
+    ru_confirmed = 0
     for probe in probes:
         result = ru_results.get(probe.node.node_id)
         if result is None:
             continue
         if result.ok is not None or result.reason not in globalping.NOT_CHECKED_REASONS:
             globalping.record_ru_result(history, probe.node.node_id, result, checked_at)
+        if result.ok is True:
+            ru_confirmed += 1
         if result.ok is False:
             ru_blocked_ids.add(probe.node.node_id)
     if ru_blocked_ids:
@@ -442,23 +462,45 @@ def build_subscription(
         "Российская проверка (Globalping, RU): %s",
         globalping.format_summary(ru_stats),
     )
-    probes_ru = [
-        p for p in probes
-        if p.node.node_id not in ru_blocked_ids
-        and (
-            not ru_stats.enabled
-            or (ru_results.get(p.node.node_id) is not None and ru_results[p.node.node_id].ok is True)
+    # Гейт исключает только ПОДТВЕРЖДЁННО заблокированные узлы (≥2 RU-проба не
+    # подключились). «Неизвестно» (нет квоты/пробов, дедлайн, API-ошибка,
+    # молчание ICMP) не является отказом: иначе при исчерпанной квоте Globalping
+    # вся подписка схлопывалась до одного узла, подтверждённого Check-Host, и
+    # сборка падала с «работают только 1 узлов (минимум 3)». Неподтверждённые
+    # узлы проходят к глубокой проверке через туннель, которая и остаётся
+    # финальным словом о работоспособности.
+    probes_ru = [p for p in probes if p.node.node_id not in ru_blocked_ids]
+    # Покрытие считаем относительно приоритетного короткого списка, а не всех
+    # 400+ кандидатов: бюджет RU-проверки заведомо меньше их числа.
+    gate_total = max(1, min(len(probes), len(prioritization) or len(probes)))
+    if not ru_stats.enabled:
+        ru_stats.gate = "disabled"
+    elif ru_confirmed >= max(1, gate_total // 2):
+        ru_stats.gate = "confirmed"
+    elif ru_confirmed:
+        ru_stats.gate = "partial"
+        LOGGER.warning(
+            "RU-проверка подтвердила только %d из %d узлов; остальные допущены к глубокой проверке",
+            ru_confirmed,
+            len(probes),
         )
-    ]
+    else:
+        ru_stats.gate = "degraded"
+        LOGGER.warning(
+            "RU-проверка не дала ни одного подтверждения (квота/API/пробы); "
+            "неподтверждённые узлы допущены к глубокой проверке"
+        )
     LOGGER.info(
-        "RU gate: подтверждено=%d, исключено как недоступные=%d, не подтверждено=%d; пригодно к глубокой проверке=%d",
-        sum(result is not None and result.ok is True for result in ru_results.values()),
+        "RU gate: подтверждено=%d, исключено как недоступные=%d, не подтверждено=%d, "
+        "gate=%s; пригодно к глубокой проверке=%d",
+        ru_confirmed,
         len(ru_blocked_ids),
-        max(0, len(probes) - len(ru_blocked_ids) - len(probes_ru)),
+        max(0, len(probes) - len(ru_blocked_ids) - ru_confirmed),
+        ru_stats.gate,
         len(probes_ru),
     )
     if not probes_ru:
-        _persist_state(history, health, config)
+        _persist_state(history, health, config, dry_run=dry_run)
         raise BuildError(
             "ни один сервер не доступен из российской сети; "
             "последняя подписка сохранена без изменений"
@@ -472,6 +514,7 @@ def build_subscription(
         config.target_count,
         config.preferred_countries,
         max_per_subnet=max(2, config.max_per_subnet),
+        max_per_country=config.max_per_country,
     )
     skipped: list[Node] = []
     if skip_deep_check:
@@ -598,7 +641,7 @@ def build_subscription(
             result.country, result.score, result.http_ms, result.checks_passed,
         )
     if len(selected) < config.min_publish_count:
-        _persist_state(history, health, config)
+        _persist_state(history, health, config, dry_run=dry_run)
         raise BuildError(
             f"работают только {len(selected)} узлов (минимум {config.min_publish_count}); "
             "последняя подписка сохранена без изменений"

@@ -789,6 +789,14 @@ def test_builder_with_token_uses_mocked_ru_layer(tmp_path, countries_file, monke
 def test_config_ru_keys(tmp_path):
     base = json.loads(Path("config/subscription.json").read_text(encoding="utf-8"))
     base.pop("sources_file", None)
+    base["sources"] = [
+        {
+            "id": "x",
+            "name": "X",
+            "url": "https://example.com/s",
+            "category": "universal",
+        }
+    ]
     raw_path = tmp_path / "subscription.json"
     raw_path.write_text(json.dumps(base))
     loaded = load_config(raw_path)
@@ -943,7 +951,50 @@ def test_checkhost_success_endpoint_dedup_and_hysteria_skip(monkeypatch):
     assert results[alias.node_id].node_id == alias.node_id
     assert len(sessions[0].calls) == 2  # one creation + one poll per endpoint
     query = parse_qs(urlsplit(sessions[0].calls[0][1]).query)
-    assert query == {"host": ["9.9.9.9:443"], "node": [gp.CHECKHOST_RU_NODE]}
+    assert query == {
+        "host": ["9.9.9.9:443"],
+        "node": list(gp.CHECKHOST_RU_NODES),
+    }
+
+
+def test_checkhost_parses_list_format_and_uses_multiple_ru_nodes(monkeypatch):
+    """Реальный Check-Host отвечает массивами, а не только словарями."""
+    node = make_node("list.example")
+
+    def handler(method, url, json=None):
+        if "/check-tcp?" in url:
+            return FakeResponse(200, {"request_id": "r1"})
+        return FakeResponse(
+            200,
+            {
+                "ru1.node.check-host.net": [[{"error": "Connection refused"}]],
+                "ru3.node.check-host.net": [["OK", 0.031, "1.2.3.4"]],
+            },
+        )
+
+    install_fake_session(monkeypatch, handler)
+    fast_checkhost_polls(monkeypatch)
+    results = gp.run_checkhost_fallback([probe(node, resolved_ip="9.9.9.9")])
+    (result,) = results.values()
+    assert result.ok is True
+    assert result.latency_ms == 31
+
+
+def test_quota_budget_counts_tests_and_reserves_half(monkeypatch):
+    """10 тестов, 3 проба на измерение, резерв 5 → доступно 1 измерение."""
+    limits = {"rateLimit": {"measurements": {"create": {"type": "user", "remaining": 10}}}}
+    handler = limits_then_post_create_poll(
+        {"m1": [finished_payload([[10]])]}, limits_payload=limits
+    )
+    results, stats, _sessions = run_ru(
+        monkeypatch,
+        [probe(make_node(f"1.1.1.{i}")) for i in range(3)],
+        handler,
+        budget=10,
+    )
+    assert stats.budget == 1
+    assert sum(result.ok is True for result in results.values()) == 1
+    assert sum(result.reason == "budget" for result in results.values()) == 2
 
 
 def test_checkhost_hysteria_only_does_not_open_session(monkeypatch):
@@ -1022,9 +1073,16 @@ def test_checkhost_node_timeout_includes_creation_and_polling(monkeypatch, phase
 
 
 @pytest.mark.parametrize("fallback_succeeds", [True, False])
-def test_builder_globalping_deadline_uses_fallback_without_bypassing_ru_gate(
+def test_builder_globalping_deadline_degrades_gracefully(
     tmp_path, countries_file, monkeypatch, fallback_succeeds,
 ):
+    """Дедлайн Globalping не должен обнулять подписку.
+
+    Неподтверждённые из РФ узлы допускаются к глубокой проверке; успешный
+    Check-Host добавляет лишь дополнительное подтверждение. Раньше при
+    fallback_succeeds=False сборка падала с BuildError, хотя локальная и
+    глубокая проверки могли быть полностью рабочими.
+    """
     c = cfg(tmp_path, countries_file)
     c = replace(c, paths=replace(c.paths, source_health=tmp_path / "source_health.json"))
     wire_build(monkeypatch, four_links())
@@ -1057,16 +1115,18 @@ def test_builder_globalping_deadline_uses_fallback_without_bypassing_ru_gate(
 
     monkeypatch.setattr(gp, "run_ru_check", expired_ru)
     monkeypatch.setattr(gp, "run_checkhost_fallback", fallback)
-    if fallback_succeeds:
-        report = build_subscription(c, now=datetime(2026, 1, 1, tzinfo=UTC))
-        assert report.published == 3 and len(verified) == 3
-        stats = json.loads(c.paths.stats.read_text())
-        assert stats["ru_check"]["enabled"] and stats["ru_check"]["deadline_exceeded"]
-    else:
-        with pytest.raises(BuildError, match="российской сети"):
-            build_subscription(c, now=datetime(2026, 1, 1, tzinfo=UTC))
-        assert verified == []
-        assert all(path.read_bytes() == content for path, content in previous.items())
-        assert isinstance(json.loads(c.paths.history.read_text()), dict)
-        assert isinstance(json.loads(c.paths.source_health.read_text()), dict)
+    report = build_subscription(c, now=datetime(2026, 1, 1, tzinfo=UTC))
+    # Все четыре кандидата прошли локальную проверку и допущены к глубокой:
+    # отсутствие RU-подтверждения не является блокировкой.
+    assert len(verified) == 4
+    assert report.published == 3
+    stats = json.loads(c.paths.stats.read_text())
+    assert stats["ru_check"]["enabled"] and stats["ru_check"]["deadline_exceeded"]
+    # Check-Host подтвердил 3 из 4 — покрытие достаточное; без него — degraded.
+    assert stats["ru_check"]["gate"] == ("confirmed" if fallback_succeeds else "degraded")
+    assert stats["total"] == 3
+    assert previous != {
+        path: path.read_bytes()
+        for path in (c.paths.subscription_base64, c.paths.subscription_raw, c.paths.stats)
+    }
     assert len(seen) == 4

@@ -80,6 +80,63 @@ def test_duplicate_url_rejected(tmp_path):
         add_source(path, "https://example.com/one")
 
 
+def _config_with_sources_file(tmp_path: Path) -> Path:
+    payload = {
+        "schema_version": 1,
+        "sources_file": "config/sources.txt",
+        "paths": {
+            "subscription_base64": "a",
+            "subscription_raw": "b",
+            "stats": "c",
+            "history": "d",
+            "countries": "e",
+        },
+        "target_count": 3,
+        "min_publish_count": 1,
+        "max_candidates": 10,
+        "max_per_endpoint": 1,
+        "category_quotas": {"universal": 3},
+        "preferred_countries": ["RU"],
+        "fetch_workers": 1,
+        "probe_workers": 1,
+        "verify_workers": 1,
+        "source_timeout_seconds": 5,
+        "tcp_timeout_seconds": 1,
+        "verify_timeout_seconds": 5,
+        "speed_test_bytes": 0,
+        "xray_bin": "xray",
+    }
+    path = tmp_path / "config" / "subscription.json"
+    path.parent.mkdir()
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    (path.parent / "sources.txt").write_text(
+        "https://example.com/one # id=one, category=universal, enabled=true, name=Первый лист\n"
+        "https://example.com/two # id=two, category=whitelist, enabled=true, name=Второй, с запятой\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_sources_file_roundtrip_preserves_ids_names_and_newlines(tmp_path):
+    path = _config_with_sources_file(tmp_path)
+    sources = list_sources(path)
+    assert [source.source_id for source in sources] == ["one", "two"]
+    assert sources[1].name == "Второй, с запятой"
+    assert sources[1].category == "whitelist"
+
+    set_source_enabled(path, "one", False)
+    text = (tmp_path / "config" / "sources.txt").read_text(encoding="utf-8")
+    # Регрессия: раньше файл склеивался литеральными "\n" в одну строку.
+    assert "\\n" not in text
+    assert len(text.splitlines()) == 2
+    assert "id=one" in text and "id=two" in text
+    assert "name=Второй, с запятой" in text
+    sources = list_sources(path)
+    assert sources[0].enabled is False
+    assert sources[1].name == "Второй, с запятой"
+    assert sources[1].category == "whitelist"
+
+
 def test_cli_sources_list_and_add(tmp_path, capsys):
     path = _config(tmp_path)
     assert main(["--config", str(path), "sources"]) == 0

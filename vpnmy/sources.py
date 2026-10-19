@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Sequence
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from .config import (
     ConfigError,
+    format_source_line,
     load_raw_config,
     parse_sources,
+    parse_sources_text,
     save_raw_config,
     suggest_source_id,
 )
@@ -48,8 +49,10 @@ def _write_sources(path: Path, raw: dict, sources: Sequence[Source]) -> list[Sou
     if raw.get("sources_file"):
         root = path.parent.parent if path.parent.name == "config" else path.parent
         destination = (root / raw["sources_file"]).resolve()
+        # Важно: реальные переводы строки, а не литерал "\n". Старая версия
+        # склеивала весь файл в одну строку и ломала последующие запуски.
         destination.write_text(
-            "\\n".join(f"{item.url} # category={item.category}, name={item.name}, enabled={str(item.enabled).lower()}" for item in parsed) + "\\n",
+            "\n".join(format_source_line(item) for item in parsed) + "\n",
             encoding="utf-8",
         )
     else:
@@ -63,15 +66,7 @@ def list_sources(path: str | Path) -> list[Source]:
     if raw.get("sources_file"):
         root = config_path.parent.parent if config_path.parent.name == "config" else config_path.parent
         source_file = (root / raw["sources_file"]).resolve()
-        rows = []
-        for line in source_file.read_text(encoding="utf-8").splitlines():
-            clean = line.strip()
-            if not clean or clean.startswith("#"):
-                continue
-            url, _, metadata = clean.partition(" #")
-            attrs = dict(re.findall(r"([a-z_]+)=([^,\s]+)", metadata))
-            rows.append({"id": suggest_source_id(url.strip(), {r["id"] for r in rows}), "name": attrs.get("name", urlsplit(url.strip()).hostname or "source"), "url": url.strip(), "category": attrs.get("category", "universal"), "enabled": attrs.get("enabled", "true").lower() == "true"})
-        return parse_sources(rows)
+        return parse_sources_text(source_file.read_text(encoding="utf-8"))
     return parse_sources(raw.get("sources"))
 
 
