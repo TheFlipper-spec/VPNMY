@@ -2,15 +2,15 @@
   "schema_version": 4,
   "status": "healthy",
   "check_mode": "xray",
-  "updated_at": "2026-10-26T06:54:31Z",
-  "updated_msk": "2026-10-26T09:54:31+03:00",
+  "updated_at": "2026-10-26T14:07:40Z",
+  "updated_msk": "2026-10-26T17:07:40+03:00",
   "update_interval_minutes": 10,
   "profile_title": "FL1P VPN",
   "subscription_url_fragment": "FL1P VPN",
   "total": 12,
   "protocols": {
-    "HYSTERIA2": 4,
-    "VLESS": 8
+    "VLESS": 8,
+    "HYSTERIA2": 4
   },
   "quarantined_sources": 2,
   "subscription_file": "FL1PVPN",
@@ -41,129 +41,131 @@
     "before_selection": {
       "by_country": {
         "US": 5,
-        "CA": 1,
-        "JP": 1,
-        "KR": 3,
+        "JP": 2,
         "FR": 6,
-        "TW": 1,
+        "KR": 3,
         "DE": 2,
-        "NL": 2,
-        "ES": 1
+        "TW": 2,
+        "ES": 1,
+        "NL": 3
       },
       "by_asn": {
         "AS31898": 4,
-        "AS16276": 4,
-        "AS20473": 1,
-        "AS205502": 1,
+        "AS16276": 3,
+        "AS41745": 1,
+        "AS20473": 2,
         "AS12876": 1,
         "AS16509": 3,
-        "AS152179": 1,
         "AS207957": 1,
+        "AS152179": 1,
         "AS219284": 2,
-        "AS12989": 1,
         "AS25198": 2,
-        "AS16003": 1
+        "AS12989": 2,
+        "AS16003": 1,
+        "AS3462": 1
       },
       "by_ip": {
-        "163.192.14.135": 1,
-        "15.204.97.219": 1,
-        "15.204.97.216": 1,
         "144.24.46.175": 1,
-        "51.161.72.153": 1,
-        "45.32.10.7": 1,
-        "169.40.42.35": 1,
-        "152.70.237.123": 1,
-        "152.67.200.82": 1,
+        "163.192.14.135": 1,
+        "15.204.97.216": 1,
+        "15.204.97.219": 1,
+        "185.95.231.156": 1,
+        "45.32.10.7": 2,
         "62.210.124.146": 1,
+        "152.70.237.123": 1,
         "13.36.234.11": 2,
-        "103.115.109.49": 1,
         "64.188.98.171": 1,
-        "163.245.42.48": 2,
-        "86.54.28.75": 1,
-        "3.39.4.109": 1,
+        "103.115.109.49": 1,
+        "163.245.42.48": 1,
         "103.244.145.138": 1,
-        "89.127.211.136": 1,
+        "76.164.203.135": 1,
+        "86.54.28.75": 2,
         "137.74.16.237": 1,
-        "76.164.203.135": 1
+        "89.127.211.136": 1,
+        "9.247.23.209": 1,
+        "152.67.200.82": 1,
+        "3.39.4.109": 1,
+        "118.167.211.77": 1
       },
       "by_subnet": {
+        "144.24.46.0/24": 1,
         "163.192.14.0/24": 1,
         "15.204.97.0/24": 2,
-        "144.24.46.0/24": 1,
-        "51.161.72.0/24": 1,
-        "45.32.10.0/24": 1,
-        "169.40.42.0/24": 1,
-        "152.70.237.0/24": 1,
-        "152.67.200.0/24": 1,
+        "185.95.231.0/24": 1,
+        "45.32.10.0/24": 2,
         "62.210.124.0/24": 1,
+        "152.70.237.0/24": 1,
         "13.36.234.0/24": 2,
-        "103.115.109.0/24": 1,
         "64.188.98.0/24": 1,
-        "163.245.42.0/24": 2,
-        "86.54.28.0/24": 1,
-        "3.39.4.0/24": 1,
+        "103.115.109.0/24": 1,
+        "163.245.42.0/24": 1,
         "103.244.145.0/24": 1,
-        "89.127.211.0/24": 1,
+        "76.164.203.0/24": 1,
+        "86.54.28.0/24": 2,
         "137.74.16.0/24": 1,
-        "76.164.203.0/24": 1
+        "89.127.211.0/24": 1,
+        "9.247.23.0/24": 1,
+        "152.67.200.0/24": 1,
+        "3.39.4.0/24": 1,
+        "118.167.211.0/24": 1
       }
     },
     "after_selection": {
       "by_country": {
         "US": 3,
         "FR": 2,
-        "NL": 2,
         "DE": 1,
         "ES": 1,
+        "NL": 2,
         "KR": 2,
         "JP": 1
       },
       "by_asn": {
-        "AS31898": 2,
         "AS16276": 2,
+        "AS31898": 2,
         "AS219284": 1,
-        "AS12989": 1,
         "AS25198": 2,
         "AS16003": 1,
+        "AS12989": 1,
         "AS16509": 1,
         "AS20473": 1,
         "AS12876": 1
       },
       "by_ip": {
-        "163.192.14.135": 1,
         "15.204.97.216": 1,
         "15.204.97.219": 1,
+        "163.192.14.135": 1,
         "163.245.42.48": 1,
-        "86.54.28.75": 1,
         "103.244.145.138": 1,
-        "89.127.211.136": 1,
         "76.164.203.135": 1,
+        "89.127.211.136": 1,
+        "86.54.28.75": 1,
         "3.39.4.109": 1,
         "45.32.10.7": 1,
-        "152.70.237.123": 1,
-        "62.210.124.146": 1
+        "62.210.124.146": 1,
+        "152.70.237.123": 1
       },
       "by_subnet": {
-        "163.192.14.0/24": 1,
         "15.204.97.0/24": 2,
+        "163.192.14.0/24": 1,
         "163.245.42.0/24": 1,
-        "86.54.28.0/24": 1,
         "103.244.145.0/24": 1,
-        "89.127.211.0/24": 1,
         "76.164.203.0/24": 1,
+        "89.127.211.0/24": 1,
+        "86.54.28.0/24": 1,
         "3.39.4.0/24": 1,
         "45.32.10.0/24": 1,
-        "152.70.237.0/24": 1,
-        "62.210.124.0/24": 1
+        "62.210.124.0/24": 1,
+        "152.70.237.0/24": 1
       }
     },
-    "excluded_by_limits": 10
+    "excluded_by_limits": 12
   },
   "asn": {
-    "enriched": 27,
+    "enriched": 28,
     "cached": 0,
     "failed": 0,
-    "total": 27,
+    "total": 28,
     "status": "ok"
   },
   "ru_check": {
@@ -176,21 +178,21 @@
     "quota_remaining": 500,
     "probes_per_target": 3,
     "submitted": 60,
-    "checked": 91,
-    "reachable": 83,
-    "blocked": 2,
-    "unknown": 6,
-    "not_checked": 342,
+    "checked": 90,
+    "reachable": 84,
+    "blocked": 1,
+    "unknown": 5,
+    "not_checked": 347,
     "no_ru_probes": 0,
     "api_errors": 0,
     "rate_limited": 0,
     "retries": 0,
     "credits_consumed": 0,
-    "median_latency_ms": 130,
-    "elapsed_seconds": 34.1,
+    "median_latency_ms": 184,
+    "elapsed_seconds": 28.6,
     "deadline_exceeded": false,
     "gate": "confirmed",
-    "checked_at": "2026-10-26T06:54:31Z",
+    "checked_at": "2026-10-26T14:07:40Z",
     "description": "TCP-проверка порта (классические протоколы) и ICMP-пинг (Hysteria2) с российских узлов Globalping до глубокой проверки. «Заблокировано» — минимум два независимых RU-проба не подключились. Молчание ICMP для Hysteria2 считается «неизвестно», а не отказом. Проверка из российских дата-центров — не эквивалент домашней/мобильной сети РФ."
   },
   "quality": {
@@ -217,15 +219,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 1298,
-      "found": 125,
-      "accepted": 66,
-      "rejected": 59,
+      "fetch_ms": 1013,
+      "found": 86,
+      "accepted": 50,
+      "rejected": 36,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -234,15 +236,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 235,
-      "found": 4789,
-      "accepted": 1198,
-      "rejected": 3591,
+      "fetch_ms": 323,
+      "found": 4707,
+      "accepted": 1174,
+      "rejected": 3533,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -251,15 +253,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 126,
-      "found": 942,
-      "accepted": 936,
+      "fetch_ms": 158,
+      "found": 944,
+      "accepted": 938,
       "rejected": 6,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -268,15 +270,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 198,
-      "found": 1687,
-      "accepted": 1022,
-      "rejected": 665,
+      "fetch_ms": 427,
+      "found": 1747,
+      "accepted": 1027,
+      "rejected": 720,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -285,15 +287,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 126,
-      "found": 985,
-      "accepted": 207,
-      "rejected": 778,
+      "fetch_ms": 154,
+      "found": 986,
+      "accepted": 203,
+      "rejected": 783,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -302,15 +304,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 133,
-      "found": 148,
-      "accepted": 38,
-      "rejected": 110,
+      "fetch_ms": 151,
+      "found": 150,
+      "accepted": 20,
+      "rejected": 130,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 39,
+      "attempts": 42,
+      "successes": 40,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -319,15 +321,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 158,
-      "found": 132,
-      "accepted": 36,
-      "rejected": 96,
+      "fetch_ms": 134,
+      "found": 89,
+      "accepted": 12,
+      "rejected": 77,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 38,
+      "attempts": 42,
+      "successes": 39,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -336,15 +338,15 @@
       "category": "whitelist",
       "enabled": true,
       "available": true,
-      "fetch_ms": 97,
-      "found": 131,
+      "fetch_ms": 109,
+      "found": 135,
       "accepted": 43,
-      "rejected": 88,
+      "rejected": 92,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -353,15 +355,15 @@
       "category": "whitelist",
       "enabled": true,
       "available": true,
-      "fetch_ms": 89,
-      "found": 109,
-      "accepted": 36,
-      "rejected": 73,
+      "fetch_ms": 113,
+      "found": 97,
+      "accepted": 27,
+      "rejected": 70,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -370,15 +372,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 127,
-      "found": 234,
-      "accepted": 234,
+      "fetch_ms": 171,
+      "found": 223,
+      "accepted": 223,
       "rejected": 0,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -387,15 +389,15 @@
       "category": "universal",
       "enabled": true,
       "available": true,
-      "fetch_ms": 499,
-      "found": 314,
-      "accepted": 164,
-      "rejected": 150,
+      "fetch_ms": 515,
+      "found": 245,
+      "accepted": 113,
+      "rejected": 132,
       "quarantined": false,
-      "attempts": 41,
-      "successes": 41,
+      "attempts": 42,
+      "successes": 42,
       "fail_streak": 0,
-      "last_ok": "2026-10-26T06:54:31Z",
+      "last_ok": "2026-10-26T14:07:40Z",
       "last_error": null
     },
     {
@@ -435,16 +437,9 @@
   ],
   "retired_nodes": [
     {
-      "id": "074926390a41582d",
-      "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
-      "protocol": "grpc",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "0e2431c4b0d2c30f",
-      "endpoint": "100.27.16.249:1991",
-      "protocol": "xhttp",
+      "id": "021706e511bf727d",
+      "endpoint": "103.172.197.3:16006",
+      "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
@@ -463,8 +458,15 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "1865418840b563b0",
-      "endpoint": "103.215.239.85:2050",
+      "id": "161cf096d39307b4",
+      "endpoint": "103.246.145.244:11802",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "18d5e8dce43b40a8",
+      "endpoint": "103.106.229.190:19261",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -477,13 +479,6 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "1b5f860029c9d447",
-      "endpoint": "103.246.145.244:11802",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
       "id": "1d3b6679b96e3986",
       "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
       "protocol": "grpc",
@@ -491,8 +486,8 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "1d56e39c2538c41d",
-      "endpoint": "0join.outline-vpn.cloud:443",
+      "id": "1ee52a9420603557",
+      "endpoint": "209.200.246.148:443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -500,13 +495,6 @@
     {
       "id": "205be55630f8bd48",
       "endpoint": "103.113.68.50:8443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "205cc803576bb023",
-      "endpoint": "103.172.197.2:29172",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -540,13 +528,6 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "2b3372472f8bb1d0",
-      "endpoint": "103.106.229.190:13898",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
       "id": "3109ac5d85211898",
       "endpoint": "103.231.73.99:8443",
       "protocol": "tcp",
@@ -568,15 +549,15 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "36113707be211ed4",
-      "endpoint": "103.172.197.3:16006",
+      "id": "3889bb418c83cc7f",
+      "endpoint": "103.109.234.129:443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "37bc09d35109836c",
-      "endpoint": "3f8efdt.fi1.h1clayd.click:443",
+      "id": "39634f4ec89895f3",
+      "endpoint": "103.166.127.195:448",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -596,15 +577,15 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "3fa1a0df3b82d53f",
-      "endpoint": "103.175.79.2:443",
-      "protocol": "tcp",
+      "id": "3ee51740090d5356",
+      "endpoint": "103.109.234.113:443",
+      "protocol": "xhttp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "3ff0d49d3522bc72",
-      "endpoint": "103.167.234.179:443",
+      "id": "3fa1a0df3b82d53f",
+      "endpoint": "103.175.79.2:443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -638,13 +619,6 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "5785393629ace246",
-      "endpoint": "103.246.145.244:11802",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
       "id": "59808632d04c097b",
       "endpoint": "faf318x.fi3.h1clayd.click:443",
       "protocol": "xhttp",
@@ -666,6 +640,13 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
+      "id": "5b8d7823a40fdc72",
+      "endpoint": "103.240.146.250:6443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
       "id": "617f118520e9d49a",
       "endpoint": "103.175.79.2:443",
       "protocol": "tcp",
@@ -680,9 +661,30 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
+      "id": "64f0f5d6acaa387b",
+      "endpoint": "103.12.77.191:34045",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "678b2f41e69067a3",
+      "endpoint": "103.109.234.199:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
       "id": "6ae354e03c802e31",
       "endpoint": "103.109.234.113:443",
       "protocol": "xhttp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "6bc7a495220fdbbe",
+      "endpoint": "103.24.207.87:10000",
+      "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
@@ -708,16 +710,9 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "7bd61bb448f64023",
-      "endpoint": "193.34.213.38:443",
+      "id": "781460d73f5c8ade",
+      "endpoint": "103.109.234.129:443",
       "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "7ca7d16e91d2796f",
-      "endpoint": "103.109.234.113:443",
-      "protocol": "xhttp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
@@ -729,16 +724,9 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "7eb18bb31b907612",
-      "endpoint": "103.175.79.2:443",
+      "id": "7dbf1db6b55afd90",
+      "endpoint": "103.172.197.3:16006",
       "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "7f36d57f2b81ea33",
-      "endpoint": "031c1bf3e9d44591.mechanicir.ir:56625",
-      "protocol": "grpc",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
@@ -764,6 +752,13 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
+      "id": "8531af76cb6f93ea",
+      "endpoint": "103.166.127.195:448",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
       "id": "89e1481031a6307c",
       "endpoint": "103.193.173.51:39485",
       "protocol": "tcp",
@@ -778,6 +773,13 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
+      "id": "8d60f1b628fdf0e8",
+      "endpoint": "103.227.84.174:6443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
       "id": "8da6ad38df8ac936",
       "endpoint": "103.109.234.96:443",
       "protocol": "tcp",
@@ -785,16 +787,9 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "9390ecc48e4e53ab",
-      "endpoint": "103.227.84.162:443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "94f3030de55de0c9",
-      "endpoint": "100.outline-vpn.cloud:26516",
-      "protocol": "http",
+      "id": "94dd35e1cb9acd8a",
+      "endpoint": "031c1bf3e9d44591.mechanicir.ir:56625",
+      "protocol": "grpc",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
@@ -806,8 +801,15 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "9c1db65ae18b037a",
-      "endpoint": "103.106.3.170:51579",
+      "id": "97c58c70e538bb4b",
+      "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
+      "protocol": "grpc",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "9b99cf6421a7e728",
+      "endpoint": "103.172.197.3:16006",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -815,6 +817,27 @@
     {
       "id": "9f685ed091d28aef",
       "endpoint": "193.124.128.233:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "9f8a5905ac38f4cc",
+      "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
+      "protocol": "grpc",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "a12e1d078d0c7300",
+      "endpoint": "080f2d83dbd8fefe.jobwebs.ir:50567",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "a4249b6de3b088b5",
+      "endpoint": "103.113.68.85:8443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -904,8 +927,22 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
+      "id": "b693dd19681fe19c",
+      "endpoint": "103.119.18.253:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
       "id": "b7b5cb70b7ff74e3",
       "endpoint": "103.166.127.195:448",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "b8afa347552d5432",
+      "endpoint": "103.109.234.199:443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -925,8 +962,15 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "bf38fb93748816fe",
-      "endpoint": "103.109.234.199:443",
+      "id": "bb1a692621389fa1",
+      "endpoint": "103.231.73.181:8443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "bba56052eef4eb30",
+      "endpoint": "0e806ccdc7a782a3.instasup.ir:2003",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -946,13 +990,6 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "c2b3d59e222d4e1d",
-      "endpoint": "103.123.162.50:10011",
-      "protocol": "raw",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
       "id": "c409c78d8868f72e",
       "endpoint": "103.231.75.185:443",
       "protocol": "tcp",
@@ -967,16 +1004,16 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "c904f8ba5571d5b2",
-      "endpoint": "1.162.51.106:37898",
-      "protocol": "tcp",
+      "id": "cae88a0306892cef",
+      "endpoint": "103.241.66.93:40449",
+      "protocol": "grpc",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "cd813584306df696",
-      "endpoint": "103.180.20.132:20007",
-      "protocol": "tcp",
+      "id": "cb211dee986c4e7b",
+      "endpoint": "digin.riziro.ir:8443",
+      "protocol": "xhttp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
@@ -1009,8 +1046,8 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "d87fe237164fa103",
-      "endpoint": "103.106.229.190:19261",
+      "id": "de68b1507fe3fdf6",
+      "endpoint": "103.192.179.61:17895",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -1023,8 +1060,8 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "e49ee124c221381d",
-      "endpoint": "103.214.173.62:41705",
+      "id": "e3fd50337b47495e",
+      "endpoint": "194.59.245.250:40443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -1065,6 +1102,13 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
+      "id": "fd75bd3fd8f84469",
+      "endpoint": "102.207.41.160:26974",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
       "id": "fdcffdbfaa5f0473",
       "endpoint": "103.109.234.198:443",
       "protocol": "tcp",
@@ -1086,30 +1130,170 @@
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "021706e511bf727d",
+      "id": "074926390a41582d",
+      "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
+      "protocol": "grpc",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "0e2431c4b0d2c30f",
+      "endpoint": "100.27.16.249:1991",
+      "protocol": "xhttp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "1865418840b563b0",
+      "endpoint": "103.215.239.85:2050",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "1b5f860029c9d447",
+      "endpoint": "103.246.145.244:11802",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "1d56e39c2538c41d",
+      "endpoint": "0join.outline-vpn.cloud:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "205cc803576bb023",
+      "endpoint": "103.172.197.2:29172",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "2b3372472f8bb1d0",
+      "endpoint": "103.106.229.190:13898",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "36113707be211ed4",
       "endpoint": "103.172.197.3:16006",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "3889bb418c83cc7f",
-      "endpoint": "103.109.234.129:443",
+      "id": "37bc09d35109836c",
+      "endpoint": "3f8efdt.fi1.h1clayd.click:443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "39634f4ec89895f3",
-      "endpoint": "103.166.127.195:448",
+      "id": "3ff0d49d3522bc72",
+      "endpoint": "103.167.234.179:443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
     {
-      "id": "3ee51740090d5356",
+      "id": "5785393629ace246",
+      "endpoint": "103.246.145.244:11802",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "7bd61bb448f64023",
+      "endpoint": "193.34.213.38:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "7ca7d16e91d2796f",
       "endpoint": "103.109.234.113:443",
       "protocol": "xhttp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "7eb18bb31b907612",
+      "endpoint": "103.175.79.2:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "7f36d57f2b81ea33",
+      "endpoint": "031c1bf3e9d44591.mechanicir.ir:56625",
+      "protocol": "grpc",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "9390ecc48e4e53ab",
+      "endpoint": "103.227.84.162:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "94f3030de55de0c9",
+      "endpoint": "100.outline-vpn.cloud:26516",
+      "protocol": "http",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "9c1db65ae18b037a",
+      "endpoint": "103.106.3.170:51579",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "bf38fb93748816fe",
+      "endpoint": "103.109.234.199:443",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "c2b3d59e222d4e1d",
+      "endpoint": "103.123.162.50:10011",
+      "protocol": "raw",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "c904f8ba5571d5b2",
+      "endpoint": "1.162.51.106:37898",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "cd813584306df696",
+      "endpoint": "103.180.20.132:20007",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "d87fe237164fa103",
+      "endpoint": "103.106.229.190:19261",
+      "protocol": "tcp",
+      "status": "retired",
+      "reason": "repeated failed checks without reliable success"
+    },
+    {
+      "id": "e49ee124c221381d",
+      "endpoint": "103.214.173.62:41705",
+      "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
     },
@@ -1123,111 +1307,6 @@
     {
       "id": "4cab42e3ad936185",
       "endpoint": "103.172.197.3:16006",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "64f0f5d6acaa387b",
-      "endpoint": "103.12.77.191:34045",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "678b2f41e69067a3",
-      "endpoint": "103.109.234.199:443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "781460d73f5c8ade",
-      "endpoint": "103.109.234.129:443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "7dbf1db6b55afd90",
-      "endpoint": "103.172.197.3:16006",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "8d60f1b628fdf0e8",
-      "endpoint": "103.227.84.174:6443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "94dd35e1cb9acd8a",
-      "endpoint": "031c1bf3e9d44591.mechanicir.ir:56625",
-      "protocol": "grpc",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "97c58c70e538bb4b",
-      "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
-      "protocol": "grpc",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "9b99cf6421a7e728",
-      "endpoint": "103.172.197.3:16006",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "9f8a5905ac38f4cc",
-      "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
-      "protocol": "grpc",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "a12e1d078d0c7300",
-      "endpoint": "080f2d83dbd8fefe.jobwebs.ir:50567",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "a4249b6de3b088b5",
-      "endpoint": "103.113.68.85:8443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "b693dd19681fe19c",
-      "endpoint": "103.119.18.253:443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "b8afa347552d5432",
-      "endpoint": "103.109.234.199:443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "bb1a692621389fa1",
-      "endpoint": "103.231.73.181:8443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "bba56052eef4eb30",
-      "endpoint": "0e806ccdc7a782a3.instasup.ir:2003",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -1249,48 +1328,6 @@
     {
       "id": "1c2e5d9f1f46482a",
       "endpoint": "103.193.173.51:39485",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "8531af76cb6f93ea",
-      "endpoint": "103.166.127.195:448",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "cb211dee986c4e7b",
-      "endpoint": "digin.riziro.ir:8443",
-      "protocol": "xhttp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "de68b1507fe3fdf6",
-      "endpoint": "103.192.179.61:17895",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "fd75bd3fd8f84469",
-      "endpoint": "102.207.41.160:26974",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "18d5e8dce43b40a8",
-      "endpoint": "103.106.229.190:19261",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "1ee52a9420603557",
-      "endpoint": "209.200.246.148:443",
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
@@ -1350,50 +1387,12 @@
       "protocol": "tcp",
       "status": "retired",
       "reason": "repeated failed checks without reliable success"
-    },
-    {
-      "id": "b4a9a22ecfa0f6c2",
-      "endpoint": "144.31.168.59:443",
-      "protocol": "tcp",
-      "status": "retired",
-      "reason": "repeated failed checks without reliable success"
     }
   ],
   "servers": [
     {
-      "id": "8dd629b99389f0e2",
-      "name": "🇺🇸 FL1P VPN · США · Интернет · 35 мс",
-      "country": "US",
-      "country_name": "США",
-      "country_flag": "🇺🇸",
-      "category": "universal",
-      "category_name": "Обычный интернет",
-      "protocol": "HYSTERIA2",
-      "transport": "hysteria2",
-      "security": "tls",
-      "host": "163.192.14.135",
-      "ip": "163.192.14.135",
-      "egress_ip": "163.192.14.135",
-      "asn": "AS31898",
-      "port": 50160,
-      "ping": 2,
-      "tcp_ms": 2,
-      "http_ms": 35,
-      "http_max_ms": 65,
-      "jitter_ms": 32,
-      "attempts": 3,
-      "speed_mbps": 29.44,
-      "score": 85.0,
-      "ru_ms": 198,
-      "verified": true,
-      "checks_passed": 2,
-      "success_streak": 146,
-      "source": "FastNodes — Hysteria2",
-      "checked_at": "2026-10-26T06:55:43Z"
-    },
-    {
       "id": "0e183645e8feeb42",
-      "name": "🇺🇸 FL1P VPN · США · Интернет · 91 мс",
+      "name": "🇺🇸 FL1P VPN · США · Интернет · 148 мс",
       "country": "US",
       "country_name": "США",
       "country_flag": "🇺🇸",
@@ -1407,24 +1406,24 @@
       "egress_ip": "2604:2dc0:200:26d8::",
       "asn": "AS16276",
       "port": 23576,
-      "ping": 19,
-      "tcp_ms": 19,
-      "http_ms": 91,
-      "http_max_ms": 132,
-      "jitter_ms": 45,
+      "ping": 35,
+      "tcp_ms": 35,
+      "http_ms": 148,
+      "http_max_ms": 158,
+      "jitter_ms": 12,
       "attempts": 3,
-      "speed_mbps": 11.58,
-      "score": 84.7,
+      "speed_mbps": 7.06,
+      "score": 82.8,
       "ru_ms": 196,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 38,
+      "success_streak": 39,
       "source": "Epodonios — все конфигурации",
-      "checked_at": "2026-10-26T06:55:23Z"
+      "checked_at": "2026-10-26T14:08:28Z"
     },
     {
       "id": "deaad4f1dc23d016",
-      "name": "🇺🇸 FL1P VPN · США · Интернет · 90 мс",
+      "name": "🇺🇸 FL1P VPN · США · Интернет · 148 мс",
       "country": "US",
       "country_name": "США",
       "country_flag": "🇺🇸",
@@ -1438,24 +1437,55 @@
       "egress_ip": "2604:2dc0:200:26db::",
       "asn": "AS16276",
       "port": 23576,
-      "ping": 16,
-      "tcp_ms": 16,
-      "http_ms": 90,
-      "http_max_ms": 91,
-      "jitter_ms": 3,
+      "ping": 30,
+      "tcp_ms": 30,
+      "http_ms": 148,
+      "http_max_ms": 159,
+      "jitter_ms": 12,
       "attempts": 3,
-      "speed_mbps": 4.37,
-      "score": 82.3,
+      "speed_mbps": 6.77,
+      "score": 82.7,
       "ru_ms": 198,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 24,
+      "success_streak": 25,
       "source": "Epodonios — все конфигурации",
-      "checked_at": "2026-10-26T06:55:24Z"
+      "checked_at": "2026-10-26T14:08:28Z"
+    },
+    {
+      "id": "8dd629b99389f0e2",
+      "name": "🇺🇸 FL1P VPN · США · Интернет · 80 мс",
+      "country": "US",
+      "country_name": "США",
+      "country_flag": "🇺🇸",
+      "category": "universal",
+      "category_name": "Обычный интернет",
+      "protocol": "HYSTERIA2",
+      "transport": "hysteria2",
+      "security": "tls",
+      "host": "163.192.14.135",
+      "ip": "163.192.14.135",
+      "egress_ip": "163.192.14.135",
+      "asn": "AS31898",
+      "port": 50160,
+      "ping": 23,
+      "tcp_ms": 23,
+      "http_ms": 80,
+      "http_max_ms": 140,
+      "jitter_ms": 63,
+      "attempts": 3,
+      "speed_mbps": 11.86,
+      "score": 81.8,
+      "ru_ms": 192,
+      "verified": true,
+      "checks_passed": 2,
+      "success_streak": 147,
+      "source": "FastNodes — Hysteria2",
+      "checked_at": "2026-10-26T14:08:49Z"
     },
     {
       "id": "12f23cdba1f91a05",
-      "name": "🇫🇷 FL1P VPN · Франция · Интернет · 604 мс",
+      "name": "🇫🇷 FL1P VPN · Франция · Интернет · 595 мс",
       "country": "FR",
       "country_name": "Франция",
       "country_flag": "🇫🇷",
@@ -1469,55 +1499,24 @@
       "egress_ip": "51.255.37.164",
       "asn": "AS219284",
       "port": 443,
-      "ping": 141,
-      "tcp_ms": 141,
-      "http_ms": 604,
-      "http_max_ms": 617,
-      "jitter_ms": 15,
+      "ping": 140,
+      "tcp_ms": 140,
+      "http_ms": 595,
+      "http_max_ms": 595,
+      "jitter_ms": 2,
       "attempts": 3,
-      "speed_mbps": 1.72,
-      "score": 77.9,
-      "ru_ms": 54,
+      "speed_mbps": 1.78,
+      "score": 78.0,
+      "ru_ms": 55,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 37,
+      "success_streak": 38,
       "source": "Epodonios — все конфигурации",
-      "checked_at": "2026-10-26T06:55:27Z"
-    },
-    {
-      "id": "84d28928df656043",
-      "name": "🇳🇱 FL1P VPN · Нидерланды · Интернет · 617 мс",
-      "country": "NL",
-      "country_name": "Нидерланды",
-      "country_flag": "🇳🇱",
-      "category": "universal",
-      "category_name": "Обычный интернет",
-      "protocol": "VLESS",
-      "transport": "tcp",
-      "security": "reality",
-      "host": "free-amsterdam-node-1.cloudwidecdn.com",
-      "ip": "86.54.28.75",
-      "egress_ip": "86.54.28.75",
-      "asn": "AS12989",
-      "port": 443,
-      "ping": 142,
-      "tcp_ms": 142,
-      "http_ms": 617,
-      "http_max_ms": 623,
-      "jitter_ms": 13,
-      "attempts": 3,
-      "speed_mbps": 1.74,
-      "score": 77.8,
-      "ru_ms": 41,
-      "verified": true,
-      "checks_passed": 2,
-      "success_streak": 35,
-      "source": "FastNodes — проверенные узлы",
-      "checked_at": "2026-10-26T06:55:27Z"
+      "checked_at": "2026-10-26T14:08:31Z"
     },
     {
       "id": "f052d3083db03ca6",
-      "name": "🇩🇪 FL1P VPN · Германия · Интернет · 634 мс",
+      "name": "🇩🇪 FL1P VPN · Германия · Интернет · 603 мс",
       "country": "DE",
       "country_name": "Германия",
       "country_flag": "🇩🇪",
@@ -1531,55 +1530,24 @@
       "egress_ip": "162.249.126.228",
       "asn": "AS25198",
       "port": 443,
-      "ping": 155,
-      "tcp_ms": 155,
-      "http_ms": 634,
-      "http_max_ms": 636,
-      "jitter_ms": 27,
+      "ping": 145,
+      "tcp_ms": 145,
+      "http_ms": 603,
+      "http_max_ms": 604,
+      "jitter_ms": 12,
       "attempts": 3,
-      "speed_mbps": 1.52,
-      "score": 77.6,
-      "ru_ms": 46,
+      "speed_mbps": 1.69,
+      "score": 77.9,
+      "ru_ms": 47,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 21,
-      "source": "FastNodes — VLESS",
-      "checked_at": "2026-10-26T06:55:30Z"
-    },
-    {
-      "id": "e06e5ef82ee72c3d",
-      "name": "🇳🇱 FL1P VPN · Нидерланды · Интернет · 644 мс",
-      "country": "NL",
-      "country_name": "Нидерланды",
-      "country_flag": "🇳🇱",
-      "category": "universal",
-      "category_name": "Обычный интернет",
-      "protocol": "VLESS",
-      "transport": "tcp",
-      "security": "reality",
-      "host": "89.127.211.136",
-      "ip": "89.127.211.136",
-      "egress_ip": "89.127.211.136",
-      "asn": "AS16003",
-      "port": 443,
-      "ping": 149,
-      "tcp_ms": 149,
-      "http_ms": 644,
-      "http_max_ms": 659,
-      "jitter_ms": 34,
-      "attempts": 3,
-      "speed_mbps": 1.68,
-      "score": 77.6,
-      "ru_ms": 56,
-      "verified": true,
-      "checks_passed": 2,
-      "success_streak": 30,
+      "success_streak": 22,
       "source": "FastNodes — проверенные узлы",
-      "checked_at": "2026-10-26T06:55:28Z"
+      "checked_at": "2026-10-26T14:08:33Z"
     },
     {
       "id": "fbef905ebdd379b7",
-      "name": "🇪🇸 FL1P VPN · Испания · Интернет · 658 мс",
+      "name": "🇪🇸 FL1P VPN · Испания · Интернет · 608 мс",
       "country": "ES",
       "country_name": "Испания",
       "country_flag": "🇪🇸",
@@ -1593,24 +1561,86 @@
       "egress_ip": "76.164.203.134",
       "asn": "AS25198",
       "port": 443,
-      "ping": 154,
-      "tcp_ms": 154,
-      "http_ms": 658,
-      "http_max_ms": 664,
-      "jitter_ms": 31,
+      "ping": 141,
+      "tcp_ms": 141,
+      "http_ms": 608,
+      "http_max_ms": 660,
+      "jitter_ms": 77,
       "attempts": 3,
-      "speed_mbps": 1.52,
-      "score": 77.4,
-      "ru_ms": 70,
+      "speed_mbps": 1.73,
+      "score": 77.7,
+      "ru_ms": 65,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 19,
+      "success_streak": 20,
       "source": "FastNodes — проверенные узлы",
-      "checked_at": "2026-10-26T06:55:33Z"
+      "checked_at": "2026-10-26T14:08:34Z"
+    },
+    {
+      "id": "e06e5ef82ee72c3d",
+      "name": "🇳🇱 FL1P VPN · Нидерланды · Интернет · 629 мс",
+      "country": "NL",
+      "country_name": "Нидерланды",
+      "country_flag": "🇳🇱",
+      "category": "universal",
+      "category_name": "Обычный интернет",
+      "protocol": "VLESS",
+      "transport": "tcp",
+      "security": "reality",
+      "host": "89.127.211.136",
+      "ip": "89.127.211.136",
+      "egress_ip": "89.127.211.136",
+      "asn": "AS16003",
+      "port": 443,
+      "ping": 140,
+      "tcp_ms": 140,
+      "http_ms": 629,
+      "http_max_ms": 648,
+      "jitter_ms": 36,
+      "attempts": 3,
+      "speed_mbps": 1.74,
+      "score": 77.7,
+      "ru_ms": 55,
+      "verified": true,
+      "checks_passed": 2,
+      "success_streak": 31,
+      "source": "FastNodes — проверенные узлы",
+      "checked_at": "2026-10-26T14:08:32Z"
+    },
+    {
+      "id": "84d28928df656043",
+      "name": "🇳🇱 FL1P VPN · Нидерланды · Интернет · 645 мс",
+      "country": "NL",
+      "country_name": "Нидерланды",
+      "country_flag": "🇳🇱",
+      "category": "universal",
+      "category_name": "Обычный интернет",
+      "protocol": "VLESS",
+      "transport": "tcp",
+      "security": "reality",
+      "host": "free-amsterdam-node-1.cloudwidecdn.com",
+      "ip": "86.54.28.75",
+      "egress_ip": "86.54.28.75",
+      "asn": "AS12989",
+      "port": 443,
+      "ping": 154,
+      "tcp_ms": 154,
+      "http_ms": 645,
+      "http_max_ms": 656,
+      "jitter_ms": 36,
+      "attempts": 3,
+      "speed_mbps": 1.67,
+      "score": 77.6,
+      "ru_ms": 41,
+      "verified": true,
+      "checks_passed": 2,
+      "success_streak": 36,
+      "source": "FastNodes — проверенные узлы",
+      "checked_at": "2026-10-26T14:08:32Z"
     },
     {
       "id": "d9af5b5d8e233d1c",
-      "name": "🇰🇷 FL1P VPN · Южная Корея · Интернет · 618 мс",
+      "name": "🇰🇷 FL1P VPN · Южная Корея · Интернет · 722 мс",
       "country": "KR",
       "country_name": "Южная Корея",
       "country_flag": "🇰🇷",
@@ -1624,24 +1654,24 @@
       "egress_ip": "3.39.4.109",
       "asn": "AS16509",
       "port": 13672,
-      "ping": 148,
-      "tcp_ms": 148,
-      "http_ms": 618,
-      "http_max_ms": 792,
-      "jitter_ms": 178,
+      "ping": 175,
+      "tcp_ms": 175,
+      "http_ms": 722,
+      "http_max_ms": 751,
+      "jitter_ms": 32,
       "attempts": 3,
-      "speed_mbps": 1.33,
-      "score": 77.3,
-      "ru_ms": 270,
+      "speed_mbps": 1.32,
+      "score": 76.9,
+      "ru_ms": 304,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 13,
+      "success_streak": 14,
       "source": "FastNodes — проверенные узлы",
-      "checked_at": "2026-10-26T06:55:48Z"
+      "checked_at": "2026-10-26T14:08:39Z"
     },
     {
       "id": "9fa7091f61830715",
-      "name": "🇯🇵 FL1P VPN · Япония · Интернет · 356 мс",
+      "name": "🇯🇵 FL1P VPN · Япония · Интернет · 359 мс",
       "country": "JP",
       "country_name": "Япония",
       "country_flag": "🇯🇵",
@@ -1655,55 +1685,24 @@
       "egress_ip": "45.32.10.7",
       "asn": "AS20473",
       "port": 443,
-      "ping": 105,
-      "tcp_ms": 105,
-      "http_ms": 356,
-      "http_max_ms": 581,
-      "jitter_ms": 225,
+      "ping": 108,
+      "tcp_ms": 108,
+      "http_ms": 359,
+      "http_max_ms": 600,
+      "jitter_ms": 244,
       "attempts": 3,
-      "speed_mbps": 2.92,
-      "score": 76.5,
+      "speed_mbps": 2.85,
+      "score": 76.4,
       "ru_ms": null,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 34,
+      "success_streak": 35,
       "source": "0xRadikal — Hysteria2",
-      "checked_at": "2026-10-26T06:55:50Z"
-    },
-    {
-      "id": "876b279afb90a4d2",
-      "name": "🇰🇷 FL1P VPN · Южная Корея · Интернет · 418 мс",
-      "country": "KR",
-      "country_name": "Южная Корея",
-      "country_flag": "🇰🇷",
-      "category": "universal",
-      "category_name": "Обычный интернет",
-      "protocol": "HYSTERIA2",
-      "transport": "hysteria2",
-      "security": "tls",
-      "host": "152.70.237.123",
-      "ip": "152.70.237.123",
-      "egress_ip": "152.70.237.123",
-      "asn": "AS31898",
-      "port": 2053,
-      "ping": 134,
-      "tcp_ms": 134,
-      "http_ms": 418,
-      "http_max_ms": 680,
-      "jitter_ms": 263,
-      "attempts": 3,
-      "speed_mbps": 2.46,
-      "score": 75.8,
-      "ru_ms": 276,
-      "verified": true,
-      "checks_passed": 2,
-      "success_streak": 34,
-      "source": "FastNodes — Hysteria2",
-      "checked_at": "2026-10-26T06:55:52Z"
+      "checked_at": "2026-10-26T14:08:54Z"
     },
     {
       "id": "1bd2467de078af81",
-      "name": "🇫🇷 FL1P VPN · Франция · Интернет · 467 мс",
+      "name": "🇫🇷 FL1P VPN · Франция · Интернет · 419 мс",
       "country": "FR",
       "country_name": "Франция",
       "country_flag": "🇫🇷",
@@ -1717,20 +1716,51 @@
       "egress_ip": "62.210.124.146",
       "asn": "AS12876",
       "port": 22000,
-      "ping": 153,
-      "tcp_ms": 153,
-      "http_ms": 467,
-      "http_max_ms": 759,
-      "jitter_ms": 293,
+      "ping": 132,
+      "tcp_ms": 132,
+      "http_ms": 419,
+      "http_max_ms": 664,
+      "jitter_ms": 252,
       "attempts": 3,
-      "speed_mbps": 2.16,
-      "score": 75.3,
+      "speed_mbps": 2.4,
+      "score": 75.8,
       "ru_ms": 54,
       "verified": true,
       "checks_passed": 2,
-      "success_streak": 85,
+      "success_streak": 86,
       "source": "0xRadikal — Hysteria2",
-      "checked_at": "2026-10-26T06:55:48Z"
+      "checked_at": "2026-10-26T14:08:53Z"
+    },
+    {
+      "id": "876b279afb90a4d2",
+      "name": "🇰🇷 FL1P VPN · Южная Корея · Интернет · 435 мс",
+      "country": "KR",
+      "country_name": "Южная Корея",
+      "country_flag": "🇰🇷",
+      "category": "universal",
+      "category_name": "Обычный интернет",
+      "protocol": "HYSTERIA2",
+      "transport": "hysteria2",
+      "security": "tls",
+      "host": "152.70.237.123",
+      "ip": "152.70.237.123",
+      "egress_ip": "152.70.237.123",
+      "asn": "AS31898",
+      "port": 2053,
+      "ping": 179,
+      "tcp_ms": 179,
+      "http_ms": 435,
+      "http_max_ms": 779,
+      "jitter_ms": 344,
+      "attempts": 3,
+      "speed_mbps": 2.28,
+      "score": 75.5,
+      "ru_ms": 297,
+      "verified": true,
+      "checks_passed": 2,
+      "success_streak": 35,
+      "source": "FastNodes — Hysteria2",
+      "checked_at": "2026-10-26T14:08:56Z"
     }
   ]
 }
