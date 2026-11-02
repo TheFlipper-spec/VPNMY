@@ -14,7 +14,7 @@
       "category": "universal",
       "endpoint": "103.249.133.79:58440",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -203,7 +203,7 @@
       "category": "universal",
       "endpoint": "103.172.197.3:16006",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -354,19 +354,6 @@
       "last_seen": "2026-10-30T00:13:35Z",
       "recent": []
     },
-    "03e689e717efaf67": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
-      "recent": []
-    },
-    "03f363f170ffe015": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 150,
-      "ru_ok_at": "2026-10-28T21:53:02Z"
-    },
     "03f9fba732352b8e": {
       "category": "universal",
       "last_seen": "2026-11-01T02:06:09Z",
@@ -435,18 +422,6 @@
       "last_seen": "2026-10-28T11:33:45Z",
       "recent": []
     },
-    "0465b2154eb6a98e": {
-      "category": "universal",
-      "endpoint": "150.241.101.80:8443",
-      "failures": 1,
-      "last_seen": "2026-10-27T15:59:30Z",
-      "protocol": "tcp",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "046f331b6000d657": {
       "category": "universal",
       "last_seen": "2026-10-28T05:25:40Z",
@@ -455,11 +430,6 @@
     "04ac2444e82956cc": {
       "category": "universal",
       "last_seen": "2026-10-27T23:58:40Z",
-      "recent": []
-    },
-    "04c6faa938675b48": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
       "recent": []
     },
     "04cf6ab5bdcb3dda": {
@@ -581,7 +551,7 @@
       "category": "universal",
       "endpoint": "15.204.97.195:23576",
       "failures": 1,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0
@@ -698,11 +668,6 @@
       "last_seen": "2026-10-30T18:47:53Z",
       "recent": []
     },
-    "06cbc62b956cf957": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
-      "recent": []
-    },
     "06ccd940d249a996": {
       "category": "universal",
       "endpoint": "13.143.172.34:2083",
@@ -714,6 +679,11 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "06eaac9ae143e1ca": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
     },
     "06ec5231e0ed4864": {
       "category": "universal",
@@ -788,8 +758,15 @@
     },
     "071036307bd05a61": {
       "category": "universal",
-      "last_seen": "2026-10-28T05:25:40Z",
-      "recent": []
+      "endpoint": "202.10.40.89:8443",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "071df3a8282e3cf2": {
       "category": "universal",
@@ -872,11 +849,6 @@
     "07ba491368239ea6": {
       "category": "universal",
       "last_seen": "2026-10-29T08:21:36Z",
-      "recent": []
-    },
-    "080695c0be3397e1": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
       "recent": []
     },
     "080ff46f88c780ea": {
@@ -975,7 +947,7 @@
       "category": "universal",
       "endpoint": "1.sdwan.realm-sync.com:55567",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -1004,27 +976,32 @@
       "country": "GB",
       "egress_ip": "143.246.182.199",
       "failures": 0,
-      "http_max_ms": 438,
-      "http_ms": 438,
-      "jitter_ms": 22,
-      "last_seen": "2026-11-02T17:00:02Z",
-      "last_success": "2026-11-02T17:00:02Z",
+      "http_max_ms": 565,
+      "http_ms": 550,
+      "jitter_ms": 28,
+      "last_seen": "2026-11-02T23:51:54Z",
+      "last_success": "2026-11-02T23:51:54Z",
       "latency_medians": [
-        438
+        438,
+        550
       ],
-      "median_ms": 438,
+      "median_ms": 550,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "5.104.74.69",
-      "speed_mbps": 2.5,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 104
+      "ru_blocked_streak": 0,
+      "ru_ms": 45,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.89,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 131
     },
     "090d751a9f73afcf": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "090d87e6acbcf4b5": {
@@ -1101,22 +1078,6 @@
       "last_seen": "2026-10-27T20:36:16Z",
       "recent": []
     },
-    "0945e13004499754": {
-      "category": "universal",
-      "endpoint": "staging.lastilhame.monster:443",
-      "failures": 1,
-      "last_seen": "2026-10-27T15:59:30Z",
-      "protocol": "tcp",
-      "recent": [
-        0
-      ],
-      "ru_blocked": true,
-      "ru_blocked_at": "2026-10-27T15:59:30Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "streak": 0,
-      "successes": 0
-    },
     "096df74571d0f72e": {
       "category": "universal",
       "last_seen": "2026-10-31T02:14:43Z",
@@ -1173,7 +1134,7 @@
     },
     "099c4d02d123b348": {
       "category": "universal",
-      "last_seen": "2026-11-01T02:06:09Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "099ca0177eb6ca20": {
@@ -1247,8 +1208,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-11-01T16:16:42Z",
+      "ru_ms": 46,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -1384,11 +1345,6 @@
       "last_seen": "2026-10-31T19:30:06Z",
       "recent": []
     },
-    "0c34351bf26607ff": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
-      "recent": []
-    },
     "0c3d080124fb6d5c": {
       "category": "universal",
       "last_seen": "2026-10-29T08:21:36Z",
@@ -1500,7 +1456,7 @@
     },
     "0ce5cb481dd6fd0d": {
       "category": "universal",
-      "last_seen": "2026-10-30T13:26:50Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "0ce6bf0dbac8df9b": {
@@ -1516,6 +1472,11 @@
     "0cfa97d24a5ae9a6": {
       "category": "universal",
       "last_seen": "2026-10-29T01:43:23Z",
+      "recent": []
+    },
+    "0d046b3393017656": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "0d3b06e67a16d76d": {
@@ -1627,30 +1588,32 @@
       "country": "MX",
       "egress_ip": "147.78.1.170",
       "failures": 0,
-      "http_max_ms": 1737,
-      "http_ms": 1101,
-      "jitter_ms": 956,
-      "last_seen": "2026-11-02T17:00:02Z",
-      "last_success": "2026-11-02T17:00:02Z",
+      "http_max_ms": 425,
+      "http_ms": 395,
+      "jitter_ms": 66,
+      "last_seen": "2026-11-02T23:51:49Z",
+      "last_success": "2026-11-02T23:51:49Z",
       "latency_medians": [
         353,
         413,
-        1101
+        1101,
+        395
       ],
-      "median_ms": 1101,
+      "median_ms": 395,
       "recent": [
+        1,
         1,
         1,
         1
       ],
       "resolved_ip": "147.78.1.253",
       "ru_blocked_streak": 0,
-      "ru_ms": 175,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 3.27,
-      "streak": 3,
-      "successes": 3,
-      "tcp_ms": 55
+      "ru_ms": 171,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 3.85,
+      "streak": 4,
+      "successes": 4,
+      "tcp_ms": 49
     },
     "0dad001d3932946b": {
       "category": "universal",
@@ -1724,13 +1687,12 @@
       "egress_ip": "2604:2dc0:200:26d8::",
       "endpoint": "15.204.97.216:23576",
       "failures": 1,
-      "http_max_ms": 241,
-      "http_ms": 238,
-      "jitter_ms": 4,
-      "last_seen": "2026-11-02T16:59:56Z",
-      "last_success": "2026-11-02T16:59:56Z",
+      "http_max_ms": 160,
+      "http_ms": 145,
+      "jitter_ms": 15,
+      "last_seen": "2026-11-02T23:51:47Z",
+      "last_success": "2026-11-02T23:51:47Z",
       "latency_medians": [
-        65,
         221,
         325,
         94,
@@ -1749,12 +1711,12 @@
         279,
         147,
         294,
-        238
+        238,
+        145
       ],
-      "median_ms": 238,
+      "median_ms": 145,
       "protocol": "tcp",
       "recent": [
-        1,
         1,
         1,
         1,
@@ -1763,24 +1725,25 @@
         1,
         1,
         1,
+        1,
         1
       ],
       "resolved_ip": "15.204.97.216",
       "ru_blocked_streak": 0,
-      "ru_ms": 196,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 4.44,
-      "streak": 5,
-      "successes": 59,
-      "tcp_ms": 51
+      "ru_ms": 192,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 7.31,
+      "streak": 6,
+      "successes": 60,
+      "tcp_ms": 30
     },
     "0e1a807580d6e3dd": {
       "category": "universal",
       "last_seen": "2026-11-01T09:08:04Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 180,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 176,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "0e1e80a7a637c62a": {
       "category": "universal",
@@ -1906,7 +1869,7 @@
     },
     "0ebae4158f1f810a": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "0ec8748f643b6d87": {
@@ -1922,9 +1885,9 @@
       ],
       "ru_blocked": true,
       "ru_blocked_at": "2026-11-01T16:16:42Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "ru_ok_at": "2026-10-31T08:47:43Z",
+      "ru_blocked_streak": 0,
+      "ru_ms": 119,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -2045,7 +2008,7 @@
     },
     "0f760a14c070a2fb": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "0f8aff3fc648bba5": {
@@ -2126,7 +2089,7 @@
       "category": "universal",
       "endpoint": "103.252.117.7:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -2193,7 +2156,7 @@
       "category": "universal",
       "endpoint": "103.172.197.3:16006",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -2285,7 +2248,7 @@
     },
     "11376d0fcb343a4a": {
       "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "113bab02c2ae38ae": {
@@ -2301,11 +2264,6 @@
     "11635ecc1f226a8a": {
       "category": "universal",
       "last_seen": "2026-11-01T02:06:09Z",
-      "recent": []
-    },
-    "119f2708c6f9699d": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
       "recent": []
     },
     "11cf98ff066aa754": {
@@ -2475,18 +2433,6 @@
       "last_seen": "2026-10-30T22:55:22Z",
       "recent": []
     },
-    "1340143abb89c159": {
-      "category": "universal",
-      "endpoint": "169.40.42.75:443",
-      "failures": 1,
-      "last_seen": "2026-10-27T15:59:30Z",
-      "protocol": "tcp",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "134359c4cea88ceb": {
       "category": "universal",
       "endpoint": "can.kramiliantha.sbs:443",
@@ -2527,7 +2473,7 @@
     },
     "1393012010132f56": {
       "category": "universal",
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "13b3cc4a31ca7609": {
@@ -2561,11 +2507,6 @@
       ],
       "streak": 0,
       "successes": 0
-    },
-    "14294eecedbe3753": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
-      "recent": []
     },
     "144779851c6c2863": {
       "category": "universal",
@@ -2696,11 +2637,6 @@
       "last_seen": "2026-10-28T17:19:57Z",
       "recent": []
     },
-    "15e9eaec2e1da69f": {
-      "category": "universal",
-      "last_seen": "2026-10-27T15:59:30Z",
-      "recent": []
-    },
     "15f135681e709cf2": {
       "category": "universal",
       "last_seen": "2026-11-01T16:16:42Z",
@@ -2725,7 +2661,7 @@
       "category": "universal",
       "endpoint": "103.246.145.244:11802",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -2880,7 +2816,7 @@
       "category": "universal",
       "endpoint": "103.215.239.85:2050",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -2966,7 +2902,7 @@
       "category": "universal",
       "endpoint": "103.106.229.190:19261",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -3057,7 +2993,7 @@
       "category": "universal",
       "endpoint": "103.25.85.38:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -3203,7 +3139,7 @@
       "category": "universal",
       "endpoint": "103.253.43.210:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -3260,7 +3196,7 @@
       "category": "universal",
       "endpoint": "103.246.145.244:11802",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -3329,15 +3265,14 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "FR",
-      "egress_ip": "2001:bc8:32d7:17b::100",
+      "egress_ip": "62.210.124.146",
       "failures": 0,
-      "http_max_ms": 584,
-      "http_ms": 367,
-      "jitter_ms": 225,
-      "last_seen": "2026-11-02T17:00:08Z",
-      "last_success": "2026-11-02T17:00:08Z",
+      "http_max_ms": 733,
+      "http_ms": 445,
+      "jitter_ms": 289,
+      "last_seen": "2026-11-02T23:52:01Z",
+      "last_success": "2026-11-02T23:52:01Z",
       "latency_medians": [
-        427,
         382,
         333,
         356,
@@ -3356,9 +3291,10 @@
         310,
         447,
         319,
-        367
+        367,
+        445
       ],
-      "median_ms": 367,
+      "median_ms": 445,
       "recent": [
         1,
         1,
@@ -3373,12 +3309,12 @@
       ],
       "resolved_ip": "62.210.124.146",
       "ru_blocked_streak": 0,
-      "ru_ms": 53,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.81,
-      "streak": 114,
-      "successes": 114,
-      "tcp_ms": 104
+      "ru_ms": 52,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.24,
+      "streak": 115,
+      "successes": 115,
+      "tcp_ms": 132
     },
     "1bf3858ddaacc1b9": {
       "category": "universal",
@@ -3417,7 +3353,7 @@
       "category": "universal",
       "endpoint": "103.193.173.51:39485",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -3503,7 +3439,7 @@
     },
     "1cc9292520f2048d": {
       "category": "universal",
-      "last_seen": "2026-10-29T08:21:36Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "1cccc139c0383ba8": {
@@ -3557,7 +3493,7 @@
       "category": "universal",
       "endpoint": "0join.outline-vpn.cloud:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -3620,7 +3556,7 @@
     },
     "1db272cac4936a55": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "1e04ce6cd712cca1": {
@@ -3657,7 +3593,7 @@
     },
     "1e4c266d1a6d93a9": {
       "category": "universal",
-      "last_seen": "2026-11-01T02:06:09Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "1e6d2eec549b7b21": {
@@ -3749,8 +3685,8 @@
       "ru_blocked": true,
       "ru_blocked_at": "2026-10-28T21:53:02Z",
       "ru_blocked_streak": 0,
-      "ru_ms": 210,
-      "ru_ok_at": "2026-11-01T16:16:42Z",
+      "ru_ms": 193,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -3812,7 +3748,7 @@
       "category": "universal",
       "endpoint": "162.35.8.62:443",
       "failures": 3,
-      "last_seen": "2026-10-27T23:58:40Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -3833,7 +3769,7 @@
     },
     "202a90c968a4ab27": {
       "category": "universal",
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 54,
@@ -3880,7 +3816,7 @@
     },
     "2090e8cc2be13fff": {
       "category": "universal",
-      "last_seen": "2026-10-27T23:58:40Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "20a60f4fab7e283a": {
@@ -3917,7 +3853,7 @@
     },
     "20f15978413e463c": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "21843718ab8eb592": {
@@ -4144,7 +4080,7 @@
     },
     "2371b6bb16b86397": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "237b770912574812": {
@@ -4179,7 +4115,7 @@
     },
     "2395e3f226e100dd": {
       "category": "universal",
-      "last_seen": "2026-10-29T08:21:36Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "23a053dc39fbd20e": {
@@ -4216,8 +4152,8 @@
       ],
       "resolved_ip": "169.40.42.74",
       "ru_blocked_streak": 0,
-      "ru_ms": 113,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
+      "ru_ms": 109,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "speed_mbps": 3.12,
       "streak": 1,
       "successes": 1,
@@ -4429,7 +4365,7 @@
     },
     "254209afb63e8a7c": {
       "category": "universal",
-      "last_seen": "2026-10-31T22:46:03Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "2548e979fa866fde": {
@@ -4439,7 +4375,7 @@
     },
     "2585a5d4916547c7": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 171,
@@ -4474,7 +4410,7 @@
     },
     "25cb278e712b25a5": {
       "category": "universal",
-      "last_seen": "2026-10-29T01:43:23Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "25ce8914fc2b480f": {
@@ -4513,7 +4449,7 @@
       "category": "universal",
       "endpoint": "101.outline-vpn.cloud:3600",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -5011,6 +4947,11 @@
       "streak": 0,
       "successes": 0
     },
+    "2ac203990c41990c": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "2aec66caaf88102f": {
       "category": "universal",
       "last_seen": "2026-11-01T16:16:42Z",
@@ -5025,7 +4966,7 @@
       "category": "universal",
       "endpoint": "vpn-kr-003.fastervpn.world:443",
       "failures": 1,
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "hysteria2",
       "recent": [
         0
@@ -5055,7 +4996,7 @@
       "category": "universal",
       "endpoint": "103.106.229.190:13898",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -5515,6 +5456,34 @@
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": []
     },
+    "2f5f8056312b5407": {
+      "asn": "AS210976",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "NL",
+      "egress_ip": "5.129.237.55",
+      "failures": 0,
+      "http_max_ms": 566,
+      "http_ms": 562,
+      "jitter_ms": 5,
+      "last_seen": "2026-11-02T23:51:57Z",
+      "last_success": "2026-11-02T23:51:57Z",
+      "latency_medians": [
+        562
+      ],
+      "median_ms": 562,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "5.129.237.55",
+      "ru_blocked_streak": 0,
+      "ru_ms": 40,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.86,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 130
+    },
     "2f6ae08a34799e5c": {
       "category": "universal",
       "endpoint": "195.123.235.183:443",
@@ -5565,7 +5534,7 @@
       "category": "universal",
       "endpoint": "51.158.206.103:23576",
       "failures": 2,
-      "last_seen": "2026-10-29T01:43:23Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -5635,8 +5604,8 @@
       "last_seen": "2026-10-29T20:30:12Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 122,
-      "ru_ok_at": "2026-11-01T20:46:21Z"
+      "ru_ms": 114,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "30c8c0a4d35d0460": {
       "category": "universal",
@@ -5662,7 +5631,7 @@
       "category": "universal",
       "endpoint": "103.231.73.99:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -5766,7 +5735,7 @@
     },
     "323087ecbf9c2e46": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "323a3a70ac8393fc": {
@@ -5845,7 +5814,7 @@
       "category": "universal",
       "endpoint": "103.113.70.21:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -5985,7 +5954,7 @@
       "category": "universal",
       "endpoint": "103.166.127.195:448",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -6044,8 +6013,8 @@
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 268,
-      "ru_ok_at": "2026-11-01T20:46:21Z"
+      "ru_ms": 259,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "34ff893d5cc5290c": {
       "category": "universal",
@@ -6057,8 +6026,8 @@
       "last_seen": "2026-11-02T00:33:28Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 171,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 170,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "3506a8f147a14acd": {
       "category": "whitelist",
@@ -6169,6 +6138,11 @@
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": []
     },
+    "35be21797bb204b3": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "360844fa22a139a1": {
       "category": "universal",
       "last_seen": "2026-10-28T05:25:40Z",
@@ -6247,13 +6221,12 @@
       "country": "US",
       "egress_ip": "185.95.231.156",
       "failures": 0,
-      "http_max_ms": 123,
-      "http_ms": 120,
-      "jitter_ms": 7,
-      "last_seen": "2026-11-02T16:59:54Z",
-      "last_success": "2026-11-02T16:59:54Z",
+      "http_max_ms": 281,
+      "http_ms": 275,
+      "jitter_ms": 8,
+      "last_seen": "2026-11-02T23:51:46Z",
+      "last_success": "2026-11-02T23:51:46Z",
       "latency_medians": [
-        153,
         143,
         65,
         329,
@@ -6272,9 +6245,10 @@
         74,
         277,
         53,
-        120
+        120,
+        275
       ],
-      "median_ms": 120,
+      "median_ms": 275,
       "recent": [
         1,
         1,
@@ -6289,12 +6263,12 @@
       ],
       "resolved_ip": "185.95.231.156",
       "ru_blocked_streak": 0,
-      "ru_ms": 143,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 9.23,
-      "streak": 23,
-      "successes": 23,
-      "tcp_ms": 23
+      "ru_ms": 114,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 4.1,
+      "streak": 24,
+      "successes": 24,
+      "tcp_ms": 56
     },
     "36d85bbf4aa6fad7": {
       "category": "universal",
@@ -6421,6 +6395,11 @@
       "streak": 0,
       "successes": 0
     },
+    "38493eba359085ce": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "38495609e0733de8": {
       "category": "universal",
       "last_seen": "2026-11-02T06:44:06Z",
@@ -6472,7 +6451,7 @@
       "category": "universal",
       "endpoint": "103.109.234.129:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -6524,7 +6503,7 @@
       "category": "universal",
       "endpoint": "103.166.127.195:448",
       "failures": 4,
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -6585,7 +6564,7 @@
     },
     "39fdfd7dbb699c29": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 42,
@@ -6660,13 +6639,12 @@
       "country": "US",
       "egress_ip": "185.195.57.173",
       "failures": 0,
-      "http_max_ms": 1064,
-      "http_ms": 135,
-      "jitter_ms": 932,
-      "last_seen": "2026-11-02T16:59:55Z",
-      "last_success": "2026-11-02T16:59:55Z",
+      "http_max_ms": 448,
+      "http_ms": 426,
+      "jitter_ms": 94,
+      "last_seen": "2026-11-02T23:51:47Z",
+      "last_success": "2026-11-02T23:51:47Z",
       "latency_medians": [
-        181,
         226,
         98,
         255,
@@ -6685,9 +6663,10 @@
         143,
         413,
         129,
-        135
+        135,
+        426
       ],
-      "median_ms": 135,
+      "median_ms": 426,
       "recent": [
         1,
         1,
@@ -6703,11 +6682,11 @@
       "resolved_ip": "169.40.42.35",
       "ru_blocked_streak": 0,
       "ru_ms": 114,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 8.61,
-      "streak": 60,
-      "successes": 60,
-      "tcp_ms": 20
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.98,
+      "streak": 61,
+      "successes": 61,
+      "tcp_ms": 72
     },
     "3b0ac7e489abc6c0": {
       "asn": "AS8560",
@@ -6752,15 +6731,16 @@
     "3b48a8cfafbfa2eb": {
       "category": "universal",
       "endpoint": "169.40.42.231:443",
-      "failures": 1,
-      "last_seen": "2026-10-31T19:30:06Z",
+      "failures": 2,
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
+        0,
         0
       ],
       "ru_blocked": true,
-      "ru_blocked_at": "2026-10-31T19:30:06Z",
-      "ru_blocked_streak": 1,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 2,
       "ru_ms": null,
       "streak": 0,
       "successes": 0
@@ -6945,7 +6925,7 @@
       ],
       "ru_blocked_streak": 0,
       "ru_ms": 182,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -6973,7 +6953,7 @@
     },
     "3d64707491e658a5": {
       "category": "universal",
-      "last_seen": "2026-10-31T19:30:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 205,
@@ -6996,7 +6976,7 @@
       "category": "universal",
       "endpoint": "103.172.197.3:16006",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -7099,23 +7079,28 @@
       "country": "GB",
       "egress_ip": "143.246.182.199",
       "failures": 0,
-      "http_max_ms": 435,
-      "http_ms": 433,
-      "jitter_ms": 10,
-      "last_seen": "2026-11-02T17:00:02Z",
-      "last_success": "2026-11-02T17:00:02Z",
+      "http_max_ms": 557,
+      "http_ms": 555,
+      "jitter_ms": 3,
+      "last_seen": "2026-11-02T23:51:54Z",
+      "last_success": "2026-11-02T23:51:54Z",
       "latency_medians": [
-        433
+        433,
+        555
       ],
-      "median_ms": 433,
+      "median_ms": 555,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "5.104.74.70",
-      "speed_mbps": 2.31,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 100
+      "ru_blocked_streak": 0,
+      "ru_ms": 46,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.87,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 131
     },
     "3e97116cbbd5d032": {
       "category": "universal",
@@ -7166,7 +7151,7 @@
       "category": "universal",
       "endpoint": "103.109.234.113:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "xhttp",
       "recent": [
         0,
@@ -7212,8 +7197,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-11-01T16:16:42Z",
+      "ru_ms": 46,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -7284,7 +7269,7 @@
       "category": "universal",
       "endpoint": "103.175.79.2:443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -7434,6 +7419,11 @@
     "414ad3e3a1e31ba4": {
       "category": "universal",
       "last_seen": "2026-11-02T06:44:06Z",
+      "recent": []
+    },
+    "414fb79c5b00acf6": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "41695b904d2081c1": {
@@ -7652,7 +7642,7 @@
     },
     "43a72075f91173f2": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "43a9eb1ce0e9c6fa": {
@@ -7662,28 +7652,30 @@
       "country": "NL",
       "egress_ip": "50.7.193.149",
       "failures": 0,
-      "http_max_ms": 463,
-      "http_ms": 446,
-      "jitter_ms": 22,
-      "last_seen": "2026-11-02T17:00:00Z",
-      "last_success": "2026-11-02T17:00:00Z",
+      "http_max_ms": 661,
+      "http_ms": 599,
+      "jitter_ms": 63,
+      "last_seen": "2026-11-02T23:51:52Z",
+      "last_success": "2026-11-02T23:51:52Z",
       "latency_medians": [
         690,
-        446
+        446,
+        599
       ],
-      "median_ms": 446,
+      "median_ms": 599,
       "recent": [
+        1,
         1,
         1
       ],
       "resolved_ip": "50.7.193.131",
       "ru_blocked_streak": 0,
-      "ru_ms": 48,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.59,
-      "streak": 2,
-      "successes": 2,
-      "tcp_ms": 100
+      "ru_ms": 40,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.86,
+      "streak": 3,
+      "successes": 3,
+      "tcp_ms": 141
     },
     "43d9b81cb1d1f0d6": {
       "asn": "AS33993",
@@ -7736,16 +7728,32 @@
       "successes": 0
     },
     "44038469259d891c": {
+      "asn": "AS9123",
       "category": "whitelist",
+      "checks_passed": 2,
+      "country": "DE",
+      "egress_ip": "45.145.56.6",
       "endpoint": "5.129.202.74:443",
       "failures": 1,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "http_max_ms": 1067,
+      "http_ms": 935,
+      "jitter_ms": 142,
+      "last_seen": "2026-11-02T23:51:56Z",
+      "last_success": "2026-11-02T23:51:56Z",
+      "latency_medians": [
+        935
+      ],
+      "median_ms": 935,
       "protocol": "tcp",
       "recent": [
-        0
+        0,
+        1
       ],
-      "streak": 0,
-      "successes": 0
+      "resolved_ip": "5.129.202.74",
+      "speed_mbps": 1.15,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 1238
     },
     "442ec754527d4a3b": {
       "category": "universal",
@@ -7794,7 +7802,7 @@
     },
     "44ae665bec4c4f61": {
       "category": "universal",
-      "last_seen": "2026-10-31T19:30:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "44c9e6cc8da56595": {
@@ -7867,7 +7875,7 @@
     },
     "459aeccbfadb1093": {
       "category": "universal",
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "45a2dd33dc26483f": {
@@ -8051,6 +8059,11 @@
       "ru_ms": 182,
       "ru_ok_at": "2026-10-29T20:30:12Z"
     },
+    "476e77e00c74c2de": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "478f277ea990304f": {
       "category": "universal",
       "last_seen": "2026-10-30T13:26:50Z",
@@ -8158,13 +8171,12 @@
       "country": "JP",
       "egress_ip": "138.3.208.26",
       "failures": 0,
-      "http_max_ms": 1162,
-      "http_ms": 697,
-      "jitter_ms": 615,
-      "last_seen": "2026-11-02T17:00:17Z",
-      "last_success": "2026-11-02T17:00:17Z",
+      "http_max_ms": 579,
+      "http_ms": 413,
+      "jitter_ms": 226,
+      "last_seen": "2026-11-02T23:52:06Z",
+      "last_success": "2026-11-02T23:52:06Z",
       "latency_medians": [
-        448,
         463,
         518,
         474,
@@ -8183,9 +8195,10 @@
         535,
         369,
         574,
-        697
+        697,
+        413
       ],
-      "median_ms": 697,
+      "median_ms": 413,
       "recent": [
         1,
         1,
@@ -8200,12 +8213,12 @@
       ],
       "resolved_ip": "138.3.208.26",
       "ru_blocked_streak": 0,
-      "ru_ms": 290,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 1.17,
-      "streak": 28,
-      "successes": 28,
-      "tcp_ms": 143
+      "ru_ms": 283,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.91,
+      "streak": 29,
+      "successes": 29,
+      "tcp_ms": 112
     },
     "4896aac5b47926ac": {
       "category": "universal",
@@ -8279,7 +8292,12 @@
     },
     "4922a31d51b0668c": {
       "category": "universal",
-      "last_seen": "2026-10-30T22:55:22Z",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
+    "49253fad6f9e08a9": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "4929828291081923": {
@@ -8349,14 +8367,15 @@
       ],
       "ru_blocked": true,
       "ru_blocked_at": "2026-10-31T19:30:06Z",
-      "ru_blocked_streak": 2,
-      "ru_ms": null,
+      "ru_blocked_streak": 0,
+      "ru_ms": 119,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
     "4a171ab4d7a59dfb": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "4a2949025f611d73": {
@@ -8379,8 +8398,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 166,
-      "ru_ok_at": "2026-11-02T06:44:06Z",
+      "ru_ms": 182,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -8412,13 +8431,12 @@
       "egress_ip": "160.187.100.109",
       "endpoint": "160.187.100.109:443",
       "failures": 2,
-      "http_max_ms": 990,
-      "http_ms": 641,
-      "jitter_ms": 361,
-      "last_seen": "2026-11-02T17:00:17Z",
-      "last_success": "2026-11-02T17:00:17Z",
+      "http_max_ms": 861,
+      "http_ms": 554,
+      "jitter_ms": 323,
+      "last_seen": "2026-11-02T23:52:07Z",
+      "last_success": "2026-11-02T23:52:07Z",
       "latency_medians": [
-        609,
         671,
         616,
         510,
@@ -8437,9 +8455,10 @@
         696,
         549,
         684,
-        641
+        641,
+        554
       ],
-      "median_ms": 641,
+      "median_ms": 554,
       "protocol": "hysteria2",
       "recent": [
         1,
@@ -8455,12 +8474,12 @@
       ],
       "resolved_ip": "160.187.100.109",
       "ru_blocked_streak": 0,
-      "ru_ms": 260,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 1.25,
-      "streak": 30,
-      "successes": 42,
-      "tcp_ms": 174
+      "ru_ms": 236,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.42,
+      "streak": 31,
+      "successes": 43,
+      "tcp_ms": 147
     },
     "4b5cb5e45ce5f9bd": {
       "category": "whitelist",
@@ -8504,7 +8523,7 @@
     },
     "4c1fdfbfa47ffd3e": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 193,
@@ -8568,7 +8587,7 @@
       "category": "universal",
       "endpoint": "103.253.43.210:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -8607,6 +8626,11 @@
       "retired_reason": "repeated failed checks without reliable success",
       "streak": 0,
       "successes": 0
+    },
+    "4cc105885e7417e6": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
     },
     "4cc56f806964ef2c": {
       "category": "universal",
@@ -8752,7 +8776,7 @@
     "4dfbcaf2e4ff3367": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [
         0,
         0,
@@ -8806,7 +8830,7 @@
       "category": "universal",
       "endpoint": "100.28.124.111:2083",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "xhttp",
       "recent": [
         0,
@@ -8862,7 +8886,7 @@
       "category": "universal",
       "endpoint": "103.182.97.250:23198",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -8996,7 +9020,7 @@
     },
     "50dcc54856a6580d": {
       "category": "universal",
-      "last_seen": "2026-11-01T02:06:09Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "510699650698eccf": {
@@ -9049,7 +9073,7 @@
       "category": "universal",
       "last_seen": "2026-11-02T06:44:06Z",
       "recent": [],
-      "ru_unknown_at": "2026-11-02T16:58:49Z"
+      "ru_unknown_at": "2026-11-02T23:50:41Z"
     },
     "519991e9c5d5de31": {
       "category": "universal",
@@ -9192,19 +9216,36 @@
       "successes": 1,
       "tcp_ms": 34
     },
+    "527a308a2f938e57": {
+      "category": "universal",
+      "endpoint": "169.40.42.225:443",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
+    },
     "52dc9f375c764913": {
       "category": "universal",
       "endpoint": "1.sdwan.realm-sync.com:5457",
-      "failures": 2,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "failures": 3,
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
+        0,
         0,
         0
       ],
       "ru_blocked": true,
-      "ru_blocked_at": "2026-11-02T16:58:49Z",
-      "ru_blocked_streak": 2,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 3,
       "ru_ms": null,
       "streak": 0,
       "successes": 0
@@ -9223,7 +9264,7 @@
       "category": "universal",
       "endpoint": "103.214.69.177:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -9440,8 +9481,8 @@
       "last_seen": "2026-10-31T08:47:43Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 308,
-      "ru_ok_at": "2026-10-31T02:14:43Z"
+      "ru_ms": 238,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "5546eac16f8aceab": {
       "category": "universal",
@@ -9497,22 +9538,28 @@
       "checks_passed": 2,
       "country": "CH",
       "egress_ip": "2a05:9406::af9",
-      "failures": 0,
+      "endpoint": "45.90.57.119:8443",
+      "failures": 1,
       "http_max_ms": 827,
       "http_ms": 492,
       "jitter_ms": 342,
-      "last_seen": "2026-11-02T17:00:12Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "last_success": "2026-11-02T17:00:12Z",
       "latency_medians": [
         492
       ],
       "median_ms": 492,
+      "protocol": "tcp",
       "recent": [
-        1
+        1,
+        0
       ],
       "resolved_ip": "45.90.57.119",
+      "ru_blocked_streak": 0,
+      "ru_ms": 47,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "speed_mbps": 0.0,
-      "streak": 1,
+      "streak": 0,
       "successes": 1,
       "tcp_ms": 112
     },
@@ -9649,13 +9696,12 @@
       "country": "FR",
       "egress_ip": "13.36.234.11",
       "failures": 0,
-      "http_max_ms": 571,
-      "http_ms": 352,
-      "jitter_ms": 221,
-      "last_seen": "2026-11-02T17:00:12Z",
-      "last_success": "2026-11-02T17:00:12Z",
+      "http_max_ms": 742,
+      "http_ms": 470,
+      "jitter_ms": 287,
+      "last_seen": "2026-11-02T23:52:03Z",
+      "last_success": "2026-11-02T23:52:03Z",
       "latency_medians": [
-        388,
         314,
         401,
         488,
@@ -9674,9 +9720,10 @@
         312,
         448,
         307,
-        352
+        352,
+        470
       ],
-      "median_ms": 352,
+      "median_ms": 470,
       "recent": [
         1,
         1,
@@ -9691,12 +9738,12 @@
       ],
       "resolved_ip": "13.36.234.11",
       "ru_blocked_streak": 0,
-      "ru_ms": 52,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.12,
-      "streak": 64,
-      "successes": 64,
-      "tcp_ms": 107
+      "ru_ms": 51,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.66,
+      "streak": 65,
+      "successes": 65,
+      "tcp_ms": 140
     },
     "5686eea4cdfbe026": {
       "category": "universal",
@@ -9707,7 +9754,7 @@
       "category": "universal",
       "endpoint": "nas.aizhzo.com:5010",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "hysteria2",
       "recent": [
         0,
@@ -9736,7 +9783,7 @@
       ],
       "ru_blocked_streak": 0,
       "ru_ms": 182,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -9868,7 +9915,7 @@
     },
     "579d247ae6c867e7": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "57ad859e4be4e091": {
@@ -9876,8 +9923,8 @@
       "last_seen": "2026-10-29T15:29:39Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 117,
-      "ru_ok_at": "2026-10-30T13:26:50Z"
+      "ru_ms": 115,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "58038e491d82af3a": {
       "category": "universal",
@@ -9994,13 +10041,12 @@
       "country": "US",
       "egress_ip": "185.195.57.174",
       "failures": 0,
-      "http_max_ms": 286,
-      "http_ms": 209,
-      "jitter_ms": 164,
-      "last_seen": "2026-11-02T16:59:54Z",
-      "last_success": "2026-11-02T16:59:54Z",
+      "http_max_ms": 415,
+      "http_ms": 361,
+      "jitter_ms": 126,
+      "last_seen": "2026-11-02T23:51:47Z",
+      "last_success": "2026-11-02T23:51:47Z",
       "latency_medians": [
-        354,
         134,
         295,
         374,
@@ -10019,9 +10065,10 @@
         113,
         305,
         141,
-        209
+        209,
+        361
       ],
-      "median_ms": 209,
+      "median_ms": 361,
       "recent": [
         1,
         1,
@@ -10036,12 +10083,12 @@
       ],
       "resolved_ip": "169.40.42.74",
       "ru_blocked_streak": 0,
-      "ru_ms": 113,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 5.74,
-      "streak": 27,
-      "successes": 27,
-      "tcp_ms": 19
+      "ru_ms": 109,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 3.72,
+      "streak": 28,
+      "successes": 28,
+      "tcp_ms": 62
     },
     "5966747e63be9faf": {
       "category": "universal",
@@ -10050,7 +10097,7 @@
     },
     "5969317519735cc6": {
       "category": "universal",
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "596b04cec8fd1d91": {
@@ -10082,9 +10129,9 @@
       ],
       "ru_blocked": true,
       "ru_blocked_at": "2026-11-01T16:16:42Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "ru_ok_at": "2026-10-26T06:54:31Z",
+      "ru_blocked_streak": 0,
+      "ru_ms": 198,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -10303,7 +10350,7 @@
       "category": "universal",
       "endpoint": "103.113.70.21:443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -10320,7 +10367,7 @@
       "category": "universal",
       "endpoint": "103.240.146.250:6443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -10403,7 +10450,7 @@
     },
     "5c92539b73727d5b": {
       "category": "universal",
-      "last_seen": "2026-10-30T06:21:12Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "5c95638866851df8": {
@@ -10553,7 +10600,7 @@
     },
     "5db9d2082eaab252": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 248,
@@ -10621,7 +10668,7 @@
     },
     "5ef40daa6dbdfde3": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "5f025911811714d7": {
@@ -10816,7 +10863,7 @@
       "category": "universal",
       "endpoint": "103.175.79.2:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -10942,7 +10989,7 @@
       "category": "universal",
       "endpoint": "100.24.50.197:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -10976,7 +11023,10 @@
     "6319992aa4a08aa7": {
       "category": "universal",
       "last_seen": "2026-11-02T06:44:06Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 118,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "632c013b98226648": {
       "category": "universal",
@@ -11107,7 +11157,7 @@
       "category": "universal",
       "endpoint": "103.227.84.162:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -11260,7 +11310,7 @@
     },
     "662a13e87546a1cc": {
       "category": "universal",
-      "last_seen": "2026-10-31T22:46:03Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "66359588a4e9f60d": {
@@ -11311,6 +11361,11 @@
       "last_seen": "2026-10-30T22:55:22Z",
       "recent": []
     },
+    "66858caaa3b8f9dd": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "668c4e1d7724621e": {
       "category": "universal",
       "last_seen": "2026-10-31T22:46:03Z",
@@ -11318,7 +11373,7 @@
     },
     "669c18bbdb0c5bd5": {
       "category": "universal",
-      "last_seen": "2026-10-31T02:14:43Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "66a435ae64a818f9": {
@@ -11432,7 +11487,7 @@
       "category": "universal",
       "endpoint": "103.109.234.199:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -11475,7 +11530,7 @@
     },
     "67d94f467dce400d": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "67e1c9c5e9abbe25": {
@@ -11501,7 +11556,7 @@
     },
     "68133a7677631179": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "68238274f46d9e5d": {
@@ -11557,7 +11612,7 @@
     },
     "690b010fda3be0cb": {
       "category": "universal",
-      "last_seen": "2026-11-01T02:06:09Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "6928c77f0ac05170": {
@@ -11590,7 +11645,7 @@
     },
     "6935512918de9dd0": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 188,
@@ -11691,7 +11746,8 @@
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 121,
-      "ru_ok_at": "2026-10-29T08:21:36Z"
+      "ru_ok_at": "2026-10-29T08:21:36Z",
+      "ru_unknown_at": "2026-11-02T23:50:41Z"
     },
     "69f420c2e97608b1": {
       "category": "universal",
@@ -11742,7 +11798,7 @@
       "category": "universal",
       "endpoint": "103.109.234.113:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "xhttp",
       "recent": [
         0,
@@ -11807,7 +11863,7 @@
       "category": "universal",
       "endpoint": "103.24.207.87:10000",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -11943,7 +11999,7 @@
       "http_max_ms": 614,
       "http_ms": 330,
       "jitter_ms": 310,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "last_success": "2026-10-30T06:22:21Z",
       "latency_medians": [
         330
@@ -12011,7 +12067,7 @@
     "6da384aa92072625": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [
         0
       ],
@@ -12092,6 +12148,11 @@
     "6e4c1d505f73c4a2": {
       "category": "universal",
       "last_seen": "2026-10-28T05:25:40Z",
+      "recent": []
+    },
+    "6e5fa79ad1ce6ede": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "6e68e052be2d9d5e": {
@@ -12360,7 +12421,7 @@
     },
     "71f871fbe1fac614": {
       "category": "universal",
-      "last_seen": "2026-10-27T23:58:40Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "71fba712aac41200": {
@@ -12451,7 +12512,7 @@
       "category": "universal",
       "endpoint": "103.137.247.92:34045",
       "failures": 4,
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -12583,7 +12644,7 @@
       "category": "universal",
       "endpoint": "103.241.65.169:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -12599,7 +12660,7 @@
     "740f070bedc9dfa8": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [
         0,
         0,
@@ -12728,7 +12789,10 @@
     "74f0296fd96e8346": {
       "category": "universal",
       "last_seen": "2026-10-28T05:25:40Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 119,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "7515dd111c0eecab": {
       "category": "universal",
@@ -12790,19 +12854,19 @@
       "last_seen": "2026-11-02T16:58:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 244,
-      "ru_ok_at": "2026-11-02T00:33:28Z"
+      "ru_ms": 236,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "75e800c7017f2bac": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "76073f3411f48d17": {
       "category": "universal",
       "endpoint": "51.158.206.87:23576",
       "failures": 1,
-      "last_seen": "2026-10-29T08:21:36Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0
@@ -12969,8 +13033,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 166,
-      "ru_ok_at": "2026-11-02T06:44:06Z",
+      "ru_ms": 182,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -13015,7 +13079,7 @@
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 170,
-      "ru_ok_at": "2026-11-02T06:44:06Z"
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "77d48a591bc557f1": {
       "category": "universal",
@@ -13036,7 +13100,7 @@
       "category": "universal",
       "endpoint": "103.109.234.129:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -13108,7 +13172,10 @@
     "78a52c1729d30a92": {
       "category": "universal",
       "last_seen": "2026-11-01T20:46:21Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 196,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "78afe4470e0b011b": {
       "category": "universal",
@@ -13192,13 +13259,12 @@
       "country": "JP",
       "egress_ip": "45.32.10.7",
       "failures": 0,
-      "http_max_ms": 779,
-      "http_ms": 463,
-      "jitter_ms": 319,
-      "last_seen": "2026-11-02T17:00:14Z",
-      "last_success": "2026-11-02T17:00:14Z",
+      "http_max_ms": 585,
+      "http_ms": 356,
+      "jitter_ms": 235,
+      "last_seen": "2026-11-02T23:52:04Z",
+      "last_success": "2026-11-02T23:52:04Z",
       "latency_medians": [
-        433,
         570,
         433,
         360,
@@ -13217,9 +13283,10 @@
         509,
         365,
         512,
-        463
+        463,
+        356
       ],
-      "median_ms": 463,
+      "median_ms": 356,
       "recent": [
         1,
         1,
@@ -13233,11 +13300,11 @@
         1
       ],
       "resolved_ip": "45.32.10.7",
-      "ru_unknown_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.19,
-      "streak": 54,
-      "successes": 54,
-      "tcp_ms": 147
+      "ru_unknown_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.8,
+      "streak": 55,
+      "successes": 55,
+      "tcp_ms": 109
     },
     "78f7dc1cbb874b33": {
       "category": "universal",
@@ -13376,7 +13443,7 @@
       "category": "universal",
       "endpoint": "103.253.43.210:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -13479,15 +13546,14 @@
       "category": "universal",
       "checks_passed": 2,
       "country": "ES",
-      "egress_ip": "76.164.203.245",
+      "egress_ip": "76.164.203.244",
       "failures": 0,
-      "http_max_ms": 589,
-      "http_ms": 575,
-      "jitter_ms": 93,
-      "last_seen": "2026-11-02T16:59:58Z",
-      "last_success": "2026-11-02T16:59:58Z",
+      "http_max_ms": 725,
+      "http_ms": 720,
+      "jitter_ms": 5,
+      "last_seen": "2026-11-02T23:51:52Z",
+      "last_success": "2026-11-02T23:51:52Z",
       "latency_medians": [
-        498,
         606,
         448,
         537,
@@ -13506,9 +13572,10 @@
         454,
         723,
         503,
-        575
+        575,
+        720
       ],
-      "median_ms": 575,
+      "median_ms": 720,
       "recent": [
         1,
         1,
@@ -13523,16 +13590,16 @@
       ],
       "resolved_ip": "156.252.229.11",
       "ru_blocked_streak": 0,
-      "ru_ms": 80,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.14,
-      "streak": 20,
-      "successes": 20,
-      "tcp_ms": 106
+      "ru_ms": 84,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.52,
+      "streak": 21,
+      "successes": 21,
+      "tcp_ms": 149
     },
     "7b6325de82bbdeeb": {
       "category": "universal",
-      "last_seen": "2026-10-28T05:25:40Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "7b73e6d2d4bbb1ad": {
@@ -13712,8 +13779,8 @@
       "last_seen": "2026-10-30T22:55:22Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 260,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 236,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "7d11d99036deded1": {
       "category": "universal",
@@ -13789,7 +13856,7 @@
       "category": "universal",
       "endpoint": "103.172.197.3:16006",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -13862,7 +13929,7 @@
       "category": "universal",
       "endpoint": "103.175.79.2:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -13904,7 +13971,7 @@
       "category": "universal",
       "endpoint": "031c1bf3e9d44591.mechanicir.ir:56625",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "grpc",
       "recent": [
         0,
@@ -13919,7 +13986,7 @@
     },
     "7f697aa30ea62e30": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 193,
@@ -13942,7 +14009,7 @@
     },
     "7f9d3f6314afe762": {
       "category": "universal",
-      "last_seen": "2026-10-30T00:13:35Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "7fd7823988e05c20": {
@@ -14178,7 +14245,7 @@
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 170,
-      "ru_ok_at": "2026-11-02T06:44:06Z"
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "82898d76d7795d3c": {
       "category": "universal",
@@ -14216,7 +14283,7 @@
       "category": "universal",
       "endpoint": "103.149.183.198:13779",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -14260,6 +14327,11 @@
     "83610fa8bb757539": {
       "category": "universal",
       "last_seen": "2026-10-29T15:29:39Z",
+      "recent": []
+    },
+    "8370240f3e82eb40": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "837648a9a42a2a5f": {
@@ -14325,7 +14397,7 @@
       "category": "universal",
       "endpoint": "103.246.145.244:25488",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -14393,7 +14465,7 @@
     },
     "848b136e0b33ee82": {
       "category": "universal",
-      "last_seen": "2026-10-31T22:46:03Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "849f3937793596f2": {
@@ -14441,13 +14513,12 @@
       "country": "NL",
       "egress_ip": "86.54.28.75",
       "failures": 0,
-      "http_max_ms": 707,
-      "http_ms": 665,
-      "jitter_ms": 137,
-      "last_seen": "2026-11-02T16:59:57Z",
-      "last_success": "2026-11-02T16:59:57Z",
+      "http_max_ms": 1200,
+      "http_ms": 860,
+      "jitter_ms": 524,
+      "last_seen": "2026-11-02T23:51:50Z",
+      "last_success": "2026-11-02T23:51:50Z",
       "latency_medians": [
-        533,
         656,
         501,
         633,
@@ -14466,9 +14537,10 @@
         513,
         645,
         384,
-        665
+        665,
+        860
       ],
-      "median_ms": 665,
+      "median_ms": 860,
       "recent": [
         1,
         1,
@@ -14483,12 +14555,12 @@
       ],
       "resolved_ip": "86.54.28.75",
       "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.17,
-      "streak": 61,
-      "successes": 61,
-      "tcp_ms": 100
+      "ru_ms": 40,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.72,
+      "streak": 62,
+      "successes": 62,
+      "tcp_ms": 142
     },
     "84eefc36478b7718": {
       "category": "universal",
@@ -14502,13 +14574,12 @@
       "country": "FR",
       "egress_ip": "13.36.234.11",
       "failures": 0,
-      "http_max_ms": 572,
-      "http_ms": 360,
-      "jitter_ms": 220,
-      "last_seen": "2026-11-02T17:00:11Z",
-      "last_success": "2026-11-02T17:00:11Z",
+      "http_max_ms": 722,
+      "http_ms": 453,
+      "jitter_ms": 277,
+      "last_seen": "2026-11-02T23:52:02Z",
+      "last_success": "2026-11-02T23:52:02Z",
       "latency_medians": [
-        399,
         313,
         387,
         491,
@@ -14527,9 +14598,10 @@
         317,
         441,
         306,
-        360
+        360,
+        453
       ],
-      "median_ms": 360,
+      "median_ms": 453,
       "recent": [
         1,
         1,
@@ -14544,12 +14616,12 @@
       ],
       "resolved_ip": "13.36.234.11",
       "ru_blocked_streak": 0,
-      "ru_ms": 52,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.1,
-      "streak": 65,
-      "successes": 65,
-      "tcp_ms": 106
+      "ru_ms": 51,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.72,
+      "streak": 66,
+      "successes": 66,
+      "tcp_ms": 138
     },
     "85317cb538eb61e2": {
       "category": "universal",
@@ -14731,13 +14803,12 @@
       "country": "KR",
       "egress_ip": "152.70.237.123",
       "failures": 0,
-      "http_max_ms": 893,
-      "http_ms": 554,
-      "jitter_ms": 350,
-      "last_seen": "2026-11-02T17:00:11Z",
-      "last_success": "2026-11-02T17:00:11Z",
+      "http_max_ms": 748,
+      "http_ms": 461,
+      "jitter_ms": 294,
+      "last_seen": "2026-11-02T23:52:02Z",
+      "last_success": "2026-11-02T23:52:02Z",
       "latency_medians": [
-        690,
         606,
         504,
         433,
@@ -14756,9 +14827,10 @@
         646,
         423,
         581,
-        554
+        554,
+        461
       ],
-      "median_ms": 554,
+      "median_ms": 461,
       "recent": [
         1,
         1,
@@ -14773,12 +14845,12 @@
       ],
       "resolved_ip": "152.70.237.123",
       "ru_blocked_streak": 0,
-      "ru_ms": 284,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 1.88,
-      "streak": 67,
-      "successes": 67,
-      "tcp_ms": 168
+      "ru_ms": 291,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.24,
+      "streak": 68,
+      "successes": 68,
+      "tcp_ms": 137
     },
     "87856abe6e59047b": {
       "category": "universal",
@@ -14840,8 +14912,8 @@
       "last_seen": "2026-10-29T01:43:23Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 261,
-      "ru_ok_at": "2026-11-02T00:33:28Z"
+      "ru_ms": 259,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "88da048338cb3b24": {
       "category": "universal",
@@ -14936,7 +15008,7 @@
     },
     "8a265e2eca2548ac": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 171,
@@ -15018,7 +15090,7 @@
     },
     "8a8aa393655e1cb9": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "8aa2f0251d49f7c8": {
@@ -15063,7 +15135,7 @@
     },
     "8aff5b1cb7e03560": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 43,
@@ -15188,7 +15260,7 @@
     },
     "8c5cfe370512cda1": {
       "category": "universal",
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "8c72d9c374ac1607": {
@@ -15237,7 +15309,7 @@
     },
     "8cd7f7c8c03f431a": {
       "category": "universal",
-      "last_seen": "2026-10-28T05:25:40Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "8ce977fc057fa9e8": {
@@ -15321,7 +15393,7 @@
       "category": "universal",
       "endpoint": "103.109.234.96:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -15346,13 +15418,12 @@
       "country": "US",
       "egress_ip": "163.192.14.135",
       "failures": 0,
-      "http_max_ms": 665,
-      "http_ms": 185,
-      "jitter_ms": 480,
-      "last_seen": "2026-11-02T17:00:05Z",
-      "last_success": "2026-11-02T17:00:05Z",
+      "http_max_ms": 116,
+      "http_ms": 79,
+      "jitter_ms": 41,
+      "last_seen": "2026-11-02T23:51:57Z",
+      "last_success": "2026-11-02T23:51:57Z",
       "latency_medians": [
-        164,
         240,
         148,
         39,
@@ -15371,9 +15442,10 @@
         440,
         81,
         233,
-        185
+        185,
+        79
       ],
-      "median_ms": 185,
+      "median_ms": 79,
       "recent": [
         1,
         1,
@@ -15388,21 +15460,21 @@
       ],
       "resolved_ip": "163.192.14.135",
       "ru_blocked_streak": 0,
-      "ru_ms": 176,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
+      "ru_ms": 178,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "ru_unknown_at": "2026-10-22T01:26:15Z",
-      "speed_mbps": 5.27,
-      "streak": 178,
-      "successes": 178,
-      "tcp_ms": 51
+      "speed_mbps": 9.98,
+      "streak": 179,
+      "successes": 179,
+      "tcp_ms": 17
     },
     "8dd7bc5f9ef05c41": {
       "category": "universal",
       "last_seen": "2026-11-01T16:16:42Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 59,
-      "ru_ok_at": "2026-10-30T18:47:53Z"
+      "ru_ms": 57,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "8de69f37e19fc521": {
       "category": "universal",
@@ -15479,6 +15551,18 @@
       "category": "universal",
       "last_seen": "2026-10-31T19:30:06Z",
       "recent": []
+    },
+    "8e3fefc05d0f4470": {
+      "category": "whitelist",
+      "endpoint": "5.129.202.74:443",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
     },
     "8e48295c81e396ad": {
       "category": "universal",
@@ -15867,7 +15951,7 @@
     },
     "9254a9ba0b52ae06": {
       "category": "universal",
-      "last_seen": "2026-10-29T01:43:23Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "9259dd2d76690302": {
@@ -15880,13 +15964,18 @@
       "last_seen": "2026-11-02T16:58:49Z",
       "recent": []
     },
+    "9287d99c5fedf86e": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "9292304fd872591e": {
       "category": "universal",
       "last_seen": "2026-10-30T00:13:35Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 111,
-      "ru_ok_at": "2026-11-02T00:33:28Z"
+      "ru_ms": 109,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "92965294f7174ae2": {
       "category": "universal",
@@ -15928,8 +16017,8 @@
       "last_seen": "2026-10-30T22:55:22Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 206,
-      "ru_ok_at": "2026-10-31T19:30:06Z"
+      "ru_ms": 198,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "935667e960c7da41": {
       "category": "universal",
@@ -16004,7 +16093,7 @@
       "category": "universal",
       "endpoint": "103.227.84.162:443",
       "failures": 4,
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -16131,7 +16220,7 @@
     },
     "947af53e71b440fc": {
       "category": "universal",
-      "last_seen": "2026-10-31T02:14:43Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "947be4845e1cb6c8": {
@@ -16171,7 +16260,7 @@
     },
     "94b638630415aaf9": {
       "category": "universal",
-      "last_seen": "2026-10-31T02:14:43Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "94bb90e9251a8b14": {
@@ -16253,7 +16342,7 @@
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 248,
-      "ru_ok_at": "2026-11-02T00:33:28Z"
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "94f0c22f611b5350": {
       "category": "universal",
@@ -16264,7 +16353,7 @@
       "category": "universal",
       "endpoint": "100.outline-vpn.cloud:26516",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "http",
       "recent": [
         0,
@@ -16476,14 +16565,14 @@
     },
     "96cbcecec3968e64": {
       "category": "universal",
-      "last_seen": "2026-10-31T15:15:39Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "96e1476650e41bb1": {
       "category": "universal",
       "endpoint": "103.103.245.218:37730",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -16568,7 +16657,7 @@
       "category": "universal",
       "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "grpc",
       "recent": [
         0,
@@ -16762,7 +16851,7 @@
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 170,
-      "ru_ok_at": "2026-11-02T06:44:06Z"
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "9a3d2f399e55aecd": {
       "category": "universal",
@@ -16951,7 +17040,7 @@
       "category": "universal",
       "endpoint": "103.106.3.170:51579",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -17041,8 +17130,8 @@
       "last_seen": "2026-11-01T16:16:42Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 266,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 259,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "9d9de5e89bc883cd": {
       "category": "universal",
@@ -17199,7 +17288,7 @@
       "category": "universal",
       "endpoint": "1.sdwan.realm-sync.com:54387",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -17234,7 +17323,7 @@
     },
     "9eb7d040ac7b6b8a": {
       "category": "universal",
-      "last_seen": "2026-10-27T23:58:40Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "9ef6751803ce745a": {
@@ -17261,7 +17350,7 @@
       "category": "universal",
       "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "grpc",
       "recent": [
         0,
@@ -17286,13 +17375,12 @@
       "country": "JP",
       "egress_ip": "45.32.10.7",
       "failures": 0,
-      "http_max_ms": 770,
-      "http_ms": 473,
-      "jitter_ms": 302,
-      "last_seen": "2026-11-02T17:00:10Z",
-      "last_success": "2026-11-02T17:00:10Z",
+      "http_max_ms": 655,
+      "http_ms": 350,
+      "jitter_ms": 306,
+      "last_seen": "2026-11-02T23:52:00Z",
+      "last_success": "2026-11-02T23:52:00Z",
       "latency_medians": [
-        451,
         508,
         431,
         377,
@@ -17311,9 +17399,10 @@
         531,
         369,
         507,
-        473
+        473,
+        350
       ],
-      "median_ms": 473,
+      "median_ms": 350,
       "recent": [
         1,
         1,
@@ -17327,11 +17416,11 @@
         1
       ],
       "resolved_ip": "45.32.10.7",
-      "ru_unknown_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.18,
-      "streak": 67,
-      "successes": 67,
-      "tcp_ms": 144
+      "ru_unknown_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.87,
+      "streak": 68,
+      "successes": 68,
+      "tcp_ms": 108
     },
     "9fd4b90d89d723bc": {
       "category": "universal",
@@ -17391,7 +17480,7 @@
     },
     "a0f35dd4017e9fbb": {
       "category": "universal",
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "a0f3e6d697be2be3": {
@@ -17448,7 +17537,7 @@
       "category": "universal",
       "endpoint": "080f2d83dbd8fefe.jobwebs.ir:50567",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -17525,7 +17614,7 @@
     },
     "a1fa1d94a8335f49": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 179,
@@ -17728,6 +17817,34 @@
       "last_seen": "2026-11-02T00:33:28Z",
       "recent": []
     },
+    "a447c25824e67372": {
+      "asn": "AS205089",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "NL",
+      "egress_ip": "141.0.187.16",
+      "failures": 0,
+      "http_max_ms": 555,
+      "http_ms": 545,
+      "jitter_ms": 12,
+      "last_seen": "2026-11-02T23:51:59Z",
+      "last_success": "2026-11-02T23:51:59Z",
+      "latency_medians": [
+        545
+      ],
+      "median_ms": 545,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "141.0.187.6",
+      "ru_blocked_streak": 0,
+      "ru_ms": 43,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.87,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 132
+    },
     "a458b30f51b0e904": {
       "category": "universal",
       "last_seen": "2026-10-27T20:36:16Z",
@@ -17768,6 +17885,22 @@
       "last_seen": "2026-10-30T06:21:12Z",
       "recent": []
     },
+    "a4da26ebdd6a9c0a": {
+      "category": "universal",
+      "endpoint": "23.95.222.127:8443",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
+    },
     "a4ec2e7bb38fd6ed": {
       "category": "universal",
       "last_seen": "2026-10-31T08:47:43Z",
@@ -17787,7 +17920,7 @@
       "category": "universal",
       "endpoint": "103.119.18.253:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -17812,11 +17945,11 @@
       "country": "NL",
       "egress_ip": "2a03:6f02::1:b69",
       "endpoint": "hys28.wba-pn.ru:443",
-      "failures": 148,
+      "failures": 149,
       "http_max_ms": 825,
       "http_ms": 548,
       "jitter_ms": 285,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "last_success": "2026-10-02T21:18:32Z",
       "latency_medians": [
         518,
@@ -17887,6 +18020,11 @@
     "a63e7ab46080e151": {
       "category": "universal",
       "last_seen": "2026-10-31T08:47:43Z",
+      "recent": []
+    },
+    "a643c7197df36acd": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "a65d90286debbd50": {
@@ -17975,7 +18113,7 @@
       "category": "universal",
       "endpoint": "103.109.234.166:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -18091,19 +18229,21 @@
       "country": "NL",
       "egress_ip": "141.0.187.15",
       "failures": 0,
-      "http_max_ms": 589,
-      "http_ms": 342,
-      "jitter_ms": 250,
-      "last_seen": "2026-11-02T17:00:19Z",
-      "last_success": "2026-11-02T17:00:19Z",
+      "http_max_ms": 719,
+      "http_ms": 427,
+      "jitter_ms": 292,
+      "last_seen": "2026-11-02T23:52:09Z",
+      "last_success": "2026-11-02T23:52:09Z",
       "latency_medians": [
         299,
         421,
         283,
-        342
+        342,
+        427
       ],
-      "median_ms": 342,
+      "median_ms": 427,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -18111,12 +18251,12 @@
       ],
       "resolved_ip": "141.0.187.15",
       "ru_blocked_streak": 0,
-      "ru_ms": 45,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.98,
-      "streak": 4,
-      "successes": 4,
-      "tcp_ms": 97
+      "ru_ms": 40,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.41,
+      "streak": 5,
+      "successes": 5,
+      "tcp_ms": 140
     },
     "a80dab11e0fb8943": {
       "category": "universal",
@@ -18218,8 +18358,8 @@
       "last_seen": "2026-10-28T05:25:40Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 198,
-      "ru_ok_at": "2026-11-02T00:33:28Z"
+      "ru_ms": 196,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "a90dd88a0be12299": {
       "category": "universal",
@@ -18281,8 +18421,8 @@
       "last_seen": "2026-11-01T16:16:42Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 201,
-      "ru_ok_at": "2026-10-29T15:29:39Z"
+      "ru_ms": 192,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "a95e0da6a853961e": {
       "category": "universal",
@@ -18333,7 +18473,7 @@
       "category": "universal",
       "endpoint": "103.109.234.113:443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "xhttp",
       "recent": [
         0,
@@ -18366,7 +18506,7 @@
     },
     "aa45a6b024491d88": {
       "category": "universal",
-      "last_seen": "2026-10-30T00:13:35Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "aa6449d7393a1a03": {
@@ -18425,6 +18565,11 @@
       "streak": 0,
       "successes": 0
     },
+    "ab30888aa783634f": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "ab53a7859e153756": {
       "category": "universal",
       "last_seen": "2026-10-31T19:30:06Z",
@@ -18440,8 +18585,8 @@
       "last_seen": "2026-11-02T06:44:06Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 260,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 236,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "ab7a384bda1673c9": {
       "category": "universal",
@@ -18507,7 +18652,7 @@
     },
     "abe3224179e6b435": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "ac13d93d8b36dcca": {
@@ -18518,7 +18663,7 @@
     "ac1be639a47d963c": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [
         0,
         0,
@@ -18624,6 +18769,34 @@
       "ru_blocked_streak": 0,
       "ru_ms": 56,
       "ru_ok_at": "2026-10-28T17:19:57Z"
+    },
+    "ad17d4b137087a1d": {
+      "asn": "AS207957",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "US",
+      "egress_ip": "91.196.33.14",
+      "failures": 0,
+      "http_max_ms": 385,
+      "http_ms": 376,
+      "jitter_ms": 13,
+      "last_seen": "2026-11-02T23:51:56Z",
+      "last_success": "2026-11-02T23:51:56Z",
+      "latency_medians": [
+        376
+      ],
+      "median_ms": 376,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "91.196.33.14",
+      "ru_blocked_streak": 0,
+      "ru_ms": 159,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.69,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 22
     },
     "ad215b1ddc684ed4": {
       "category": "universal",
@@ -18825,6 +18998,11 @@
       "streak": 0,
       "successes": 0
     },
+    "aeba41fe0caa98e6": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "aedad409a8978e53": {
       "category": "universal",
       "endpoint": "xray2-direct-mci1-fs-ce.freesocks.work:443",
@@ -18875,7 +19053,7 @@
       "category": "universal",
       "endpoint": "103.231.75.184:2089",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -18908,13 +19086,12 @@
       "country": "TW",
       "egress_ip": "103.115.109.49",
       "failures": 0,
-      "http_max_ms": 1002,
-      "http_ms": 642,
-      "jitter_ms": 363,
-      "last_seen": "2026-11-02T17:00:16Z",
-      "last_success": "2026-11-02T17:00:16Z",
+      "http_max_ms": 837,
+      "http_ms": 537,
+      "jitter_ms": 312,
+      "last_seen": "2026-11-02T23:52:05Z",
+      "last_success": "2026-11-02T23:52:05Z",
       "latency_medians": [
-        620,
         690,
         600,
         530,
@@ -18933,9 +19110,10 @@
         686,
         572,
         697,
-        642
+        642,
+        537
       ],
-      "median_ms": 642,
+      "median_ms": 537,
       "recent": [
         1,
         1,
@@ -18950,16 +19128,16 @@
       ],
       "resolved_ip": "103.115.109.49",
       "ru_blocked_streak": 0,
-      "ru_ms": 242,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 1.29,
-      "streak": 58,
-      "successes": 58,
-      "tcp_ms": 172
+      "ru_ms": 238,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.48,
+      "streak": 59,
+      "successes": 59,
+      "tcp_ms": 146
     },
     "af4ac5230034e4cf": {
       "category": "universal",
-      "last_seen": "2026-10-29T20:30:12Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "af804b810d4682f6": {
@@ -18972,16 +19150,16 @@
       "last_seen": "2026-10-28T05:25:40Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-10-30T06:21:12Z"
+      "ru_ms": 40,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "afa7b94d37b9fe7c": {
       "category": "universal",
       "last_seen": "2026-11-02T16:58:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 250,
-      "ru_ok_at": "2026-10-28T11:33:45Z"
+      "ru_ms": 238,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "afb7d945a90f389b": {
       "category": "universal",
@@ -19060,7 +19238,7 @@
     },
     "b05b7bff2ef25301": {
       "category": "universal",
-      "last_seen": "2026-10-31T08:47:43Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "b075c58b7b3a2429": {
@@ -19166,6 +19344,11 @@
       "last_seen": "2026-10-27T20:36:16Z",
       "recent": []
     },
+    "b11dc86f570b2690": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "b131d748fa5d188f": {
       "category": "universal",
       "last_seen": "2026-10-28T11:33:45Z",
@@ -19219,7 +19402,7 @@
       "category": "universal",
       "endpoint": "103.246.145.244:11802",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -19236,7 +19419,7 @@
       "category": "universal",
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": [],
-      "ru_unknown_at": "2026-11-02T16:58:49Z"
+      "ru_unknown_at": "2026-11-02T23:50:41Z"
     },
     "b1c0ea820337f244": {
       "category": "universal",
@@ -19252,6 +19435,22 @@
       "category": "universal",
       "last_seen": "2026-10-28T05:25:40Z",
       "recent": []
+    },
+    "b22f3908c75b0035": {
+      "category": "universal",
+      "endpoint": "5.34.178.120:443",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
     },
     "b242e78ae0fc8ab1": {
       "category": "universal",
@@ -19406,7 +19605,7 @@
     },
     "b3ca1318fb5dcdc9": {
       "category": "universal",
-      "last_seen": "2026-10-29T15:29:39Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "b3e70b1e146ca04f": {
@@ -19504,7 +19703,7 @@
     },
     "b447b38ef95b3000": {
       "category": "universal",
-      "last_seen": "2026-11-01T02:06:09Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "b45d207218b3d20d": {
@@ -19614,7 +19813,7 @@
     },
     "b5ee25a38f46937e": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "b5fa2a343d61644e": {
@@ -19639,7 +19838,7 @@
       "category": "universal",
       "endpoint": "51.158.206.103:23576",
       "failures": 1,
-      "last_seen": "2026-10-30T00:13:35Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0
@@ -19704,7 +19903,7 @@
     },
     "b690ff15b488ba3b": {
       "category": "universal",
-      "last_seen": "2026-10-30T18:47:53Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 274,
@@ -19714,7 +19913,7 @@
       "category": "universal",
       "endpoint": "103.119.18.253:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -19747,7 +19946,10 @@
     "b6b7ccdbc4ae379f": {
       "category": "universal",
       "last_seen": "2026-10-31T08:47:43Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 115,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "b6bca791f1ec64f4": {
       "category": "universal",
@@ -19772,8 +19974,8 @@
       "last_seen": "2026-11-02T16:58:49Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 306,
-      "ru_ok_at": "2026-11-02T06:44:06Z"
+      "ru_ms": 236,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "b70e4c655716bfb9": {
       "category": "universal",
@@ -19838,11 +20040,11 @@
       "country": "KR",
       "egress_ip": "152.67.200.82",
       "failures": 0,
-      "http_max_ms": 1109,
-      "http_ms": 639,
-      "jitter_ms": 470,
-      "last_seen": "2026-11-02T17:00:20Z",
-      "last_success": "2026-11-02T17:00:20Z",
+      "http_max_ms": 741,
+      "http_ms": 454,
+      "jitter_ms": 292,
+      "last_seen": "2026-11-02T23:52:08Z",
+      "last_success": "2026-11-02T23:52:08Z",
       "latency_medians": [
         650,
         729,
@@ -19852,10 +20054,12 @@
         703,
         8000,
         639,
-        639
+        639,
+        454
       ],
-      "median_ms": 639,
+      "median_ms": 454,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -19868,12 +20072,12 @@
       ],
       "resolved_ip": "152.67.200.82",
       "ru_blocked_streak": 0,
-      "ru_ms": 266,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 1.62,
-      "streak": 9,
-      "successes": 9,
-      "tcp_ms": 205
+      "ru_ms": 259,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.3,
+      "streak": 10,
+      "successes": 10,
+      "tcp_ms": 157
     },
     "b726ed605cfc2eee": {
       "category": "universal",
@@ -19885,7 +20089,7 @@
     },
     "b73b57668b90c4e4": {
       "category": "universal",
-      "last_seen": "2026-10-31T19:30:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "b73e16f706457467": {
@@ -19943,7 +20147,7 @@
       "category": "universal",
       "endpoint": "103.166.127.195:448",
       "failures": 4,
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -20048,7 +20252,7 @@
     },
     "b8dd592e5d408c24": {
       "category": "universal",
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "b8ee070cb164826c": {
@@ -20141,7 +20345,7 @@
       "category": "universal",
       "endpoint": "103.175.79.2:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -20158,7 +20362,7 @@
       "category": "universal",
       "endpoint": "103.113.70.21:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "raw",
       "recent": [
         0,
@@ -20190,7 +20394,7 @@
       "category": "universal",
       "endpoint": "103.231.73.181:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -20229,7 +20433,7 @@
       "category": "universal",
       "endpoint": "0e806ccdc7a782a3.instasup.ir:2003",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -20264,7 +20468,7 @@
     },
     "bc3cebf2666e108e": {
       "category": "universal",
-      "last_seen": "2026-11-01T02:06:09Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "bc3d87bdcc6fb8e4": {
@@ -20282,8 +20486,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 268,
-      "ru_ok_at": "2026-11-02T00:33:28Z",
+      "ru_ms": 243,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -20291,7 +20495,7 @@
       "category": "universal",
       "last_seen": "2026-11-01T16:16:42Z",
       "recent": [],
-      "ru_unknown_at": "2026-11-02T16:58:49Z"
+      "ru_unknown_at": "2026-11-02T23:50:41Z"
     },
     "bc563ef1adcd7b04": {
       "category": "universal",
@@ -20311,12 +20515,12 @@
     },
     "bc7007835224573d": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "bc7b7e528cef40fa": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "bc89c80a1dd0ac46": {
@@ -20330,6 +20534,34 @@
       ],
       "streak": 0,
       "successes": 0
+    },
+    "bca6ce858639a3d3": {
+      "asn": "AS218656",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "GB",
+      "egress_ip": "143.246.182.129",
+      "failures": 0,
+      "http_max_ms": 542,
+      "http_ms": 541,
+      "jitter_ms": 3,
+      "last_seen": "2026-11-02T23:51:58Z",
+      "last_success": "2026-11-02T23:51:58Z",
+      "latency_medians": [
+        541
+      ],
+      "median_ms": 541,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "212.69.135.30",
+      "ru_blocked_streak": 0,
+      "ru_ms": 46,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.94,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 130
     },
     "bcc9467bf748911d": {
       "category": "universal",
@@ -20413,8 +20645,8 @@
       "last_seen": "2026-10-30T22:55:22Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 119,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 116,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "bedccc09a27254ec": {
       "category": "universal",
@@ -20508,7 +20740,7 @@
       "category": "universal",
       "endpoint": "103.109.234.166:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -20656,7 +20888,7 @@
       "category": "universal",
       "endpoint": "103.231.75.185:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -20722,7 +20954,7 @@
       "category": "universal",
       "endpoint": "103.123.162.50:10011",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "raw",
       "recent": [
         0,
@@ -20854,28 +21086,30 @@
       "country": "US",
       "egress_ip": "47.253.226.114",
       "failures": 0,
-      "http_max_ms": 1148,
-      "http_ms": 545,
-      "jitter_ms": 971,
-      "last_seen": "2026-11-01T09:09:09Z",
-      "last_success": "2026-11-01T09:09:09Z",
+      "http_max_ms": 242,
+      "http_ms": 234,
+      "jitter_ms": 9,
+      "last_seen": "2026-11-02T23:51:49Z",
+      "last_success": "2026-11-02T23:51:49Z",
       "latency_medians": [
         45,
-        545
+        545,
+        234
       ],
-      "median_ms": 545,
+      "median_ms": 234,
       "recent": [
+        1,
         1,
         1
       ],
       "resolved_ip": "47.253.226.114",
       "ru_blocked_streak": 0,
-      "ru_ms": 136,
-      "ru_ok_at": "2026-11-02T06:44:06Z",
-      "speed_mbps": 3.15,
-      "streak": 2,
-      "successes": 2,
-      "tcp_ms": 37
+      "ru_ms": 134,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.39,
+      "streak": 3,
+      "successes": 3,
+      "tcp_ms": 59
     },
     "c44eef5df27b1b47": {
       "category": "universal",
@@ -20935,7 +21169,7 @@
       "category": "universal",
       "endpoint": "169.40.42.163:443",
       "failures": 4,
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -21128,7 +21362,7 @@
       "category": "universal",
       "endpoint": "103.109.234.166:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -21278,7 +21512,7 @@
       ],
       "ru_blocked_streak": 0,
       "ru_ms": 182,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -21311,12 +21545,12 @@
     },
     "c96bfef186dbb156": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "c97466257458f334": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "c994809eb699afbd": {
@@ -21336,7 +21570,7 @@
     },
     "ca163ab8b488c87d": {
       "category": "universal",
-      "last_seen": "2026-10-30T22:55:22Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "ca2ea0bb8887a0b8": {
@@ -21383,7 +21617,7 @@
       "category": "universal",
       "endpoint": "103.241.66.93:40449",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "grpc",
       "recent": [
         0,
@@ -21427,7 +21661,7 @@
     },
     "cb4dcee2b7afc434": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "cb5571b0b9600e53": {
@@ -21457,26 +21691,28 @@
       "country": "MX",
       "egress_ip": "147.78.1.170",
       "failures": 0,
-      "http_max_ms": 500,
-      "http_ms": 478,
-      "jitter_ms": 64,
-      "last_seen": "2026-11-02T17:00:01Z",
-      "last_success": "2026-11-02T17:00:01Z",
+      "http_max_ms": 403,
+      "http_ms": 393,
+      "jitter_ms": 50,
+      "last_seen": "2026-11-02T23:51:52Z",
+      "last_success": "2026-11-02T23:51:52Z",
       "latency_medians": [
-        478
+        478,
+        393
       ],
-      "median_ms": 478,
+      "median_ms": 393,
       "recent": [
+        1,
         1
       ],
       "resolved_ip": "147.78.1.253",
       "ru_blocked_streak": 0,
-      "ru_ms": 175,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.42,
-      "streak": 1,
-      "successes": 1,
-      "tcp_ms": 59
+      "ru_ms": 171,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 3.23,
+      "streak": 2,
+      "successes": 2,
+      "tcp_ms": 49
     },
     "cb7ffa326672edc8": {
       "category": "universal",
@@ -21561,6 +21797,11 @@
       "last_seen": "2026-10-27T23:58:40Z",
       "recent": []
     },
+    "ccc92cad91aaa559": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "ccdd407e67a39776": {
       "category": "universal",
       "endpoint": "103.119.18.115:443",
@@ -21631,7 +21872,7 @@
     },
     "cd5f8ba2e8ec343f": {
       "category": "universal",
-      "last_seen": "2026-10-31T22:46:03Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "cd63ba185567ad17": {
@@ -21697,11 +21938,6 @@
       "streak": 0,
       "successes": 0
     },
-    "cdcd7992347e62bf": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "cdd36276619c82ff": {
       "category": "universal",
       "last_seen": "2026-10-27T23:58:40Z",
@@ -21715,11 +21951,6 @@
     "cde029db01736cc7": {
       "category": "universal",
       "last_seen": "2026-10-31T02:14:43Z",
-      "recent": []
-    },
-    "cdf7259e221e27d9": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
       "recent": []
     },
     "ce21ae23d1d64148": {
@@ -21784,7 +22015,7 @@
       "category": "universal",
       "endpoint": "103.109.234.129:443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -21797,21 +22028,9 @@
       "streak": 0,
       "successes": 0
     },
-    "cedafa2e1b4f4330": {
-      "category": "universal",
-      "endpoint": "77.239.102.129:17232",
-      "failures": 1,
-      "last_seen": "2026-10-27T20:36:16Z",
-      "protocol": "tcp",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "ceefd66aba3a3442": {
       "category": "universal",
-      "last_seen": "2026-10-31T22:46:03Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "cf083963febf3533": {
@@ -21860,7 +22079,7 @@
     },
     "cf48f7407139b42c": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "cf4efc4507d7ceb5": {
@@ -21910,25 +22129,13 @@
     },
     "cfc5e39f90ddd8ee": {
       "category": "universal",
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "cfd5f5cff2392f63": {
       "category": "universal",
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": []
-    },
-    "cfec7ae9b1b2909e": {
-      "category": "universal",
-      "endpoint": "france.cloudpath.live:443",
-      "failures": 1,
-      "last_seen": "2026-10-27T20:36:16Z",
-      "protocol": "tcp",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "cff29f4d97082347": {
       "category": "universal",
@@ -22043,8 +22250,8 @@
         0
       ],
       "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-11-01T16:16:42Z",
+      "ru_ms": 46,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -22132,6 +22339,11 @@
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": []
     },
+    "d1327f5319023ac1": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "d14a87f171af19e4": {
       "category": "universal",
       "last_seen": "2026-10-30T13:26:50Z",
@@ -22173,7 +22385,7 @@
       "category": "universal",
       "endpoint": "103.123.162.50:10011",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -22223,7 +22435,7 @@
       "category": "universal",
       "endpoint": "103.109.234.165:443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -22340,7 +22552,7 @@
       "category": "universal",
       "endpoint": "102.37.155.79:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "xhttp",
       "recent": [
         0,
@@ -22429,6 +22641,11 @@
       "last_seen": "2026-10-27T23:58:40Z",
       "recent": []
     },
+    "d45909e663e71d8d": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "d4606602b8effc43": {
       "category": "universal",
       "endpoint": "91.196.163.150:8443",
@@ -22444,11 +22661,6 @@
     "d49aac3a45940821": {
       "category": "universal",
       "last_seen": "2026-11-01T02:06:09Z",
-      "recent": []
-    },
-    "d4cb26004544829b": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
       "recent": []
     },
     "d4d01d5cc6e19174": {
@@ -22495,9 +22707,14 @@
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": []
     },
+    "d51cb157639054f3": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "d542c1b69b22c702": {
       "category": "universal",
-      "last_seen": "2026-11-02T00:33:28Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "d549dc7067057ab5": {
@@ -22608,11 +22825,12 @@
       "checks_passed": 2,
       "country": "FR",
       "egress_ip": "51.255.37.164",
-      "failures": 0,
+      "endpoint": "edge.bookmai.com:443",
+      "failures": 1,
       "http_max_ms": 496,
       "http_ms": 455,
       "jitter_ms": 52,
-      "last_seen": "2026-11-02T16:59:56Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "last_success": "2026-11-02T16:59:56Z",
       "latency_medians": [
         517,
@@ -22637,6 +22855,7 @@
         455
       ],
       "median_ms": 455,
+      "protocol": "tcp",
       "recent": [
         1,
         1,
@@ -22647,14 +22866,16 @@
         1,
         1,
         1,
-        1
+        0
       ],
       "resolved_ip": "163.245.42.120",
-      "ru_blocked_streak": 0,
-      "ru_ms": 62,
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
       "ru_ok_at": "2026-11-02T16:58:49Z",
       "speed_mbps": 2.49,
-      "streak": 60,
+      "streak": 0,
       "successes": 60,
       "tcp_ms": 103
     },
@@ -22671,7 +22892,7 @@
     },
     "d6af599cd081919b": {
       "category": "universal",
-      "last_seen": "2026-11-01T02:06:09Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 306,
@@ -22681,7 +22902,7 @@
       "category": "universal",
       "endpoint": "103.172.197.2:29172",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -22754,18 +22975,6 @@
       "last_seen": "2026-11-01T09:08:04Z",
       "recent": []
     },
-    "d75a50aa0cbf9939": {
-      "category": "universal",
-      "endpoint": "188.225.77.241:443",
-      "failures": 1,
-      "last_seen": "2026-10-27T20:36:16Z",
-      "protocol": "tcp",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "d76c6b1ed434a1ba": {
       "category": "universal",
       "last_seen": "2026-10-27T23:58:40Z",
@@ -22797,9 +23006,9 @@
       ],
       "ru_blocked": true,
       "ru_blocked_at": "2026-11-01T20:46:21Z",
-      "ru_blocked_streak": 1,
-      "ru_ms": null,
-      "ru_ok_at": "2026-11-01T16:16:42Z",
+      "ru_blocked_streak": 0,
+      "ru_ms": 114,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -22963,7 +23172,7 @@
       "category": "universal",
       "endpoint": "103.106.229.190:19261",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -23011,6 +23220,11 @@
       "last_seen": "2026-10-29T01:43:23Z",
       "recent": []
     },
+    "d912fce82cad61b6": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
+      "recent": []
+    },
     "d9474799868cc717": {
       "category": "universal",
       "last_seen": "2026-10-28T05:25:40Z",
@@ -23023,11 +23237,11 @@
       "country": "NL",
       "egress_ip": "50.7.95.198",
       "failures": 0,
-      "http_max_ms": 725,
-      "http_ms": 327,
-      "jitter_ms": 398,
-      "last_seen": "2026-11-02T17:00:16Z",
-      "last_success": "2026-11-02T17:00:16Z",
+      "http_max_ms": 978,
+      "http_ms": 449,
+      "jitter_ms": 531,
+      "last_seen": "2026-11-02T23:52:07Z",
+      "last_success": "2026-11-02T23:52:07Z",
       "latency_medians": [
         277,
         376,
@@ -23039,9 +23253,10 @@
         339,
         482,
         631,
-        327
+        327,
+        449
       ],
-      "median_ms": 327,
+      "median_ms": 449,
       "recent": [
         1,
         1,
@@ -23056,12 +23271,12 @@
       ],
       "resolved_ip": "50.7.38.243",
       "ru_blocked_streak": 0,
-      "ru_ms": 40,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 3.04,
-      "streak": 11,
-      "successes": 11,
-      "tcp_ms": 96
+      "ru_ms": 42,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.27,
+      "streak": 12,
+      "successes": 12,
+      "tcp_ms": 141
     },
     "d98a8d37e9caf6c8": {
       "category": "universal",
@@ -23140,7 +23355,7 @@
     },
     "da6e63384b16a04c": {
       "category": "universal",
-      "last_seen": "2026-10-31T02:14:43Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [],
       "ru_blocked_streak": 0,
       "ru_ms": 173,
@@ -23243,11 +23458,6 @@
       "last_seen": "2026-10-31T08:47:43Z",
       "recent": []
     },
-    "db5a18f4c4fae5fa": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "db601e859158b093": {
       "category": "universal",
       "last_seen": "2026-10-28T11:33:45Z",
@@ -23333,11 +23543,6 @@
       "streak": 0,
       "successes": 0
     },
-    "dbc7ab51ca98eab6": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "dbdd2c8f99f8755c": {
       "category": "universal",
       "last_seen": "2026-10-30T22:55:22Z",
@@ -23389,13 +23594,41 @@
     },
     "dc49aa940f5d3bc1": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "dc5844d8c2c0e157": {
       "category": "universal",
       "last_seen": "2026-10-30T06:21:12Z",
       "recent": []
+    },
+    "dc5a1ba4b928b5cf": {
+      "asn": "AS218656",
+      "category": "universal",
+      "checks_passed": 2,
+      "country": "GB",
+      "egress_ip": "143.246.182.103",
+      "failures": 0,
+      "http_max_ms": 547,
+      "http_ms": 543,
+      "jitter_ms": 4,
+      "last_seen": "2026-11-02T23:51:58Z",
+      "last_success": "2026-11-02T23:51:58Z",
+      "latency_medians": [
+        543
+      ],
+      "median_ms": 543,
+      "recent": [
+        1
+      ],
+      "resolved_ip": "212.69.135.70",
+      "ru_blocked_streak": 0,
+      "ru_ms": 46,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.98,
+      "streak": 1,
+      "successes": 1,
+      "tcp_ms": 130
     },
     "dcbbff926ba67b2b": {
       "category": "universal",
@@ -23420,15 +23653,16 @@
     "dcc509b3f174888a": {
       "category": "universal",
       "endpoint": "5.34.178.120:443",
-      "failures": 1,
-      "last_seen": "2026-11-01T09:08:04Z",
+      "failures": 2,
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
+        0,
         0
       ],
       "ru_blocked": true,
-      "ru_blocked_at": "2026-11-01T09:08:04Z",
-      "ru_blocked_streak": 1,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 2,
       "ru_ms": null,
       "ru_ok_at": "2026-10-31T19:30:06Z",
       "streak": 0,
@@ -23486,13 +23720,12 @@
       "country": "US",
       "egress_ip": "185.95.231.156",
       "failures": 0,
-      "http_max_ms": 153,
-      "http_ms": 131,
-      "jitter_ms": 33,
-      "last_seen": "2026-11-02T16:59:53Z",
-      "last_success": "2026-11-02T16:59:53Z",
+      "http_max_ms": 276,
+      "http_ms": 275,
+      "jitter_ms": 2,
+      "last_seen": "2026-11-02T23:51:46Z",
+      "last_success": "2026-11-02T23:51:46Z",
       "latency_medians": [
-        143,
         55,
         139,
         297,
@@ -23511,9 +23744,10 @@
         71,
         264,
         57,
-        131
+        131,
+        275
       ],
-      "median_ms": 131,
+      "median_ms": 275,
       "recent": [
         1,
         1,
@@ -23528,12 +23762,12 @@
       ],
       "resolved_ip": "185.95.231.156",
       "ru_blocked_streak": 0,
-      "ru_ms": 143,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 9.94,
-      "streak": 33,
-      "successes": 33,
-      "tcp_ms": 22
+      "ru_ms": 114,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 3.97,
+      "streak": 34,
+      "successes": 34,
+      "tcp_ms": 67
     },
     "dd4cff38b43d5d21": {
       "category": "universal",
@@ -23580,22 +23814,8 @@
     },
     "dd8f66cf8776efca": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
-    },
-    "dde96fc8b067fb72": {
-      "category": "universal",
-      "endpoint": "germ-node.datamove.online:2040",
-      "failures": 3,
-      "last_seen": "2026-10-27T20:36:16Z",
-      "protocol": "tcp",
-      "recent": [
-        0,
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "de09c8f5acf53891": {
       "category": "universal",
@@ -23643,7 +23863,7 @@
       "category": "universal",
       "endpoint": "103.192.179.61:17895",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -23748,7 +23968,7 @@
       "category": "universal",
       "endpoint": "103.253.43.210:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -23918,13 +24138,12 @@
       "country": "NL",
       "egress_ip": "89.127.211.136",
       "failures": 0,
-      "http_max_ms": 507,
-      "http_ms": 496,
-      "jitter_ms": 16,
-      "last_seen": "2026-11-02T16:59:56Z",
-      "last_success": "2026-11-02T16:59:56Z",
+      "http_max_ms": 584,
+      "http_ms": 581,
+      "jitter_ms": 7,
+      "last_seen": "2026-11-02T23:51:49Z",
+      "last_success": "2026-11-02T23:51:49Z",
       "latency_medians": [
-        520,
         581,
         517,
         487,
@@ -23943,9 +24162,10 @@
         413,
         592,
         406,
-        496
+        496,
+        581
       ],
-      "median_ms": 496,
+      "median_ms": 581,
       "recent": [
         1,
         1,
@@ -23960,12 +24180,12 @@
       ],
       "resolved_ip": "89.127.211.136",
       "ru_blocked_streak": 0,
-      "ru_ms": 65,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 2.29,
-      "streak": 56,
-      "successes": 56,
-      "tcp_ms": 105
+      "ru_ms": 57,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 1.83,
+      "streak": 57,
+      "successes": 57,
+      "tcp_ms": 143
     },
     "e0f20414c9efe7c1": {
       "category": "universal",
@@ -23986,7 +24206,7 @@
     },
     "e15f19cc4518dfac": {
       "category": "universal",
-      "last_seen": "2026-11-01T09:08:04Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "e1630e5b17f41525": {
@@ -24060,7 +24280,7 @@
       "category": "universal",
       "endpoint": "103.193.173.51:39485",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -24175,7 +24395,7 @@
     },
     "e2d5569ab1556c32": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "e2e05afab5f40669": {
@@ -24277,7 +24497,7 @@
     "e3d61e5e3330e162": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [
         0,
         0,
@@ -24314,11 +24534,6 @@
       "streak": 0,
       "successes": 0
     },
-    "e4063b35809f6128": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "e4159662070c45be": {
       "category": "universal",
       "last_seen": "2026-10-29T08:21:36Z",
@@ -24348,7 +24563,7 @@
       "category": "universal",
       "endpoint": "103.214.173.62:41705",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -24395,23 +24610,6 @@
       "last_seen": "2026-10-31T02:14:43Z",
       "recent": []
     },
-    "e52df9a043a759e5": {
-      "category": "universal",
-      "endpoint": "de8.bexait.ir:2434",
-      "failures": 4,
-      "last_seen": "2026-10-27T20:36:16Z",
-      "protocol": "tcp",
-      "recent": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "retired": true,
-      "retired_reason": "repeated failed checks without reliable success",
-      "streak": 0,
-      "successes": 0
-    },
     "e53eb45828a9c19e": {
       "category": "universal",
       "last_seen": "2026-10-27T23:58:40Z",
@@ -24420,11 +24618,6 @@
     "e55e0599b2faf5b7": {
       "category": "universal",
       "last_seen": "2026-10-30T13:26:50Z",
-      "recent": []
-    },
-    "e589ba4cc7a81494": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
       "recent": []
     },
     "e5a77e1af4c9e40f": {
@@ -24524,7 +24717,7 @@
     "e6903e503619bec5": {
       "category": "universal",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": [
         0,
         0,
@@ -24570,8 +24763,8 @@
       "last_seen": "2026-11-01T02:06:09Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 180,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 176,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "e6d84170586c2422": {
       "category": "universal",
@@ -24710,8 +24903,8 @@
       "last_seen": "2026-10-31T02:14:43Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 284,
-      "ru_ok_at": "2026-10-30T06:21:12Z"
+      "ru_ms": 259,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "e7c68dd5fe1b5706": {
       "category": "universal",
@@ -24727,6 +24920,22 @@
       "category": "universal",
       "last_seen": "2026-11-02T06:44:06Z",
       "recent": []
+    },
+    "e7d36abe30372d53": {
+      "category": "universal",
+      "endpoint": "xray1-direct-mci1-fs-ce.freesocks.work:443",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "ru_blocked": true,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 1,
+      "ru_ms": null,
+      "streak": 0,
+      "successes": 0
     },
     "e7f415dbc246bdcc": {
       "category": "universal",
@@ -24816,8 +25025,8 @@
       ],
       "resolved_ip": "155.248.209.237",
       "ru_blocked_streak": 0,
-      "ru_ms": 180,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
+      "ru_ms": 176,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "speed_mbps": 3.92,
       "streak": 19,
       "successes": 19,
@@ -24833,8 +25042,8 @@
       "last_seen": "2026-11-01T09:08:04Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 306,
-      "ru_ok_at": "2026-11-02T06:44:06Z"
+      "ru_ms": 236,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "e8d3604003197036": {
       "category": "universal",
@@ -24850,11 +25059,6 @@
       "ru_ok_at": "2026-10-30T00:13:35Z",
       "streak": 0,
       "successes": 0
-    },
-    "e8dd940bf710e1ed": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
     },
     "e8e05effbb0bd6a9": {
       "category": "universal",
@@ -24938,7 +25142,7 @@
     },
     "e92c4358051f2b52": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "e938cbe6646d42f7": {
@@ -25022,7 +25226,7 @@
       "category": "universal",
       "endpoint": "103.106.229.190:19261",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -25099,14 +25303,9 @@
       "streak": 0,
       "successes": 0
     },
-    "e9ff4cf955a0b4b4": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "ea85b124481b683a": {
       "category": "universal",
-      "last_seen": "2026-10-31T19:30:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "ea9a0ad3aab3834d": {
@@ -25117,6 +25316,11 @@
     "eaa08c8b5bd0f2a6": {
       "category": "universal",
       "last_seen": "2026-10-30T06:21:12Z",
+      "recent": []
+    },
+    "eaa0a05d35cc7a43": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "eaa76c129ebda32a": {
@@ -25161,7 +25365,7 @@
       "category": "universal",
       "endpoint": "0b889c24f5229843.mechanicir.ir:56625",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "grpc",
       "recent": [
         0,
@@ -25218,7 +25422,7 @@
     },
     "eb94cc6ec135c111": {
       "category": "universal",
-      "last_seen": "2026-10-30T18:47:53Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "ebaf43892cec7ddb": {
@@ -25233,20 +25437,22 @@
       "country": "KR",
       "egress_ip": "152.70.237.123",
       "failures": 0,
-      "http_max_ms": 867,
-      "http_ms": 535,
-      "jitter_ms": 336,
-      "last_seen": "2026-11-02T17:00:19Z",
-      "last_success": "2026-11-02T17:00:19Z",
+      "http_max_ms": 715,
+      "http_ms": 441,
+      "jitter_ms": 275,
+      "last_seen": "2026-11-02T23:52:09Z",
+      "last_success": "2026-11-02T23:52:09Z",
       "latency_medians": [
         425,
         611,
         433,
         594,
-        535
+        535,
+        441
       ],
-      "median_ms": 535,
+      "median_ms": 441,
       "recent": [
+        1,
         1,
         1,
         1,
@@ -25255,12 +25461,12 @@
       ],
       "resolved_ip": "152.70.237.123",
       "ru_blocked_streak": 0,
-      "ru_ms": 284,
-      "ru_ok_at": "2026-11-02T16:58:49Z",
-      "speed_mbps": 1.94,
-      "streak": 5,
-      "successes": 5,
-      "tcp_ms": 163
+      "ru_ms": 291,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "speed_mbps": 2.33,
+      "streak": 6,
+      "successes": 6,
+      "tcp_ms": 142
     },
     "ebc436e0a4230ac4": {
       "category": "universal",
@@ -25270,6 +25476,11 @@
     "ebcc80301e3b1575": {
       "category": "universal",
       "last_seen": "2026-10-27T23:58:40Z",
+      "recent": []
+    },
+    "ec54b8b076451927": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "ec6762be788b8866": {
@@ -25379,6 +25590,18 @@
       "last_seen": "2026-10-27T23:58:40Z",
       "recent": []
     },
+    "ed6432bc874a44ad": {
+      "category": "universal",
+      "endpoint": "169.40.37.232:25362",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "streak": 0,
+      "successes": 0
+    },
     "ed710248f885b102": {
       "category": "universal",
       "last_seen": "2026-10-31T22:46:03Z",
@@ -25424,18 +25647,6 @@
       "last_seen": "2026-11-01T09:08:04Z",
       "recent": []
     },
-    "edd8371b7bea744e": {
-      "category": "universal",
-      "endpoint": "web.trostshield.online:443",
-      "failures": 1,
-      "last_seen": "2026-10-27T20:36:16Z",
-      "protocol": "tcp",
-      "recent": [
-        0
-      ],
-      "streak": 0,
-      "successes": 0
-    },
     "edda81f099b507fb": {
       "category": "universal",
       "last_seen": "2026-10-28T05:25:40Z",
@@ -25450,7 +25661,7 @@
       "category": "universal",
       "endpoint": "103.246.145.244:11802",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -25476,34 +25687,10 @@
       "ru_ms": 255,
       "ru_ok_at": "2026-10-28T11:33:45Z"
     },
-    "ee0759fbc03cf62c": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
-    "ee2b03ef1b006b1a": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "ee2b388771624b08": {
       "category": "universal",
       "last_seen": "2026-10-27T23:58:40Z",
       "recent": []
-    },
-    "ee37b805df8a8dd9": {
-      "category": "universal",
-      "endpoint": "178.104.225.122:44444",
-      "failures": 3,
-      "last_seen": "2026-10-27T20:36:16Z",
-      "protocol": "tcp",
-      "recent": [
-        0,
-        0,
-        0
-      ],
-      "streak": 0,
-      "successes": 0
     },
     "ee4926c811b73afb": {
       "category": "universal",
@@ -25542,15 +25729,13 @@
       "streak": 0,
       "successes": 0
     },
-    "ee94d5e722a63cb1": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "ee977148250f6749": {
       "category": "universal",
       "last_seen": "2026-11-02T16:58:49Z",
-      "recent": []
+      "recent": [],
+      "ru_blocked_streak": 0,
+      "ru_ms": 168,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "eeca250ed5fb9d9a": {
       "category": "universal",
@@ -25589,7 +25774,7 @@
       "category": "universal",
       "endpoint": "103.113.70.30:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -25796,7 +25981,7 @@
       "category": "universal",
       "endpoint": "103.253.43.210:8443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -25907,7 +26092,7 @@
     },
     "f1c5e0e48f8994b9": {
       "category": "universal",
-      "last_seen": "2026-11-01T20:46:21Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "f1d52236a740970c": {
@@ -25966,8 +26151,8 @@
       ],
       "resolved_ip": "152.67.200.82",
       "ru_blocked_streak": 0,
-      "ru_ms": 294,
-      "ru_ok_at": "2026-10-31T15:15:39Z",
+      "ru_ms": 259,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "speed_mbps": 1.47,
       "streak": 0,
       "successes": 63,
@@ -25976,11 +26161,6 @@
     "f1eb35de90d8600b": {
       "category": "universal",
       "last_seen": "2026-11-01T16:16:42Z",
-      "recent": []
-    },
-    "f20663815298de13": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
       "recent": []
     },
     "f20c7753d3004929": {
@@ -26060,11 +26240,6 @@
       "last_seen": "2026-10-30T00:13:35Z",
       "recent": []
     },
-    "f31ff616ff5056f1": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "f32d65f9eca62b23": {
       "category": "universal",
       "last_seen": "2026-10-29T15:29:39Z",
@@ -26129,7 +26304,7 @@
     },
     "f399d761a6174e88": {
       "category": "universal",
-      "last_seen": "2026-11-01T16:16:42Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "f3a57e7fc359aaf5": {
@@ -26147,6 +26322,11 @@
     "f3b954ebcca0a6b8": {
       "category": "universal",
       "last_seen": "2026-10-29T01:43:23Z",
+      "recent": []
+    },
+    "f3df1daeb74f3fdd": {
+      "category": "universal",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "f3e30bf80874cb8b": {
@@ -26195,7 +26375,7 @@
     },
     "f40c1aea7e616422": {
       "category": "universal",
-      "last_seen": "2026-10-29T20:30:12Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "f43d24c263cd948d": {
@@ -26285,7 +26465,7 @@
       "category": "universal",
       "endpoint": "103.109.234.198:443",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -26531,8 +26711,8 @@
       "ru_blocked": true,
       "ru_blocked_at": "2026-10-31T02:14:43Z",
       "ru_blocked_streak": 0,
-      "ru_ms": 200,
-      "ru_ok_at": "2026-10-31T19:30:06Z",
+      "ru_ms": 196,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
       "streak": 0,
       "successes": 0
     },
@@ -26555,7 +26735,7 @@
       "category": "universal",
       "endpoint": "103.24.207.39:444",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -26654,11 +26834,6 @@
     "f80a9701e0e458db": {
       "category": "universal",
       "last_seen": "2026-10-30T00:13:35Z",
-      "recent": []
-    },
-    "f840725d36565649": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
       "recent": []
     },
     "f844c1027e31e5a3": {
@@ -26783,14 +26958,6 @@
       "category": "universal",
       "last_seen": "2026-10-31T08:47:43Z",
       "recent": []
-    },
-    "f95fb36679c2f714": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": [],
-      "ru_blocked_streak": 0,
-      "ru_ms": 43,
-      "ru_ok_at": "2026-10-25T10:04:48Z"
     },
     "f9652b7e73a76c7f": {
       "category": "universal",
@@ -26932,7 +27099,7 @@
       "category": "universal",
       "endpoint": "103.249.133.79:58440",
       "failures": 4,
-      "last_seen": "2026-11-02T06:44:06Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -26949,7 +27116,7 @@
       "category": "universal",
       "endpoint": "103.249.133.79:58440",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -26967,9 +27134,24 @@
       "last_seen": "2026-10-31T19:30:06Z",
       "recent": []
     },
+    "fb2016bcfc73e066": {
+      "category": "universal",
+      "endpoint": "103.119.18.192:443",
+      "failures": 1,
+      "last_seen": "2026-11-02T23:50:41Z",
+      "protocol": "tcp",
+      "recent": [
+        0
+      ],
+      "ru_blocked_streak": 0,
+      "ru_ms": 46,
+      "ru_ok_at": "2026-11-02T23:50:41Z",
+      "streak": 0,
+      "successes": 0
+    },
     "fb5a505c7f07583c": {
       "category": "universal",
-      "last_seen": "2026-10-30T22:55:22Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "recent": []
     },
     "fb6e586ddb20cf86": {
@@ -27128,11 +27310,6 @@
       "streak": 0,
       "successes": 0
     },
-    "fce49b52263a5f1e": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
-    },
     "fcea2923550e16ef": {
       "category": "universal",
       "endpoint": "xray1-direct-mci1-fs-ce.freesocks.work:443",
@@ -27170,8 +27347,8 @@
       "last_seen": "2026-11-02T06:44:06Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 274,
-      "ru_ok_at": "2026-10-31T19:30:06Z"
+      "ru_ms": 259,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "fd727cca42e19333": {
       "category": "universal",
@@ -27182,7 +27359,7 @@
       "category": "universal",
       "endpoint": "102.207.41.160:26974",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -27254,7 +27431,7 @@
       "category": "universal",
       "endpoint": "103.109.234.198:443",
       "failures": 4,
-      "last_seen": "2026-11-02T16:58:49Z",
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
         0,
@@ -27287,11 +27464,6 @@
       "ru_ms": null,
       "streak": 0,
       "successes": 0
-    },
-    "fe308a2997ce68fb": {
-      "category": "universal",
-      "last_seen": "2026-10-27T20:36:16Z",
-      "recent": []
     },
     "fe6570387445a816": {
       "category": "universal",
@@ -27435,15 +27607,16 @@
     "ff661269159820f7": {
       "category": "universal",
       "endpoint": "169.40.42.235:443",
-      "failures": 1,
-      "last_seen": "2026-11-01T16:16:42Z",
+      "failures": 2,
+      "last_seen": "2026-11-02T23:50:41Z",
       "protocol": "tcp",
       "recent": [
+        0,
         0
       ],
       "ru_blocked": true,
-      "ru_blocked_at": "2026-11-01T16:16:42Z",
-      "ru_blocked_streak": 1,
+      "ru_blocked_at": "2026-11-02T23:50:41Z",
+      "ru_blocked_streak": 2,
       "ru_ms": null,
       "streak": 0,
       "successes": 0
@@ -27535,8 +27708,8 @@
       "last_seen": "2026-11-01T16:16:42Z",
       "recent": [],
       "ru_blocked_streak": 0,
-      "ru_ms": 260,
-      "ru_ok_at": "2026-11-02T16:58:49Z"
+      "ru_ms": 236,
+      "ru_ok_at": "2026-11-02T23:50:41Z"
     },
     "ffc20ad476d64122": {
       "category": "universal",
